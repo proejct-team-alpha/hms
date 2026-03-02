@@ -12,6 +12,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
@@ -161,7 +163,21 @@ public class GlobalExceptionHandler {
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // 5. 예측 불가 예외 (폴백)
+    // 5. 정적 리소스 없음 (favicon.ico 등)
+    // ════════════════════════════════════════════════════════════════════════
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFound(
+            NoResourceFoundException ex, HttpServletRequest req) {
+
+        log.warn("[GlobalExceptionHandler] 리소스 없음: path={}", req.getRequestURI());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of("RESOURCE_NOT_FOUND", ex.getMessage(), req));
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // 6. 예측 불가 예외 (폴백)
     // ════════════════════════════════════════════════════════════════════════
 
     @ExceptionHandler(Exception.class)

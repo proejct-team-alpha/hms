@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.Authentication;
@@ -54,10 +55,28 @@ import java.io.IOException;
 public class SecurityConfig {
 
     // ════════════════════════════════════════════════════════════════════════
-    // Security Filter Chain
+    // H2 Console Security Filter Chain (개발용)
+    // ════════════════════════════════════════════════════════════════════════
+    // H2 콘솔은 별도 서블릿이므로 MvcRequestMatcher로 매칭 불가.
+    // PathRequest.toH2Console()을 사용하는 전용 필터 체인 필요.
+
+    @Bean
+    @Order(1)
+    SecurityFilterChain h2ConsoleFilterChain(HttpSecurity http) throws Exception {
+        return http
+            .securityMatcher("/h2-console/**")
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+            .csrf(csrf -> csrf.disable())
+            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+            .build();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Main Security Filter Chain
     // ════════════════════════════════════════════════════════════════════════
 
     @Bean
+    @Order(2)
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
             // ── CSRF ─────────────────────────────────────────────────────
@@ -74,8 +93,6 @@ public class SecurityConfig {
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
                 // Spring MVC 에러 페이지
                 .requestMatchers("/error/**").permitAll()
-                // H2 콘솔 (개발용 — 운영 환경에서는 이 줄 제거)
-                .requestMatchers("/h2-console/**").permitAll()
                 // 샘플 참고 코드 (개발용)
                 .requestMatchers("/sample/**").permitAll()
 

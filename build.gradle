@@ -34,6 +34,8 @@ dependencies {
 
 	// Runtime-only (실행 시에만 필요)
 	runtimeOnly 'com.h2database:h2'
+	// H2 콘솔 (Spring Boot 4 — 별도 모듈로 분리됨)
+	implementation 'org.springframework.boot:spring-boot-h2console'
 
 	// Annotation processors
 	annotationProcessor 'org.projectlombok:lombok'
