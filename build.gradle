@@ -1,0 +1,62 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.0.3'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.smartclinic'
+version = '0.0.1-SNAPSHOT'
+description = 'Demo project for Spring Boot'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// Spring Boot Starters (alphabetical)
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-mustache'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// Third-party
+	implementation 'com.auth0:java-jwt:4.3.0'
+
+	// Compile-only (빌드 시에만 필요)
+	compileOnly 'org.projectlombok:lombok'
+
+	// Runtime-only (실행 시에만 필요)
+	runtimeOnly 'com.h2database:h2'
+
+	// Annotation processors
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// Test
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// JAR 설정
+bootJar {
+	archiveFileName = "${project.name}-${project.version}.jar"
+}
+
+// 테스트 설정
+test {
+	useJUnitPlatform()
+}
+
+// 컴파일 옵션 (UTF-8 인코딩)
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+}
+

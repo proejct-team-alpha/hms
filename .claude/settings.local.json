@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs ls -la)",
+      "Bash(wc -l \"/d/workspace/hms/doc/demo/🏥 병원 예약 & 내부 업무 시스템 — 화면 기능 정의서 v2 31575e817b0c8050908cfec68069b433.md\")",
+      "Bash(./gradlew compileJava --quiet)",
+      "Bash(./gradlew compileJava)"
+    ]
+  }
+}

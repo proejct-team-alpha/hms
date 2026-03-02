@@ -1,0 +1,12 @@
+{{! S3 — NURSE 사이드 메뉴. 화면 14~16, 35 }}
+<nav class="sidebar">
+  <h3>≡ 간호사 메뉴</h3>
+  <ul>
+    <li><a href="/nurse/dashboard">🏠 대시보드</a></li>
+    <li><a href="/nurse/schedule/list">📋 오늘 예약 현황</a></li>
+    <li><a href="/nurse/mypage">👤 내 정보관리</a></li>
+    {{#showChatbot}}
+    <li><a href="#" id="chatbot-toggle">💬 챗봇 열기</a></li>
+    {{/showChatbot}}
+  </ul>
+</nav>

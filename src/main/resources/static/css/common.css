@@ -1,0 +1,230 @@
+/* ==============================================================================
+   HMS — 공통 스타일
+   documents 06_화면_기능_정의서 §2 공통 레이아웃 참고
+   ============================================================================== */
+
+:root {
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-danger: #dc2626;
+  --color-success: #16a34a;
+  --color-muted: #6b7280;
+  --color-border: #e5e7eb;
+  --color-bg: #f9fafb;
+  --font-sans: "Pretendard", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1f2937;
+  background: var(--color-bg);
+}
+
+/* ------------------------------------------------------------------------------
+   로그인 화면 (L3)
+   ------------------------------------------------------------------------------ */
+.header-login {
+  text-align: center;
+  padding: 2rem;
+  background: #fff;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.header-login h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.login-main {
+  max-width: 400px;
+  margin: 4rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.login-main h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+.login-form .form-group {
+  margin-bottom: 1rem;
+}
+
+.login-form label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+
+.login-form input[type="text"],
+.login-form input[type="password"] {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+}
+
+.login-form button {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.login-form button:hover {
+  background: var(--color-primary-hover);
+}
+
+.error-msg {
+  color: var(--color-danger);
+  margin-bottom: 1rem;
+}
+
+.success-msg {
+  color: var(--color-success);
+  margin-bottom: 1rem;
+}
+
+.login-hint {
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+/* ------------------------------------------------------------------------------
+   공통 헤더 (H1, H2, H3)
+   ------------------------------------------------------------------------------ */
+.header-public,
+.header-staff {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  background: #fff;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.header-public a,
+.header-staff a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.header-public a:hover,
+.header-staff a:hover {
+  text-decoration: underline;
+}
+
+.header-staff .page-title {
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
+}
+
+.header-staff .user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* ------------------------------------------------------------------------------
+   공통 푸터
+   ------------------------------------------------------------------------------ */
+.footer-public,
+.footer-staff {
+  padding: 1rem 1.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  border-top: 1px solid var(--color-border);
+  background: #fff;
+}
+
+/* ------------------------------------------------------------------------------
+   에러 화면
+   ------------------------------------------------------------------------------ */
+.error-page {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.error-page h1 {
+  margin-bottom: 1rem;
+}
+
+.error-page a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.error-page a:hover {
+  text-decoration: underline;
+}
+
+/* ------------------------------------------------------------------------------
+   사이드바 (L2)
+   ------------------------------------------------------------------------------ */
+.sidebar {
+  width: 220px;
+  padding: 1rem;
+  background: #fff;
+  border-right: 1px solid var(--color-border);
+}
+
+.sidebar h3 {
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+}
+
+.sidebar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar li {
+  margin-bottom: 0.25rem;
+}
+
+.sidebar a {
+  display: block;
+  padding: 0.5rem;
+  color: #374151;
+  text-decoration: none;
+  border-radius: 4px;
+}
+
+.sidebar a:hover {
+  background: var(--color-bg);
+  color: var(--color-primary);
+}
+
+.sidebar strong {
+  display: block;
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+/* ------------------------------------------------------------------------------
+   유틸리티
+   ------------------------------------------------------------------------------ */
+.text-muted { color: var(--color-muted); }
+.text-danger { color: var(--color-danger); }
+.text-success { color: var(--color-success); }

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 — HMS</title>
+    <link rel="stylesheet" href="/css/common.css">
+</head>
+<body>
+    {{> common/header-login}}
+    <main class="login-main">
+        <h2>로그인</h2>
+        {{#error}}
+        <p class="error-msg">로그인에 실패했습니다. 아이디와 비밀번호를 확인하세요.</p>
+        {{/error}}
+        {{#logout}}
+        <p class="success-msg">로그아웃되었습니다.</p>
+        {{/logout}}
+        <form method="post" action="/login" class="login-form">
+            <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+            <div class="form-group">
+                <label for="username">아이디</label>
+                <input type="text" id="username" name="username" required autofocus>
+            </div>
+            <div class="form-group">
+                <label for="password">비밀번호</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">로그인</button>
+        </form>
+        <p class="login-hint">테스트: admin01 / staff01 / doctor01 / nurse01 (비밀번호: password123)</p>
+    </main>
+</body>
+</html>
