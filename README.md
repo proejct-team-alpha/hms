@@ -70,7 +70,15 @@ cp .env.example .env
 - **프로필**: `dev` (기본)
 - **DB**: H2 in-memory (별도 설치 불필요)
 - **H2 콘솔**: <http://localhost:8080/h2-console>
+- **테스트 데이터**: `src/main/resources/sql_test.sql` (H2용 테스트 데이터 & 로그인 정보)
 - **테스트 계정**: `admin01` / `staff01` / `doctor01` / `nurse01` (비밀번호: `password123`)
+
+| 아이디   | 비밀번호    | 역할   |
+|----------|-------------|--------|
+| admin01  | password123 | ADMIN  |
+| staff01  | password123 | STAFF  |
+| doctor01 | password123 | DOCTOR |
+| nurse01  | password123 | NURSE  |
 
 > ⚠️ `.env` 는 `.gitignore` 등록됨 — 절대 커밋 금지
 
@@ -102,7 +110,8 @@ src/main/resources/
 │   └── images/
 ├── application.properties
 ├── application-dev.properties
-└── application-prod.properties.example
+├── application-prod.properties.example
+└── sql_test.sql              # H2 테스트 데이터 & 로그인 정보
 ```
 
 ---

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{pageTitle}} — HMS</title>
+  <link rel="stylesheet" href="/css/common.css">
+</head>
+<body>
+  {{> common/header-staff}}
+  <div class="layout-body">
+    {{> common/sidebar-nurse}}
+    <main class="main-content">
+      <h2>간호사 대시보드</h2>
+      <p>환영합니다. {{loginName}}님</p>
+    </main>
+  </div>
+  {{> common/footer-staff}}
+</body>
+</html>

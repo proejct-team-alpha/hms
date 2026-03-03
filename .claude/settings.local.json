@@ -14,7 +14,13 @@
       "Bash(javap -v -cp \"C:/Users/deepe/.gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-h2console/4.0.2/c635f22e41aa37ee521e8481e03e4bddfdab98da/spring-boot-h2console-4.0.2.jar\" org.springframework.boot.h2console.autoconfigure.H2ConsoleAutoConfiguration)",
       "WebFetch(domain:medium.com)",
       "WebFetch(domain:www.danvega.dev)",
-      "Bash(# Try to check if the JAR is actually included in the runtime classpath cd d:/workspace/hms && ./gradlew -q printClasspath || ./gradlew -q dependencies --configuration runtimeClasspath 2>&1)"
+      "Bash(# Try to check if the JAR is actually included in the runtime classpath cd d:/workspace/hms && ./gradlew -q printClasspath || ./gradlew -q dependencies --configuration runtimeClasspath 2>&1)",
+      "Bash(xargs wc -l)",
+      "Bash(gh api repos/proejct-team-alpha/documents/contents/ --jq '.[].name')",
+      "Bash(where gh)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)"
     ]
   }
 }
