@@ -16,9 +16,9 @@
 
 ### Phase 2 작업 상태 비고
 
-4 domain 엔티티 구현 ❌ Patient, Staff, Doctor, Department, Reservation, TreatmentRecord, Item, HospitalRule, LlmRecommendation
-5 StaffUserDetailsService 구현 ❌ Staff 엔티티 기반 로그인, SecurityConfig 주석 참고
-6 초기 데이터 (DataLoader) ❌ H2 in-memory용 테스트 계정 (admin01, staff01 등)
+4 domain 엔티티 구현 ✅ Patient, Staff, Doctor, Department, Reservation, TreatmentRecord, Item, HospitalRule, LlmRecommendation, ChatbotHistory
+5 StaffUserDetailsService 구현 ✅ Staff 엔티티 기반 로그인, SecurityConfig 주석 참고
+6 초기 데이터 (DataLoader) ✅ H2 in-memory용 테스트 계정 (admin01, staff01, doctor01, nurse01 / password123)
 
 ---
 
@@ -26,9 +26,9 @@
 
 ### Phase 3 작업 상태 비고
 
-7 LayoutModelInterceptor 구현 ❌ pageTitle, loginName, isAdmin/isDoctor/isNurse/isStaff, showChatbot, currentPath, dashboardUrl 주입 (documents §2)
-8 WebMvcConfig 인터셉터 등록 ❌ LayoutModelInterceptor 등록, /css, /js, /images, /error, /h2-console 제외
-9 SlotService / ReservationValidationService ❌ common/service 패키지 (30분 슬롯, 예약 검증)
+7 LayoutModelInterceptor 구현 ✅ pageTitle, loginName, isAdmin/isDoctor/isNurse/isStaff, showChatbot, currentPath, dashboardUrl 주입 (documents §2)
+8 WebMvcConfig 인터셉터 등록 ✅ LayoutModelInterceptor 등록, /css, /js, /images, /error, /h2-console 제외
+9 SlotService / ReservationValidationService ✅ common/service 패키지 (30분 슬롯, 예약 검증)
 
 ---
 
