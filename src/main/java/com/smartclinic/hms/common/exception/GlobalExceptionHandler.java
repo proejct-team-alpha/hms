@@ -29,7 +29,8 @@ import lombok.extern.slf4j.Slf4j;
  *   2. ConstraintViolationException    — @Validated (Path/Query 파라미터 검증 실패)
  *   3. CustomException                 — 도메인 비즈니스 예외
  *   4. EntityNotFoundException         — JPA 리소스 없음
- *   5. Exception                       — 예측 불가 예외 (폴백)
+ *   5. NoResourceFoundException       — 정적 리소스/라우트 없음
+ *   6. Exception                       — 예측 불가 예외 (폴백)
  *
  * ■ 응답 포맷
  *   { "success": false, "errorCode": "...", "message": "...",
@@ -170,10 +171,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleNoResourceFound(
             NoResourceFoundException ex, HttpServletRequest req) {
 
-        log.warn("[GlobalExceptionHandler] 리소스 없음: path={}", req.getRequestURI());
+        log.debug("[GlobalExceptionHandler] 리소스 없음: path={}", req.getRequestURI());
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ErrorResponse.of("RESOURCE_NOT_FOUND", ex.getMessage(), req));
+                .body(ErrorResponse.of("ROUTE_NOT_FOUND", ex.getMessage(), req));
     }
 
     // ════════════════════════════════════════════════════════════════════════
