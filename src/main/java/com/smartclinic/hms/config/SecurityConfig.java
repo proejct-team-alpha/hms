@@ -162,13 +162,6 @@ public class SecurityConfig {
                 .accessDeniedPage("/error/403")
             )
 
-            // ── 보안 헤더 ─────────────────────────────────────────────────
-            // H2 콘솔이 iframe을 사용하므로 sameOrigin 허용 (개발용).
-            // 운영 환경에서 H2 콘솔을 비활성화하면 기본값(DENY)으로 복원 권장.
-            .headers(headers -> headers
-                .frameOptions(frame -> frame.sameOrigin())
-            )
-
             .build();
     }
 
