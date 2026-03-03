@@ -37,7 +37,7 @@ public class ClaudeApiConfig {
     private static final String ANTHROPIC_VERSION = "2023-06-01";
 
     /** 환경 변수 CLAUDE_API_KEY 로 주입 */
-    @Value("${claude.api.key}")
+    @Value("${claude.api.key:}")
     private String apiKey;
 
     /** 연결·읽기 타임아웃 (기본 5초, application.properties 변경 가능) */
