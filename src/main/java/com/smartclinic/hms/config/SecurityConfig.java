@@ -9,8 +9,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -207,6 +210,19 @@ public class SecurityConfig {
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    InMemoryUserDetailsManager userDetailsService(PasswordEncoder encoder) {
+        UserDetails admin = User.builder().username("admin01").password(encoder.encode("password123")).roles("ADMIN")
+                .build();
+        UserDetails staff = User.builder().username("staff01").password(encoder.encode("password123")).roles("STAFF")
+                .build();
+        UserDetails doctor = User.builder().username("doctor01").password(encoder.encode("password123")).roles("DOCTOR")
+                .build();
+        UserDetails nurse = User.builder().username("nurse01").password(encoder.encode("password123")).roles("NURSE")
+                .build();
+        return new InMemoryUserDetailsManager(admin, staff, doctor, nurse);
     }
 
     /**
