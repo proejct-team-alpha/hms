@@ -4,36 +4,132 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MediCare+ - 스마트 병원 예약 및 업무 관리 시스템</title>
-    <link rel="stylesheet" href="/css/tailwind.min.css">
-    <script src="/js/lucide.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* iframe 스크롤바 스타일링 */
+        iframe::-webkit-scrollbar {
+            width: 8px;
+        }
+        iframe::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        iframe::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        iframe::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex flex-col items-center justify-center p-6">
-    <div class="text-center mb-12">
-        <div class="w-20 h-20 bg-indigo-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-6 shadow-lg">
-            <i data-lucide="stethoscope" class="w-10 h-10"></i>
-        </div>
-        <h1 class="text-4xl font-bold text-slate-800 mb-4">MediCare+</h1>
-        <p class="text-lg text-slate-500">스마트 병원 예약 및 업무 관리 시스템</p>
+<body class="bg-slate-50 h-screen overflow-hidden flex">
+    <!-- Sidebar -->
+    <div id="sidebar-container" class="h-full shrink-0"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden">
+        <!-- Header -->
+        <div id="header-container" class="shrink-0"></div>
+
+        <!-- Page Content (iframe) -->
+        <main class="flex-1 overflow-hidden relative bg-slate-50/50">
+            <iframe 
+                id="content-frame" 
+                src="views/main/dashboard.html" 
+                class="absolute inset-0 w-full h-full border-none"
+                title="메인 콘텐츠"
+            ></iframe>
+        </main>
+
+        <!-- Footer -->
+        <div id="footer-container" class="shrink-0"></div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
-        <a href="/reservation/symptom" class="bg-white p-10 rounded-3xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-300 transition-all group flex flex-col items-center text-center cursor-pointer block">
-            <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mb-6 group-hover:scale-110 transition-transform">
-                <i data-lucide="user" class="w-8 h-8"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-slate-800 mb-2">환자용</h2>
-            <p class="text-slate-500">진료 예약 및 확인</p>
-        </a>
+    <script>
+        // 공통 컴포넌트 로드
+        async function loadPartials() {
+            try {
+                const [headerRes, sidebarRes, footerRes] = await Promise.all([
+                    fetch('views/partials/header.html'),
+                    fetch('views/main/sidebar.html'),
+                    fetch('views/partials/footer.html')
+                ]);
 
-        <a href="/login" class="bg-white p-10 rounded-3xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-300 transition-all group flex flex-col items-center text-center cursor-pointer block">
-            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 mb-6 group-hover:scale-110 transition-transform">
-                <i data-lucide="shield-check" class="w-8 h-8"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-slate-800 mb-2">직원용</h2>
-            <p class="text-slate-500">업무 시스템 로그인</p>
-        </a>
-    </div>
+                const headerHtml = await headerRes.text();
+                const sidebarHtml = await sidebarRes.text();
+                const footerHtml = await footerRes.text();
 
-    <script src="/js/app.js"></script>
+                document.getElementById('header-container').innerHTML = headerHtml;
+                document.getElementById('sidebar-container').innerHTML = sidebarHtml;
+                document.getElementById('footer-container').innerHTML = footerHtml;
+
+                // 아이콘 초기화
+                lucide.createIcons();
+                
+                // 네비게이션 설정
+                setupNavigation();
+            } catch (error) {
+                console.error('컴포넌트 로드 실패:', error);
+            }
+        }
+
+        // 네비게이션 설정
+        function setupNavigation() {
+            const iframe = document.getElementById('content-frame');
+            const navItems = document.querySelectorAll('.nav-item');
+            const headerTitle = document.getElementById('header-title');
+            const headerDesc = document.getElementById('header-desc');
+
+            // 페이지별 타이틀 매핑
+            const titleMap = {
+                'dashboard.html': { title: '홈', desc: '스마트 병원 예약 및 업무 관리 시스템' },
+                'login.html': { title: '직원 로그인', desc: '병원 업무 시스템에 접속합니다.' },
+                'role-selection.html': { title: '권한 선택', desc: '이용하실 업무 시스템을 선택해주세요.' }
+            };
+
+            // iframe 로드 완료 이벤트
+            iframe.addEventListener('load', () => {
+                try {
+                    const currentPath = iframe.contentWindow.location.pathname.split('/').pop();
+                    
+                    // 사이드바 활성 상태 업데이트
+                    navItems.forEach(item => {
+                        const itemPath = item.getAttribute('data-path');
+                        if (currentPath === itemPath) {
+                            item.classList.add('bg-indigo-50', 'text-indigo-600');
+                            item.classList.remove('text-slate-600');
+                        } else {
+                            item.classList.remove('bg-indigo-50', 'text-indigo-600');
+                            item.classList.add('text-slate-600');
+                        }
+                    });
+
+                    // 헤더 타이틀 업데이트
+                    const pageInfo = titleMap[currentPath];
+                    if (pageInfo && headerTitle) {
+                        headerTitle.textContent = pageInfo.title;
+                        if (headerDesc) headerDesc.textContent = pageInfo.desc;
+                    }
+                } catch (e) {
+                    console.error('iframe 접근 오류 (CORS 등):', e);
+                }
+            });
+
+            // 사이드바 링크 클릭 이벤트
+            navItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const path = item.getAttribute('data-path');
+                    if (path && path !== '#') {
+                        iframe.src = 'views/main/' + path;
+                    }
+                });
+            });
+        }
+
+        // 초기화 실행
+        document.addEventListener('DOMContentLoaded', loadPartials);
+    </script>
 </body>
 </html>
