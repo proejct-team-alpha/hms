@@ -1,0 +1,22 @@
+{
+  "name": "hms-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "HMS (Hospital Management System) frontend assets",
+  "scripts": {
+    "build:css": "npx @tailwindcss/cli -i src/main/resources/static/css/input.css -o src/main/resources/static/css/tailwind.min.css --minify",
+    "build:js": "node scripts/copy-vendor.js",
+    "build": "npm run build:css && npm run build:js",
+    "watch:css": "npx @tailwindcss/cli -i src/main/resources/static/css/input.css -o src/main/resources/static/css/tailwind.min.css --watch",
+    "dev": "npm run build:js && npm run watch:css"
+  },
+  "dependencies": {
+    "chart.js": "^4.4.8",
+    "lucide": "^0.474.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.14",
+    "tailwindcss": "^4.1.14"
+  }
+}

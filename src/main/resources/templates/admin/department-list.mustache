@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>진료과 관리</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <script src="/js/lucide.min.js"></script>
 </head>
 <body class="bg-slate-50 min-h-screen p-6">
     <div class="max-w-7xl mx-auto space-y-6">
@@ -206,35 +206,7 @@
         </div>
     </div>
 
-    <script>
-        // 아이콘 초기화
-        lucide.createIcons();
-
-        // 모달 관리
-        const modal = document.getElementById('deptModal');
-        const form = document.getElementById('deptForm');
-
-        function openModal(name = '', code = '', count = 0, status = 'ACTIVE') {
-            document.getElementById('modalTitle').textContent = name ? '진료과 수정' : '진료과 등록';
-            document.getElementById('deptName').value = name;
-            document.getElementById('deptCode').value = code;
-            document.getElementById('deptDoctorCount').value = count;
-            document.getElementById('deptStatus').value = status;
-            
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-
-        function closeModal() {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('저장되었습니다.');
-            closeModal();
-        });
-    </script>
+    <script src="/js/app.js"></script>
+    <script src="/js/pages/admin-department-list.js"></script>
 </body>
 </html>
