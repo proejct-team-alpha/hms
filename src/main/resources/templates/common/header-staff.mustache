@@ -1,10 +1,10 @@
 {{! H2 — 내부 직원 헤더. L2 레이아웃 (화면 06~36) }}
-<header class="header-staff">
+<header class="l-header--staff">
   <a href="{{dashboardUrl}}">🏥 HMS 내부 시스템</a>
   <span class="page-title">{{pageTitle}}</span>
   <div class="user-info">
     <span>{{loginName}} ({{#isAdmin}}ADMIN{{/isAdmin}}{{#isDoctor}}DOCTOR{{/isDoctor}}{{#isNurse}}NURSE{{/isNurse}}{{#isStaff}}STAFF{{/isStaff}})</span>
-    <form method="post" action="/logout" style="display:inline;">
+    <form method="post" action="/logout" class="u-inline-form">
       <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
       <button type="submit">로그아웃</button>
     </form>

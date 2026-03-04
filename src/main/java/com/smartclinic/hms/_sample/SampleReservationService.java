@@ -120,6 +120,23 @@ public class SampleReservationService {
     public void receive(Long reservationId) {
         SampleReservation reservation = findById(reservationId);
 
+        /*
+         * ── [보안] IDOR 방지 — 객체 수준 권한 검증 (실제 구현 시 필수) ──
+         * ID만으로 리소스에 접근하면 다른 사용자의 데이터를 조작할 수 있음.
+         * SecurityContextHolder에서 현재 로그인 사용자를 확인하여 소유권/권한 검증 필요.
+         *
+         * 예시:
+         * Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+         * String username = auth.getName();
+         * Staff currentStaff = staffRepository.findByUsername(username)
+         *         .orElseThrow(() -> CustomException.unauthorized("인증 정보를 찾을 수 없습니다."));
+         *
+         * // 접수 직원은 자기 부서 예약만 접수 가능하도록 제한
+         * if (!currentStaff.getDepartment().getId().equals(reservation.getDepartmentId())) {
+         *     throw CustomException.forbidden("해당 예약에 대한 접수 권한이 없습니다.");
+         * }
+         */
+
         // 도메인 메서드가 상태 검증 포함 — 잘못된 상태 시 IllegalStateException
         try {
             reservation.receive();
@@ -166,6 +183,19 @@ public class SampleReservationService {
     @Transactional
     public void cancel(Long reservationId) {
         SampleReservation reservation = findById(reservationId);
+
+        /*
+         * ── [보안] IDOR 방지 — 객체 수준 권한 검증 (실제 구현 시 필수) ──
+         * 관리자 전용 취소의 경우에도 로그인 사용자의 ROLE 검증 권장.
+         *
+         * 예시:
+         * Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+         * boolean isAdmin = auth.getAuthorities().stream()
+         *         .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+         * if (!isAdmin) {
+         *     throw CustomException.forbidden("예약 취소 권한이 없습니다.");
+         * }
+         */
 
         try {
             reservation.cancel();

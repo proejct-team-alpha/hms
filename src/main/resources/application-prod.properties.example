@@ -69,7 +69,12 @@ logging.file.max-size=50MB
 logging.file.max-history=90
 
 # ------------------------------------------------------------------------------
+# 세션 쿠키 보안 (운영: HTTPS 필수)
+# ------------------------------------------------------------------------------
+server.servlet.session.cookie.secure=true
+
+# ------------------------------------------------------------------------------
 # 에러 페이지 (운영: 스택트레이스 비노출)
 # ------------------------------------------------------------------------------
-server.error.include-message=always
+server.error.include-message=never
 server.error.include-stacktrace=never
