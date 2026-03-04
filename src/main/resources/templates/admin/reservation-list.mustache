@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>예약 취소 관리</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <script src="/js/lucide.min.js"></script>
 </head>
 <body class="bg-slate-50 min-h-screen p-6">
     <div class="max-w-7xl mx-auto space-y-6">
@@ -225,40 +225,6 @@
         </div>
     </div>
 
-    <script>
-        // 아이콘 초기화
-        lucide.createIcons();
-
-        // 모달 관리
-        const modal = document.getElementById('patientModal');
-
-        function openModal(name, phone, dept, doctor, time, status, symptoms) {
-            document.getElementById('modalName').textContent = name;
-            document.getElementById('modalPhone').textContent = phone;
-            document.getElementById('modalDept').textContent = dept;
-            document.getElementById('modalDoctor').textContent = doctor;
-            document.getElementById('modalTime').textContent = time;
-            document.getElementById('modalSymptoms').textContent = symptoms || '등록된 증상 정보가 없습니다.';
-            
-            const statusEl = document.getElementById('modalStatus');
-            statusEl.textContent = status;
-            
-            // 상태에 따른 색상 변경
-            statusEl.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold';
-            if (status === 'RESERVED') statusEl.classList.add('bg-indigo-100', 'text-indigo-800');
-            else if (status === 'RECEIVED') statusEl.classList.add('bg-green-100', 'text-green-800');
-            else if (status === 'COMPLETED') statusEl.classList.add('bg-blue-100', 'text-blue-800');
-            else if (status === 'IN_PROGRESS') statusEl.classList.add('bg-purple-100', 'text-purple-800');
-            else statusEl.classList.add('bg-red-100', 'text-red-800');
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-
-        function closeModal() {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-    </script>
+    <script src="/js/app.js"></script>
 </body>
 </html>

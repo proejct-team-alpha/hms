@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>직원 등록/수정</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <script src="/js/lucide.min.js"></script>
 </head>
 <body class="bg-slate-50 min-h-screen p-6">
     <div class="max-w-2xl mx-auto space-y-6">
@@ -127,64 +127,7 @@
         </div>
     </div>
 
-    <script>
-        // 아이콘 초기화
-        lucide.createIcons();
-
-        // URL 파라미터 확인 (수정 모드인지 확인)
-        const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('id');
-
-        if (id) {
-            document.getElementById('pageTitle').textContent = '직원 정보 수정';
-            document.getElementById('staffPassword').placeholder = '변경할 경우에만 입력';
-            document.getElementById('staffPassword').required = false;
-            document.getElementById('staffConfirmPassword').required = false;
-            
-            // 모의 데이터 로드
-            if (id === '1') {
-                document.getElementById('staffName').value = '김관리';
-                document.getElementById('staffRole').value = 'ADMIN';
-                document.getElementById('staffDept').value = '행정부';
-                document.getElementById('staffPhone').value = '010-1111-2222';
-            } else if (id === '2') {
-                document.getElementById('staffName').value = '이의사';
-                document.getElementById('staffRole').value = 'DOCTOR';
-                document.getElementById('staffDept').value = '내과';
-                document.getElementById('staffPhone').value = '010-3333-4444';
-            } else if (id === '3') {
-                document.getElementById('staffName').value = '박간호';
-                document.getElementById('staffRole').value = 'NURSE';
-                document.getElementById('staffDept').value = '외래간호팀';
-                document.getElementById('staffPhone').value = '010-5555-6666';
-            } else if (id === '4') {
-                document.getElementById('staffName').value = '최원무';
-                document.getElementById('staffRole').value = 'STAFF';
-                document.getElementById('staffDept').value = '원무과';
-                document.getElementById('staffPhone').value = '010-7777-8888';
-            }
-        } else {
-            document.getElementById('staffPassword').required = true;
-            document.getElementById('staffConfirmPassword').required = true;
-        }
-
-        // 폼 제출 처리
-        document.getElementById('staffForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const password = document.getElementById('staffPassword').value;
-            const confirmPassword = document.getElementById('staffConfirmPassword').value;
-
-            if (password || confirmPassword) {
-                if (password !== confirmPassword) {
-                    alert('비밀번호가 일치하지 않습니다.');
-                    return;
-                }
-            }
-
-            alert('직원 정보가 저장되었습니다.');
-            window.location.href = 'staff-list.html';
-        });
-    </script>
+    <script src="/js/app.js"></script>
+    <script src="/js/pages/admin-staff-form.js"></script>
 </body>
 </html>

@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>예약 환자 접수</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <script src="/js/lucide.min.js"></script>
 </head>
 <body class="bg-slate-50 min-h-screen p-6">
     <div class="max-w-3xl mx-auto space-y-6">
@@ -123,57 +123,7 @@
         </div>
     </div>
 
-    <script>
-        // 아이콘 초기화
-        lucide.createIcons();
-
-        // URL 파라미터에서 환자 ID 가져오기 (모의 데이터 설정용)
-        const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('id');
-
-        // 모의 데이터 설정
-        if (id === '1') {
-            document.getElementById('patientName').textContent = '김철수';
-            document.getElementById('patientPhone').textContent = '010-1234-5678';
-            document.getElementById('patientType').textContent = 'ONLINE 예약';
-            document.getElementById('patientTime').textContent = '오늘 10:00';
-            document.getElementById('patientDept').textContent = '내과 / 김의사';
-            document.getElementById('patientSymptoms').textContent = '기침, 발열';
-        } else if (id === '2') {
-            document.getElementById('patientName').textContent = '이영희';
-            document.getElementById('patientPhone').textContent = '010-2345-6789';
-            document.getElementById('patientType').textContent = 'ONLINE 예약';
-            document.getElementById('patientTime').textContent = '오늘 09:30';
-            document.getElementById('patientDept').textContent = '정형외과 / 박의사';
-            document.getElementById('patientSymptoms').textContent = '허리 통증';
-        } else if (id === '3') {
-            document.getElementById('patientName').textContent = '박지민';
-            document.getElementById('patientPhone').textContent = '010-3456-7890';
-            document.getElementById('patientType').textContent = 'WALKIN 예약';
-            document.getElementById('patientTime').textContent = '오늘 11:00';
-            document.getElementById('patientDept').textContent = '소아과 / 이의사';
-            document.getElementById('patientSymptoms').textContent = '복통';
-        } else {
-            document.getElementById('patientName').textContent = '알 수 없음';
-            document.getElementById('patientPhone').textContent = '정보 없음';
-            document.getElementById('patientTime').textContent = '정보 없음';
-            document.getElementById('patientDept').textContent = '정보 없음';
-        }
-
-        function handleReceive(event) {
-            const btn = event.currentTarget;
-            const originalContent = btn.innerHTML;
-            
-            // 로딩 상태 UI
-            btn.innerHTML = '<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> 접수 완료 처리 (RECEIVED)';
-            btn.disabled = true;
-            btn.classList.add('opacity-50');
-
-            setTimeout(() => {
-                alert('접수가 완료되었습니다.');
-                window.location.href = 'reception-list.html';
-            }, 1000);
-        }
-    </script>
+    <script src="/js/app.js"></script>
+    <script src="/js/pages/staff-reception-detail.js"></script>
 </body>
 </html>

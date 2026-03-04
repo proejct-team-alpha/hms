@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>간호사 대시보드</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <script src="/js/lucide.min.js"></script>
+    <script src="/js/chart.min.js"></script>
 </head>
 <body class="bg-slate-50 min-h-screen">
     <div class="max-w-7xl mx-auto p-6 space-y-6">
@@ -116,88 +116,6 @@
         </div>
     </div>
 
-    <script>
-        // 아이콘 초기화
-        lucide.createIcons();
-
-        // 차트 초기화
-        const ctx = document.getElementById('patientChart').getContext('2d');
-        
-        // 그라데이션 생성
-        const gradient = ctx.createLinearGradient(0, 0, 0, 250);
-        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
-        gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
-
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-                datasets: [{
-                    label: '환자 수',
-                    data: [5, 8, 12, 7, 15, 10, 6],
-                    borderColor: '#6366f1',
-                    backgroundColor: gradient,
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#ffffff',
-                    pointBorderColor: '#6366f1',
-                    pointBorderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        backgroundColor: '#ffffff',
-                        titleColor: '#1e293b',
-                        bodyColor: '#475569',
-                        borderColor: '#e2e8f0',
-                        borderWidth: 1,
-                        padding: 10,
-                        displayColors: false,
-                        callbacks: {
-                            label: function(context) {
-                                return context.parsed.y + '명';
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            color: '#64748b',
-                            font: {
-                                size: 12
-                            }
-                        }
-                    },
-                    y: {
-                        grid: {
-                            color: '#e2e8f0',
-                            drawBorder: false,
-                            borderDash: [3, 3]
-                        },
-                        ticks: {
-                            color: '#64748b',
-                            font: {
-                                size: 12
-                            },
-                            stepSize: 5
-                        }
-                    }
-                }
-            }
-        });
-    </script>
+    <script src="/js/app.js"></script>
 </body>
 </html>

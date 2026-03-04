@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>물품 등록/수정</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <script src="/js/lucide.min.js"></script>
 </head>
 <body class="bg-slate-50 min-h-screen p-6">
     <div class="max-w-2xl mx-auto space-y-6">
@@ -118,39 +118,7 @@
         </div>
     </div>
 
-    <script>
-        // 아이콘 초기화
-        lucide.createIcons();
-
-        // URL 파라미터 확인 (수정 모드인지 확인)
-        const urlParams = new URLSearchParams(window.location.search);
-        const itemId = urlParams.get('id');
-
-        if (itemId) {
-            document.getElementById('pageTitle').textContent = '물품 정보 수정';
-            
-            // Mock 데이터 채우기
-            if (itemId === '1') {
-                document.getElementById('itemName').value = '주사기 (10ml)';
-                document.getElementById('itemCategory').value = '의료소모품';
-                document.getElementById('itemStock').value = '50';
-                document.getElementById('itemMinStock').value = '100';
-                document.getElementById('itemUnit').value = '개';
-            } else if (itemId === '2') {
-                document.getElementById('itemName').value = '타이레놀 정';
-                document.getElementById('itemCategory').value = '의약품';
-                document.getElementById('itemStock').value = '500';
-                document.getElementById('itemMinStock').value = '100';
-                document.getElementById('itemUnit').value = '정';
-            }
-        }
-
-        // 폼 제출 처리
-        document.getElementById('itemForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('물품 정보가 저장되었습니다.');
-            window.location.href = 'item-list.html';
-        });
-    </script>
+    <script src="/js/app.js"></script>
+    <script src="/js/pages/item-manager-item-form.js"></script>
 </body>
 </html>
