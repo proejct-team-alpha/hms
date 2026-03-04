@@ -1,21 +1,32 @@
-{{! S4 — ADMIN 사이드 메뉴. 화면 17~32, 36 }}
-<nav class="l-sidebar">
-  <h3>≡ 관리자 메뉴</h3>
-  <ul>
-    <li><a href="/admin/dashboard">🏠 대시보드</a></li>
-    <li><strong>▸ 예약 관리</strong></li>
-    <li><a href="/admin/reservation/list">📋 전체 예약 목록</a></li>
-    <li><a href="/admin/reception/list">📋 전체 접수 목록</a></li>
-    <li><strong>▸ 환자 관리</strong></li>
-    <li><a href="/admin/patient/list">👥 환자 목록</a></li>
-    <li><strong>▸ 직원 관리</strong></li>
-    <li><a href="/admin/staff/list">👔 직원 목록</a></li>
-    <li><strong>▸ 진료과 관리</strong></li>
-    <li><a href="/admin/department/list">🏥 진료과 목록</a></li>
-    <li><strong>▸ 물품 관리</strong></li>
-    <li><a href="/admin/item/list">📦 물품 목록</a></li>
-    <li><strong>▸ 규칙 관리</strong></li>
-    <li><a href="/admin/rule/list">📜 병원 규칙 목록</a></li>
-    <li><a href="/admin/mypage">👤 내 정보관리</a></li>
-  </ul>
-</nav>
+<aside class="w-64 bg-slate-900 text-slate-300 flex flex-col h-screen sticky top-0">
+    <div class="p-6 flex items-center gap-3 text-white">
+        <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
+            <i data-lucide="settings" class="w-5 h-5"></i>
+        </div>
+        <span class="text-xl font-bold tracking-tight">관리자 시스템</span>
+    </div>
+
+    <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        {{#navItems}}
+        <a href="{{url}}" target="contentFrame" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-colors {{#isActive}}bg-indigo-600 text-white{{/isActive}}">
+            <i data-lucide="{{icon}}" class="w-5 h-5"></i>
+            <span class="font-medium">{{label}}</span>
+        </a>
+        {{/navItems}}
+    </nav>
+
+    <div class="p-4 border-t border-slate-800">
+        <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-800 text-white">
+            <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
+                <span class="text-sm font-bold">{{roleName}}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium truncate">{{adminName}}</p>
+                <p class="text-xs text-slate-400 truncate">{{adminEmail}}</p>
+            </div>
+            <a href="{{logoutUrl}}" class="text-slate-400 hover:text-white">
+                <i data-lucide="log-out" class="w-5 h-5"></i>
+            </a>
+        </div>
+    </div>
+</aside>
