@@ -1,20 +1,182 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{pageTitle}} — HMS</title>
-  <link rel="stylesheet" href="/css/common.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 대시보드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
-  {{> common/header-staff}}
-  <div class="layout-body">
-    {{> common/sidebar-admin}}
-    <main class="main-content">
-      <h2>관리자 대시보드</h2>
-      <p>환영합니다. {{loginName}}님</p>
-    </main>
-  </div>
-  {{> common/footer-staff}}
+<body class="bg-slate-50 min-h-screen p-6">
+    <div class="max-w-7xl mx-auto space-y-6">
+        <h1 class="text-2xl font-bold text-slate-800">관리자 대시보드</h1>
+        
+        <!-- 통계 카드 -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                        <i data-lucide="users" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <div class="text-sm font-medium text-slate-500">총 직원 수</div>
+                        <div class="text-2xl font-bold text-slate-800">24명</div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
+                        <i data-lucide="calendar" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <div class="text-sm font-medium text-slate-500">오늘 예약 취소</div>
+                        <div class="text-2xl font-bold text-slate-800">3건</div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
+                        <i data-lucide="building-2" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <div class="text-sm font-medium text-slate-500">운영 진료과</div>
+                        <div class="text-2xl font-bold text-slate-800">5개</div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600">
+                        <i data-lucide="shield-check" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <div class="text-sm font-medium text-slate-500">활성 규칙</div>
+                        <div class="text-2xl font-bold text-slate-800">12개</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 일별 환자 수 추이 차트 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-bold text-slate-800">일별 환자 수 추이</h2>
+                    <i data-lucide="trending-up" class="w-5 h-5 text-indigo-500"></i>
+                </div>
+                <div class="h-[300px] w-full relative">
+                    <canvas id="patientChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 카테고리별 물품 재고 현황 차트 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-bold text-slate-800">카테고리별 물품 재고 현황</h2>
+                    <i data-lucide="package" class="w-5 h-5 text-orange-500"></i>
+                </div>
+                <div class="h-[300px] w-full relative">
+                    <canvas id="inventoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 아이콘 초기화
+        lucide.createIcons();
+
+        // 환자 수 차트
+        const patientCtx = document.getElementById('patientChart').getContext('2d');
+        new Chart(patientCtx, {
+            type: 'line',
+            data: {
+                labels: ['02/25', '02/26', '02/27', '02/28', '03/01', '03/02', '03/03'],
+                datasets: [{
+                    label: '환자 수',
+                    data: [45, 52, 38, 65, 48, 55, 42],
+                    borderColor: '#6366f1',
+                    backgroundColor: '#6366f1',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#6366f1',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#ffffff',
+                        titleColor: '#1e293b',
+                        bodyColor: '#475569',
+                        borderColor: '#e2e8f0',
+                        borderWidth: 1,
+                        padding: 12
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#64748b', font: { size: 12 } }
+                    },
+                    y: {
+                        grid: { color: '#f1f5f9', drawBorder: false, borderDash: [3, 3] },
+                        ticks: { color: '#64748b', font: { size: 12 } }
+                    }
+                }
+            }
+        });
+
+        // 재고 현황 차트 (가로 막대)
+        const inventoryCtx = document.getElementById('inventoryChart').getContext('2d');
+        new Chart(inventoryCtx, {
+            type: 'bar',
+            data: {
+                labels: ['의료소모품', '의약품', '사무용품', '기타비품'],
+                datasets: [{
+                    label: '재고량',
+                    data: [85, 62, 45, 30],
+                    backgroundColor: '#f59e0b',
+                    borderRadius: 4,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#ffffff',
+                        titleColor: '#1e293b',
+                        bodyColor: '#475569',
+                        borderColor: '#e2e8f0',
+                        borderWidth: 1,
+                        padding: 12
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: '#f1f5f9', drawBorder: false, borderDash: [3, 3] },
+                        ticks: { display: false }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { color: '#64748b', font: { size: 12 } }
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>

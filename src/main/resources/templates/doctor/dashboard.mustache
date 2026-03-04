@@ -1,20 +1,118 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{pageTitle}} — HMS</title>
-  <link rel="stylesheet" href="/css/common.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>의사 대시보드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body>
-  {{> common/header-staff}}
-  <div class="layout-body">
-    {{> common/sidebar-doctor}}
-    <main class="main-content">
-      <h2>의사 대시보드</h2>
-      <p>환영합니다. {{loginName}}님</p>
-    </main>
-  </div>
-  {{> common/footer-staff}}
+<body class="bg-slate-50 min-h-screen p-6">
+    <div class="max-w-7xl mx-auto space-y-6">
+        <h1 class="text-2xl font-bold text-slate-800">의사 대시보드</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                        <i data-lucide="users" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <div class="text-sm font-medium text-slate-500">오늘 진료 환자 수</div>
+                        <div class="text-2xl font-bold text-slate-800">5명</div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
+                        <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <div class="text-sm font-medium text-slate-500">진료 완료</div>
+                        <div class="text-2xl font-bold text-slate-800">1명</div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
+                        <i data-lucide="clock" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <div class="text-sm font-medium text-slate-500">현재 대기 중</div>
+                        <div class="text-2xl font-bold text-slate-800">1명</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="calendar" class="w-5 h-5 text-indigo-600"></i>
+                    오늘의 진료 일정 미리 보기
+                </h2>
+                <a href="treatment-list.html" class="text-sm text-indigo-600 font-medium flex items-center gap-1 hover:text-indigo-800">
+                    진료 목록 전체보기 <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </a>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- 진료 중 환자 -->
+                <a href="treatment-detail.html?id=3" class="block p-4 rounded-xl border transition-all cursor-pointer hover:shadow-md bg-indigo-50 border-indigo-200 ring-2 ring-indigo-100">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-sm font-bold text-slate-500">10:00</span>
+                        <span class="text-xs font-bold px-2 py-1 rounded-lg bg-indigo-600 text-white">
+                            진료 중
+                        </span>
+                    </div>
+                    <div class="font-bold text-slate-800 mb-1">강감찬</div>
+                    <div class="text-xs text-slate-500 truncate">복통</div>
+                </a>
+
+                <!-- 예약 환자 1 -->
+                <a href="treatment-detail.html?id=1" class="block p-4 rounded-xl border transition-all cursor-pointer hover:shadow-md bg-white border-slate-200">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-sm font-bold text-slate-500">09:00</span>
+                        <span class="text-xs font-bold px-2 py-1 rounded-lg bg-slate-100 text-slate-400">
+                            예약
+                        </span>
+                    </div>
+                    <div class="font-bold text-slate-800 mb-1">홍길동</div>
+                    <div class="text-xs text-slate-500 truncate">기침, 발열</div>
+                </a>
+
+                <!-- 진료 대기 환자 -->
+                <a href="treatment-detail.html?id=7" class="block p-4 rounded-xl border transition-all cursor-pointer hover:shadow-md bg-white border-slate-200">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-sm font-bold text-slate-500">13:00</span>
+                        <span class="text-xs font-bold px-2 py-1 rounded-lg bg-orange-100 text-orange-600">
+                            진료 대기
+                        </span>
+                    </div>
+                    <div class="font-bold text-slate-800 mb-1">안중근</div>
+                    <div class="text-xs text-slate-500 truncate">소화불량</div>
+                </a>
+
+                <!-- 예약 환자 2 -->
+                <a href="treatment-detail.html?id=11" class="block p-4 rounded-xl border transition-all cursor-pointer hover:shadow-md bg-white border-slate-200">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-sm font-bold text-slate-500">15:00</span>
+                        <span class="text-xs font-bold px-2 py-1 rounded-lg bg-slate-100 text-slate-400">
+                            예약
+                        </span>
+                    </div>
+                    <div class="font-bold text-slate-800 mb-1">유재석</div>
+                    <div class="text-xs text-slate-500 truncate">피로감</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 아이콘 초기화
+        lucide.createIcons();
+    </script>
 </body>
 </html>

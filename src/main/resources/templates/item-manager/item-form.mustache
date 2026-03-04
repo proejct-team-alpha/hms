@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>물품 등록/수정</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-50 min-h-screen p-6">
+    <div class="max-w-2xl mx-auto space-y-6">
+        <!-- 헤더 -->
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+                    <i data-lucide="package" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800" id="pageTitle">물품 등록</h1>
+                    <p class="text-slate-500 mt-1">병원에서 사용하는 물품의 재고와 최소 수량을 관리합니다.</p>
+                </div>
+            </div>
+            <a href="item-list.html" class="text-sm font-medium text-slate-500 hover:text-slate-700">
+                목록으로 돌아가기
+            </a>
+        </div>
+
+        <!-- 폼 영역 -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+            <form id="itemForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">물품명</label>
+                        <div class="relative">
+                            <i data-lucide="package" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                            <input
+                                type="text"
+                                id="itemName"
+                                required
+                                class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                                placeholder="예: 알코올 솜"
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">카테고리</label>
+                        <div class="relative">
+                            <i data-lucide="layers" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                            <select
+                                id="itemCategory"
+                                required
+                                class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
+                            >
+                                <option value="의료소모품">의료소모품</option>
+                                <option value="의약품">의약품</option>
+                                <option value="사무용품">사무용품</option>
+                                <option value="기타비품">기타비품</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">현재 재고 수량</label>
+                        <div class="relative">
+                            <i data-lucide="hash" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                            <input
+                                type="number"
+                                id="itemStock"
+                                required
+                                min="0"
+                                value="0"
+                                class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">최소 유지 수량</label>
+                        <div class="relative">
+                            <i data-lucide="hash" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                            <input
+                                type="number"
+                                id="itemMinStock"
+                                required
+                                min="0"
+                                value="0"
+                                class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">단위</label>
+                        <input
+                            type="text"
+                            id="itemUnit"
+                            required
+                            value="개"
+                            class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                            placeholder="예: 개, 박스, 정"
+                        />
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t border-slate-200 flex justify-end gap-3">
+                    <a href="item-list.html" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors inline-block">
+                        취소
+                    </a>
+                    <button
+                        type="submit"
+                        class="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2"
+                    >
+                        <i data-lucide="save" class="w-5 h-5"></i>
+                        저장하기
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 아이콘 초기화
+        lucide.createIcons();
+
+        // URL 파라미터 확인 (수정 모드인지 확인)
+        const urlParams = new URLSearchParams(window.location.search);
+        const itemId = urlParams.get('id');
+
+        if (itemId) {
+            document.getElementById('pageTitle').textContent = '물품 정보 수정';
+            
+            // Mock 데이터 채우기
+            if (itemId === '1') {
+                document.getElementById('itemName').value = '주사기 (10ml)';
+                document.getElementById('itemCategory').value = '의료소모품';
+                document.getElementById('itemStock').value = '50';
+                document.getElementById('itemMinStock').value = '100';
+                document.getElementById('itemUnit').value = '개';
+            } else if (itemId === '2') {
+                document.getElementById('itemName').value = '타이레놀 정';
+                document.getElementById('itemCategory').value = '의약품';
+                document.getElementById('itemStock').value = '500';
+                document.getElementById('itemMinStock').value = '100';
+                document.getElementById('itemUnit').value = '정';
+            }
+        }
+
+        // 폼 제출 처리
+        document.getElementById('itemForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('물품 정보가 저장되었습니다.');
+            window.location.href = 'item-list.html';
+        });
+    </script>
+</body>
+</html>
