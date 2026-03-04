@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>병원 규칙 등록/수정</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <script src="/js/lucide.min.js"></script>
 </head>
 <body class="bg-slate-50 min-h-screen p-6">
     <div class="max-w-2xl mx-auto space-y-6">
@@ -93,56 +93,7 @@
         </div>
     </div>
 
-    <script>
-        // 아이콘 초기화
-        lucide.createIcons();
-
-        // URL 파라미터 확인 (수정 모드인지 확인)
-        const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('id');
-
-        if (id) {
-            document.getElementById('pageTitle').textContent = '병원 규칙 수정';
-            
-            // 모의 데이터 로드
-            if (id === '1') {
-                document.getElementById('ruleTitle').value = '면회 시간 안내';
-                document.getElementById('ruleCategory').value = '일반안내';
-                document.getElementById('ruleContent').value = '평일: 18:00~20:00, 주말: 10:00~12:00, 18:00~20:00';
-                document.getElementById('ruleIsActive').checked = true;
-            } else if (id === '2') {
-                document.getElementById('ruleTitle').value = '주차 요금 안내';
-                document.getElementById('ruleCategory').value = '주차/시설';
-                document.getElementById('ruleContent').value = '외래 진료 환자 4시간 무료, 입원 환자 보호자 1대 무료';
-                document.getElementById('ruleIsActive').checked = true;
-            } else if (id === '3') {
-                document.getElementById('ruleTitle').value = '코로나19 관련 지침 (구버전)';
-                document.getElementById('ruleCategory').value = '방역지침';
-                document.getElementById('ruleContent').value = '모든 내원객 마스크 착용 의무화';
-                document.getElementById('ruleIsActive').checked = false;
-            }
-            toggleActiveIcon();
-        }
-
-        // 활성화 체크박스 아이콘 토글
-        function toggleActiveIcon() {
-            const isActive = document.getElementById('ruleIsActive').checked;
-            const container = document.getElementById('activeIconContainer');
-            
-            if (isActive) {
-                container.innerHTML = '<i data-lucide="check-circle-2" class="w-5 h-5 text-green-500"></i>';
-            } else {
-                container.innerHTML = '<i data-lucide="x-circle" class="w-5 h-5 text-slate-400"></i>';
-            }
-            lucide.createIcons();
-        }
-
-        // 폼 제출 처리
-        document.getElementById('ruleForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('규칙이 저장되었습니다.');
-            window.location.href = 'rule-list.html';
-        });
-    </script>
+    <script src="/js/app.js"></script>
+    <script src="/js/pages/admin-rule-form.js"></script>
 </body>
 </html>

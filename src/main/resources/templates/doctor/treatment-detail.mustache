@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>진료실</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <script src="/js/lucide.min.js"></script>
 </head>
 <body class="bg-slate-50 min-h-screen p-6">
     <div class="max-w-4xl mx-auto space-y-6">
@@ -101,51 +101,7 @@
         </div>
     </div>
 
-    <script>
-        // 아이콘 초기화
-        lucide.createIcons();
-
-        // URL 파라미터에서 환자 ID 가져오기 (모의 데이터 설정용)
-        const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('id');
-
-        // 모의 데이터 설정
-        if (id === '3') {
-            document.getElementById('patientName').textContent = '강감찬';
-            document.getElementById('patientSymptoms').textContent = '복통';
-        } else if (id === '7') {
-            document.getElementById('patientName').textContent = '안중근';
-            document.getElementById('patientSymptoms').textContent = '소화불량';
-        } else if (id === '1') {
-            document.getElementById('patientName').textContent = '홍길동';
-            document.getElementById('patientSymptoms').textContent = '기침, 발열';
-        } else if (id === '11') {
-            document.getElementById('patientName').textContent = '유재석';
-            document.getElementById('patientSymptoms').textContent = '피로감';
-        } else {
-            document.getElementById('patientName').textContent = '알 수 없음';
-            document.getElementById('patientSymptoms').textContent = '정보 없음';
-        }
-
-        function handleComplete() {
-            const notes = document.getElementById('treatmentNotes').value;
-            if (!notes.trim()) {
-                alert('진료 기록을 입력해주세요.');
-                return;
-            }
-            
-            // 처리 중 UI 시뮬레이션
-            const btn = event.currentTarget;
-            const originalContent = btn.innerHTML;
-            btn.innerHTML = '<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> 진료 완료';
-            btn.disabled = true;
-            btn.classList.add('opacity-50');
-
-            setTimeout(() => {
-                alert('진료가 완료되었습니다.');
-                window.location.href = 'treatment-list.html';
-            }, 1000);
-        }
-    </script>
+    <script src="/js/app.js"></script>
+    <script src="/js/pages/doctor-treatment-detail.js"></script>
 </body>
 </html>
