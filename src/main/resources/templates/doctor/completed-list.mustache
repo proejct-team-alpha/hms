@@ -3,76 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>진료 완료 목록</title>
-    <link rel="stylesheet" href="/css/tailwind.min.css">
-    <script src="/js/lucide.min.js"></script>
+    <title>진료 완료 내역</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-slate-50 min-h-screen p-6">
+<body class="bg-slate-50 p-6">
     <div class="max-w-7xl mx-auto space-y-6">
         <div class="flex items-center gap-3 mb-8">
             <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600">
-                <i data-lucide="clipboard-list" class="w-6 h-6"></i>
+                <i data-lucide="check-circle" class="w-6 h-6"></i>
             </div>
             <div>
-                <h1 class="text-2xl font-bold text-slate-800">진료 완료 목록</h1>
+                <h1 class="text-2xl font-bold text-slate-800">진료 완료 내역</h1>
                 <p class="text-slate-500 mt-1">오늘 진료가 완료된 환자 목록입니다.</p>
             </div>
+            
+            <form action="{{searchUrl}}" method="GET" class="relative w-full md:w-64 ml-auto">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                <input
+                    type="text"
+                    name="keyword"
+                    value="{{searchKeyword}}"
+                    placeholder="환자명 검색..."
+                    class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-sm"
+                />
+            </form>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- 완료 항목 -->
-            <div class="bg-white rounded-2xl p-6 border border-slate-200 transition-all cursor-pointer hover:shadow-md hover:border-green-300" onclick="location.href='treatment-detail.html?id=4'">
+            {{#completedPatients}}
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 opacity-80 hover:opacity-100 transition-opacity">
                 <div class="flex justify-between items-start mb-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-green-100 text-green-600">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 text-slate-400">
                             <i data-lucide="user" class="w-5 h-5"></i>
                         </div>
                         <div>
-                            <h3 class="font-bold text-slate-800 text-lg">유관순</h3>
+                            <h3 class="font-bold text-slate-800 text-lg">{{patientName}}</h3>
                             <div class="flex items-center gap-1.5 text-sm text-slate-500 font-medium">
                                 <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                                10:30
+                                {{time}}
                             </div>
                         </div>
                     </div>
-                    
-                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-green-600 text-white">
-                        진료 완료
-                    </span>
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-200 text-slate-600">진료 완료</span>
                 </div>
-
+                
                 <div class="bg-slate-50 rounded-xl p-3 text-sm text-slate-600 line-clamp-2 border border-slate-100">
-                    두통
+                    {{diagnosisRecord}}
                 </div>
-
+                
                 <div class="mt-4 flex justify-between items-center">
-                    <span class="text-xs font-medium px-2 py-1 rounded-md bg-blue-50 text-blue-600">
-                        ONLINE
-                    </span>
+                    <button onclick="location.href='{{recordUrl}}'" class="text-sm font-medium text-slate-600 hover:text-slate-800 flex items-center gap-1">
+                        <i data-lucide="file-text" class="w-4 h-4"></i> 기록 보기
+                    </button>
                     
-                    <span class="text-sm font-medium text-green-600 flex items-center gap-1">
-                        완료됨 <i data-lucide="check-circle-2" class="w-4 h-4"></i>
-                    </span>
+                    {{#isOnline}}<span class="text-xs font-medium px-2 py-1 rounded-md bg-blue-50 text-blue-600">온라인</span>{{/isOnline}}
+                    {{#isVisit}}<span class="text-xs font-medium px-2 py-1 rounded-md bg-orange-50 text-orange-600">방문</span>{{/isVisit}}
+                    {{#isPhone}}<span class="text-xs font-medium px-2 py-1 rounded-md bg-purple-50 text-purple-600">전화</span>{{/isPhone}}
                 </div>
             </div>
+            {{/completedPatients}}
+            
+            {{^completedPatients}}
+            <div class="col-span-full text-center py-10 text-slate-500">완료된 진료 내역이 없습니다.</div>
+            {{/completedPatients}}
         </div>
-        
-        <!-- 페이지네이션 -->
-        <div class="flex justify-center mt-8">
-            <nav class="flex items-center gap-1">
-                <button class="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-50" disabled>
-                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
-                </button>
-                <button class="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium bg-indigo-600 text-white">
-                    1
-                </button>
-                <button class="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-50" disabled>
-                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                </button>
-            </nav>
-        </div>
+
+        {{> partials/pagination}}
     </div>
 
-    <script src="/js/app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>

@@ -4,189 +4,75 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>진료 목록</title>
-    <link rel="stylesheet" href="/css/tailwind.min.css">
-    <script src="/js/lucide.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-slate-50 min-h-screen p-6">
+<body class="bg-slate-50 p-6">
     <div class="max-w-7xl mx-auto space-y-6">
-        <!-- 헤더 및 검색 -->
-        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
-                    <i data-lucide="stethoscope" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-800">진료 목록</h1>
-                    <p class="text-slate-500 mt-1">김의사 원장님의 오늘 전체 진료 일정입니다.</p>
-                </div>
+        <div class="flex items-center gap-3 mb-8">
+            <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+                <i data-lucide="stethoscope" class="w-6 h-6"></i>
             </div>
-            <div class="relative w-full md:w-64">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800">진료 목록</h1>
+                <p class="text-slate-500 mt-1">{{doctorName}} 원장님의 오늘 전체 진료 일정입니다.</p>
+            </div>
+            <div class="relative w-full md:w-64 ml-auto">
                 <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                <input
-                    type="text"
-                    placeholder="환자명 검색..."
-                    class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                />
+                <input type="text" placeholder="환자명 검색..." class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"/>
             </div>
         </div>
 
-        <!-- 진료 목록 그리드 -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- 진료 중 항목 -->
-            <div class="bg-white rounded-2xl p-6 border transition-all cursor-pointer hover:shadow-md border-indigo-500 shadow-sm ring-1 ring-indigo-500" onclick="location.href='treatment-detail.html?id=3'">
+            {{#patients}}
+            <div onclick="location.href='{{detailUrl}}'" class="bg-white rounded-2xl p-6 border transition-all cursor-pointer hover:shadow-md 
+                {{#isTreating}}border-indigo-500 shadow-sm ring-1 ring-indigo-500{{/isTreating}} 
+                {{^isTreating}}border-slate-200 hover:border-indigo-300{{/isTreating}}">
+                
                 <div class="flex justify-between items-start mb-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-indigo-100 text-indigo-600">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center {{#isTreating}}bg-indigo-100 text-indigo-600{{/isTreating}}{{^isTreating}}bg-slate-100 text-slate-500{{/isTreating}}">
                             <i data-lucide="user" class="w-5 h-5"></i>
                         </div>
                         <div>
-                            <h3 class="font-bold text-slate-800 text-lg">강감찬</h3>
+                            <h3 class="font-bold text-slate-800 text-lg">{{patientName}}</h3>
                             <div class="flex items-center gap-1.5 text-sm text-slate-500 font-medium">
                                 <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                                10:00
+                                {{time}}
                             </div>
                         </div>
                     </div>
-                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-600 text-white">
-                        진료 중
-                    </span>
+                    
+                    {{#isTreating}}<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-600 text-white">진료 중</span>{{/isTreating}}
+                    {{#isWaiting}}<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-600">진료 대기</span>{{/isWaiting}}
+                    {{#isReserved}}<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">예약</span>{{/isReserved}}
                 </div>
-
+                
                 <div class="bg-slate-50 rounded-xl p-3 text-sm text-slate-600 line-clamp-2 border border-slate-100">
-                    복통
+                    {{symptoms}}
                 </div>
-
+                
                 <div class="mt-4 flex justify-between items-center">
                     <div class="flex gap-2">
-                        <!-- 진료 중이므로 버튼 없음 -->
-                    </div>
-                    <span class="text-xs font-medium px-2 py-1 rounded-md bg-orange-50 text-orange-600">
-                        WALKIN
-                    </span>
-                </div>
-            </div>
-
-            <!-- 진료 대기 항목 -->
-            <div class="bg-white rounded-2xl p-6 border transition-all cursor-pointer hover:shadow-md border-slate-200 hover:border-indigo-300" onclick="location.href='treatment-detail.html?id=7'">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 text-slate-500">
-                            <i data-lucide="user" class="w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-slate-800 text-lg">안중근</h3>
-                            <div class="flex items-center gap-1.5 text-sm text-slate-500 font-medium">
-                                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                                13:00
-                            </div>
-                        </div>
-                    </div>
-                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-600">
-                        진료 대기
-                    </span>
-                </div>
-
-                <div class="bg-slate-50 rounded-xl p-3 text-sm text-slate-600 line-clamp-2 border border-slate-100">
-                    소화불량
-                </div>
-
-                <div class="mt-4 flex justify-between items-center">
-                    <div class="flex gap-2">
-                        <button onclick="event.stopPropagation(); alert('진료를 시작합니다.'); location.href='treatment-detail.html?id=7'" class="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                        {{#isWaiting}}
+                        <button onclick="event.stopPropagation(); location.href='{{startTreatmentUrl}}'" class="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
                             진료 시작
                         </button>
+                        {{/isWaiting}}
                     </div>
-                    <span class="text-xs font-medium px-2 py-1 rounded-md bg-purple-50 text-purple-600">
-                        PHONE
-                    </span>
+                    
+                    {{#isOnline}}<span class="text-xs font-medium px-2 py-1 rounded-md bg-blue-50 text-blue-600">온라인</span>{{/isOnline}}
+                    {{#isVisit}}<span class="text-xs font-medium px-2 py-1 rounded-md bg-orange-50 text-orange-600">방문</span>{{/isVisit}}
+                    {{#isPhone}}<span class="text-xs font-medium px-2 py-1 rounded-md bg-purple-50 text-purple-600">전화</span>{{/isPhone}}
                 </div>
             </div>
-
-            <!-- 예약 항목 1 -->
-            <div class="bg-white rounded-2xl p-6 border transition-all cursor-pointer hover:shadow-md border-slate-200 hover:border-indigo-300" onclick="location.href='treatment-detail.html?id=1'">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 text-slate-500">
-                            <i data-lucide="user" class="w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-slate-800 text-lg">홍길동</h3>
-                            <div class="flex items-center gap-1.5 text-sm text-slate-500 font-medium">
-                                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                                09:00
-                            </div>
-                        </div>
-                    </div>
-                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
-                        예약
-                    </span>
-                </div>
-
-                <div class="bg-slate-50 rounded-xl p-3 text-sm text-slate-600 line-clamp-2 border border-slate-100">
-                    기침, 발열
-                </div>
-
-                <div class="mt-4 flex justify-between items-center">
-                    <div class="flex gap-2">
-                        <!-- 예약 상태이므로 버튼 없음 -->
-                    </div>
-                    <span class="text-xs font-medium px-2 py-1 rounded-md bg-blue-50 text-blue-600">
-                        ONLINE
-                    </span>
-                </div>
-            </div>
-
-            <!-- 예약 항목 2 -->
-            <div class="bg-white rounded-2xl p-6 border transition-all cursor-pointer hover:shadow-md border-slate-200 hover:border-indigo-300" onclick="location.href='treatment-detail.html?id=11'">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 text-slate-500">
-                            <i data-lucide="user" class="w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-slate-800 text-lg">유재석</h3>
-                            <div class="flex items-center gap-1.5 text-sm text-slate-500 font-medium">
-                                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                                15:00
-                            </div>
-                        </div>
-                    </div>
-                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
-                        예약
-                    </span>
-                </div>
-
-                <div class="bg-slate-50 rounded-xl p-3 text-sm text-slate-600 line-clamp-2 border border-slate-100">
-                    피로감
-                </div>
-
-                <div class="mt-4 flex justify-between items-center">
-                    <div class="flex gap-2">
-                        <!-- 예약 상태이므로 버튼 없음 -->
-                    </div>
-                    <span class="text-xs font-medium px-2 py-1 rounded-md bg-blue-50 text-blue-600">
-                        ONLINE
-                    </span>
-                </div>
-            </div>
+            {{/patients}}
         </div>
+        
+        {{> partials/pagination}} </div>
 
-        <!-- 페이지네이션 -->
-        <div class="flex justify-center mt-8">
-            <nav class="flex items-center gap-1">
-                <button class="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-50" disabled>
-                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
-                </button>
-                <button class="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium bg-indigo-600 text-white">
-                    1
-                </button>
-                <button class="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-50" disabled>
-                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                </button>
-            </nav>
-        </div>
-    </div>
-
-    <script src="/js/app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>
