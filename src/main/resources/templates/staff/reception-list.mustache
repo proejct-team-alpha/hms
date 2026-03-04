@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>예약 환자 목록</title>
-    <link rel="stylesheet" href="/css/tailwind.min.css">
-    <script src="/js/lucide.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="bg-slate-50 min-h-screen p-6">
     <div class="max-w-7xl mx-auto space-y-6">
@@ -22,18 +22,18 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="p-4 border-b border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50">
+            <form action="{{searchUrl}}" method="GET" class="p-4 border-b border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50">
                 <div class="flex flex-wrap gap-2">
-                    <button class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-slate-800 text-white">
+                    <button type="submit" name="status" value="ALL" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors {{#isStatusAll}}bg-slate-800 text-white{{/isStatusAll}}{{^isStatusAll}}bg-white border border-slate-300 text-slate-600 hover:bg-slate-100{{/isStatusAll}}">
                         전체
                     </button>
-                    <button class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100">
+                    <button type="submit" name="status" value="RESERVED" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors {{#isStatusReserved}}bg-slate-800 text-white{{/isStatusReserved}}{{^isStatusReserved}}bg-white border border-slate-300 text-slate-600 hover:bg-slate-100{{/isStatusReserved}}">
                         예약 (접수 대기)
                     </button>
-                    <button class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100">
+                    <button type="submit" name="status" value="WAITING" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors {{#isStatusWaiting}}bg-slate-800 text-white{{/isStatusWaiting}}{{^isStatusWaiting}}bg-white border border-slate-300 text-slate-600 hover:bg-slate-100{{/isStatusWaiting}}">
                         진료 대기
                     </button>
-                    <button class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100">
+                    <button type="submit" name="status" value="COMPLETED" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors {{#isStatusCompleted}}bg-slate-800 text-white{{/isStatusCompleted}}{{^isStatusCompleted}}bg-white border border-slate-300 text-slate-600 hover:bg-slate-100{{/isStatusCompleted}}">
                         진료 완료
                     </button>
                 </div>
@@ -42,12 +42,14 @@
                         <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
                         <input 
                             type="text" 
+                            name="keyword"
+                            value="{{searchKeyword}}"
                             placeholder="환자명 또는 연락처 검색..." 
                             class="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-full"
                         />
                     </div>
                 </div>
-            </div>
+            </form>
 
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse min-w-[800px]">
@@ -63,142 +65,80 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200">
-                        <!-- 진료 대기 환자 -->
-                        <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="location.href='reception-detail.html?id=2'">
-                            <td class="p-4 text-sm font-medium text-slate-900">09:30</td>
-                            <td class="p-4 text-sm font-semibold text-slate-800">이영희</td>
-                            <td class="p-4 text-sm text-slate-600">010-2345-6789</td>
+                        {{#receptions}}
+                        <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="location.href='{{detailUrl}}'">
+                            <td class="p-4 text-sm font-medium text-slate-900">{{time}}</td>
+                            <td class="p-4 text-sm font-semibold text-slate-800">{{patientName}}</td>
+                            <td class="p-4 text-sm text-slate-600">{{phone}}</td>
                             <td class="p-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    ONLINE
-                                </span>
+                                {{#isOnline}}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">ONLINE</span>{{/isOnline}}
+                                {{#isWalkin}}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">WALKIN</span>{{/isWalkin}}
+                                {{#isPhone}}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">PHONE</span>{{/isPhone}}
                             </td>
-                            <td class="p-4 text-sm text-slate-600">정형외과 / 박의사</td>
+                            <td class="p-4 text-sm text-slate-600">{{department}} / {{doctorName}}</td>
                             <td class="p-4">
-                                <span class="inline-flex items-center gap-1.5 text-sm font-medium text-green-600">
-                                    <i data-lucide="check-circle" class="w-4 h-4"></i>
-                                    진료 대기
-                                </span>
-                            </td>
-                            <td class="p-4 text-right">
-                                <div class="flex justify-end gap-2">
-                                    <button onclick="event.stopPropagation(); if(confirm('예약을 취소하시겠습니까?')) alert('취소되었습니다.');" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors">
-                                        <i data-lucide="x-circle" class="w-4 h-4"></i>
-                                        취소
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- 예약 환자 -->
-                        <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="location.href='reception-detail.html?id=1'">
-                            <td class="p-4 text-sm font-medium text-slate-900">10:00</td>
-                            <td class="p-4 text-sm font-semibold text-slate-800">김철수</td>
-                            <td class="p-4 text-sm text-slate-600">010-1234-5678</td>
-                            <td class="p-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    ONLINE
-                                </span>
-                            </td>
-                            <td class="p-4 text-sm text-slate-600">내과 / 김의사</td>
-                            <td class="p-4">
+                                {{#isReserved}}
                                 <span class="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600">
-                                    <i data-lucide="clock" class="w-4 h-4"></i>
-                                    예약
+                                    <i data-lucide="clock" class="w-4 h-4"></i> 예약
                                 </span>
-                            </td>
-                            <td class="p-4 text-right">
-                                <div class="flex justify-end gap-2">
-                                    <button onclick="event.stopPropagation(); alert('접수 처리되었습니다.');" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 text-sm font-medium rounded-lg hover:bg-green-100 transition-colors">
-                                        <i data-lucide="check-circle" class="w-4 h-4"></i>
-                                        접수
-                                    </button>
-                                    <button onclick="event.stopPropagation(); if(confirm('예약을 취소하시겠습니까?')) alert('취소되었습니다.');" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors">
-                                        <i data-lucide="x-circle" class="w-4 h-4"></i>
-                                        취소
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- 진료 중 환자 -->
-                        <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="location.href='reception-detail.html?id=3'">
-                            <td class="p-4 text-sm font-medium text-slate-900">11:00</td>
-                            <td class="p-4 text-sm font-semibold text-slate-800">박지민</td>
-                            <td class="p-4 text-sm text-slate-600">010-3456-7890</td>
-                            <td class="p-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                    WALKIN
+                                {{/isReserved}}
+                                {{#isWaiting}}
+                                <span class="inline-flex items-center gap-1.5 text-sm font-medium text-green-600">
+                                    <i data-lucide="check-circle" class="w-4 h-4"></i> 진료 대기
                                 </span>
-                            </td>
-                            <td class="p-4 text-sm text-slate-600">소아과 / 이의사</td>
-                            <td class="p-4">
+                                {{/isWaiting}}
+                                {{#isTreating}}
                                 <span class="inline-flex items-center gap-1.5 text-sm font-medium text-purple-600">
-                                    <i data-lucide="activity" class="w-4 h-4"></i>
-                                    진료 중
+                                    <i data-lucide="activity" class="w-4 h-4"></i> 진료 중
                                 </span>
-                            </td>
-                            <td class="p-4 text-right">
-                                <div class="flex justify-end gap-2">
-                                    <button onclick="event.stopPropagation(); if(confirm('예약을 취소하시겠습니까?')) alert('취소되었습니다.');" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors">
-                                        <i data-lucide="x-circle" class="w-4 h-4"></i>
-                                        취소
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- 진료 완료 환자 -->
-                        <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="location.href='reception-detail.html?id=4'">
-                            <td class="p-4 text-sm font-medium text-slate-900">14:00</td>
-                            <td class="p-4 text-sm font-semibold text-slate-800">최동훈</td>
-                            <td class="p-4 text-sm text-slate-600">010-4567-8901</td>
-                            <td class="p-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                    PHONE
-                                </span>
-                            </td>
-                            <td class="p-4 text-sm text-slate-600">내과 / 김의사</td>
-                            <td class="p-4">
+                                {{/isTreating}}
+                                {{#isCompleted}}
                                 <span class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600">
-                                    <i data-lucide="check-circle" class="w-4 h-4"></i>
-                                    진료 완료
+                                    <i data-lucide="check-circle" class="w-4 h-4"></i> 진료 완료
                                 </span>
+                                {{/isCompleted}}
                             </td>
                             <td class="p-4 text-right">
                                 <div class="flex justify-end gap-2">
-                                    <button onclick="event.stopPropagation(); if(confirm('예약을 취소하시겠습니까?')) alert('취소되었습니다.');" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors">
-                                        <i data-lucide="x-circle" class="w-4 h-4"></i>
-                                        취소
-                                    </button>
+                                    {{#isReserved}}
+                                    <form action="{{processReceptionUrl}}" method="POST" class="inline" onclick="event.stopPropagation();">
+                                        <input type="hidden" name="id" value="{{id}}">
+                                        <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 text-sm font-medium rounded-lg hover:bg-green-100 transition-colors">
+                                            <i data-lucide="check-circle" class="w-4 h-4"></i> 접수
+                                        </button>
+                                    </form>
+                                    {{/isReserved}}
+                                    
+                                    {{^isCompleted}}
+                                    <form action="{{cancelUrl}}" method="POST" class="inline" onclick="event.stopPropagation(); return confirm('예약을 취소하시겠습니까?');">
+                                        <input type="hidden" name="id" value="{{id}}">
+                                        <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors">
+                                            <i data-lucide="x-circle" class="w-4 h-4"></i> 취소
+                                        </button>
+                                    </form>
+                                    {{/isCompleted}}
                                 </div>
                             </td>
                         </tr>
+                        {{/receptions}}
+
+                        {{^receptions}}
+                        <tr>
+                            <td colspan="7" class="p-8 text-center text-slate-500">조건에 맞는 내역이 없습니다.</td>
+                        </tr>
+                        {{/receptions}}
                     </tbody>
                 </table>
             </div>
             
             <div class="p-4 border-t border-slate-200">
-                <div class="flex justify-center">
-                    <nav class="flex items-center gap-1">
-                        <button class="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-50" disabled>
-                            <i data-lucide="chevron-left" class="w-4 h-4"></i>
-                        </button>
-                        <button class="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium bg-indigo-600 text-white">
-                            1
-                        </button>
-                        <button class="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">
-                            2
-                        </button>
-                        <button class="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50">
-                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                        </button>
-                    </nav>
-                </div>
+                {{> partials/pagination}}
             </div>
         </div>
     </div>
 
-    <script src="/js/app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>
