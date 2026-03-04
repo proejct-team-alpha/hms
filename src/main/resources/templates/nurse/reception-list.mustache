@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>예약 환자 목록</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-50 min-h-screen p-6">
+    <div class="max-w-7xl mx-auto space-y-6">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-slate-800">예약 환자 목록</h1>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <!-- 필터 및 검색 바 -->
+            <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                <div class="flex gap-2">
+                    <button class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-slate-800 text-white">
+                        전체
+                    </button>
+                    <button class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100">
+                        진료 대기
+                    </button>
+                    <button class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100">
+                        진료 완료
+                    </button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="relative">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                        <input 
+                            type="text" 
+                            placeholder="환자명 또는 연락처 검색..." 
+                            class="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-64"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <!-- 테이블 -->
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
+                        <th class="p-4 font-medium">시간</th>
+                        <th class="p-4 font-medium">환자명</th>
+                        <th class="p-4 font-medium">연락처</th>
+                        <th class="p-4 font-medium">예약 구분</th>
+                        <th class="p-4 font-medium">진료과 / 전문의</th>
+                        <th class="p-4 font-medium">상태</th>
+                        <th class="p-4 font-medium text-right">비고</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    <!-- 행 1 -->
+                    <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="window.location.href='patient-detail.html'">
+                        <td class="p-4 text-sm font-medium text-slate-900">10:30</td>
+                        <td class="p-4 text-sm font-semibold text-slate-800">김철수</td>
+                        <td class="p-4 text-sm text-slate-600">010-1234-5678</td>
+                        <td class="p-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                ONLINE
+                            </span>
+                        </td>
+                        <td class="p-4 text-sm text-slate-600">내과 / 이의사</td>
+                        <td class="p-4">
+                            <span class="inline-flex items-center gap-1.5 text-sm font-medium text-green-600">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                진료 대기
+                            </span>
+                        </td>
+                        <td class="p-4 text-right">
+                            <!-- 간호사는 접수/취소 버튼이 없음 -->
+                        </td>
+                    </tr>
+
+                    <!-- 행 2 -->
+                    <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="window.location.href='patient-detail.html'">
+                        <td class="p-4 text-sm font-medium text-slate-900">11:30</td>
+                        <td class="p-4 text-sm font-semibold text-slate-800">박지민</td>
+                        <td class="p-4 text-sm text-slate-600">010-9876-5432</td>
+                        <td class="p-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                PHONE
+                            </span>
+                        </td>
+                        <td class="p-4 text-sm text-slate-600">정형외과 / 김의사</td>
+                        <td class="p-4">
+                            <span class="inline-flex items-center gap-1.5 text-sm font-medium text-green-600">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                진료 대기
+                            </span>
+                        </td>
+                        <td class="p-4 text-right">
+                        </td>
+                    </tr>
+
+                    <!-- 행 3 -->
+                    <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="window.location.href='patient-detail.html'">
+                        <td class="p-4 text-sm font-medium text-slate-900">09:00</td>
+                        <td class="p-4 text-sm font-semibold text-slate-800">최영호</td>
+                        <td class="p-4 text-sm text-slate-600">010-5555-4444</td>
+                        <td class="p-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                WALKIN
+                            </span>
+                        </td>
+                        <td class="p-4 text-sm text-slate-600">이비인후과 / 박의사</td>
+                        <td class="p-4">
+                            <span class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                진료 완료
+                            </span>
+                        </td>
+                        <td class="p-4 text-right">
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <!-- 페이지네이션 -->
+            <div class="p-4 border-t border-slate-200 flex justify-center">
+                <nav class="flex items-center gap-1">
+                    <button class="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-50" disabled>
+                        <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                    </button>
+                    <button class="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium bg-indigo-600 text-white">
+                        1
+                    </button>
+                    <button class="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">
+                        2
+                    </button>
+                    <button class="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50">
+                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 아이콘 초기화
+        lucide.createIcons();
+    </script>
+</body>
+</html>

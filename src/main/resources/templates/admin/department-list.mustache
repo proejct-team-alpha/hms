@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>진료과 관리</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-50 min-h-screen p-6">
+    <div class="max-w-7xl mx-auto space-y-6">
+        <!-- 헤더 -->
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-slate-800">진료과 관리</h1>
+            <button onclick="openModal()" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+                진료과 등록
+            </button>
+        </div>
+
+        <!-- 메인 콘텐츠 -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <!-- 검색바 -->
+            <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                <div class="relative w-64">
+                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                    <input 
+                        type="text" 
+                        placeholder="진료과명 또는 코드 검색..." 
+                        class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                </div>
+            </div>
+
+            <!-- 테이블 -->
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
+                        <th class="p-4 font-medium">진료과명</th>
+                        <th class="p-4 font-medium">코드</th>
+                        <th class="p-4 font-medium">소속 의사 수</th>
+                        <th class="p-4 font-medium">상태</th>
+                        <th class="p-4 font-medium text-right">관리</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    <!-- 항목 1 -->
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                                    <i data-lucide="building-2" class="w-4 h-4"></i>
+                                </div>
+                                <span class="font-semibold text-slate-800">내과</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-sm text-slate-600 font-mono">IM</td>
+                        <td class="p-4 text-sm text-slate-600">5명</td>
+                        <td class="p-4">
+                            <button class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors bg-green-100 text-green-800 hover:bg-green-200">
+                                운영 중
+                            </button>
+                        </td>
+                        <td class="p-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <button onclick="openModal('내과', 'IM', 5, 'ACTIVE')" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                                    <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                </button>
+                                <button class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- 항목 2 -->
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                                    <i data-lucide="building-2" class="w-4 h-4"></i>
+                                </div>
+                                <span class="font-semibold text-slate-800">외과</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-sm text-slate-600 font-mono">GS</td>
+                        <td class="p-4 text-sm text-slate-600">3명</td>
+                        <td class="p-4">
+                            <button class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors bg-green-100 text-green-800 hover:bg-green-200">
+                                운영 중
+                            </button>
+                        </td>
+                        <td class="p-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <button onclick="openModal('외과', 'GS', 3, 'ACTIVE')" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                                    <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                </button>
+                                <button class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- 항목 3 -->
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                                    <i data-lucide="building-2" class="w-4 h-4"></i>
+                                </div>
+                                <span class="font-semibold text-slate-800">정형외과</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-sm text-slate-600 font-mono">OS</td>
+                        <td class="p-4 text-sm text-slate-600">4명</td>
+                        <td class="p-4">
+                            <button class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors bg-slate-100 text-slate-800 hover:bg-slate-200">
+                                운영 중지
+                            </button>
+                        </td>
+                        <td class="p-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <button onclick="openModal('정형외과', 'OS', 4, 'INACTIVE')" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                                    <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                </button>
+                                <button class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 등록/수정 모달 -->
+    <div id="deptModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h2 id="modalTitle" class="text-xl font-bold text-slate-800">진료과 등록</h2>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <form id="deptForm" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">진료과명</label>
+                    <input
+                        type="text"
+                        id="deptName"
+                        required
+                        class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                        placeholder="예: 내과"
+                    />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">진료과 코드</label>
+                    <input
+                        type="text"
+                        id="deptCode"
+                        required
+                        class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none uppercase"
+                        placeholder="예: IM"
+                    />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">소속 의사 수</label>
+                    <input
+                        type="number"
+                        id="deptDoctorCount"
+                        required
+                        min="0"
+                        class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                        placeholder="0"
+                    />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">운영 상태</label>
+                    <select
+                        id="deptStatus"
+                        class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                    >
+                        <option value="ACTIVE">운영 중</option>
+                        <option value="INACTIVE">운영 중지</option>
+                    </select>
+                </div>
+                <div class="pt-4 flex gap-3">
+                    <button
+                        type="button"
+                        onclick="closeModal()"
+                        class="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+                    >
+                        취소
+                    </button>
+                    <button
+                        type="submit"
+                        class="flex-1 px-4 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        저장
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 아이콘 초기화
+        lucide.createIcons();
+
+        // 모달 관리
+        const modal = document.getElementById('deptModal');
+        const form = document.getElementById('deptForm');
+
+        function openModal(name = '', code = '', count = 0, status = 'ACTIVE') {
+            document.getElementById('modalTitle').textContent = name ? '진료과 수정' : '진료과 등록';
+            document.getElementById('deptName').value = name;
+            document.getElementById('deptCode').value = code;
+            document.getElementById('deptDoctorCount').value = count;
+            document.getElementById('deptStatus').value = status;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('저장되었습니다.');
+            closeModal();
+        });
+    </script>
+</body>
+</html>

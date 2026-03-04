@@ -3,32 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로그인 — HMS</title>
-    <link rel="stylesheet" href="/css/common.css">
+    <title>직원 로그인 - MediCare+</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body>
-    {{> common/header-login}}
-    <main class="l-login-main">
-        <h2>로그인</h2>
-        {{#error}}
-        <p class="c-alert--error">로그인에 실패했습니다. 아이디와 비밀번호를 확인하세요.</p>
-        {{/error}}
-        {{#logout}}
-        <p class="c-alert--success">로그아웃되었습니다.</p>
-        {{/logout}}
-        <form method="post" action="/login" class="c-form">
-            <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
-            <div class="c-form__group">
-                <label for="username" class="c-form__label">아이디</label>
-                <input type="text" id="username" name="username" required autofocus>
+<body class="bg-slate-50 min-h-screen flex flex-col items-center justify-center p-6 relative">
+    <a href="../index.html" class="absolute top-8 left-8 flex items-center gap-2 text-slate-500 hover:text-slate-800 font-medium transition-colors">
+        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+        처음으로
+    </a>
+
+    <div class="bg-white p-10 rounded-3xl shadow-lg border border-slate-200 w-full max-w-md">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 mx-auto mb-4">
+                <i data-lucide="shield-check" class="w-8 h-8"></i>
             </div>
-            <div class="c-form__group">
-                <label for="password" class="c-form__label">비밀번호</label>
-                <input type="password" id="password" name="password" required>
+            <h1 class="text-2xl font-bold text-slate-800">직원 로그인</h1>
+            <p class="text-slate-500 mt-2">병원 업무 시스템에 접속합니다.</p>
+        </div>
+
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">사번 (아이디)</label>
+                <div class="relative">
+                    <i data-lucide="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                    <input
+                        type="text"
+                        required
+                        class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                        placeholder="사번을 입력하세요"
+                    >
+                </div>
             </div>
-            <button type="submit">로그인</button>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">비밀번호</label>
+                <div class="relative">
+                    <i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                    <input
+                        type="password"
+                        required
+                        class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                        placeholder="비밀번호를 입력하세요"
+                    >
+                </div>
+            </div>
+
+            <button
+                type="submit"
+                class="w-full py-4 bg-indigo-600 text-white rounded-xl font-medium text-lg hover:bg-indigo-700 transition-colors shadow-sm"
+            >
+                로그인
+            </button>
         </form>
-        <p class="c-login__hint">테스트: admin01 / staff01 / doctor01 / nurse01 (비밀번호: password123)</p>
-    </main>
+    </div>
+
+    <script>
+        // 아이콘 초기화
+        lucide.createIcons();
+
+        // 폼 제출 이벤트
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // 실제 구현에서는 여기서 인증을 처리합니다.
+            // 인증 성공 시 권한 선택 페이지로 이동
+            window.location.href = 'role-selection.html';
+        });
+    </script>
 </body>
 </html>
