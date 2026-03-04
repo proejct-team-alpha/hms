@@ -2,6 +2,7 @@ package com.smartclinic.hms.config;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -9,17 +10,20 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * ════════════════════════════════════════════════════════════════════════════
@@ -27,6 +31,7 @@ import java.io.IOException;
  * ════════════════════════════════════════════════════════════════════════════
  *
  * ■ 인증 방식: 세션 기반 (Spring Security 기본 세션 — JWT 미사용)
+ * ■ UserDetailsService: CustomUserDetailsService (Staff DB 조회)
  * ■ 역할: ROLE_ADMIN, ROLE_DOCTOR, ROLE_NURSE, ROLE_STAFF
  *
  * ■ URL 접근 권한 (API 명세서 v3.0 §1.3)
@@ -42,25 +47,31 @@ import java.io.IOException;
  *   /nurse/**             간호사             ROLE_NURSE, ROLE_ADMIN (§7)
  *   /admin/**             관리자             ROLE_ADMIN 전용 (§9~§14)
  *
- * ■ 로그인 성공 리다이렉트 (§2.2)
- *   ROLE_ADMIN  → /admin/dashboard
- *   ROLE_DOCTOR → /doctor/dashboard
- *   ROLE_NURSE  → /nurse/dashboard
- *   ROLE_STAFF  → /staff/dashboard
- *
- * ■ UserDetailsService
- *   InMemoryUserDetailsManager (테스트: admin01, staff01, doctor01, nurse01 / password123)
+ * ■ 보안 설정
+ *   - CORS: 허용 Origin 화이트리스트 (환경변수 설정 가능)
+ *   - CSRF: SSR 폼 보호 활성화, /llm/symptom/** 만 제외
+ *   - Security Headers: CSP, HSTS, Referrer-Policy, Permissions-Policy
+ *   - Rate Limiting: RateLimitFilter (IP 기반 토큰 버킷)
+ *   - 로그인 실패: 사용자 열거 방지 (일관된 에러 메시지)
  * ════════════════════════════════════════════════════════════════════════════
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    /** CORS 허용 Origin — 환경변수 또는 기본값 (개발: localhost:8080) */
+    @Value("${hms.cors.allowed-origins:http://localhost:8080}")
+    private String allowedOrigins;
+
+    private final RateLimitFilter rateLimitFilter;
+
+    public SecurityConfig(RateLimitFilter rateLimitFilter) {
+        this.rateLimitFilter = rateLimitFilter;
+    }
+
     // ════════════════════════════════════════════════════════════════════════
     // H2 Console Security Filter Chain (개발용)
     // ════════════════════════════════════════════════════════════════════════
-    // H2 콘솔은 별도 서블릿이므로 MvcRequestMatcher로 매칭 불가.
-    // PathRequest.toH2Console()을 사용하는 전용 필터 체인 필요.
 
     @Bean
     @Order(1)
@@ -81,13 +92,34 @@ public class SecurityConfig {
     @Order(2)
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-            // ── CSRF ─────────────────────────────────────────────────────
+            // ── CORS ────────────────────────────────────────────────────
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+            // ── CSRF ────────────────────────────────────────────────────
             // SSR(Mustache) 폼 제출 보호 활성화.
-            // LLM AJAX 엔드포인트(JSON 전용)는 제외 — JS fetch 호출 시 CSRF 헤더 불필요.
-            // 폼 제출 엔드포인트는 Mustache 템플릿에 {{_csrf.token}} 포함 필요.
+            // 비회원 LLM 증상 분석 AJAX(JSON 전용)만 제외.
+            // /llm/rules/** 는 인증 필요 엔드포인트이므로 CSRF 보호 유지.
+            // JS fetch 호출 시 CSRF 토큰을 X-CSRF-TOKEN 헤더로 전송 필요.
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/llm/**")
+                .ignoringRequestMatchers("/llm/symptom/**")
             )
+
+            // ── Security Headers ────────────────────────────────────────
+            .headers(headers -> headers
+                .contentSecurityPolicy(csp -> csp
+                    .policyDirectives("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; frame-ancestors 'self'")
+                )
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .maxAgeInSeconds(31536000)
+                    .includeSubDomains(true)
+                )
+                .referrerPolicy(referrer -> referrer
+                    .policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
+                )
+            )
+
+            // ── Rate Limiting Filter ────────────────────────────────────
+            .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
 
             // ── URL별 접근 권한 ───────────────────────────────────────────
             .authorizeHttpRequests(auth -> auth
@@ -133,7 +165,7 @@ public class SecurityConfig {
                 .usernameParameter("username")
                 .passwordParameter("password")
                 .successHandler(roleBasedSuccessHandler()) // 역할별 대시보드 리다이렉트
-                .failureUrl("/login?error=true")           // 실패 시 (§2.2)
+                .failureHandler(loginFailureHandler())     // 사용자 열거 방지 — 일관된 에러 메시지
                 .permitAll()
             )
 
@@ -147,17 +179,12 @@ public class SecurityConfig {
             )
 
             // ── 세션 관리 ─────────────────────────────────────────────────
-            // 동일 계정 최대 세션 1개.
-            // maxSessionsPreventsLogin(false): 새 로그인 시 기존 세션 만료 (타 기기 자동 로그아웃).
-            // HttpSessionEventPublisher Bean 등록 필수 (아래 참고).
             .sessionManagement(session -> {
                 session.maximumSessions(1)
                        .maxSessionsPreventsLogin(false);
             })
 
             // ── 인증·인가 오류 처리 (§1.6) ───────────────────────────────
-            // 미로그인 접근(401): Spring Security가 자동으로 /login 리다이렉트.
-            // 권한 없는 접근(403): /error/403 화면 렌더링.
             .exceptionHandling(ex -> ex
                 .accessDeniedPage("/error/403")
             )
@@ -171,13 +198,6 @@ public class SecurityConfig {
 
     /**
      * 로그인 성공 시 ROLE별 대시보드로 리다이렉트 (API 명세서 §2.2).
-     *
-     * <pre>
-     * ROLE_ADMIN  → /admin/dashboard
-     * ROLE_DOCTOR → /doctor/dashboard
-     * ROLE_NURSE  → /nurse/dashboard
-     * ROLE_STAFF  → /staff/dashboard
-     * </pre>
      */
     @Bean
     AuthenticationSuccessHandler roleBasedSuccessHandler() {
@@ -206,28 +226,45 @@ public class SecurityConfig {
     }
 
     /**
+     * 로그인 실패 핸들러 — 사용자 열거 방지 (§2.2)
+     * 아이디 미존재 / 비밀번호 불일치 / 비활성 계정 모두 동일 에러 파라미터 전달.
+     */
+    @Bean
+    SimpleUrlAuthenticationFailureHandler loginFailureHandler() {
+        return new SimpleUrlAuthenticationFailureHandler("/login?error=true");
+    }
+
+    /**
      * BCrypt 패스워드 인코더.
      * Staff 등록(§10.3) 및 비밀번호 수정 시 암호화에 사용.
-     * UserDetailsService 구현체에서 주입받아 사용.
      */
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * CORS 설정 — 허용 Origin 화이트리스트.
+     * 환경변수 hms.cors.allowed-origins 로 쉼표 구분 Origin 지정 가능.
+     * 기본값: http://localhost:8080 (개발용)
+     */
     @Bean
-    InMemoryUserDetailsManager userDetailsService(PasswordEncoder encoder) {
-        UserDetails admin = User.builder().username("admin01").password(encoder.encode("password123")).roles("ADMIN").build();
-        UserDetails staff = User.builder().username("staff01").password(encoder.encode("password123")).roles("STAFF").build();
-        UserDetails doctor = User.builder().username("doctor01").password(encoder.encode("password123")).roles("DOCTOR").build();
-        UserDetails nurse = User.builder().username("nurse01").password(encoder.encode("password123")).roles("NURSE").build();
-        return new InMemoryUserDetailsManager(admin, staff, doctor, nurse);
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Content-Type", "X-CSRF-TOKEN", "Authorization"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 
     /**
      * 세션 동시성 제어를 위한 이벤트 퍼블리셔.
      * sessionManagement().maximumSessions() 동작에 필수.
-     * 세션 생성·소멸 이벤트를 Spring Security가 감지하여 동시 세션을 관리함.
      */
     @Bean
     HttpSessionEventPublisher httpSessionEventPublisher() {
