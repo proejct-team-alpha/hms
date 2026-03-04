@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>환자 서비스 - MediCare+</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* iframe 스크롤바 스타일링 */
+        iframe::-webkit-scrollbar { width: 8px; }
+        iframe::-webkit-scrollbar-track { background: #f1f5f9; }
+        iframe::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        iframe::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 h-screen overflow-hidden flex">
+    
+    {{> partials/sidebar-patient}}
+
+    <div class="flex-1 flex flex-col h-full overflow-hidden">
+        {{> partials/header-patient}}
+
+        <main class="flex-1 overflow-hidden relative bg-slate-50/50">
+            <iframe 
+                name="contentFrame"
+                id="content-frame" 
+                src="{{defaultFrameUrl}}" 
+                class="absolute inset-0 w-full h-full border-none"
+                title="환자 서비스 콘텐츠"
+            ></iframe>
+        </main>
+
+        {{> partials/footer-patient}}
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // iframe 내비게이션 연동
+        const iframe = document.getElementById('content-frame');
+        const navItems = document.querySelectorAll('.nav-item');
+        const headerTitle = document.getElementById('header-title');
+        const headerDesc = document.getElementById('header-desc');
+
+        const titleMap = {
+            'dashboard.html': { title: '진료 예약', desc: '원하시는 예약 방식을 선택해주세요.' },
+            'direct-reservation.html': { title: '직접 선택 예약', desc: '원하시는 진료과와 시간을 선택해주세요.' },
+            'symptom-reservation.html': { title: 'AI 증상 분석 예약', desc: '증상을 입력하시면 AI가 적합한 진료과와 전문의를 추천해 드립니다.' },
+            'reservation-complete.html': { title: '예약 완료', desc: '진료 예약이 성공적으로 접수되었습니다.' }
+        };
+
+        iframe.addEventListener('load', () => {
+            try {
+                const currentPath = iframe.contentWindow.location.pathname.split('/').pop();
+                
+                navItems.forEach(item => {
+                    const itemPath = item.getAttribute('data-path');
+                    if (currentPath === itemPath || (currentPath.includes('reservation') && itemPath === 'dashboard.html')) {
+                        item.classList.add('bg-indigo-50', 'text-indigo-600');
+                        item.classList.remove('text-slate-600');
+                    } else {
+                        item.classList.remove('bg-indigo-50', 'text-indigo-600');
+                        item.classList.add('text-slate-600');
+                    }
+                });
+
+                if (titleMap[currentPath] && headerTitle) {
+                    headerTitle.textContent = titleMap[currentPath].title;
+                    if (headerDesc) headerDesc.textContent = titleMap[currentPath].desc;
+                }
+            } catch (e) {
+                console.log('Cross-origin iframe access denied');
+            }
+        });
+    </script>
+</body>
+</html>
