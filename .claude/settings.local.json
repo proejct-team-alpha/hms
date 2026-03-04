@@ -20,7 +20,8 @@
       "Bash(where gh)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:api.github.com)"
+      "WebFetch(domain:api.github.com)",
+      "Bash(wc -l src/main/java/com/smartclinic/hms/**/*.java src/main/java/com/smartclinic/hms/**/**/*.java src/main/java/com/smartclinic/hms/**/**/**/*.java)"
     ]
   }
 }
