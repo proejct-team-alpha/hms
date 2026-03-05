@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>진료과 관리</title>
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <script src="/js/lucide.min.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen p-6">
+    <div class="max-w-7xl mx-auto space-y-6">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-slate-800">진료과 관리</h1>
+            <button onclick="document.getElementById('addDeptModal').classList.remove('hidden')" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                <i data-lucide="plus" class="w-5 h-5"></i> 진료과 등록
+            </button>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <form action="/admin/department-list" method="GET" class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                <div class="relative w-64">
+                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                    <input type="text" name="keyword" value="" placeholder="진료과명 검색..." class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"/>
+                </div>
+            </form>
+
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
+                        <th class="p-4 font-medium">진료과명</th>
+                        <th class="p-4 font-medium">코드</th>
+                        <th class="p-4 font-medium">소속 의사 수</th>
+                        <th class="p-4 font-medium">상태</th>
+                        <th class="p-4 font-medium text-right">관리</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><i data-lucide="building-2" class="w-4 h-4"></i></div>
+                                <span class="font-semibold text-slate-800">내과</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-sm text-slate-600 font-mono">INT</td>
+                        <td class="p-4 text-sm text-slate-600">5명</td>
+                        <td class="p-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors bg-green-100 text-green-800">운영 중</span>
+                        </td>
+                        <td class="p-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <a href="/admin/department-list?edit=1" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"><i data-lucide="edit-2" class="w-4 h-4"></i></a>
+                                <form action="/admin/department-list" method="POST" class="inline" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                                    <input type="hidden" name="id" value="1">
+                                    <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

@@ -44,6 +44,22 @@ application-prod.properties
 *.lock.db
 
 # =========================
+# Node.js (프론트엔드 빌드)
+# =========================
+node_modules/
+npm-debug.log*
+
+# =========================
+# 프론트엔드 빌드 산출물
+# =========================
+# Tailwind CSS 빌드 결과 (input.css → tailwind.min.css)
+src/main/resources/static/css/tailwind.min.css
+
+# Vendor JS (node_modules에서 복사)
+src/main/resources/static/js/lucide.min.js
+src/main/resources/static/js/chart.min.js
+
+# =========================
 # IDE
 # =========================
 ### STS ###
@@ -79,6 +95,12 @@ out/
 
 ### Cursor ###
 .cursor/
+
+# =========================
+# AI / 도구
+# =========================
+.claude/
+.omc/
 
 # =========================
 # OS

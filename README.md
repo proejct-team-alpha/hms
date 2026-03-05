@@ -7,16 +7,18 @@
 
 ## 기술 스택
 
-| 분류      | 기술                                |
-| --------- | ----------------------------------- |
-| Language  | Java 21                             |
-| Framework | Spring Boot 4.x                     |
-| Security  | Spring Security (세션 기반, 4 ROLE) |
-| View      | Mustache (SSR)                      |
-| ORM       | Spring Data JPA                     |
-| DB        | H2 (개발) / MySQL 8.x (운영)        |
-| AI        | Claude API (Anthropic)              |
-| Build     | Gradle                              |
+| 분류      | 기술                                    |
+| --------- | --------------------------------------- |
+| Language  | Java 21                                 |
+| Framework | Spring Boot 4.x                         |
+| Security  | Spring Security (세션 기반, 4 ROLE)     |
+| View      | Mustache (SSR)                          |
+| CSS       | Tailwind CSS 4.x (CLI 빌드)            |
+| JS Vendor | Lucide Icons, Chart.js                  |
+| ORM       | Spring Data JPA                         |
+| DB        | H2 (개발) / MySQL 8.x (운영)           |
+| AI        | Claude API (Anthropic)                  |
+| Build     | Gradle (백엔드) + npm (프론트엔드)      |
 
 ---
 
@@ -42,28 +44,51 @@
 ### 사전 준비
 
 - Java 21
+- Node.js 18+ (프론트엔드 빌드)
 - Claude API Key ([Anthropic Console](https://console.anthropic.com) 발급) — LLM 기능 사용 시
 
 ### 실행 방법
 
 ```bash
 # 1. 저장소 클론
-git clone https://github.com/[org]/hms.git
-cd hms
+git clone https://github.com/proejct-team-alpha/hospital-reservation-system.git
+cd hospital-reservation-system
 
 # 2. 환경 변수 파일 생성 (git에 포함되지 않음)
 cp .env.example .env
 # .env 에 CLAUDE_API_KEY=sk-ant-... 입력
 
-# 3. 실행 (Windows PowerShell)
+# 3. 프론트엔드 빌드
+npm install          # 의존성 설치 (최초 1회)
+npm run build        # Tailwind CSS 빌드 + Vendor JS 복사
+
+# 4. 서버 실행 (Windows PowerShell)
 .\run-dev.ps1
 
 # 또는 Gradle 직접 실행
 .\gradlew bootRun
 
-# 4. 접속
+# 5. 접속
 # http://localhost:8080
 ```
+
+### 프론트엔드 개발 (CSS 실시간 반영)
+
+```bash
+npm run dev          # Vendor JS 복사 + Tailwind CSS watch 모드
+```
+
+별도 터미널에서 `gradlew bootRun`을 함께 실행하면 CSS 변경이 즉시 반영됩니다.
+
+### npm 스크립트 요약
+
+| 명령어              | 설명                                                   |
+| ------------------- | ------------------------------------------------------ |
+| `npm install`       | 의존성 설치 (최초 1회 또는 package.json 변경 시)       |
+| `npm run build`     | CSS 빌드 + Vendor JS 복사 (배포/CI용)                  |
+| `npm run build:css` | Tailwind CSS만 빌드 (`input.css` → `tailwind.min.css`) |
+| `npm run build:js`  | Vendor JS만 복사 (lucide, chart.js)                    |
+| `npm run dev`       | CSS watch 모드 (개발용, 변경 감지 자동 빌드)           |
 
 ### 개발 환경
 
@@ -87,31 +112,43 @@ cp .env.example .env
 ## 프로젝트 구조
 
 ```
-src/main/java/com/smartclinic/hms/
-├── config/              # Security, MVC, Claude API 설정
-├── common/              # 공통 인터셉터, 예외 처리, 유틸, 서비스
-├── domain/              # JPA Entity (예정)
-├── admin/               # 관리자 화면 (dashboard, staff, patient, rule, item, department, reservation, reception)
-├── staff/               # 접수 직원 화면 (dashboard, reception, reservation, walkin)
-├── doctor/              # 의사 화면 (treatment)
-├── nurse/               # 간호사 화면 (schedule, patient)
-├── reservation/          # 외부 예약 흐름
-├── llm/                 # Claude API 연동
-└── _sample/             # 샘플 코드 (참고용)
-
-src/main/resources/
-├── templates/
-│   ├── common/          # 헤더·사이드바·푸터 파셜 (L1/L2/L3 레이아웃)
-│   ├── auth/            # 로그인
-│   └── error/           # 403, 404
-├── static/
-│   ├── css/
-│   ├── js/
-│   └── images/
-├── application.properties
-├── application-dev.properties
-├── application-prod.properties.example
-└── sql_test.sql              # H2 테스트 데이터 & 로그인 정보
+hospital-reservation-system/
+├── package.json                 # 프론트엔드 빌드 설정 (npm)
+├── scripts/copy-vendor.js       # Vendor JS 복사 스크립트
+├── build.gradle                 # 백엔드 빌드 설정 (Gradle)
+│
+├── src/main/java/com/smartclinic/hms/
+│   ├── config/                  # Security, MVC, Claude API 설정
+│   ├── common/                  # 공통 인터셉터, 예외 처리, 유틸, 서비스
+│   ├── domain/                  # JPA Entity
+│   ├── admin/                   # 관리자 (CRUD, 대시보드, REST API)
+│   ├── staff/                   # 접수 직원 (접수, 전화예약, 방문접수)
+│   ├── doctor/                  # 의사 (진료 목록, 진료 기록)
+│   ├── nurse/                   # 간호사 (스케줄, 환자 정보 수정)
+│   ├── reservation/             # 외부 예약 흐름
+│   └── llm/                     # Claude API 연동
+│
+├── src/main/resources/
+│   ├── templates/
+│   │   ├── common/              # 헤더·사이드바·푸터 파셜
+│   │   ├── admin/               # 관리자 화면
+│   │   ├── staff/               # 접수 직원 화면
+│   │   ├── doctor/              # 의사 화면
+│   │   ├── nurse/               # 간호사 화면
+│   │   ├── auth/                # 로그인
+│   │   ├── home/                # 메인 페이지
+│   │   └── error/               # 403, 404
+│   ├── static/
+│   │   ├── css/input.css        # Tailwind CSS 소스
+│   │   ├── js/app.js            # 공통 JS (lucide init)
+│   │   └── js/pages/            # 페이지별 JS (차트, 폼 등)
+│   ├── application.properties
+│   ├── application-dev.properties
+│   └── sql_test.sql             # H2 테스트 데이터 & 로그인 정보
+│
+└── doc/                         # 프로젝트 문서
+    ├── PRD.md                   # 요구사항 정의서
+    └── SKILL_*.md               # 개발자별 작업 명세
 ```
 
 ---
@@ -142,4 +179,9 @@ feature/*  ← 기능별 개발 브랜치
 | 문서                                                                            | 비고                                             |
 | ------------------------------------------------------------------------------- | ------------------------------------------------ |
 | [proejct-team-alpha/documents](https://github.com/proejct-team-alpha/documents) | 프로젝트 계획서, API 명세서, 화면 정의서, ERD 등 |
+| [doc/PRD.md](doc/PRD.md)                                                        | 요구사항 정의서 (PRD)                            |
+| [doc/SKILL_LEAD.md](doc/SKILL_LEAD.md)                                          | 책임개발자 작업 명세                             |
+| [doc/SKILL_DEV_A.md](doc/SKILL_DEV_A.md)                                        | 개발자 A 작업 명세                               |
+| [doc/SKILL_DEV_B.md](doc/SKILL_DEV_B.md)                                        | 개발자 B 작업 명세                               |
+| [doc/SKILL_DEV_C.md](doc/SKILL_DEV_C.md)                                        | 개발자 C 작업 명세                               |
 | [doc/PRE_WORK.md](doc/PRE_WORK.md)                                              | 선행 작업 체크리스트                             |

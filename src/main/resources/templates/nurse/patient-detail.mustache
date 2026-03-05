@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>환자 정보 관리 - 홍길동</title>
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <script src="/js/lucide.min.js"></script>
+</head>
+<body class="bg-slate-50 p-6">
+    <div class="max-w-3xl mx-auto space-y-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-800">환자 정보 관리</h1>
+            </div>
+            <button onclick="history.back()" class="text-sm font-medium text-slate-500 hover:text-slate-700">
+                목록으로 돌아가기
+            </button>
+        </div>
+
+        <form action="/nurse/patient/1/update" method="POST" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <input type="hidden" name="patientId" value="1">
+            
+            <div class="bg-indigo-50 border-b border-indigo-100 p-6 flex items-center gap-4">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100">
+                    <i data-lucide="user" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800">홍길동</h2>
+                    <div class="flex items-center gap-2 text-sm text-slate-600 mt-1">
+                        <span class="font-medium">35세 / 남</span>
+                        <span class="text-slate-300">|</span>
+                        <span class="flex items-center gap-1"><i data-lucide="phone" class="w-3.5 h-3.5"></i> 010-1234-5678</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8 space-y-8">
+                <div class="grid grid-cols-2 gap-8">
+                    <div class="space-y-6">
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">기본 정보</h3>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">연락처</label>
+                            <div class="relative">
+                                <i data-lucide="phone" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                                <input
+                                    type="tel"
+                                    name="phone"
+                                    value="010-1234-5678"
+                                    class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">주소</label>
+                            <input
+                                type="text"
+                                name="address"
+                                value="서울시 강남구 테헤란로 123"
+                                class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">의료 정보 (특이사항)</h3>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-4 h-4 text-indigo-500"></i>
+                                알레르기 및 기저질환
+                            </label>
+                            <textarea
+                                name="medicalNotes"
+                                class="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none h-32 resize-none"
+                            >페니실린 알레르기</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-8 border-t border-slate-200 flex justify-end gap-3">
+                    <button 
+                        type="submit"
+                        class="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2"
+                    >
+                        <i data-lucide="save" class="w-5 h-5"></i>
+                        정보 저장 (UPDATE)
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
