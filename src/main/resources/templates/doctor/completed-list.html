@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>진료 완료 목록 - MediCare+</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/feather-icons"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  
+  <script src="components/sidebar.js"></script>
+
+  <div class="main-content">
+    <script src="components/header.js"></script>
+    
+    <main class="content-wrapper">
+      <div class="space-y-6 max-w-5xl mx-auto">
+        <div class="flex items-center gap-3 mb-8">
+          <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600">
+            <i data-feather="check-circle" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-slate-800">진료 완료 목록</h1>
+            <p class="text-slate-500 mt-1">오늘 진료가 완료된 환자 목록입니다.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="list-container">
+          <!-- List injected by JS -->
+        </div>
+      </div>
+    </main>
+
+    <script src="components/footer.js"></script>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const reservations = getReservations();
+      
+      const completedList = reservations.filter(r => r.status === 'COMPLETED');
+      const sortedList = [...completedList].sort((a, b) => b.time.localeCompare(a.time));
+
+      const listContainer = document.getElementById('list-container');
+      
+      if (sortedList.length === 0) {
+        listContainer.innerHTML = \`
+          <div class="col-span-full p-8 text-center text-slate-500 bg-white rounded-2xl border border-slate-200">
+            진료 완료된 환자가 없습니다.
+          </div>
+        \`;
+      } else {
+        listContainer.innerHTML = sortedList.map(patient => {
+          let typeClass = 'bg-orange-50 text-orange-600';
+          if (patient.type === 'ONLINE') typeClass = 'bg-blue-50 text-blue-600';
+          else if (patient.type === 'PHONE') typeClass = 'bg-purple-50 text-purple-600';
+
+          return \`
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 transition-all">
+              <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full flex items-center justify-center bg-green-100 text-green-600">
+                    <i data-feather="user" class="w-5 h-5"></i>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-slate-800 text-lg">\${patient.name}</h3>
+                    <div class="flex items-center gap-1.5 text-sm text-slate-500 font-medium">
+                      <i data-feather="clock" class="w-3.5 h-3.5"></i>
+                      \${patient.time}
+                    </div>
+                  </div>
+                </div>
+                
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-green-600 text-white">
+                  진료 완료
+                </span>
+              </div>
+
+              <div class="bg-slate-50 rounded-xl p-3 text-sm text-slate-600 line-clamp-2 border border-slate-100">
+                \${patient.symptoms || '증상 없음'}
+              </div>
+
+              <div class="mt-4 flex justify-between items-center">
+                <span class="text-xs font-medium px-2 py-1 rounded-md \${typeClass}">
+                  \${patient.type}
+                </span>
+                
+                <span class="text-sm font-medium text-green-600 flex items-center gap-1">
+                  완료됨 <i data-feather="check-circle" class="w-4 h-4"></i>
+                </span>
+              </div>
+            </div>
+          \`;
+        }).join('');
+      }
+
+      feather.replace();
+    });
+  </script>
+</body>
+</html>
