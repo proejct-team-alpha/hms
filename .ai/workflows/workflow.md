@@ -52,7 +52,7 @@
 ### 2.2 문서 우선순위
 
 1. `doc/PROJECT_STRUCTURE.md`, `doc/RULE.md`
-2. `.ai/AGENTS.md`, `.ai/memory.md`
+2. `.AGENTS.md`, `.ai/memory.md`
 3. 외부 documents 저장소 최신 권장 문서
 
 ---

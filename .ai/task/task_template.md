@@ -22,6 +22,37 @@ Rules:
 - `number`: 3-digit incremental number per role
 - `feature`: short kebab-case description
 
+## AI Summary 작성 규칙
+
+AI Summary는 작업 내용을 빠르게 이해할 수 있도록 **핵심 변경 사항만 3~6줄로 요약**한다.  
+상세 구현 내용은 아래 섹션(Plan, Implementation, Report 등)에 작성한다.
+
+작성 기준:
+
+1. **무엇을 구현/수정했는지** (Feature 또는 작업 목적)
+2. **핵심 변경 사항** (컨트롤러, 서비스, API, 화면 등)
+3. **보안/권한 또는 주요 동작 변화**
+4. **검증 결과** (테스트 또는 기본 동작 확인)
+
+권장 형식:
+
+- 작업 목적 또는 Feature 요약
+- 주요 구현 내용 (엔드포인트, 화면, 로직 등)
+- 권한 정책 또는 핵심 동작
+- 테스트 또는 검증 결과
+
+주의사항:
+
+- 6줄을 넘기지 않는다.
+- 코드 블록은 사용하지 않는다.
+- 상세 설명은 아래 섹션에 작성한다.
+
+## AI Summary
+
+-
+-
+-
+
 ## 1) Task Meta
 
 - Task ID:
