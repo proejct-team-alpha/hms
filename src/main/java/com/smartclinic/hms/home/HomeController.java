@@ -8,8 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class HomeController {
 
     @GetMapping("/")
-    public String index(Model model) {
-        model.addAttribute("message", "Smart Clinic에 오신 것을 환영합니다.");
+    public String index() {
         return "home/index";
     }
 }
