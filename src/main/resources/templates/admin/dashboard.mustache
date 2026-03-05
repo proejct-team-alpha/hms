@@ -12,80 +12,70 @@
     <div class="max-w-7xl mx-auto space-y-6">
         <h1 class="text-2xl font-bold text-slate-800">관리자 대시보드</h1>
         
-        <!-- 통계 카드 -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-                        <i data-lucide="users" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                        <div class="text-sm font-medium text-slate-500">총 직원 수</div>
-                        <div class="text-2xl font-bold text-slate-800">24명</div>
-                    </div>
+                    <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600"><i data-lucide="users" class="w-6 h-6"></i></div>
+                    <div><div class="text-sm font-medium text-slate-500">총 직원 수</div><div class="text-2xl font-bold text-slate-800">25명</div></div>
                 </div>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
-                        <i data-lucide="calendar" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                        <div class="text-sm font-medium text-slate-500">오늘 예약 취소</div>
-                        <div class="text-2xl font-bold text-slate-800">3건</div>
-                    </div>
+                    <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600"><i data-lucide="calendar" class="w-6 h-6"></i></div>
+                    <div><div class="text-sm font-medium text-slate-500">오늘 예약 취소</div><div class="text-2xl font-bold text-slate-800">2건</div></div>
                 </div>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
-                        <i data-lucide="building-2" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                        <div class="text-sm font-medium text-slate-500">운영 진료과</div>
-                        <div class="text-2xl font-bold text-slate-800">5개</div>
-                    </div>
+                    <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600"><i data-lucide="building-2" class="w-6 h-6"></i></div>
+                    <div><div class="text-sm font-medium text-slate-500">운영 진료과</div><div class="text-2xl font-bold text-slate-800">8개</div></div>
                 </div>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600">
-                        <i data-lucide="shield-check" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                        <div class="text-sm font-medium text-slate-500">활성 규칙</div>
-                        <div class="text-2xl font-bold text-slate-800">12개</div>
-                    </div>
+                    <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
+                    <div><div class="text-sm font-medium text-slate-500">활성 규칙</div><div class="text-2xl font-bold text-slate-800">12개</div></div>
                 </div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- 일별 환자 수 추이 차트 -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-lg font-bold text-slate-800">일별 환자 수 추이</h2>
-                    <i data-lucide="trending-up" class="w-5 h-5 text-indigo-500"></i>
                 </div>
-                <div class="h-[300px] w-full relative">
-                    <canvas id="patientChart"></canvas>
-                </div>
+                <div class="h-[300px] w-full relative"><canvas id="patientChart"></canvas></div>
             </div>
-
-            <!-- 카테고리별 물품 재고 현황 차트 -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-lg font-bold text-slate-800">카테고리별 물품 재고 현황</h2>
-                    <i data-lucide="package" class="w-5 h-5 text-orange-500"></i>
                 </div>
-                <div class="h-[300px] w-full relative">
-                    <canvas id="inventoryChart"></canvas>
-                </div>
+                <div class="h-[300px] w-full relative"><canvas id="inventoryChart"></canvas></div>
             </div>
         </div>
     </div>
 
-    <script src="/js/app.js"></script>
-    <script src="/js/pages/admin-dashboard.js"></script>
+    <script>
+        lucide.createIcons();
+
+        // 차트 데이터 서버 바인딩
+        new Chart(document.getElementById('patientChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ["월","화","수","목","금","토","일"],
+                datasets: [{ label: '환자 수', data: [45, 52, 38, 61, 55, 30, 20], borderColor: '#6366f1', backgroundColor: '#6366f1', borderWidth: 3, tension: 0.4 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        new Chart(document.getElementById('inventoryChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ["의료소모품","의약품","사무용품"],
+                datasets: [{ label: '재고량', data: [120, 85, 200], backgroundColor: '#f59e0b', borderRadius: 4 }]
+            },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+        });
+    </script>
 </body>
 </html>

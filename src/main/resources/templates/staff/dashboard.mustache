@@ -20,7 +20,7 @@
                     </div>
                     <div>
                         <div class="text-sm font-medium text-slate-500">오늘 총 예약</div>
-                        <div class="text-2xl font-bold text-slate-800">12명</div>
+                        <div class="text-2xl font-bold text-slate-800">15명</div>
                     </div>
                 </div>
             </div>
@@ -31,7 +31,7 @@
                     </div>
                     <div>
                         <div class="text-sm font-medium text-slate-500">접수 대기</div>
-                        <div class="text-2xl font-bold text-slate-800">3명</div>
+                        <div class="text-2xl font-bold text-slate-800">5명</div>
                     </div>
                 </div>
             </div>
@@ -64,65 +64,22 @@
                     </a>
                 </div>
                 <div class="space-y-3">
-                    <!-- 예약 현황 항목 1 -->
                     <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
                         <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-orange-500"></div>
-                            <span class="font-medium text-slate-800">김철수</span>
-                            <span class="text-sm text-slate-500">내과 / 14:00</span>
+                            <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+                            <span class="font-medium text-slate-800">홍길동</span>
+                            <span class="text-sm text-slate-500">내과 / 09:00</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span class="text-xs font-medium px-2 py-1 rounded-full bg-orange-100 text-orange-700">
+                            <span class="text-xs font-medium px-2 py-1 rounded-full bg-indigo-100 text-indigo-800">
                                 예약
                             </span>
-                            <button onclick="alert('접수 처리되었습니다.')" class="text-xs font-medium px-3 py-1 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors">
-                                접수하기
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 예약 현황 항목 2 -->
-                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-                        <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
-                            <span class="font-medium text-slate-800">이영희</span>
-                            <span class="text-sm text-slate-500">정형외과 / 14:30</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-700">
-                                진료 대기
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- 예약 현황 항목 3 -->
-                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-                        <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
-                            <span class="font-medium text-slate-800">박지민</span>
-                            <span class="text-sm text-slate-500">소아과 / 15:00</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-medium px-2 py-1 rounded-full bg-purple-100 text-purple-700">
-                                진료 중
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <!-- 예약 현황 항목 4 -->
-                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-                        <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-orange-500"></div>
-                            <span class="font-medium text-slate-800">최동훈</span>
-                            <span class="text-sm text-slate-500">내과 / 16:00</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-medium px-2 py-1 rounded-full bg-orange-100 text-orange-700">
-                                예약
-                            </span>
-                            <button onclick="alert('접수 처리되었습니다.')" class="text-xs font-medium px-3 py-1 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors">
-                                접수하기
-                            </button>
+                            <form action="/staff/reception/process" method="POST" class="inline">
+                                <input type="hidden" name="reservationId" value="1">
+                                <button type="submit" class="text-xs font-medium px-3 py-1 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors">
+                                    접수하기
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -130,7 +87,50 @@
         </div>
     </div>
 
-    <script src="/js/app.js"></script>
-    <script src="/js/pages/staff-dashboard.js"></script>
+    <script>
+        lucide.createIcons();
+
+        // 차트 초기화 (서버에서 데이터 주입)
+        const ctx = document.getElementById('timeChart').getContext('2d');
+        const labels = ["09:00","10:00","11:00","14:00","15:00"];
+        const reservationData = [5, 8, 6, 4, 3];
+        const receptionData = [4, 7, 5, 3, 2];
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: '예약',
+                        data: reservationData,
+                        backgroundColor: '#818cf8',
+                        borderRadius: 4,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.8
+                    },
+                    {
+                        label: '접수',
+                        data: receptionData,
+                        backgroundColor: '#34d399',
+                        borderRadius: 4,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.8
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } }
+                },
+                scales: {
+                    x: { grid: { display: false, drawBorder: false }, ticks: { color: '#64748b', font: { size: 12 } } },
+                    y: { grid: { color: '#e2e8f0', drawBorder: false, borderDash: [3, 3] }, ticks: { color: '#64748b', font: { size: 12 } } }
+                }
+            }
+        });
+    </script>
 </body>
 </html>

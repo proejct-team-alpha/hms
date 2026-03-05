@@ -3,105 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>진료실</title>
+    <title>진료 상세 - 홍길동</title>
     <link rel="stylesheet" href="/css/tailwind.min.css">
     <script src="/js/lucide.min.js"></script>
 </head>
-<body class="bg-slate-50 min-h-screen p-6">
-    <div class="max-w-4xl mx-auto space-y-6">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
-                    <i data-lucide="stethoscope" class="w-5 h-5"></i>
-                </div>
-                <h1 class="text-2xl font-bold text-slate-800">진료실</h1>
-            </div>
-            <a href="treatment-list.html" class="text-sm font-medium text-slate-500 hover:text-slate-700">
-                목록으로 돌아가기
-            </a>
-        </div>
+<body class="bg-slate-50 p-6">
+    <div class="max-w-7xl mx-auto space-y-6">
+        <button onclick="history.back()" class="flex items-center gap-2 text-slate-500 hover:text-slate-800 font-medium mb-6 transition-colors">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            목록으로 돌아가기
+        </button>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Left Column: Patient Info -->
-            <div class="col-span-1 space-y-6">
+        <form action="/doctor/treatment/complete" method="POST" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <input type="hidden" name="treatmentId" value="1">
+            
+            <div class="lg:col-span-1 space-y-6">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                     <div class="flex items-center gap-4 mb-6">
-                        <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
+                        <div class="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600">
                             <i data-lucide="user" class="w-8 h-8"></i>
                         </div>
                         <div>
-                            <h2 id="patientName" class="text-xl font-bold text-slate-800">환자 이름</h2>
-                            <div class="text-sm text-slate-500">35세 / M</div>
+                            <h2 class="text-2xl font-bold text-slate-800">홍길동</h2>
+                            <div class="flex items-center gap-2 text-slate-500 mt-1">
+                                <span class="text-sm">35세 / 남</span>
+                                <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                <span class="text-sm">내과</span>
+                            </div>
                         </div>
                     </div>
 
                     <div class="space-y-4">
-                        <div>
-                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">환자 호소 증상</h3>
-                            <div id="patientSymptoms" class="bg-orange-50 text-orange-900 p-3 rounded-xl text-sm border border-orange-100 leading-relaxed">
-                                증상 내용
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                            <div class="text-sm font-medium text-slate-500 mb-1">예약 시간</div>
+                            <div class="flex items-center gap-2 text-slate-800 font-medium">
+                                <i data-lucide="clock" class="w-4 h-4 text-indigo-600"></i>
+                                2025-03-05 09:00
                             </div>
                         </div>
-
-                        <div>
-                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">과거 병력</h3>
-                            <div class="bg-slate-50 text-slate-700 p-3 rounded-xl text-sm border border-slate-100">
-                                고혈압 약 복용 중
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4">
-                        <i data-lucide="activity" class="w-4 h-4 text-indigo-500"></i>
-                        최근 진료 기록
-                    </h3>
-                    <div class="space-y-3">
-                        <div class="border-l-2 border-indigo-200 pl-3 pb-3">
-                            <div class="text-xs text-slate-400 mb-1">2023.09.15</div>
-                            <div class="text-sm text-slate-700">감기 몸살, 약 처방 3일치</div>
-                        </div>
-                        <div class="border-l-2 border-slate-200 pl-3">
-                            <div class="text-xs text-slate-400 mb-1">2023.05.02</div>
-                            <div class="text-sm text-slate-700">건강검진 결과 상담</div>
+                        
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                            <div class="text-sm font-medium text-slate-500 mb-1">환자 증상 메모</div>
+                            <p class="text-slate-800 text-sm leading-relaxed">
+                                두통
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column: Treatment Notes -->
-            <div class="col-span-1 md:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-[600px]">
-                <div class="p-6 border-b border-slate-200 flex items-center gap-2">
-                    <i data-lucide="file-text" class="w-5 h-5 text-indigo-600"></i>
-                    <h2 class="text-lg font-bold text-slate-800">진료 기록 작성</h2>
-                </div>
-                
-                <div class="p-6 flex-1 flex flex-col">
-                    <textarea
-                        id="treatmentNotes"
-                        class="flex-1 w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-slate-700 leading-relaxed"
-                        placeholder="진료 내용, 처방 내역, 특이사항 등을 상세히 기록해주세요."
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i data-lucide="file-text" class="w-5 h-5 text-indigo-600"></i>
+                        진료 기록
+                    </h3>
+                    <textarea 
+                        name="medicalRecord"
+                        rows="6"
+                        class="w-full p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none text-sm leading-relaxed"
+                        placeholder="진료 내용을 상세히 기록해주세요..."
+                        required
                     ></textarea>
                 </div>
 
-                <div class="p-6 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex justify-end gap-3">
-                    <button class="px-6 py-3 bg-white border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-100 transition-colors">
-                        임시 저장
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i data-lucide="pill" class="w-5 h-5 text-indigo-600"></i>
+                        처방 내역
+                    </h3>
+                    <textarea 
+                        name="prescription"
+                        rows="4"
+                        class="w-full p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none text-sm leading-relaxed"
+                        placeholder="처방할 약품 및 지시사항을 입력해주세요..."
+                    ></textarea>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="history.back()" class="px-6 py-3 rounded-xl font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+                        취소
                     </button>
-                    <button 
-                        onclick="handleComplete()"
-                        class="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2"
-                    >
+                    <button type="submit" class="px-6 py-3 rounded-xl font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2">
                         <i data-lucide="check-circle-2" class="w-5 h-5"></i>
-                        진료 완료
+                        진료 완료 처리
                     </button>
                 </div>
             </div>
-        </div>
+        </form>
     </div>
 
-    <script src="/js/app.js"></script>
-    <script src="/js/pages/doctor-treatment-detail.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>

@@ -10,7 +10,6 @@
 </head>
 <body class="bg-slate-50 min-h-screen p-6">
     <div class="max-w-7xl mx-auto space-y-6">
-        <!-- 헤더 -->
         <div class="flex justify-between items-center">
             <h1 class="text-2xl font-bold text-slate-800">물품 담당자 대시보드</h1>
             <a href="item-form.html" class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
@@ -19,7 +18,6 @@
             </a>
         </div>
         
-        <!-- 통계 카드 -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="flex items-center gap-4">
@@ -28,7 +26,7 @@
                     </div>
                     <div>
                         <div class="text-sm font-medium text-slate-500">총 관리 물품</div>
-                        <div class="text-2xl font-bold text-slate-800">124개</div>
+                        <div class="text-2xl font-bold text-slate-800">42개</div>
                     </div>
                 </div>
             </div>
@@ -50,14 +48,13 @@
                     </div>
                     <div>
                         <div class="text-sm font-medium text-slate-500">금일 입고 건수</div>
-                        <div class="text-2xl font-bold text-emerald-600">12건</div>
+                        <div class="text-2xl font-bold text-emerald-600">5건</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- 입출고 현황 차트 -->
             <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-lg font-bold text-slate-800">입출고 현황 (최근 7일)</h2>
@@ -77,7 +74,6 @@
                 </div>
             </div>
 
-            <!-- 재고 부족 알림 -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
@@ -89,65 +85,54 @@
                     </a>
                 </div>
                 <div class="space-y-4">
-                    <!-- 아이템 1 -->
-                    <div class="p-4 bg-red-50/50 rounded-xl border border-red-100 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="font-bold text-slate-800">주사기 (10ml)</div>
-                                <div class="text-xs text-slate-500">의료소모품</div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-xs font-bold text-red-600">현재 50개</div>
-                                <div class="text-[10px] text-slate-400">최소 100개</div>
-                            </div>
-                        </div>
-                        <a href="item-form.html?id=1" class="w-full py-2 bg-white border border-red-200 text-red-600 text-xs font-bold rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-1.5">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                            재고 추가
-                        </a>
-                    </div>
-                    
-                    <!-- 아이템 2 -->
-                    <div class="p-4 bg-red-50/50 rounded-xl border border-red-100 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="font-bold text-slate-800">알코올 솜</div>
-                                <div class="text-xs text-slate-500">의료소모품</div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-xs font-bold text-red-600">현재 120박스</div>
-                                <div class="text-[10px] text-slate-400">최소 200박스</div>
-                            </div>
-                        </div>
-                        <a href="item-form.html?id=2" class="w-full py-2 bg-white border border-red-200 text-red-600 text-xs font-bold rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-1.5">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                            재고 추가
-                        </a>
-                    </div>
-                    
-                    <!-- 아이템 3 -->
-                    <div class="p-4 bg-red-50/50 rounded-xl border border-red-100 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="font-bold text-slate-800">A4 용지</div>
-                                <div class="text-xs text-slate-500">사무용품</div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-xs font-bold text-red-600">현재 2박스</div>
-                                <div class="text-[10px] text-slate-400">최소 5박스</div>
-                            </div>
-                        </div>
-                        <a href="item-form.html?id=3" class="w-full py-2 bg-white border border-red-200 text-red-600 text-xs font-bold rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-1.5">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                            재고 추가
-                        </a>
-                    </div>
+                    <div class="text-center py-6 text-sm text-slate-500">재고가 부족한 물품이 없습니다.</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="/js/app.js"></script>
-    <script src="/js/pages/item-manager-dashboard.js"></script>
+    <script>
+        lucide.createIcons();
+
+        // 차트 초기화 (서버에서 데이터 주입)
+        const ctx = document.getElementById('inventoryChart').getContext('2d');
+        const labels = ["월","화","수","목","금","토","일"];
+        const inboundData = [10, 15, 8, 12, 20, 5, 3];
+        const outboundData = [8, 12, 10, 15, 18, 4, 2];
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: '입고',
+                        data: inboundData,
+                        backgroundColor: '#6366f1',
+                        borderRadius: { topLeft: 4, topRight: 4 },
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.8
+                    },
+                    {
+                        label: '출고',
+                        data: outboundData,
+                        backgroundColor: '#cbd5e1',
+                        borderRadius: { topLeft: 4, topRight: 4 },
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.8
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#64748b' } },
+                    y: { grid: { color: '#f1f5f9', drawBorder: false, borderDash: [3, 3] }, ticks: { color: '#64748b' } }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
