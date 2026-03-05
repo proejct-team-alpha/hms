@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <div class="grid grid-cols-1 gap-4" id="rule-list-container">
   {{#rules}}
   <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex items-start justify-between">
@@ -17,6 +18,106 @@
           <i data-feather="x-circle" class="w-3.5 h-3.5"></i>비활성
         </span>
         {{/isActive}}
+=======
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>병원 규칙 관리 - MediCare+</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/feather.min.js"></script>
+</head>
+<body>
+  
+  <script src="components/sidebar.js"></script>
+
+  <div class="main-content">
+    <script src="components/header.js"></script>
+    
+    <main class="content-wrapper">
+      <div class="space-y-6 max-w-6xl mx-auto">
+        <div class="flex justify-between items-center mb-8">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+              <i data-feather="file-text" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h1 class="text-2xl font-bold text-slate-800">병원 규칙 관리</h1>
+              <p class="text-slate-500 mt-1">챗봇이 참고할 병원 규칙을 관리합니다.</p>
+            </div>
+          </div>
+          <a href="rule-form.html" class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
+            <i data-feather="plus" class="w-5 h-5"></i>
+            규칙 등록
+          </a>
+        </div>
+
+        <!-- Category Tabs and Search -->
+        <div class="flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
+          <div class="flex flex-wrap gap-2" id="category-filters">
+            <!-- Injected by JS -->
+          </div>
+          <div class="relative w-full md:w-64">
+            <i data-feather="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+            <input
+              type="text"
+              id="search-input"
+              placeholder="규칙 제목, 내용 검색..."
+              class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4" id="rule-list-container">
+          <!-- Injected by JS -->
+        </div>
+
+        <!-- Rule Detail Modal -->
+        <div id="rule-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 hidden">
+          <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+                  <i data-feather="file-text" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-slate-800">병원 규칙 상세보기</h3>
+                  <div class="flex items-center gap-2 mt-0.5">
+                    <span class="text-xs font-medium text-slate-500" id="modal-category"></span>
+                    <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
+                    <span class="text-xs font-bold" id="modal-status"></span>
+                  </div>
+                </div>
+              </div>
+              <button onclick="closeModal()" class="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-400 hover:text-slate-600">
+                <i data-feather="x" class="w-6 h-6"></i>
+              </button>
+            </div>
+            <div class="p-8 space-y-6">
+              <div>
+                <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">규칙 제목</h4>
+                <p class="text-xl font-bold text-slate-800" id="modal-title"></p>
+              </div>
+              <div>
+                <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">상세 내용</h4>
+                <div class="bg-slate-50 rounded-xl p-6 border border-slate-100">
+                  <p class="text-slate-700 leading-relaxed whitespace-pre-wrap" id="modal-content"></p>
+                </div>
+              </div>
+              <div class="flex justify-end pt-4">
+                <button
+                  onclick="closeModal()"
+                  class="px-6 py-2.5 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition-all shadow-lg shadow-slate-200"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+>>>>>>> dev
       </div>
       <p class="text-slate-600 text-sm leading-relaxed max-w-3xl truncate">{{content}}</p>
     </div>
