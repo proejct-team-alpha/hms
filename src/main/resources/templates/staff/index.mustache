@@ -3,73 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>원무과 시스템</title>
-    <link rel="stylesheet" href="/css/tailwind.min.css">
-    <script src="/js/lucide.min.js"></script>
+    <title>{{pageTitle}} - 원무과 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="bg-slate-50 min-h-screen flex">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col h-screen sticky top-0">
-        <div class="p-6 flex items-center gap-3 text-white">
-            <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
-                <i data-lucide="building-2" class="w-5 h-5"></i>
-            </div>
-            <span class="text-xl font-bold tracking-tight">원무과 시스템</span>
-        </div>
+    
+    {{> partials/sidebar-staff}}
 
-        <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-            <a href="dashboard.html" target="contentFrame" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
-                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-                <span class="font-medium">대시보드</span>
-            </a>
-            <a href="reception-list.html" target="contentFrame" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
-                <i data-lucide="users" class="w-5 h-5"></i>
-                <span class="font-medium">예약/접수 목록</span>
-            </a>
-            <a href="walkin-reception.html" target="contentFrame" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
-                <i data-lucide="user-plus" class="w-5 h-5"></i>
-                <span class="font-medium">방문 접수</span>
-            </a>
-            <a href="phone-reservation.html" target="contentFrame" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
-                <i data-lucide="phone-call" class="w-5 h-5"></i>
-                <span class="font-medium">전화 예약</span>
-            </a>
-        </nav>
-
-        <div class="p-4 border-t border-slate-800">
-            <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-800 text-white">
-                <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
-                    <span class="text-sm font-bold">원무</span>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium truncate">원무과 직원</p>
-                    <p class="text-xs text-slate-400 truncate">staff@hospital.com</p>
-                </div>
-                <a href="../index.html" class="text-slate-400 hover:text-white">
-                    <i data-lucide="log-out" class="w-5 h-5"></i>
-                </a>
-            </div>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
     <main class="flex-1 flex flex-col h-screen overflow-hidden">
-        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
-            <h2 class="text-lg font-bold text-slate-800" id="pageTitle">원무과 대시보드</h2>
-            <div class="flex items-center gap-4">
-                <button class="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
-                    <i data-lucide="bell" class="w-5 h-5"></i>
-                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                </button>
-            </div>
-        </header>
         
-        <div class="flex-1 overflow-hidden relative bg-slate-50">
-            <iframe name="contentFrame" src="dashboard.html" class="w-full h-full border-none absolute inset-0"></iframe>
+        {{> partials/header}}
+        
+        <div class="flex-1 overflow-hidden relative bg-slate-50 flex flex-col">
+            <iframe name="contentFrame" src="{{defaultFrameUrl}}" class="w-full flex-1 border-none"></iframe>
+            
+            {{> partials/footer}}
         </div>
     </main>
 
-    <script src="/js/app.js"></script>
-    <script src="/js/pages/staff-index.js"></script>
+    <script>
+        lucide.createIcons();
+
+        // iframe 내비게이션 상태 동기화 (원무과 테마: Indigo)
+        const iframe = document.querySelector('iframe[name="contentFrame"]');
+        const navLinks = document.querySelectorAll('.nav-link');
+        
+        if(navLinks.length > 0) {
+            navLinks[0].classList.remove('text-slate-300', 'hover:bg-slate-800');
+            navLinks[0].classList.add('bg-indigo-600', 'text-white');
+        }
+
+        iframe.addEventListener('load', function() {
+            try {
+                const currentUrl = iframe.contentWindow.location.href;
+                navLinks.forEach(link => {
+                    link.classList.remove('bg-indigo-600', 'text-white');
+                    link.classList.add('text-slate-300', 'hover:bg-slate-800');
+                    if (currentUrl.includes(link.getAttribute('href'))) {
+                        link.classList.remove('text-slate-300', 'hover:bg-slate-800');
+                        link.classList.add('bg-indigo-600', 'text-white');
+                    }
+                });
+            } catch (e) {
+                console.log('Cross-origin iframe access denied');
+            }
+        });
+    </script>
 </body>
 </html>

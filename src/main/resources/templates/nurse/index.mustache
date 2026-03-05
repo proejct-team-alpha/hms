@@ -3,45 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{pageTitle}} - 관리자 시스템</title>
+    <title>{{pageTitle}} - 간호사 시스템</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-slate-50 h-screen flex overflow-hidden">
+<body class="bg-slate-50 min-h-screen flex">
     
-    {{> partials/sidebar-admin}}
+    {{> partials/sidebar-nurse}}
 
-    <main class="flex-1 flex flex-col overflow-hidden relative">
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        
         {{> partials/header}}
         
-        <div class="flex-1 overflow-hidden">
-            <iframe name="contentFrame" src="{{defaultFrameUrl}}" class="w-full h-full border-none"></iframe>
+        <div class="flex-1 overflow-hidden relative bg-slate-50 flex flex-col">
+            <iframe name="contentFrame" src="{{defaultFrameUrl}}" class="w-full flex-1 border-none"></iframe>
+            
+            {{> partials/footer}}
         </div>
-
-        {{> partials/footer}}
     </main>
 
     <script>
         lucide.createIcons();
 
-        // iframe 내비게이션 동기화 (관리자 테마: Indigo)
+        // iframe 내비게이션 상태 동기화 (간호사 시스템 테마: Teal)
         const iframe = document.querySelector('iframe[name="contentFrame"]');
         const navLinks = document.querySelectorAll('.nav-link');
         
         if(navLinks.length > 0) {
             navLinks[0].classList.remove('text-slate-300', 'hover:bg-slate-800');
-            navLinks[0].classList.add('bg-indigo-600', 'text-white');
+            navLinks[0].classList.add('bg-teal-600', 'text-white');
         }
 
         iframe.addEventListener('load', function() {
             try {
                 const currentUrl = iframe.contentWindow.location.href;
                 navLinks.forEach(link => {
-                    link.classList.remove('bg-indigo-600', 'text-white');
+                    link.classList.remove('bg-teal-600', 'text-white');
                     link.classList.add('text-slate-300', 'hover:bg-slate-800');
                     if (currentUrl.includes(link.getAttribute('href'))) {
                         link.classList.remove('text-slate-300', 'hover:bg-slate-800');
-                        link.classList.add('bg-indigo-600', 'text-white');
+                        link.classList.add('bg-teal-600', 'text-white');
                     }
                 });
             } catch (e) {
