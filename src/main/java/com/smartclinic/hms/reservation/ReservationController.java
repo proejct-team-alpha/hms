@@ -1,4 +1,4 @@
-package com.smartclinic.hms.reservation.reservation;
+package com.smartclinic.hms.reservation;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

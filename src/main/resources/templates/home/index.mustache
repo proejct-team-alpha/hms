@@ -6,11 +6,12 @@
   <title>MediCare+ - 스마트 병원 예약 및 업무 관리 시스템</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/feather-icons"></script>
-  <link rel="stylesheet" href="/css/style.css"> </head>
+  <script src="/js/header-home.js"></script>
+  <script src="/js/footer-home.js"></script>
+  <script src="/js/sidebar-home.js"></script>
+  <link rel="stylesheet" href="/css/home-style.css"> </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-6 relative">
   
-  {{> components/header}}
-  {{> components/sidebar}}
 
   <div class="text-center mb-12">
     <div class="w-20 h-20 bg-indigo-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-6 shadow-lg">
@@ -22,7 +23,7 @@
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
     <button
-      onclick="location.href='/patient'"
+       onclick="location.href='/reservation/index'"
       class="bg-white p-10 rounded-3xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-300 transition-all group flex flex-col items-center text-center z-10"
     >
       <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mb-6 group-hover:scale-110 transition-transform">
@@ -44,7 +45,6 @@
     </button>
   </div>
 
-  {{> components/footer}}
   
   <script>
     document.addEventListener("DOMContentLoaded", () => {

@@ -6,12 +6,14 @@
   <title>직원 로그인 - MediCare+</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/feather-icons"></script>
-  <link rel="stylesheet" href="/css/style.css"> 
+  <script src="/js/header-home.js"></script>
+  <script src="/js/footer-home.js"></script>
+  <script src="/js/sidebar-home.js"></script>
+  <link rel="stylesheet" href="/css/style-home.css"> 
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-6 relative">
   
-  {{> components/header}}
-  {{> components/sidebar}}
+  
 
   <button 
     onclick="location.href='/'"
@@ -74,7 +76,7 @@
     </form>
   </div>
 
-  {{> components/footer}}
+  
   
   <script>
     document.addEventListener("DOMContentLoaded", () => {
