@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>환자 정보 관리 - {{patientName}}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <title>환자 정보 관리 - 홍길동</title>
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <script src="/js/lucide.min.js"></script>
 </head>
 <body class="bg-slate-50 p-6">
     <div class="max-w-3xl mx-auto space-y-6">
@@ -21,19 +21,19 @@
             </button>
         </div>
 
-        <form action="{{updatePatientUrl}}" method="POST" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <input type="hidden" name="patientId" value="{{patientId}}">
+        <form action="/nurse/patient/1/update" method="POST" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <input type="hidden" name="patientId" value="1">
             
             <div class="bg-indigo-50 border-b border-indigo-100 p-6 flex items-center gap-4">
                 <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100">
                     <i data-lucide="user" class="w-8 h-8"></i>
                 </div>
                 <div>
-                    <h2 class="text-xl font-bold text-slate-800">{{patientName}}</h2>
+                    <h2 class="text-xl font-bold text-slate-800">홍길동</h2>
                     <div class="flex items-center gap-2 text-sm text-slate-600 mt-1">
-                        <span class="font-medium">{{age}}세 / {{gender}}</span>
+                        <span class="font-medium">35세 / 남</span>
                         <span class="text-slate-300">|</span>
-                        <span class="flex items-center gap-1"><i data-lucide="phone" class="w-3.5 h-3.5"></i> {{phone}}</span>
+                        <span class="flex items-center gap-1"><i data-lucide="phone" class="w-3.5 h-3.5"></i> 010-1234-5678</span>
                     </div>
                 </div>
             </div>
@@ -50,7 +50,7 @@
                                 <input
                                     type="tel"
                                     name="phone"
-                                    value="{{phone}}"
+                                    value="010-1234-5678"
                                     class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                                     required
                                 />
@@ -62,7 +62,7 @@
                             <input
                                 type="text"
                                 name="address"
-                                value="{{address}}"
+                                value="서울시 강남구 테헤란로 123"
                                 class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                             />
                         </div>
@@ -79,7 +79,7 @@
                             <textarea
                                 name="medicalNotes"
                                 class="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none h-32 resize-none"
-                            >{{medicalNotes}}</textarea>
+                            >페니실린 알레르기</textarea>
                         </div>
                     </div>
                 </div>

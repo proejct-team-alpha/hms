@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>직접 선택 예약</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <script src="/js/lucide.min.js"></script>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col">
     <main class="flex-1 overflow-y-auto p-8">
         <div class="max-w-2xl mx-auto">
             <div class="mb-6">
-                <a href="{{backUrl}}" class="inline-flex items-center gap-2 text-slate-500 hover:text-slate-800 font-medium transition-colors">
+                <a href="/reservation" class="inline-flex items-center gap-2 text-slate-500 hover:text-slate-800 font-medium transition-colors">
                     <i data-lucide="arrow-left" class="w-5 h-5"></i> 뒤로 가기
                 </a>
             </div>
@@ -27,32 +27,22 @@
                 </div>
             </div>
 
-            {{#isAiRecommended}}
-            <div class="mb-8 p-4 bg-indigo-50 rounded-xl border border-indigo-100 flex items-start gap-3">
-                <i data-lucide="check-circle-2" class="w-5 h-5 text-indigo-600 shrink-0 mt-0.5"></i>
-                <div class="text-sm text-indigo-900">
-                    <span class="font-semibold">AI 추천 정보가 적용되었습니다.</span><br />
-                    추천 진료과: <span>{{aiDeptName}}</span> / 추천 전문의: <span>{{aiDoctorName}}</span>
-                </div>
-            </div>
-            {{/isAiRecommended}}
-
-            <form action="{{submitReservationUrl}}" method="POST" class="space-y-6">
-                <input type="hidden" name="symptoms" value="{{symptoms}}">
+            <form action="/reservation/submit" method="POST" class="space-y-6">
+                <input type="hidden" name="symptoms" value="">
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">환자 성함</label>
                         <div class="relative">
                             <i data-lucide="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                            <input type="text" name="patientName" value="{{patientName}}" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="홍길동" {{#isLoggedIn}}readonly{{/isLoggedIn}}/>
+                            <input type="text" name="patientName" value="" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="홍길동"/>
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">연락처</label>
                         <div class="relative">
                             <i data-lucide="phone" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                            <input type="tel" name="phone" value="{{patientPhone}}" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="010-1234-5678" {{#isLoggedIn}}readonly{{/isLoggedIn}}/>
+                            <input type="tel" name="phone" value="" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="010-1234-5678"/>
                         </div>
                     </div>
                 </div>
@@ -62,18 +52,18 @@
                         <label class="block text-sm font-medium text-slate-700 mb-2">진료과</label>
                         <select name="departmentId" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
                             <option value="">선택해주세요</option>
-                            {{#departments}}
-                            <option value="{{id}}" {{#isSelected}}selected{{/isSelected}}>{{name}}</option>
-                            {{/departments}}
+                            <option value="1">내과</option>
+                            <option value="2">이비인후과</option>
+                            <option value="3">정형외과</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">전문의</label>
                         <select name="doctorId" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
                             <option value="">선택해주세요</option>
-                            {{#doctors}}
-                            <option value="{{id}}" {{#isSelected}}selected{{/isSelected}}>{{name}}</option>
-                            {{/doctors}}
+                            <option value="1">김원장</option>
+                            <option value="2">이원장</option>
+                            <option value="3">박원장</option>
                         </select>
                     </div>
                 </div>
@@ -92,9 +82,11 @@
                             <i data-lucide="clock" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
                             <select name="reservationTime" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
                                 <option value="">선택해주세요</option>
-                                {{#timeSlots}}
-                                <option value="{{time}}">{{time}}</option>
-                                {{/timeSlots}}
+                                <option value="09:00">09:00</option>
+                                <option value="09:30">09:30</option>
+                                <option value="10:00">10:00</option>
+                                <option value="10:30">10:30</option>
+                                <option value="11:00">11:00</option>
                             </select>
                         </div>
                     </div>
