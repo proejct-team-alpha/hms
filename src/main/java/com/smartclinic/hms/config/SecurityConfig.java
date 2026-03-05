@@ -213,7 +213,7 @@ public class SecurityConfig {
             private String resolveTargetUrl(Authentication authentication) {
                 for (GrantedAuthority authority : authentication.getAuthorities()) {
                     return switch (authority.getAuthority()) {
-                        case "ROLE_ADMIN"  -> "/admin/dashboard";
+                        case "ROLE_ADMIN"  -> "/admin/index";
                         case "ROLE_DOCTOR" -> "/doctor/dashboard";
                         case "ROLE_NURSE"  -> "/nurse/dashboard";
                         case "ROLE_STAFF"  -> "/staff/dashboard";

@@ -62,3 +62,7 @@ tasks.withType(JavaCompile).configureEach {
 	options.encoding = 'UTF-8'
 }
 
+bootRun {
+    systemProperties = System.properties
+}
+
