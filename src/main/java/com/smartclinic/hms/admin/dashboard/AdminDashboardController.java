@@ -10,8 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class AdminDashboardController {
 
     @GetMapping("/dashboard")
-    public String dashboard(Model model) {
-        model.addAttribute("pageTitle", "관리자 대시보드");
+    public String dashboard() {
         return "admin/dashboard";
     }
 }
