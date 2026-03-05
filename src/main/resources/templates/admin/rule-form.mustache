@@ -3,97 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>병원 규칙 등록/수정</title>
-    <link rel="stylesheet" href="/css/tailwind.min.css">
-    <script src="/js/lucide.min.js"></script>
+    <title>병원 규칙 {{#isEdit}}수정{{/isEdit}}{{^isEdit}}등록{{/isEdit}}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="bg-slate-50 min-h-screen p-6">
     <div class="max-w-2xl mx-auto space-y-6">
-        <!-- 헤더 -->
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
                     <i data-lucide="file-text" class="w-6 h-6"></i>
                 </div>
                 <div>
-                    <h1 id="pageTitle" class="text-2xl font-bold text-slate-800">병원 규칙 등록</h1>
+                    <h1 class="text-2xl font-bold text-slate-800">병원 규칙 {{#isEdit}}수정{{/isEdit}}{{^isEdit}}등록{{/isEdit}}</h1>
                     <p class="text-slate-500 mt-1">챗봇이 참고할 병원 규칙을 작성합니다.</p>
                 </div>
             </div>
-            <a href="rule-list.html" class="text-sm font-medium text-slate-500 hover:text-slate-700">
-                목록으로 돌아가기
-            </a>
+            <a href="{{listUrl}}" class="text-sm font-medium text-slate-500 hover:text-slate-700">목록으로 돌아가기</a>
         </div>
 
-        <!-- 폼 -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-            <form id="ruleForm" class="space-y-6">
+            <form action="{{submitUrl}}" method="POST" class="space-y-6">
+                {{#isEdit}}<input type="hidden" name="id" value="{{ruleId}}">{{/isEdit}}
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">규칙 제목</label>
-                        <input
-                            type="text"
-                            id="ruleTitle"
-                            required
-                            class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                            placeholder="예: 면회 시간 안내"
-                        />
+                        <input type="text" name="title" value="{{ruleTitle}}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 면회 시간 안내"/>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">카테고리</label>
-                        <select
-                            id="ruleCategory"
-                            class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                        >
-                            <option value="일반안내">일반안내</option>
-                            <option value="주차/시설">주차/시설</option>
-                            <option value="방역지침">방역지침</option>
-                            <option value="기타">기타</option>
+                        <select name="category" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                            {{#categories}}
+                            <option value="{{value}}" {{#isSelected}}selected{{/isSelected}}>{{label}}</option>
+                            {{/categories}}
                         </select>
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-2">규칙 내용 (챗봇 프롬프트 반영)</label>
-                    <textarea
-                        id="ruleContent"
-                        required
-                        class="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none h-48 resize-none leading-relaxed"
-                        placeholder="상세한 규칙 내용을 작성해주세요. 이 내용은 챗봇이 답변할 때 참고합니다."
-                    ></textarea>
+                    <textarea name="content" required class="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none h-48 resize-none leading-relaxed" placeholder="상세한 규칙 내용을 작성해주세요. 이 내용은 챗봇이 답변할 때 참고합니다.">{{ruleContent}}</textarea>
                 </div>
 
                 <div class="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
                     <label class="flex items-center gap-3 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            id="ruleIsActive"
-                            checked
-                            class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-slate-300"
-                            onchange="toggleActiveIcon()"
-                        />
+                        <input type="checkbox" name="isActive" {{#ruleIsActive}}checked{{/ruleIsActive}} class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-slate-300"/>
                         <span class="text-sm font-medium text-slate-700">활성화 (챗봇 응답에 즉시 반영)</span>
                     </label>
-                    <div id="activeIconContainer" class="ml-auto">
-                        <i data-lucide="check-circle-2" class="w-5 h-5 text-green-500"></i>
-                    </div>
                 </div>
 
                 <div class="pt-6 border-t border-slate-200 flex justify-end gap-3">
-                    <a href="rule-list.html" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors">
-                        취소
-                    </a>
+                    <a href="{{listUrl}}" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors">취소</a>
                     <button type="submit" class="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2">
-                        <i data-lucide="save" class="w-5 h-5"></i>
-                        저장하기
+                        <i data-lucide="save" class="w-5 h-5"></i> 저장하기
                     </button>
                 </div>
             </form>
         </div>
     </div>
-
-    <script src="/js/app.js"></script>
-    <script src="/js/pages/admin-rule-form.js"></script>
+    <script>lucide.createIcons();</script>
 </body>
 </html>
