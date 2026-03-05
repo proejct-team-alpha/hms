@@ -14,6 +14,10 @@ const vendors = [
     dest: 'lucide.min.js'
   },
   {
+    src: 'node_modules/feather-icons/dist/feather.min.js',
+    dest: 'feather.min.js'
+  },
+  {
     src: 'node_modules/chart.js/dist/chart.umd.js',
     dest: 'chart.min.js'
   }
