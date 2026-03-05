@@ -6,14 +6,14 @@
   <title>환자 정보 관리 - MediCare+</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/feather-icons"></script>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
   
-  <script src="components/sidebar.js"></script>
+  {{> components/sidebar}}
 
   <div class="main-content">
-    <script src="components/header.js"></script>
+    {{> components/header}}
     
     <main class="content-wrapper">
       <div class="max-w-3xl mx-auto space-y-6">
@@ -24,136 +24,92 @@
             </div>
             <h1 class="text-2xl font-bold text-slate-800">환자 정보 관리</h1>
           </div>
-          <a href="reception-list.html" class="text-sm font-medium text-slate-500 hover:text-slate-700">
+          <a href="/receptions" class="text-sm font-medium text-slate-500 hover:text-slate-700">
             목록으로 돌아가기
           </a>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden" id="detail-container">
-          <!-- Details injected by JS -->
-        </div>
-      </div>
-    </main>
-
-    <script src="components/footer.js"></script>
-  </div>
-
-  <script src="js/data.js"></script>
-  <script>
-    let currentPatientId = null;
-
-    function handleUpdate() {
-      const phone = document.getElementById('patient-phone').value;
-      const address = document.getElementById('patient-address').value;
-      const notes = document.getElementById('patient-notes').value;
-
-      const btn = document.getElementById('update-btn');
-      btn.disabled = true;
-      btn.innerHTML = '<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> 저장 중...';
-
-      setTimeout(() => {
-        updatePatientInfo(currentPatientId, { phone, address, symptoms: notes });
-        alert('환자 정보가 성공적으로 수정되었습니다.');
-        btn.disabled = false;
-        btn.innerHTML = '<i data-feather="save" class="w-5 h-5"></i> 정보 저장 (UPDATE)';
-        feather.replace();
-      }, 1000);
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      const id = parseInt(getQueryParam('id'));
-      currentPatientId = id;
-      const reservation = getReservationById(id);
-
-      if (!reservation) {
-        alert('존재하지 않는 환자입니다.');
-        window.location.href = 'reception-list.html';
-        return;
-      }
-
-      const patient = {
-        id: reservation.id,
-        name: reservation.name,
-        phone: reservation.phone || '010-1234-5678',
-        age: 35,
-        gender: 'M',
-        address: reservation.address || '서울특별시 강남구 테헤란로 123',
-        notes: reservation.symptoms || '고혈압 약 복용 중. 페니실린 알레르기 있음.'
-      };
-
-      document.getElementById('detail-container').innerHTML = \`
-        <div class="bg-indigo-50 border-b border-indigo-100 p-6 flex items-center gap-4">
-          <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100">
-            <i data-feather="user" class="w-8 h-8"></i>
-          </div>
-          <div>
-            <h2 class="text-xl font-bold text-slate-800">\${patient.name}</h2>
-            <div class="flex items-center gap-2 text-sm text-slate-600 mt-1">
-              <span class="font-medium">\${patient.age}세 / \${patient.gender}</span>
-              <span class="text-slate-300">|</span>
-              <span class="flex items-center gap-1"><i data-feather="phone" class="w-3.5 h-3.5"></i> \${patient.phone}</span>
+        {{#patient}}
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="bg-indigo-50 border-b border-indigo-100 p-6 flex items-center gap-4">
+            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100">
+              <i data-feather="user" class="w-8 h-8"></i>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-slate-800">{{name}}</h2>
+              <div class="flex items-center gap-2 text-sm text-slate-600 mt-1">
+                <span class="font-medium">{{age}}세 / {{gender}}</span>
+                <span class="text-slate-300">|</span>
+                <span class="flex items-center gap-1"><i data-feather="phone" class="w-3.5 h-3.5"></i> {{phone}}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="p-8 space-y-8">
-          <div class="grid grid-cols-2 gap-8">
-            <div class="space-y-6">
-              <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">기본 정보</h3>
-              
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">연락처</label>
-                <div class="relative">
-                  <i data-feather="phone" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+          <form action="/patients/{{id}}/update" method="POST" class="p-8 space-y-8">
+            <div class="grid grid-cols-2 gap-8">
+              <div class="space-y-6">
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">기본 정보</h3>
+                
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">연락처</label>
+                  <div class="relative">
+                    <i data-feather="phone" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value="{{phone}}"
+                      class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">주소</label>
                   <input
-                    type="tel"
-                    id="patient-phone"
-                    value="\${patient.phone}"
-                    class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                    type="text"
+                    name="address"
+                    value="{{address}}"
+                    class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                   />
                 </div>
               </div>
 
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">주소</label>
-                <input
-                  type="text"
-                  id="patient-address"
-                  value="\${patient.address}"
-                  class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                />
+              <div class="space-y-6">
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">의료 정보 (특이사항)</h3>
+                
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                    <i data-feather="file-text" class="w-4 h-4 text-indigo-500"></i>
+                    알레르기 및 기저질환
+                  </label>
+                  <textarea
+                    name="notes"
+                    class="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none h-32 resize-none"
+                  >{{notes}}</textarea>
+                </div>
               </div>
             </div>
 
-            <div class="space-y-6">
-              <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">의료 정보 (특이사항)</h3>
-              
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
-                  <i data-feather="file-text" class="w-4 h-4 text-indigo-500"></i>
-                  알레르기 및 기저질환
-                </label>
-                <textarea
-                  id="patient-notes"
-                  class="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none h-32 resize-none"
-                >\${patient.notes}</textarea>
-              </div>
+            <div class="pt-8 border-t border-slate-200 flex justify-end gap-3">
+              <button 
+                type="submit"
+                class="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2"
+              >
+                <i data-feather="save" class="w-5 h-5"></i>
+                정보 저장 (UPDATE)
+              </button>
             </div>
-          </div>
-
-          <div class="pt-8 border-t border-slate-200 flex justify-end gap-3">
-            <button 
-              id="update-btn"
-              onclick="handleUpdate()"
-              class="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50"
-            >
-              <i data-feather="save" class="w-5 h-5"></i>
-              정보 저장 (UPDATE)
-            </button>
-          </div>
+          </form>
         </div>
-      \`;
+        {{/patient}}
+      </div>
+    </main>
 
+    {{> components/footer}}
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
       feather.replace();
     });
   </script>

@@ -1,64 +1,36 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>직접 선택 예약 - MediCare+</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/feather-icons"></script>
-  <link rel="stylesheet" href="css/style.css">
-</head>
 <body class="min-h-screen flex flex-col">
-  <script src="components/header.js"></script>
-  
+  {{> components/header}}
   <main class="flex-1 overflow-y-auto p-8">
     <div class="max-w-5xl mx-auto">
       <div class="max-w-2xl mx-auto">
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-          <div class="flex items-center gap-3 mb-8">
-            <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
-              <i data-feather="calendar" class="w-6 h-6"></i>
-            </div>
-            <div>
-              <h1 class="text-2xl font-bold text-slate-800">진료 예약</h1>
-              <p class="text-slate-500 mt-1">원하시는 진료과와 시간을 선택해주세요.</p>
-            </div>
-          </div>
-
-          <div id="ai-recommendation-info" class="hidden mb-8 p-4 bg-indigo-50 rounded-xl border border-indigo-100 items-start gap-3">
+          
+          {{#recommendation}}
+          <div class="mb-8 p-4 bg-indigo-50 rounded-xl border border-indigo-100 flex items-start gap-3">
             <i data-feather="check-circle" class="w-5 h-5 text-indigo-600 shrink-0 mt-0.5"></i>
             <div class="text-sm text-indigo-900">
               <span class="font-semibold">AI 추천 정보가 적용되었습니다.</span><br />
-              추천 진료과: <span id="info-dept"></span> / 추천 전문의: <span id="info-doctor"></span>
+              추천 진료과: <span>{{dept}}</span> / 추천 전문의: <span>{{doctor}}</span>
             </div>
           </div>
+          {{/recommendation}}
 
-          <form id="reservation-form" class="space-y-6">
+          <form action="/reservations/create" method="POST" class="space-y-6">
             <div class="grid grid-cols-2 gap-6">
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">환자 성함</label>
                 <div class="relative">
                   <i data-feather="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input
-                    type="text"
-                    id="name"
-                    required
-                    class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                    placeholder="홍길동"
-                  />
+                  <input type="text" name="name" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500" placeholder="홍길동" />
                 </div>
               </div>
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">연락처</label>
                 <div class="relative">
                   <i data-feather="phone" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input
-                    type="tel"
-                    id="phone"
-                    required
-                    class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                    placeholder="010-1234-5678"
-                  />
+                  <input type="tel" name="phone" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500" placeholder="010-1234-5678" />
                 </div>
               </div>
             </div>
@@ -66,72 +38,22 @@
             <div class="grid grid-cols-2 gap-6">
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">진료과</label>
-                <select
-                  id="department"
-                  required
-                  class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
-                >
+                <select name="department" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500">
                   <option value="">선택해주세요</option>
-                  <option value="내과">내과</option>
-                  <option value="외과">외과</option>
-                  <option value="소아과">소아과</option>
-                  <option value="이비인후과">이비인후과</option>
-                </select>
+                  <option value="내과" {{#isInternalMedicine}}selected{{/isInternalMedicine}}>내과</option>
+                  </select>
               </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">전문의</label>
-                <select
-                  id="doctor"
-                  required
-                  class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
-                >
-                  <option value="">선택해주세요</option>
-                  <option value="김의사 원장">김의사 원장</option>
-                  <option value="이의사 과장">이의사 과장</option>
-                  <option value="박의사 과장">박의사 과장</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-6">
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">예약 날짜</label>
                 <div class="relative">
                   <i data-feather="calendar" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input
-                    type="date"
-                    id="date"
-                    required
-                    class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                  />
-                </div>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">예약 시간</label>
-                <div class="relative">
-                  <i data-feather="clock" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <select
-                    id="time"
-                    required
-                    class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
-                  >
-                    <option value="">선택해주세요</option>
-                    <option value="09:00">09:00</option>
-                    <option value="10:00">10:00</option>
-                    <option value="11:00">11:00</option>
-                    <option value="14:00">14:00</option>
-                    <option value="15:00">15:00</option>
-                    <option value="16:00">16:00</option>
-                  </select>
+                  <input type="date" name="date" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500"/>
                 </div>
               </div>
             </div>
 
             <div class="pt-6 border-t border-slate-200">
-              <button
-                type="submit"
-                class="w-full py-4 bg-indigo-600 text-white rounded-xl font-medium text-lg hover:bg-indigo-700 transition-colors shadow-sm"
-              >
+              <button type="submit" class="w-full py-4 bg-indigo-600 text-white rounded-xl font-medium text-lg hover:bg-indigo-700 shadow-sm">
                 예약 완료하기
               </button>
             </div>
@@ -140,43 +62,7 @@
       </div>
     </div>
   </main>
-
-  <script src="components/footer.js"></script>
-  <script>
-    feather.replace();
-
-    // URL 파라미터에서 AI 추천 정보 가져오기
-    const urlParams = new URLSearchParams(window.location.search);
-    const recDept = urlParams.get('dept');
-    const recDoctor = urlParams.get('doctor');
-
-    if (recDept && recDoctor) {
-      const infoBox = document.getElementById('ai-recommendation-info');
-      infoBox.classList.remove('hidden');
-      infoBox.classList.add('flex');
-      document.getElementById('info-dept').innerText = recDept;
-      document.getElementById('info-doctor').innerText = recDoctor;
-      
-      document.getElementById('department').value = recDept;
-      document.getElementById('doctor').value = recDoctor;
-    }
-
-    document.getElementById('reservation-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      
-      const name = document.getElementById('name').value;
-      const department = document.getElementById('department').value;
-      const doctor = document.getElementById('doctor').value;
-      const date = document.getElementById('date').value;
-      const time = document.getElementById('time').value;
-
-      // URL 파라미터로 데이터 전달하여 완료 페이지로 이동
-      const params = new URLSearchParams({
-        name, department, doctor, date, time
-      });
-      
-      location.href = \`reservation-complete.html?\${params.toString()}\`;
-    });
-  </script>
+  {{> components/footer}}
+  <script>feather.replace();</script>
 </body>
 </html>

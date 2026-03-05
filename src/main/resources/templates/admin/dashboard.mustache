@@ -6,172 +6,76 @@
   <title>관리자 대시보드 - MediCare+</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/feather-icons"></script>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
   
-  <script src="components/sidebar.js"></script>
+  {{> components/sidebar}}
 
   <div class="main-content">
-    <script src="components/header.js"></script>
+    {{> components/header}}
     
     <main class="content-wrapper">
       <div class="space-y-6 max-w-6xl mx-auto">
         <h1 class="text-2xl font-bold text-slate-800">관리자 대시보드</h1>
         
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6" id="stats-container">
-          <!-- Stats injected by JS -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                <i data-feather="users" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <div class="text-sm font-medium text-slate-500">총 직원 수</div>
+                <div class="text-2xl font-bold text-slate-800">{{totalStaff}}명</div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
+                <i data-feather="calendar" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <div class="text-sm font-medium text-slate-500">예약 취소</div>
+                <div class="text-2xl font-bold text-slate-800">{{cancelledReservations}}건</div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
+                <i data-feather="building-2" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <div class="text-sm font-medium text-slate-500">운영 진료과</div>
+                <div class="text-2xl font-bold text-slate-800">{{activeDepartments}}개</div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600">
+                <i data-feather="shield" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <div class="text-sm font-medium text-slate-500">활성 규칙</div>
+                <div class="text-2xl font-bold text-slate-800">{{activeRules}}개</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Patient Count Graph (Mocked) -->
-          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-lg font-bold text-slate-800">일별 환자 수 추이</h2>
-              <i data-feather="trending-up" class="w-5 h-5 text-indigo-500"></i>
-            </div>
-            <div class="h-[300px] w-full flex items-end justify-between gap-2 pt-8 border-b border-slate-100 relative">
-              <!-- Grid lines -->
-              <div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
-                <div class="w-full border-t border-dashed border-slate-200 h-0"></div>
-                <div class="w-full border-t border-dashed border-slate-200 h-0"></div>
-                <div class="w-full border-t border-dashed border-slate-200 h-0"></div>
-                <div class="w-full border-t border-dashed border-slate-200 h-0"></div>
-                <div class="w-full border-t border-dashed border-slate-200 h-0"></div>
-              </div>
-              
-              <!-- Bars (Mocked for HTML version) -->
-              <div class="flex-1 flex flex-col items-center gap-2 z-10">
-                <div class="w-4 bg-indigo-500 rounded-t-sm" style="height: 45%"></div>
-                <div class="text-xs text-slate-500">02/25</div>
-              </div>
-              <div class="flex-1 flex flex-col items-center gap-2 z-10">
-                <div class="w-4 bg-indigo-500 rounded-t-sm" style="height: 52%"></div>
-                <div class="text-xs text-slate-500">02/26</div>
-              </div>
-              <div class="flex-1 flex flex-col items-center gap-2 z-10">
-                <div class="w-4 bg-indigo-500 rounded-t-sm" style="height: 38%"></div>
-                <div class="text-xs text-slate-500">02/27</div>
-              </div>
-              <div class="flex-1 flex flex-col items-center gap-2 z-10">
-                <div class="w-4 bg-indigo-500 rounded-t-sm" style="height: 65%"></div>
-                <div class="text-xs text-slate-500">02/28</div>
-              </div>
-              <div class="flex-1 flex flex-col items-center gap-2 z-10">
-                <div class="w-4 bg-indigo-500 rounded-t-sm" style="height: 48%"></div>
-                <div class="text-xs text-slate-500">03/01</div>
-              </div>
-              <div class="flex-1 flex flex-col items-center gap-2 z-10">
-                <div class="w-4 bg-indigo-500 rounded-t-sm" style="height: 55%"></div>
-                <div class="text-xs text-slate-500">03/02</div>
-              </div>
-              <div class="flex-1 flex flex-col items-center gap-2 z-10">
-                <div class="w-4 bg-indigo-500 rounded-t-sm" style="height: 42%"></div>
-                <div class="text-xs text-slate-500">03/03</div>
-              </div>
-            </div>
           </div>
-
-          <!-- Item Inventory Graph (Mocked) -->
-          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-lg font-bold text-slate-800">카테고리별 물품 재고 현황</h2>
-              <i data-feather="package" class="w-5 h-5 text-orange-500"></i>
-            </div>
-            <div class="h-[300px] w-full flex flex-col justify-around">
-              <div class="flex items-center gap-4">
-                <div class="w-20 text-sm text-slate-600 text-right">의료소모품</div>
-                <div class="flex-1 h-5 bg-slate-100 rounded-r-sm overflow-hidden">
-                  <div class="h-full bg-orange-500 rounded-r-sm" style="width: 85%"></div>
-                </div>
-              </div>
-              <div class="flex items-center gap-4">
-                <div class="w-20 text-sm text-slate-600 text-right">의약품</div>
-                <div class="flex-1 h-5 bg-slate-100 rounded-r-sm overflow-hidden">
-                  <div class="h-full bg-orange-500 rounded-r-sm" style="width: 62%"></div>
-                </div>
-              </div>
-              <div class="flex items-center gap-4">
-                <div class="w-20 text-sm text-slate-600 text-right">사무용품</div>
-                <div class="flex-1 h-5 bg-slate-100 rounded-r-sm overflow-hidden">
-                  <div class="h-full bg-orange-500 rounded-r-sm" style="width: 45%"></div>
-                </div>
-              </div>
-              <div class="flex items-center gap-4">
-                <div class="w-20 text-sm text-slate-600 text-right">기타비품</div>
-                <div class="flex-1 h-5 bg-slate-100 rounded-r-sm overflow-hidden">
-                  <div class="h-full bg-orange-500 rounded-r-sm" style="width: 30%"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </main>
 
-    <script src="components/footer.js"></script>
+    {{> components/footer}}
   </div>
 
-  <script src="js/data.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const staff = getStaff();
-      const reservations = getReservations();
-      const departments = getDepartments();
-      const rules = getRules();
-      
-      const totalStaff = staff.length;
-      const cancelledReservations = reservations.filter(r => r.status === 'CANCELLED').length;
-      const activeDepartments = departments.filter(d => d.status === 'ACTIVE').length;
-      const activeRules = rules.filter(r => r.isActive).length;
-      
-      document.getElementById('stats-container').innerHTML = `
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-              <i data-feather="users" class="w-6 h-6"></i>
-            </div>
-            <div>
-              <div class="text-sm font-medium text-slate-500">총 직원 수</div>
-              <div class="text-2xl font-bold text-slate-800">${totalStaff}명</div>
-            </div>
-          </div>
-        </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
-              <i data-feather="calendar" class="w-6 h-6"></i>
-            </div>
-            <div>
-              <div class="text-sm font-medium text-slate-500">예약 취소</div>
-              <div class="text-2xl font-bold text-slate-800">${cancelledReservations}건</div>
-            </div>
-          </div>
-        </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
-              <i data-feather="building-2" class="w-6 h-6"></i>
-            </div>
-            <div>
-              <div class="text-sm font-medium text-slate-500">운영 진료과</div>
-              <div class="text-2xl font-bold text-slate-800">${activeDepartments}개</div>
-            </div>
-          </div>
-        </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600">
-              <i data-feather="shield" class="w-6 h-6"></i>
-            </div>
-            <div>
-              <div class="text-sm font-medium text-slate-500">활성 규칙</div>
-              <div class="text-2xl font-bold text-slate-800">${activeRules}개</div>
-            </div>
-          </div>
-        </div>
-      `;
-
       feather.replace();
     });
   </script>

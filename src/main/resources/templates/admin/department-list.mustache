@@ -6,38 +6,40 @@
   <title>진료과 관리 - MediCare+</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/feather-icons"></script>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
   
-  <script src="components/sidebar.js"></script>
+  {{> components/sidebar}}
 
   <div class="main-content">
-    <script src="components/header.js"></script>
+    {{> components/header}}
     
     <main class="content-wrapper">
       <div class="space-y-6 max-w-6xl mx-auto">
+        
         <div class="flex justify-between items-center">
           <h1 class="text-2xl font-bold text-slate-800">진료과 관리</h1>
-          <button 
-            onclick="openModal()"
-            class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-          >
+          <a href="/admin/departments/create" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors">
             <i data-feather="plus" class="w-5 h-5"></i>
             진료과 등록
-          </button>
+          </a>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          
           <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
             <div class="relative w-64">
-              <i data-feather="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-              <input 
-                type="text" 
-                id="search-input"
-                placeholder="진료과명 또는 코드 검색..." 
-                class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-              />
+              <form action="/admin/departments" method="GET">
+                <i data-feather="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                <input 
+                  type="text" 
+                  name="search"
+                  value="{{searchQuery}}"
+                  placeholder="진료과명 또는 코드 검색..." 
+                  class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                />
+              </form>
             </div>
           </div>
 
@@ -51,243 +53,30 @@
                 <th class="p-4 font-medium text-right">관리</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-200" id="department-list-container">
-              <!-- Injected by JS -->
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Registration/Edit Modal -->
-        <div id="dept-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm hidden">
-          <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h2 class="text-xl font-bold text-slate-800" id="modal-title">
-                진료과 등록
-              </h2>
-              <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600">
-                <i data-feather="x" class="w-6 h-6"></i>
-              </button>
-            </div>
-            <form id="dept-form" class="p-6 space-y-4">
-              <input type="hidden" id="dept-id">
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1.5">진료과명</label>
-                <input
-                  type="text"
-                  id="dept-name"
-                  required
-                  class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                  placeholder="예: 내과"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1.5">진료과 코드</label>
-                <input
-                  type="text"
-                  id="dept-code"
-                  required
-                  class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none uppercase"
-                  placeholder="예: IM"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1.5">소속 의사 수</label>
-                <input
-                  type="number"
-                  id="dept-doctor-count"
-                  required
-                  min="0"
-                  class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                  placeholder="0"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1.5">운영 상태</label>
-                <select
-                  id="dept-status"
-                  class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                >
-                  <option value="ACTIVE">운영 중</option>
-                  <option value="INACTIVE">운영 중지</option>
-                </select>
-              </div>
-              <div class="pt-4 flex gap-3">
-                <button
-                  type="button"
-                  onclick="closeModal()"
-                  class="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors"
-                >
-                  취소
-                </button>
-                <button
-                  type="submit"
-                  class="flex-1 px-4 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <i data-feather="save" class="w-4 h-4"></i>
-                  저장
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-      </div>
-    </main>
-
-    <script src="components/footer.js"></script>
-  </div>
-
-  <script src="js/data.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      let departments = getDepartments();
-      let searchQuery = '';
-
-      const listContainer = document.getElementById('department-list-container');
-      const searchInput = document.getElementById('search-input');
-      const modal = document.getElementById('dept-modal');
-      const form = document.getElementById('dept-form');
-
-      function renderList() {
-        const filtered = departments.filter(d => {
-          const matchSearch = d.name.toLowerCase().includes(searchQuery.toLowerCase()) || d.code.toLowerCase().includes(searchQuery.toLowerCase());
-          return matchSearch;
-        });
-
-        if (filtered.length > 0) {
-          listContainer.innerHTML = filtered.map(dept => {
-            const statusClass = dept.status === 'ACTIVE' ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-slate-100 text-slate-800 hover:bg-slate-200';
-            const statusText = dept.status === 'ACTIVE' ? '운영 중' : '운영 중지';
-
-            return `
+            <tbody class="divide-y divide-slate-200">
+              {{#departments}}
               <tr class="hover:bg-slate-50 transition-colors">
                 <td class="p-4">
                   <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
                       <i data-feather="building-2" class="w-4 h-4"></i>
                     </div>
-                    <span class="font-semibold text-slate-800">${dept.name}</span>
+                    <span class="font-semibold text-slate-800">{{name}}</span>
                   </div>
                 </td>
-                <td class="p-4 text-sm text-slate-600 font-mono">${dept.code}</td>
-                <td class="p-4 text-sm text-slate-600">${dept.doctorCount}명</td>
+                <td class="p-4 text-sm text-slate-600 font-mono">{{code}}</td>
+                <td class="p-4 text-sm text-slate-600">{{doctorCount}}명</td>
+                
                 <td class="p-4">
-                  <button 
-                    onclick="handleToggleStatus(${dept.id})"
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${statusClass}"
-                  >
-                    ${statusText}
-                  </button>
+                  <form action="/admin/departments/{{id}}/toggle" method="POST" class="m-0 inline-block">
+                    <button type="submit" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors {{#isActive}}bg-green-100 text-green-800 hover:bg-green-200{{/isActive}}{{^isActive}}bg-slate-100 text-slate-800 hover:bg-slate-200{{/isActive}}">
+                      {{#isActive}}운영 중{{/isActive}}
+                      {{^isActive}}운영 중지{{/isActive}}
+                    </button>
+                  </form>
                 </td>
+                
                 <td class="p-4 text-right">
                   <div class="flex items-center justify-end gap-2">
-                    <button 
-                      onclick="openModal(${dept.id})"
-                      class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                    >
-                      <i data-feather="edit-2" class="w-4 h-4"></i>
-                    </button>
-                    <button 
-                      onclick="handleDelete(${dept.id})"
-                      class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <i data-feather="trash-2" class="w-4 h-4"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            `;
-          }).join('');
-        } else {
-          listContainer.innerHTML = `
-            <tr>
-              <td colspan="5" class="p-8 text-center text-slate-500">
-                검색 결과가 없습니다.
-              </td>
-            </tr>
-          `;
-        }
-        feather.replace();
-      }
-
-      searchInput.addEventListener('input', (e) => {
-        searchQuery = e.target.value;
-        renderList();
-      });
-
-      window.handleDelete = function(id) {
-        if (window.confirm('정말 이 진료과를 삭제하시겠습니까?')) {
-          deleteDepartment(id);
-          departments = getDepartments();
-          renderList();
-        }
-      };
-
-      window.handleToggleStatus = function(id) {
-        const dept = getDepartmentById(id);
-        if (dept) {
-          updateDepartment(id, { status: dept.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE' });
-          departments = getDepartments();
-          renderList();
-        }
-      };
-
-      window.openModal = function(id = null) {
-        const titleEl = document.getElementById('modal-title');
-        const idInput = document.getElementById('dept-id');
-        const nameInput = document.getElementById('dept-name');
-        const codeInput = document.getElementById('dept-code');
-        const countInput = document.getElementById('dept-doctor-count');
-        const statusInput = document.getElementById('dept-status');
-
-        if (id) {
-          const dept = getDepartmentById(id);
-          titleEl.textContent = '진료과 수정';
-          idInput.value = dept.id;
-          nameInput.value = dept.name;
-          codeInput.value = dept.code;
-          countInput.value = dept.doctorCount;
-          statusInput.value = dept.status;
-        } else {
-          titleEl.textContent = '진료과 등록';
-          idInput.value = '';
-          nameInput.value = '';
-          codeInput.value = '';
-          countInput.value = '0';
-          statusInput.value = 'ACTIVE';
-        }
-        modal.classList.remove('hidden');
-      };
-
-      window.closeModal = function() {
-        modal.classList.add('hidden');
-      };
-
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const id = document.getElementById('dept-id').value;
-        const data = {
-          name: document.getElementById('dept-name').value,
-          code: document.getElementById('dept-code').value.toUpperCase(),
-          doctorCount: parseInt(document.getElementById('dept-doctor-count').value),
-          status: document.getElementById('dept-status').value
-        };
-
-        if (id) {
-          updateDepartment(id, data);
-          alert('진료과 정보가 수정되었습니다.');
-        } else {
-          addDepartment(data);
-          alert('새로운 진료과가 등록되었습니다.');
-        }
-        
-        departments = getDepartments();
-        renderList();
-        closeModal();
-      });
-
-      renderList();
-    });
-  </script>
-</body>
-</html>
+                    <a href="/admin/departments/{{id}}/edit" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                      <i data-feather="edit-2

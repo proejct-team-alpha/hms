@@ -6,152 +6,106 @@
   <title>원무과 대시보드 - MediCare+</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/feather-icons"></script>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
   
-  <script src="components/sidebar.js"></script>
+  {{> components/sidebar}}
 
   <div class="main-content">
-    <script src="components/header.js"></script>
+    {{> components/header}}
     
     <main class="content-wrapper">
       <div class="space-y-6 max-w-5xl mx-auto">
         <h1 class="text-2xl font-bold text-slate-800">원무과 대시보드</h1>
         
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="stats-container">
-          <!-- Stats injected by JS -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                <i data-feather="users" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <div class="text-sm font-medium text-slate-500">오늘 총 예약</div>
+                <div class="text-2xl font-bold text-slate-800">{{totalReservations}}명</div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
+                <i data-feather="calendar" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <div class="text-sm font-medium text-slate-500">접수 대기</div>
+                <div class="text-2xl font-bold text-slate-800">{{waitingReservations}}명</div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
+                <i data-feather="check-circle" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <div class="text-sm font-medium text-slate-500">접수 완료</div>
+                <div class="text-2xl font-bold text-slate-800">{{completedReservations}}명</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
             <h2 class="text-lg font-bold text-slate-800 mb-6">시간대별 예약 및 접수 현황</h2>
             <div class="h-64 flex items-center justify-center bg-slate-50 border border-slate-100 rounded-xl">
-              <span class="text-slate-400 text-sm">차트 영역 (HTML 버전에서는 정적 이미지 또는 CSS로 대체)</span>
+              <span class="text-slate-400 text-sm">차트 영역</span>
             </div>
           </div>
 
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
             <div class="flex justify-between items-center mb-4">
               <h2 class="text-lg font-bold text-slate-800">최근 예약 현황 미리보기</h2>
-              <a href="reception-list.html" class="text-sm text-indigo-600 font-medium flex items-center gap-1 hover:text-indigo-800">
+              <a href="/receptions" class="text-sm text-indigo-600 font-medium flex items-center gap-1 hover:text-indigo-800">
                 전체보기 <i data-feather="arrow-right" class="w-4 h-4"></i>
               </a>
             </div>
-            <div class="space-y-3" id="recent-list-container">
-              <!-- Recent list injected by JS -->
+            
+            <div class="space-y-3">
+              {{#recentReservations}}
+              <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                <div class="flex items-center gap-3">
+                  <div class="w-2 h-2 rounded-full {{#isReserved}}bg-orange-500{{/isReserved}}{{#isReceived}}bg-green-500{{/isReceived}}{{#isInProgress}}bg-purple-500{{/isInProgress}}{{#isCompleted}}bg-blue-500{{/isCompleted}}"></div>
+                  <span class="font-medium text-slate-800">{{name}}</span>
+                  <span class="text-sm text-slate-500">{{dept}} / {{time}}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-medium px-2 py-1 rounded-full {{#isReserved}}bg-orange-100 text-orange-700{{/isReserved}}{{#isReceived}}bg-green-100 text-green-700{{/isReceived}}{{#isInProgress}}bg-purple-100 text-purple-700{{/isInProgress}}{{#isCompleted}}bg-blue-100 text-blue-700{{/isCompleted}}">
+                    {{statusText}}
+                  </span>
+                  {{#isReserved}}
+                  <form action="/receptions/{{id}}/receive" method="POST" class="inline m-0">
+                    <button type="submit" class="text-xs font-medium px-3 py-1 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors">접수하기</button>
+                  </form>
+                  {{/isReserved}}
+                </div>
+              </div>
+              {{/recentReservations}}
+              
+              {{^recentReservations}}
+              <div class="p-4 text-center text-slate-500">최근 예약이 없습니다.</div>
+              {{/recentReservations}}
             </div>
           </div>
         </div>
       </div>
     </main>
 
-    <script src="components/footer.js"></script>
+    {{> components/footer}}
   </div>
 
-  <script src="js/data.js"></script>
   <script>
-    function handleReceive(id) {
-      updateReservationStatus(id, 'RECEIVED');
-      window.location.reload();
-    }
-
     document.addEventListener("DOMContentLoaded", () => {
-      const reservations = getReservations();
-      const todayReservations = reservations.filter(r => r.status !== 'CANCELLED');
-      const totalReservations = todayReservations.length;
-      const waitingReservations = todayReservations.filter(r => r.status === 'RESERVED').length;
-      const completedReservations = todayReservations.filter(r => r.status === 'RECEIVED' || r.status === 'IN_PROGRESS' || r.status === 'COMPLETED').length;
-
-      // Render Stats
-      document.getElementById('stats-container').innerHTML = \`
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-              <i data-feather="users" class="w-6 h-6"></i>
-            </div>
-            <div>
-              <div class="text-sm font-medium text-slate-500">오늘 총 예약</div>
-              <div class="text-2xl font-bold text-slate-800">\${totalReservations}명</div>
-            </div>
-          </div>
-        </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
-              <i data-feather="calendar" class="w-6 h-6"></i>
-            </div>
-            <div>
-              <div class="text-sm font-medium text-slate-500">접수 대기</div>
-              <div class="text-2xl font-bold text-slate-800">\${waitingReservations}명</div>
-            </div>
-          </div>
-        </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
-              <i data-feather="check-circle" class="w-6 h-6"></i>
-            </div>
-            <div>
-              <div class="text-sm font-medium text-slate-500">접수 완료</div>
-              <div class="text-2xl font-bold text-slate-800">\${completedReservations}명</div>
-            </div>
-          </div>
-        </div>
-      \`;
-
-      // Render Recent List
-      const recentReservations = [...todayReservations]
-        .sort((a, b) => a.time.localeCompare(b.time))
-        .slice(0, 5);
-
-      const recentContainer = document.getElementById('recent-list-container');
-      if (recentReservations.length > 0) {
-        recentContainer.innerHTML = recentReservations.map(res => {
-          let dotClass = 'bg-green-500';
-          let badgeClass = 'bg-green-100 text-green-700';
-          let statusText = '진료 대기';
-
-          if (res.status === 'RESERVED') {
-            dotClass = 'bg-orange-500';
-            badgeClass = 'bg-orange-100 text-orange-700';
-            statusText = '예약';
-          } else if (res.status === 'IN_PROGRESS') {
-            badgeClass = 'bg-purple-100 text-purple-700';
-            statusText = '진료 중';
-          } else if (res.status === 'COMPLETED') {
-            badgeClass = 'bg-blue-100 text-blue-700';
-            statusText = '진료 완료';
-          }
-
-          return \`
-            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-              <div class="flex items-center gap-3">
-                <div class="w-2 h-2 rounded-full \${dotClass}"></div>
-                <span class="font-medium text-slate-800">\${res.name}</span>
-                <span class="text-sm text-slate-500">\${res.dept} / \${res.time}</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-medium px-2 py-1 rounded-full \${badgeClass}">
-                  \${statusText}
-                </span>
-                \${res.status === 'RESERVED' ? \`
-                  <button onclick="handleReceive(\${res.id})" class="text-xs font-medium px-3 py-1 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors">
-                    접수하기
-                  </button>
-                \` : ''}
-              </div>
-            </div>
-          \`;
-        }).join('');
-      } else {
-        recentContainer.innerHTML = \`
-          <div class="p-4 text-center text-slate-500">
-            최근 예약이 없습니다.
-          </div>
-        \`;
-      }
-
       feather.replace();
     });
   </script>

@@ -6,21 +6,22 @@
   <title>직원 로그인 - MediCare+</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/feather-icons"></script>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css"> 
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-6 relative">
-  <script src="components/header.js"></script>
-  <script src="components/sidebar.js"></script>
+  
+  {{> components/header}}
+  {{> components/sidebar}}
 
   <button 
-    onclick="location.href='index.html'"
+    onclick="location.href='/'"
     class="absolute top-8 left-8 flex items-center gap-2 text-slate-500 hover:text-slate-800 font-medium"
   >
     <i data-feather="arrow-left" class="w-5 h-5"></i>
     처음으로
   </button>
 
-  <div class="bg-white p-10 rounded-3xl shadow-lg border border-slate-200 w-full max-w-md">
+  <div class="bg-white p-10 rounded-3xl shadow-lg border border-slate-200 w-full max-w-md z-10">
     <div class="text-center mb-8">
       <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 mx-auto mb-4">
         <i data-feather="shield" class="w-8 h-8"></i>
@@ -29,13 +30,20 @@
       <p class="text-slate-500 mt-2">병원 업무 시스템에 접속합니다.</p>
     </div>
 
-    <form id="login-form" class="space-y-6">
+    {{#errorMessage}}
+    <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm font-medium text-center">
+      {{errorMessage}}
+    </div>
+    {{/errorMessage}}
+
+    <form action="/login" method="POST" class="space-y-6">
       <div>
         <label class="block text-sm font-medium text-slate-700 mb-2">사번 (아이디)</label>
         <div class="relative">
           <i data-feather="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
           <input
             type="text"
+            name="username"
             required
             class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
             placeholder="사번을 입력하세요"
@@ -49,6 +57,7 @@
           <i data-feather="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
           <input
             type="password"
+            name="password"
             required
             class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
             placeholder="비밀번호를 입력하세요"
@@ -65,12 +74,11 @@
     </form>
   </div>
 
-  <script src="components/footer.js"></script>
+  {{> components/footer}}
+  
   <script>
-    feather.replace();
-    document.getElementById('login-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      location.href = 'role-selection.html';
+    document.addEventListener("DOMContentLoaded", () => {
+      feather.replace();
     });
   </script>
 </body>
