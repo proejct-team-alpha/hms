@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>물품 담당자 대시보드</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <script src="/js/lucide.min.js"></script>
+    <script src="/js/chart.min.js"></script>
 </head>
 <body class="bg-slate-50 min-h-screen p-6">
     <div class="max-w-7xl mx-auto space-y-6">
@@ -26,7 +26,7 @@
                     </div>
                     <div>
                         <div class="text-sm font-medium text-slate-500">총 관리 물품</div>
-                        <div class="text-2xl font-bold text-slate-800">{{totalItemCount}}개</div>
+                        <div class="text-2xl font-bold text-slate-800">45개</div>
                     </div>
                 </div>
             </div>
@@ -37,7 +37,7 @@
                     </div>
                     <div>
                         <div class="text-sm font-medium text-slate-500">재고 부족 물품</div>
-                        <div class="text-2xl font-bold text-red-600">{{lowStockCount}}개</div>
+                        <div class="text-2xl font-bold text-red-600">3개</div>
                     </div>
                 </div>
             </div>
@@ -48,7 +48,7 @@
                     </div>
                     <div>
                         <div class="text-sm font-medium text-slate-500">금일 입고 건수</div>
-                        <div class="text-2xl font-bold text-emerald-600">{{todayInboundCount}}건</div>
+                        <div class="text-2xl font-bold text-emerald-600">7건</div>
                     </div>
                 </div>
             </div>
@@ -85,28 +85,38 @@
                     </a>
                 </div>
                 <div class="space-y-4">
-                    {{#lowStockItems}}
                     <div class="p-4 bg-red-50/50 rounded-xl border border-red-100 space-y-3">
                         <div class="flex items-center justify-between">
                             <div>
-                                <div class="font-bold text-slate-800">{{itemName}}</div>
-                                <div class="text-xs text-slate-500">{{category}}</div>
+                                <div class="font-bold text-slate-800">알코올 솜</div>
+                                <div class="text-xs text-slate-500">의료소모품</div>
                             </div>
                             <div class="text-right">
-                                <div class="text-xs font-bold text-red-600">현재 {{currentStock}}{{unit}}</div>
-                                <div class="text-[10px] text-slate-400">최소 {{minStock}}{{unit}}</div>
+                                <div class="text-xs font-bold text-red-600">현재 5개</div>
+                                <div class="text-[10px] text-slate-400">최소 20개</div>
                             </div>
                         </div>
-                        <a href="{{addStockUrl}}" class="w-full py-2 bg-white border border-red-200 text-red-600 text-xs font-bold rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-1.5">
+                        <a href="/item-manager/item/1/add-stock" class="w-full py-2 bg-white border border-red-200 text-red-600 text-xs font-bold rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-1.5">
                             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                             재고 추가
                         </a>
                     </div>
-                    {{/lowStockItems}}
-                    
-                    {{^lowStockItems}}
-                    <div class="text-center py-6 text-sm text-slate-500">재고가 부족한 물품이 없습니다.</div>
-                    {{/lowStockItems}}
+                    <div class="p-4 bg-red-50/50 rounded-xl border border-red-100 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="font-bold text-slate-800">밴드</div>
+                                <div class="text-xs text-slate-500">의료소모품</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs font-bold text-red-600">현재 8개</div>
+                                <div class="text-[10px] text-slate-400">최소 30개</div>
+                            </div>
+                        </div>
+                        <a href="/item-manager/item/2/add-stock" class="w-full py-2 bg-white border border-red-200 text-red-600 text-xs font-bold rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-1.5">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            재고 추가
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -115,11 +125,10 @@
     <script>
         lucide.createIcons();
 
-        // 차트 초기화 (서버에서 데이터 주입)
         const ctx = document.getElementById('inventoryChart').getContext('2d');
-        const labels = {{{chartLabelsJson}}};
-        const inboundData = {{{chartInboundDataJson}}};
-        const outboundData = {{{chartOutboundDataJson}}};
+        const labels = ["3/1", "3/2", "3/3", "3/4", "3/5", "3/6", "3/7"];
+        const inboundData = [12, 8, 15, 10, 7, 9, 11];
+        const outboundData = [8, 10, 7, 12, 9, 8, 6];
         
         new Chart(ctx, {
             type: 'bar',

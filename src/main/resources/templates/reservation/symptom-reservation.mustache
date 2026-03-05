@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 증상 분석 예약</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <script src="/js/lucide.min.js"></script>
     <style>
         .animate-in { animation: animateIn 0.3s ease-out forwards; }
         @keyframes animateIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -15,7 +15,7 @@
     <main class="flex-1 overflow-y-auto p-8">
         <div class="max-w-2xl mx-auto">
             <div class="mb-6">
-                <a href="{{backUrl}}" class="inline-flex items-center gap-2 text-slate-500 hover:text-slate-800 font-medium transition-colors">
+                <a href="/reservation" class="inline-flex items-center gap-2 text-slate-500 hover:text-slate-800 font-medium transition-colors">
                     <i data-lucide="arrow-left" class="w-5 h-5"></i> 뒤로 가기
                 </a>
             </div>
@@ -53,7 +53,7 @@
                                 <h3 class="text-lg font-semibold text-indigo-900">AI 추천 결과</h3>
                                 <p class="text-indigo-700 mt-1 mb-4">입력하신 증상에 가장 적합한 진료과와 전문의입니다.</p>
                                 
-                                <form action="{{proceedReservationUrl}}" method="POST">
+                                <form action="/reservation/proceed" method="POST">
                                     <input type="hidden" name="symptoms" id="hiddenSymptoms">
                                     <input type="hidden" name="deptId" id="hiddenDeptId">
                                     <input type="hidden" name="doctorId" id="hiddenDoctorId">
@@ -90,7 +90,6 @@
             document.getElementById('analyzeBtn').disabled = val.length === 0;
         }
 
-        // 실제 프로젝트에서는 이 부분에서 fetch()를 통해 AI 서버와 통신합니다.
         function handleAnalyze() {
             const symptom = document.getElementById('symptomInput').value.trim();
             if (!symptom) return;
@@ -104,13 +103,12 @@
                 btn.innerHTML = '분석 완료';
                 btn.classList.replace('bg-indigo-600', 'bg-slate-400');
                 
-                // 모의 데이터 세팅 (실제로는 API 응답값)
                 document.getElementById('recDept').textContent = '내과';
                 document.getElementById('recDoctor').textContent = '김의사 원장';
                 
                 document.getElementById('hiddenSymptoms').value = symptom;
-                document.getElementById('hiddenDeptId').value = 'IM'; // 진료과 코드
-                document.getElementById('hiddenDoctorId').value = 'DOC1'; // 의사 식별자
+                document.getElementById('hiddenDeptId').value = 'IM';
+                document.getElementById('hiddenDoctorId').value = 'DOC1';
 
                 document.getElementById('resultDiv').classList.remove('hidden');
             }, 1500);

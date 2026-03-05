@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>물품 {{#isEdit}}수정{{/isEdit}}{{^isEdit}}등록{{/isEdit}}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <title>물품 등록</title>
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <script src="/js/lucide.min.js"></script>
 </head>
 <body class="bg-slate-50 min-h-screen p-6">
     <div class="max-w-2xl mx-auto space-y-6">
@@ -15,25 +15,23 @@
                     <i data-lucide="package" class="w-6 h-6"></i>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-bold text-slate-800">물품 {{#isEdit}}수정{{/isEdit}}{{^isEdit}}등록{{/isEdit}}</h1>
+                    <h1 class="text-2xl font-bold text-slate-800">물품 등록</h1>
                     <p class="text-slate-500 mt-1">병원에서 사용하는 물품의 재고와 최소 수량을 관리합니다.</p>
                 </div>
             </div>
-            <a href="{{listUrl}}" class="text-sm font-medium text-slate-500 hover:text-slate-700">
+            <a href="/item-manager/items" class="text-sm font-medium text-slate-500 hover:text-slate-700">
                 목록으로 돌아가기
             </a>
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-            <form action="{{submitUrl}}" method="POST" class="space-y-6">
-                {{#isEdit}}<input type="hidden" name="itemId" value="{{itemId}}">{{/isEdit}}
-                
+            <form action="/item-manager/item/save" method="POST" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">물품명</label>
                         <div class="relative">
                             <i data-lucide="package" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                            <input type="text" name="itemName" value="{{itemName}}" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 알코올 솜"/>
+                            <input type="text" name="itemName" value="" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 알코올 솜"/>
                         </div>
                     </div>
                     <div>
@@ -41,9 +39,9 @@
                         <div class="relative">
                             <i data-lucide="layers" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
                             <select name="category" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-                                {{#categories}}
-                                <option value="{{value}}" {{#isSelected}}selected{{/isSelected}}>{{label}}</option>
-                                {{/categories}}
+                                <option value="MEDICAL">의료소모품</option>
+                                <option value="DRUG">의약품</option>
+                                <option value="OFFICE">사무용품</option>
                             </select>
                         </div>
                     </div>
@@ -54,24 +52,24 @@
                         <label class="block text-sm font-medium text-slate-700 mb-2">현재 재고 수량</label>
                         <div class="relative">
                             <i data-lucide="hash" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                            <input type="number" name="itemStock" value="{{itemStock}}" required min="0" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"/>
+                            <input type="number" name="itemStock" value="0" required min="0" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"/>
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">최소 유지 수량</label>
                         <div class="relative">
                             <i data-lucide="hash" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                            <input type="number" name="itemMinStock" value="{{itemMinStock}}" required min="0" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"/>
+                            <input type="number" name="itemMinStock" value="10" required min="0" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"/>
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">단위</label>
-                        <input type="text" name="itemUnit" value="{{itemUnit}}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 개, 박스, 정"/>
+                        <input type="text" name="itemUnit" value="개" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 개, 박스, 정"/>
                     </div>
                 </div>
 
                 <div class="pt-6 border-t border-slate-200 flex justify-end gap-3">
-                    <a href="{{listUrl}}" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors inline-block">
+                    <a href="/item-manager/items" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors inline-block">
                         취소
                     </a>
                     <button type="submit" class="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2">

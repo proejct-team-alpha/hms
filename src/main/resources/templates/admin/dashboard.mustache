@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>관리자 대시보드</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <script src="/js/lucide.min.js"></script>
+    <script src="/js/chart.min.js"></script>
 </head>
 <body class="bg-slate-50 min-h-screen p-6">
     <div class="max-w-7xl mx-auto space-y-6">
@@ -16,25 +16,25 @@
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600"><i data-lucide="users" class="w-6 h-6"></i></div>
-                    <div><div class="text-sm font-medium text-slate-500">총 직원 수</div><div class="text-2xl font-bold text-slate-800">{{totalStaff}}명</div></div>
+                    <div><div class="text-sm font-medium text-slate-500">총 직원 수</div><div class="text-2xl font-bold text-slate-800">42명</div></div>
                 </div>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600"><i data-lucide="calendar" class="w-6 h-6"></i></div>
-                    <div><div class="text-sm font-medium text-slate-500">오늘 예약 취소</div><div class="text-2xl font-bold text-slate-800">{{todayCancel}}건</div></div>
+                    <div><div class="text-sm font-medium text-slate-500">오늘 예약 취소</div><div class="text-2xl font-bold text-slate-800">3건</div></div>
                 </div>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600"><i data-lucide="building-2" class="w-6 h-6"></i></div>
-                    <div><div class="text-sm font-medium text-slate-500">운영 진료과</div><div class="text-2xl font-bold text-slate-800">{{activeDepts}}개</div></div>
+                    <div><div class="text-sm font-medium text-slate-500">운영 진료과</div><div class="text-2xl font-bold text-slate-800">8개</div></div>
                 </div>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
-                    <div><div class="text-sm font-medium text-slate-500">활성 규칙</div><div class="text-2xl font-bold text-slate-800">{{activeRules}}개</div></div>
+                    <div><div class="text-sm font-medium text-slate-500">활성 규칙</div><div class="text-2xl font-bold text-slate-800">12개</div></div>
                 </div>
             </div>
         </div>
@@ -58,12 +58,11 @@
     <script>
         lucide.createIcons();
 
-        // 차트 데이터 서버 바인딩
         new Chart(document.getElementById('patientChart').getContext('2d'), {
             type: 'line',
             data: {
-                labels: {{{patientChartLabels}}},
-                datasets: [{ label: '환자 수', data: {{{patientChartData}}}, borderColor: '#6366f1', backgroundColor: '#6366f1', borderWidth: 3, tension: 0.4 }]
+                labels: ['1/1', '1/2', '1/3', '1/4', '1/5', '1/6', '1/7'],
+                datasets: [{ label: '환자 수', data: [45, 52, 48, 61, 55, 67, 58], borderColor: '#6366f1', backgroundColor: '#6366f1', borderWidth: 3, tension: 0.4 }]
             },
             options: { responsive: true, maintainAspectRatio: false }
         });
@@ -71,8 +70,8 @@
         new Chart(document.getElementById('inventoryChart').getContext('2d'), {
             type: 'bar',
             data: {
-                labels: {{{inventoryChartLabels}}},
-                datasets: [{ label: '재고량', data: {{{inventoryChartData}}}, backgroundColor: '#f59e0b', borderRadius: 4 }]
+                labels: ['의료소모품', '의약품', '사무용품'],
+                datasets: [{ label: '재고량', data: [120, 85, 45], backgroundColor: '#f59e0b', borderRadius: 4 }]
             },
             options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
         });
