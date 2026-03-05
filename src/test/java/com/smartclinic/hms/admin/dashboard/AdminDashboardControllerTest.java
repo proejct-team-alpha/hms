@@ -1,5 +1,7 @@
 package com.smartclinic.hms.admin.dashboard;
 
+import com.smartclinic.hms.admin.dashboard.dto.AdminDashboardStatsResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,10 +14,13 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -29,6 +34,15 @@ class AdminDashboardControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @MockitoBean
+    private AdminDashboardStatsService adminDashboardStatsService;
+
+    @BeforeEach
+    void setUp() {
+        given(adminDashboardStatsService.getDashboardStats())
+                .willReturn(new AdminDashboardStatsResponse(7L, 70L, 12L, 4L));
+    }
+
     @Test
     @DisplayName("ROLE_ADMIN can render admin dashboard")
     void dashboard_withAdminRole_rendersDashboardView() throws Exception {
@@ -39,7 +53,11 @@ class AdminDashboardControllerTest {
         mockMvc.perform(get("/admin/dashboard").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/dashboard"))
-                .andExpect(model().attribute("pageTitle", "Admin Dashboard"));
+                .andExpect(model().attribute("pageTitle", "Admin Dashboard"))
+                .andExpect(model().attribute("todayReservations", 7L))
+                .andExpect(model().attribute("totalReservations", 70L))
+                .andExpect(model().attribute("totalStaff", 12L))
+                .andExpect(model().attribute("lowStockItems", 4L));
     }
 
     @Test
@@ -62,6 +80,33 @@ class AdminDashboardControllerTest {
         // when
         // then
         mockMvc.perform(get("/admin/dashboard").with(user("staff").roles("STAFF")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("ROLE_ADMIN can fetch dashboard stats as JSON")
+    void dashboardStats_withAdminRole_returnsJson() throws Exception {
+        // given
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/dashboard/stats").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.todayReservations").value(7))
+                .andExpect(jsonPath("$.data.totalReservations").value(70))
+                .andExpect(jsonPath("$.data.totalStaff").value(12))
+                .andExpect(jsonPath("$.data.lowStockItems").value(4));
+    }
+
+    @Test
+    @DisplayName("ROLE_STAFF is forbidden from dashboard stats JSON")
+    void dashboardStats_withNonAdminRole_isForbidden() throws Exception {
+        // given
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/dashboard/stats").with(user("staff").roles("STAFF")))
                 .andExpect(status().isForbidden());
     }
 

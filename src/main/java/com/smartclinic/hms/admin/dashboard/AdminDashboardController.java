@@ -1,25 +1,30 @@
 package com.smartclinic.hms.admin.dashboard;
 
+import com.smartclinic.hms.admin.dashboard.dto.AdminDashboardStatsResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.util.Map;
+
 @Controller
+@RequiredArgsConstructor
 @RequestMapping("/admin")
 public class AdminDashboardController {
 
+    private final AdminDashboardStatsService adminDashboardStatsService;
+
     @GetMapping("/dashboard")
-    public String dashboard(Model model) {
-        model.addAttribute("pageTitle", "Admin Dashboard");
-        model.addAttribute("totalStaff", 0);
-        model.addAttribute("todayCancel", 0);
-        model.addAttribute("activeDepts", 0);
-        model.addAttribute("activeRules", 0);
-        model.addAttribute("patientChartLabels", "[]");
-        model.addAttribute("patientChartData", "[]");
-        model.addAttribute("inventoryChartLabels", "[]");
-        model.addAttribute("inventoryChartData", "[]");
+    public String dashboard(HttpServletRequest req) {
+        AdminDashboardStatsResponse stats = adminDashboardStatsService.getDashboardStats();
+
+        req.setAttribute("model", stats);
         return "admin/dashboard";
     }
+
 }

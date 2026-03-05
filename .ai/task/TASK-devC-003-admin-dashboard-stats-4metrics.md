@@ -15,7 +15,7 @@
 - ACTIVE_ROLE: `DEV_C`
 - Scope (URL): `/admin/dashboard`, `/admin/dashboard/stats`
 - Scope (Module): `admin/dashboard`, `admin/item`
-- Status: `TODO`
+- Status: `DONE`
 
 ## 2) Goal
 
@@ -145,8 +145,8 @@ Authorization
 
 ### 6.2 Executed Tests
 
-- 테스트 클래스: 미실행 (Task 문서 작성 단계)
-- 결과: 미실행
+- 테스트 클래스: `AdminDashboardControllerTest`, `AdminDashboardStatsServiceTest`, `AdminDashboardStatsRepositoryTest`
+- 결과: 통과
 
 ## 7) Report (Step D)
 
@@ -156,9 +156,10 @@ Authorization
 
 ### 7.2 Implementation Summary
 
-- 관리자 대시보드 통계 4종을 DB 집계 쿼리 기반으로 구현하는 작업 계획을 정의했다.
-- SSR과 JSON 통계 API가 동일 집계 결과를 사용하도록 서비스/리포지토리 일원화 전략을 정리했다.
-- Repository/DataJpaTest + Service/Mockito + Controller/MockMvc 권한 검증 계획을 포함했다.
+- 관리자 대시보드 통계 4종(오늘 예약, 총 예약, 직원 수, 재고 부족)을 Repository 집계 쿼리로 구현했다.
+- `AdminDashboardController`에서 SSR 모델 주입과 `GET /admin/dashboard/stats` JSON 응답을 동일 서비스로 통합했다.
+- 대시보드 템플릿의 카드 4개를 통계 모델 값 바인딩으로 교체했다.
+- Repository/DataJpaTest, Service/Mockito, Controller/MockMvc 권한 테스트를 추가해 동작을 검증했다.
 
 ### 7.3 References + Versions
 
@@ -171,8 +172,8 @@ Authorization
 
 ### 7.4 Verification Result
 
-- 실행한 테스트: 없음 (Task 문서 작성만 수행)
-- 수동 검증: 템플릿 형식/Task ID/DEV_C 범위 점검 완료
+- 실행한 테스트: `./gradlew test --tests "com.smartclinic.hms.admin.dashboard.AdminDashboardControllerTest" --tests "com.smartclinic.hms.admin.dashboard.AdminDashboardStatsServiceTest" --tests "com.smartclinic.hms.admin.dashboard.AdminDashboardStatsRepositoryTest"`
+- 수동 검증: `/admin/dashboard` 모델 키 바인딩과 `/admin/dashboard/stats` JSON 구조 확인
 
 ### 7.5 TODO / Risk / Escalation
 
@@ -195,7 +196,7 @@ Authorization
 
 ## 9) Done Definition
 
-- [ ] 기능 동작 확인
-- [ ] 테스트 통과
+- [x] 기능 동작 확인
+- [x] 테스트 통과
 - [x] Report 작성 완료
 - [x] 금지 사항 위반 없음
