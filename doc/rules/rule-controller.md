@@ -52,6 +52,7 @@
 2. SSR과 API URL을 분리한다.
 - SSR: 템플릿 렌더링 엔드포인트
 - API: 데이터 조회/처리 엔드포인트
+- URL을 새로 만들거나 변경할 때는 외부 문서 저장소 `https://github.com/proejct-team-alpha/documents`를 참고해 사전 정의된 주소만 사용한다.
 
 3. DTO 네이밍을 고정한다.
 - 요청 DTO: `...Request`
@@ -86,6 +87,7 @@
 - [ ] Controller가 Service 외 계층을 직접 호출하지 않는가
 - [ ] Request/Response DTO 네이밍이 규칙을 따르는가
 - [ ] URL/권한 규칙이 기존 prefix 정책을 유지하는가
+- [ ] URL 생성/변경 시 외부 문서 저장소 기준의 사전 정의 주소만 사용했는가
 - [ ] 비즈니스 로직이 Controller에 들어가지 않았는가
 
 ---

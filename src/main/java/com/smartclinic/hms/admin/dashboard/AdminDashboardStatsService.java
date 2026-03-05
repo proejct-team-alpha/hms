@@ -1,5 +1,8 @@
 package com.smartclinic.hms.admin.dashboard;
 
+import com.smartclinic.hms.admin.item.ItemRepository;
+import com.smartclinic.hms.admin.reservation.AdminReservationRepository;
+import com.smartclinic.hms.admin.staff.AdminStaffRepository;
 import com.smartclinic.hms.admin.dashboard.dto.AdminDashboardStatsResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -14,17 +17,24 @@ import java.time.LocalDate;
 @Transactional(readOnly = true)
 public class AdminDashboardStatsService {
 
-    private final AdminDashboardStatsRepository adminDashboardStatsRepository;
+    private final AdminReservationRepository adminReservationRepository;
+    private final AdminStaffRepository adminStaffRepository;
+    private final ItemRepository itemRepository;
 
     public AdminDashboardStatsResponse getDashboardStats() {
         return getDashboardStats(LocalDate.now());
     }
 
     public AdminDashboardStatsResponse getDashboardStats(LocalDate today) {
+        long lowStockItemCount = itemRepository.findAllProjectedBy()
+                .stream()
+                .filter(item -> item.getQuantity() < item.getMinQuantity())
+                .count();
+
         return new AdminDashboardStatsResponse(
-                adminDashboardStatsRepository.countReservationsByDate(today),
-                adminDashboardStatsRepository.countAllReservations(),
-                adminDashboardStatsRepository.countActiveStaff(),
-                adminDashboardStatsRepository.countLowStockItems());
+                adminReservationRepository.countByReservationDate(today),
+                adminReservationRepository.count(),
+                adminStaffRepository.countByActiveTrue(),
+                lowStockItemCount);
     }
 }

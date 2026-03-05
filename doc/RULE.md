@@ -16,6 +16,7 @@
 | [rule_javascript.md](rules/rule_javascript.md) | 프론트엔드 (JavaScript) | 변수/함수 규칙, 비동기 처리, 에러 처리, 금지 패턴 |
 | [rule_css.md](rules/rule_css.md) | 스타일 (CSS) | BEM, 레이아웃 원칙, 파일 구조, Mustache 연동 |
 | [rule-controller.md](rules/rule-controller.md) | Controller (SSR/API) | SSR/API 분리, `Resp.ok`, DTO 네이밍, 체크리스트 |
+| [rule-repository.md](rules/rule-repository.md) | Repository (Spring Data JPA) | 모듈 배치, 네이밍, 쿼리 우선순위, 집계/EntityManager 규칙 |
 
 ---
 
@@ -37,6 +38,17 @@
 - **DTO 네이밍**: 요청 `...Request`, 응답 `...Response` 규칙 고정
 - **체크리스트**: 서비스 위임, 권한 정책, 응답 형식 일관성을 점검
 - **상세 참조**: [rule-controller.md](rules/rule-controller.md)
+
+---
+
+## Repository Rules 요약
+
+- **소유 모듈 배치**: Repository는 화면 패키지가 아닌 소유 도메인 모듈에 배치
+- **금지 네이밍**: 화면/통계 전용 Repo 금지 (`AdminDashboardStatsRepository`, `DashboardRepository`, `StatsRepository`)
+- **쿼리 우선순위**: 파생 메서드 → Projection → `@Query`
+- **집계 처리 원칙**: 단일 도메인 집계는 도메인 Repository, 다중 도메인 집계는 Service 조합
+- **EntityManager 제한**: 원칙적 직접 사용 금지, 예외 조건 충족 시에만 허용
+- **상세 참조**: [rule-repository.md](rules/rule-repository.md)
 
 ---
 

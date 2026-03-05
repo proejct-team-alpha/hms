@@ -1,5 +1,8 @@
 package com.smartclinic.hms.admin.dashboard;
 
+import com.smartclinic.hms.admin.item.ItemRepository;
+import com.smartclinic.hms.admin.reservation.AdminReservationRepository;
+import com.smartclinic.hms.admin.staff.AdminStaffRepository;
 import com.smartclinic.hms.admin.dashboard.dto.AdminDashboardStatsResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,7 +21,13 @@ import static org.mockito.BDDMockito.then;
 class AdminDashboardStatsServiceTest {
 
     @Mock
-    private AdminDashboardStatsRepository adminDashboardStatsRepository;
+    private AdminReservationRepository adminReservationRepository;
+
+    @Mock
+    private AdminStaffRepository adminStaffRepository;
+
+    @Mock
+    private ItemRepository itemRepository;
 
     @InjectMocks
     private AdminDashboardStatsService adminDashboardStatsService;
@@ -28,10 +37,13 @@ class AdminDashboardStatsServiceTest {
     void getDashboardStats_returnsAggregatedMetrics() {
         // given
         LocalDate today = LocalDate.of(2026, 3, 5);
-        given(adminDashboardStatsRepository.countReservationsByDate(today)).willReturn(5L);
-        given(adminDashboardStatsRepository.countAllReservations()).willReturn(120L);
-        given(adminDashboardStatsRepository.countActiveStaff()).willReturn(18L);
-        given(adminDashboardStatsRepository.countLowStockItems()).willReturn(3L);
+        given(adminReservationRepository.countByReservationDate(today)).willReturn(5L);
+        given(adminReservationRepository.count()).willReturn(120L);
+        given(adminStaffRepository.countByActiveTrue()).willReturn(18L);
+        given(itemRepository.findAllProjectedBy()).willReturn(java.util.List.of(
+                stock(2, 5),
+                stock(20, 10)
+        ));
 
         // when
         AdminDashboardStatsResponse response = adminDashboardStatsService.getDashboardStats(today);
@@ -40,11 +52,25 @@ class AdminDashboardStatsServiceTest {
         assertThat(response.todayReservations()).isEqualTo(5L);
         assertThat(response.totalReservations()).isEqualTo(120L);
         assertThat(response.totalStaff()).isEqualTo(18L);
-        assertThat(response.lowStockItems()).isEqualTo(3L);
+        assertThat(response.lowStockItems()).isEqualTo(1L);
 
-        then(adminDashboardStatsRepository).should().countReservationsByDate(today);
-        then(adminDashboardStatsRepository).should().countAllReservations();
-        then(adminDashboardStatsRepository).should().countActiveStaff();
-        then(adminDashboardStatsRepository).should().countLowStockItems();
+        then(adminReservationRepository).should().countByReservationDate(today);
+        then(adminReservationRepository).should().count();
+        then(adminStaffRepository).should().countByActiveTrue();
+        then(itemRepository).should().findAllProjectedBy();
+    }
+
+    private ItemRepository.StockLevelProjection stock(int quantity, int minQuantity) {
+        return new ItemRepository.StockLevelProjection() {
+            @Override
+            public int getQuantity() {
+                return quantity;
+            }
+
+            @Override
+            public int getMinQuantity() {
+                return minQuantity;
+            }
+        };
     }
 }

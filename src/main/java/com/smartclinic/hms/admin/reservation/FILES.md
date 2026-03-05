@@ -5,3 +5,4 @@
 | 파일 | 설명 |
 |------|------|
 | AdminReservationController.java | GET /admin/reservation/list, POST /admin/reservation/cancel |
+| AdminReservationRepository.java | Reservation 통계/조회 Repository |

@@ -1,5 +1,8 @@
 package com.smartclinic.hms.admin.dashboard;
 
+import com.smartclinic.hms.admin.item.ItemRepository;
+import com.smartclinic.hms.admin.reservation.AdminReservationRepository;
+import com.smartclinic.hms.admin.staff.AdminStaffRepository;
 import com.smartclinic.hms.domain.Department;
 import com.smartclinic.hms.domain.Doctor;
 import com.smartclinic.hms.domain.Item;
@@ -14,7 +17,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDate;
@@ -22,12 +24,17 @@ import java.time.LocalDate;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-@Import(AdminDashboardStatsRepository.class)
 @TestPropertySource(properties = "spring.sql.init.mode=never")
 class AdminDashboardStatsRepositoryTest {
 
     @Autowired
-    private AdminDashboardStatsRepository adminDashboardStatsRepository;
+    private AdminReservationRepository adminReservationRepository;
+
+    @Autowired
+    private AdminStaffRepository adminStaffRepository;
+
+    @Autowired
+    private ItemRepository itemRepository;
 
     @Autowired
     private EntityManager entityManager;
@@ -82,10 +89,13 @@ class AdminDashboardStatsRepositoryTest {
         entityManager.clear();
 
         // when
-        long todayReservations = adminDashboardStatsRepository.countReservationsByDate(today);
-        long totalReservations = adminDashboardStatsRepository.countAllReservations();
-        long totalActiveStaff = adminDashboardStatsRepository.countActiveStaff();
-        long lowStockItems = adminDashboardStatsRepository.countLowStockItems();
+        long todayReservations = adminReservationRepository.countByReservationDate(today);
+        long totalReservations = adminReservationRepository.count();
+        long totalActiveStaff = adminStaffRepository.countByActiveTrue();
+        long lowStockItems = itemRepository.findAllProjectedBy()
+                .stream()
+                .filter(item -> item.getQuantity() < item.getMinQuantity())
+                .count();
 
         // then
         assertThat(todayReservations).isEqualTo(1L);
