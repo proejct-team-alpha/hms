@@ -1,25 +1,3 @@
-<<<<<<< HEAD
-<tbody class="divide-y divide-slate-200">
-  {{#reservations}}
-  <tr class="hover:bg-slate-50 transition-colors">
-    <td class="p-4 text-sm font-medium text-slate-900">{{time}}</td>
-    <td class="p-4 text-sm font-semibold text-slate-800">{{name}}</td>
-    <td class="p-4 text-sm text-slate-600">{{phone}}</td>
-    <td class="p-4 text-sm text-slate-600">{{dept}} / {{doctor}}</td>
-    <td class="p-4">
-      {{#isReserved}}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800">RESERVED</span>{{/isReserved}}
-      {{#isReceived}}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800">RECEIVED</span>{{/isReceived}}
-      {{#isCompleted}}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">COMPLETED</span>{{/isCompleted}}
-      {{#isCancelled}}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800">CANCELLED</span>{{/isCancelled}}
-    </td>
-    <td class="p-4 text-right">
-      <div class="flex items-center justify-end gap-2">
-        <form action="/reservations/{{id}}/cancel" method="POST" class="inline" onsubmit="return confirm('취소하시겠습니까?');">
-          <button type="submit" {{#isCompleted}}disabled{{/isCompleted}} {{#isCancelled}}disabled{{/isCancelled}} class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 disabled:opacity-50">
-            <i data-feather="x-circle" class="w-4 h-4"></i>취소
-          </button>
-        </form>
-=======
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -96,7 +74,6 @@
             </tbody>
           </table>
         </div>
->>>>>>> dev
       </div>
     </td>
   </tr>

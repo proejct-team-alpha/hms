@@ -1,34 +1,3 @@
-<<<<<<< HEAD
-<tbody class="divide-y divide-slate-200">
-  {{#items}}
-  <tr class="hover:bg-slate-50 transition-colors">
-    <td class="p-4 text-sm font-bold text-slate-800">{{name}}</td>
-    <td class="p-4 text-sm text-slate-600">
-      <span class="px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-medium">{{category}}</span>
-    </td>
-    <td class="p-4 text-sm font-bold text-right {{#isLowStock}}text-red-600{{/isLowStock}}{{^isLowStock}}text-slate-800{{/isLowStock}}">
-      {{stock}} {{unit}}
-    </td>
-    <td class="p-4 text-sm text-slate-500 text-right">{{minStock}} {{unit}}</td>
-    <td class="p-4 text-center">
-      {{#isLowStock}}
-      <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">
-        <i data-feather="alert-triangle" class="w-3.5 h-3.5"></i>재고 부족
-      </span>
-      {{/isLowStock}}
-      {{^isLowStock}}
-      <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">정상</span>
-      {{/isLowStock}}
-    </td>
-    <td class="p-4 text-right">
-      <div class="flex items-center justify-end gap-2">
-        <a href="/items/{{id}}/edit" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md">
-          <i data-feather="edit-2" class="w-4 h-4"></i>
-        </a>
-        <form action="/items/{{id}}/delete" method="POST" class="inline" onsubmit="return confirm('삭제하시겠습니까?');">
-          <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md">
-            <i data-feather="trash-2" class="w-4 h-4"></i>
-=======
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -125,7 +94,6 @@
             data-category="${cat}"
           >
             ${cat}
->>>>>>> dev
           </button>
         </form>
       </div>

@@ -107,14 +107,6 @@ public class SecurityConfig {
             // ── Security Headers ────────────────────────────────────────
             .headers(headers -> headers
                 .contentSecurityPolicy(csp -> csp
-<<<<<<< HEAD
-                    .policyDirectives("default-src 'self'; " +
-                                      "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com; " +
-                                      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-                                      "font-src 'self' https://fonts.gstatic.com; " +
-                                      "img-src 'self' data:; " +
-                                      "frame-ancestors 'self'")
-=======
                     .policyDirectives(
                         "default-src 'self'; " +
                         "script-src 'self' 'unsafe-inline'; " +
@@ -123,7 +115,6 @@ public class SecurityConfig {
                         "font-src 'self'; " +
                         "frame-ancestors 'self'"
                     )
->>>>>>> dev
                 )
                 .httpStrictTransportSecurity(hsts -> hsts
                     .maxAgeInSeconds(31536000)
