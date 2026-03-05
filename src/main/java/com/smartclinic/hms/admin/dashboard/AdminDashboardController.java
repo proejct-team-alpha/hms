@@ -11,7 +11,15 @@ public class AdminDashboardController {
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
-        model.addAttribute("pageTitle", "관리자 대시보드");
+        model.addAttribute("pageTitle", "Admin Dashboard");
+        model.addAttribute("totalStaff", 0);
+        model.addAttribute("todayCancel", 0);
+        model.addAttribute("activeDepts", 0);
+        model.addAttribute("activeRules", 0);
+        model.addAttribute("patientChartLabels", "[]");
+        model.addAttribute("patientChartData", "[]");
+        model.addAttribute("inventoryChartLabels", "[]");
+        model.addAttribute("inventoryChartData", "[]");
         return "admin/dashboard";
     }
 }
