@@ -15,7 +15,7 @@ import java.util.List;
  * DB 기반 UserDetailsService — Staff 테이블에서 인증 정보 조회
  *
  * InMemoryUserDetailsManager 대체.
- * Staff.role (ADMIN, DOCTOR, NURSE, STAFF) → ROLE_ prefix 자동 변환.
+ * Staff.role (ADMIN, DOCTOR, NURSE, STAFF, ITEM_MANAGER) → ROLE_ prefix 자동 변환.
  */
 @Service
 @RequiredArgsConstructor

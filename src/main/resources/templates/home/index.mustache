@@ -7,10 +7,10 @@
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-6 relative">
-  <script src="components/header.js"></script>
-  <script src="components/sidebar.js"></script>
+<body class="min-h-screen flex flex-col">
+  {{> common/header-public}}
 
+  <div class="flex-1 flex flex-col items-center justify-center p-6">
   <div class="text-center mb-12">
     <div class="w-20 h-20 bg-indigo-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-6 shadow-lg">
       <i data-feather="activity" class="w-10 h-10"></i>
@@ -21,7 +21,7 @@
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
     <button
-      onclick="location.href='../patient-html/patient-choice.html'"
+      onclick="location.href='/reservation'"
       class="bg-white p-10 rounded-3xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-300 transition-all group flex flex-col items-center text-center"
     >
       <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mb-6 group-hover:scale-110 transition-transform">
@@ -32,7 +32,7 @@
     </button>
 
     <button
-      onclick="location.href='login.html'"
+      onclick="location.href='/login'"
       class="bg-white p-10 rounded-3xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-300 transition-all group flex flex-col items-center text-center"
     >
       <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 mb-6 group-hover:scale-110 transition-transform">
@@ -42,8 +42,9 @@
       <p class="text-slate-500">업무 시스템 로그인</p>
     </button>
   </div>
+  </div>
 
-  <script src="components/footer.js"></script>
+  {{> common/footer-public}}
   <script>
     feather.replace();
   </script>

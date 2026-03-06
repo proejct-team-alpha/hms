@@ -7,5 +7,6 @@ public enum StaffRole {
     ADMIN,
     DOCTOR,
     NURSE,
-    STAFF
+    STAFF,
+    ITEM_MANAGER
 }
