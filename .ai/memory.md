@@ -1,6 +1,7 @@
 ﻿# Project Memory
 
 ## Architecture
+
 - 최우선 규칙 문서는 `AGENTS.md`이며, 작업 시작 시 항상 먼저 확인한다.
 - 문서 우선순위: 로컬 `doc/PROJECT_STRUCTURE.md`, `doc/RULE.md` > 외부 documents 저장소.
 - 충돌 시 구조/패키지는 `doc/PROJECT_STRUCTURE.md`, 코딩/테스트는 `doc/RULE.md`를 우선한다.
@@ -15,6 +16,7 @@
 - 보안/공통/엔티티 레이어는 보호 영역으로 간주한다.
 
 ## Module Structure
+
 - 루트 패키지는 `com.smartclinic.hms`로 고정한다.
 - 핵심 모듈: `config`, `common`, `domain`, `auth`, `reservation`, `staff`, `doctor`, `nurse`, `admin`, `llm`.
 - `config`는 보안/웹 설정, `common`은 예외/인터셉터/공통 서비스, `domain`은 엔티티를 담당한다.
@@ -28,6 +30,7 @@
 - 엔티티 패키지에 프레젠테이션 로직을 넣지 않는다.
 
 ## URL Rules
+
 - URL은 역할 기반 접두어를 유지한다: `/reservation/**`, `/staff/**`, `/doctor/**`, `/nurse/**`, `/admin/**`, `/api/**`, `/llm/**`.
 - 공개 영역은 `/`와 `/reservation/**`를 기본으로 한다.
 - 인증 필요 영역은 역할 접두어 기준으로 Security 정책을 적용한다.
@@ -41,6 +44,7 @@
 - 모듈 경계를 넘는 prefix 재사용을 금지한다.
 
 ## Branch Strategy
+
 - 개발 중심 브랜치는 `develop`이고, 배포 안정 브랜치는 `main`이다.
 - `main` 직접 커밋/푸시를 금지한다.
 - 모든 변경은 작업 브랜치(`feature/*`, `bugfix/*`, `hotfix/*`)에서 시작한다.
@@ -54,6 +58,7 @@
 - 강제 push는 `--force-with-lease`만 허용한다.
 
 ## Role & Permission Rules
+
 - 비즈니스 역할: `ADMIN`, `STAFF`, `DOCTOR`, `NURSE`.
 - Spring Security 역할: `ROLE_ADMIN`, `ROLE_STAFF`, `ROLE_DOCTOR`, `ROLE_NURSE`.
 - 역할 매핑은 1:1로 유지한다 (`ADMIN` <-> `ROLE_ADMIN` 등).
@@ -67,6 +72,7 @@
 - 상세 권한 예외는 `doc/API.md`가 아니라 보안 규칙 문서 합의 후 반영한다.
 
 ## Module Ownership
+
 - 기본 원칙은 기능 단위 수직 소유(Controller/Service/Repository/Template 동일 영역 소유)다.
 - 공유 레이어(`config`, `common`, `domain`)는 책임개발자 소유/검토 영역으로 다룬다.
 - `reservation`은 외부 예약, `staff/doctor/nurse`는 내부업무, `admin`은 관리 기능 소유 영역이다.
@@ -80,6 +86,7 @@
 - 인터페이스 계약 변경은 관련 모듈 동시 검토를 전제로 한다.
 
 ## Forbidden Rules
+
 - `domain/**` 엔티티 구조 임의 변경 금지.
 - `SecurityConfig` 임의 변경 금지.
 - `LayoutModelInterceptor` 임의 변경 금지.
@@ -94,6 +101,7 @@
 - 상세 예외 목록/기능별 금지사항은 `doc/RULE.md`와 보안/아키텍처 문서를 따른다.
 
 ## Coding Rules (요약)
+
 - 백엔드 핵심: 트랜잭션/예외/검증/보안 규칙 일관성 유지.
 - 서비스 레이어 중심 설계, 컨트롤러는 입출력 처리에 집중.
 - DTO Record 우선, 입력 검증(`@Valid`, `@Validated`) 필수.
@@ -107,9 +115,19 @@
 - 상세 구현 규칙은 `doc/RULE.md`를 단일 기준으로 참조한다.
 
 ## Testing Minimum Rules
+
 - 핵심 비즈니스 로직 테스트는 필수이며, 미작성 상태 반영을 금지한다.
 - 테스트 구조는 Given-When-Then을 강제한다.
 - 테스트 본문에 `// given`, `// when`, `// then` 주석을 명시한다.
+- 테스트 이름/`@DisplayName`은 의도를 명확히 표현한다.
+- 단위 테스트는 Mockito 기반 격리 테스트를 우선한다.
+- Repository는 `@DataJpaTest`, Controller는 `@WebMvcTest` + MockMvc를 우선한다.
+- 통합 테스트는 핵심 플로우 최소 세트만 유지한다.
+- 외부 API 실호출 테스트를 금지하고 Mock으로 대체한다.
+- 시간/랜덤/외부 상태 의존성을 제거해 결정성을 보장한다.
+- 운영 DB 의존 테스트를 금지하고 H2/Testcontainers를 사용한다.
+- 보안 테스트는 역할별 허용/차단 케이스를 모두 검증한다.
+- 세부 테스트 패턴과 금지사항은 `doc/RULE.md`(및 `doc/rules/rule_test.md`)를 참조한다.
 - 테스트 이름/`@DisplayName`은 의도를 명확히 표현한다.
 - 단위 테스트는 Mockito 기반 격리 테스트를 우선한다.
 - Repository는 `@DataJpaTest`, Controller는 `@WebMvcTest` + MockMvc를 우선한다.

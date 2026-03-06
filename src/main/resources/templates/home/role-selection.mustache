@@ -8,8 +8,8 @@
   <script src="/js/feather.min.js"></script>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-6 relative">
-  <script src="components/header.js"></script>
-  <script src="components/sidebar.js"></script>
+  {{> common/header-staff}}
+  {{> common/sidebar-staff}}
 
   <button 
     onclick="location.href='login.html'"
@@ -86,7 +86,7 @@
     </div>
   </div>
 
-  <script src="components/footer.js"></script>
+  {{> common/footer-staff}}
   <script>
     feather.replace();
   </script>

@@ -1,0 +1,31 @@
+{{! S3 — NURSE 사이드 메뉴. 화면 14~16, 35 }}
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col h-screen fixed left-0 top-0 z-10">
+  <div class="p-6 border-b border-slate-200">
+    <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+      <i data-feather="activity" class="text-indigo-600"></i>
+      MediCare+
+    </h1>
+  </div>
+  <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+    <div>
+      <div class="text-sm font-bold text-slate-800">간호사</div>
+      <div class="text-xs text-slate-500">접속 중</div>
+    </div>
+    <form action="/logout" method="post" class="inline">
+      <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+      <button type="submit" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="로그아웃">
+        <i data-feather="log-out" class="w-5 h-5"></i>
+      </button>
+    </form>
+  </div>
+  <nav class="flex-1 overflow-y-auto p-4 space-y-1">
+    <a href="/nurse/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isNurseDashboard}}bg-indigo-50 text-indigo-700{{/isNurseDashboard}}{{^isNurseDashboard}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isNurseDashboard}}">
+      <i data-feather="layout" class="w-5 h-5"></i>
+      대시보드
+    </a>
+    <a href="/nurse/reception-list" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isNurseReception}}bg-indigo-50 text-indigo-700{{/isNurseReception}}{{^isNurseReception}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isNurseReception}}">
+      <i data-feather="clipboard" class="w-5 h-5"></i>
+      오늘 예약 현황
+    </a>
+  </nav>
+</aside>

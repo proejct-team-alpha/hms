@@ -8,7 +8,7 @@
   <script src="/js/feather.min.js"></script>
 </head>
 <body class="min-h-screen flex flex-col">
-  <script src="components/header.js"></script>
+  {{> common/header-public}}
   
   <main class="flex-1 overflow-y-auto p-8">
     <div class="max-w-5xl mx-auto">
@@ -85,7 +85,7 @@
     </div>
   </main>
 
-  <script src="components/footer.js"></script>
+  {{> common/footer-public}}
   <script>
     feather.replace();
 
