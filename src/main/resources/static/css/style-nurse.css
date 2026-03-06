@@ -1,0 +1,28 @@
+/* Custom styles for Nurse HTML pages */
+body {
+  background-color: #f8fafc; /* slate-50 */
+}
+
+.main-content {
+  margin-left: 16rem; /* 64 * 0.25rem = 16rem (w-64) */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-wrapper {
+  padding: 2rem;
+  flex: 1;
+}
+
+/* Hide scrollbar for clean sidebar */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 20px;
+}

@@ -1,88 +1,134 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>진료 목록</title>
-    <link rel="stylesheet" href="/css/tailwind.min.css">
-    <script src="/js/lucide.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>진료 목록 - MediCare+</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/feather.min.js"></script>
 </head>
-<body class="bg-slate-50 p-6">
-    <div class="max-w-7xl mx-auto space-y-6">
+<body>
+  
+  {{> common/sidebar-doctor}}
+
+  <div class="main-content flex-1 flex flex-col ml-64">
+    {{> common/header-staff}}
+    
+    <main class="content-wrapper">
+      <div class="space-y-6 max-w-5xl mx-auto">
         <div class="flex items-center gap-3 mb-8">
-            <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
-                <i data-lucide="stethoscope" class="w-6 h-6"></i>
-            </div>
-            <div>
-                <h1 class="text-2xl font-bold text-slate-800">진료 목록</h1>
-                <p class="text-slate-500 mt-1">김원장 원장님의 오늘 전체 진료 일정입니다.</p>
-            </div>
-            <div class="relative w-full md:w-64 ml-auto">
-                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                <input type="text" placeholder="환자명 검색..." class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"/>
-            </div>
+          <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+            <i data-feather="file-text" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-slate-800">진료 목록</h1>
+            <p class="text-slate-500 mt-1">오늘 전체 진료 일정입니다.</p>
+          </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div onclick="location.href='/doctor/treatment/1'" class="bg-white rounded-2xl p-6 border transition-all cursor-pointer hover:shadow-md border-indigo-500 shadow-sm ring-1 ring-indigo-500">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-indigo-100 text-indigo-600">
-                            <i data-lucide="user" class="w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-slate-800 text-lg">홍길동</h3>
-                            <div class="flex items-center gap-1.5 text-sm text-slate-500 font-medium">
-                                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                                09:00
-                            </div>
-                        </div>
-                    </div>
-                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-600 text-white">진료 중</span>
-                </div>
-                <div class="bg-slate-50 rounded-xl p-3 text-sm text-slate-600 line-clamp-2 border border-slate-100">
-                    두통, 어지러움
-                </div>
-                <div class="mt-4 flex justify-between items-center">
-                    <div class="flex gap-2"></div>
-                    <span class="text-xs font-medium px-2 py-1 rounded-md bg-blue-50 text-blue-600">온라인</span>
-                </div>
-            </div>
-            <div onclick="location.href='/doctor/treatment/2'" class="bg-white rounded-2xl p-6 border transition-all cursor-pointer hover:shadow-md border-slate-200 hover:border-indigo-300">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 text-slate-500">
-                            <i data-lucide="user" class="w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-slate-800 text-lg">김철수</h3>
-                            <div class="flex items-center gap-1.5 text-sm text-slate-500 font-medium">
-                                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                                09:30
-                            </div>
-                        </div>
-                    </div>
-                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-600">진료 대기</span>
-                </div>
-                <div class="bg-slate-50 rounded-xl p-3 text-sm text-slate-600 line-clamp-2 border border-slate-100">
-                    목 통증
-                </div>
-                <div class="mt-4 flex justify-between items-center">
-                    <div class="flex gap-2">
-                        <button onclick="event.stopPropagation(); location.href='/doctor/treatment/2/start'" class="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
-                            진료 시작
-                        </button>
-                    </div>
-                    <span class="text-xs font-medium px-2 py-1 rounded-md bg-orange-50 text-orange-600">방문</span>
-                </div>
-            </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="list-container">
+          <!-- List injected by JS -->
         </div>
-        
-        <nav class="flex gap-2"><span class="px-3 py-1 bg-indigo-600 text-white rounded">1</span><a href="?page=2" class="px-3 py-1 text-slate-600 hover:bg-slate-100 rounded">2</a></nav>
-    </div>
+      </div>
+    </main>
 
-    <script>
-        lucide.createIcons();
-    </script>
+    {{> common/footer-staff}}
+  </div>
+
+  <script src="/js/data.js"></script>
+  <script>
+    function handleStart(id) {
+      updateReservationStatus(id, 'IN_PROGRESS');
+      window.location.href = \`treatment-detail.html?id=\${id}\`;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const reservations = getReservations();
+      
+      const doctorReservations = reservations.filter(r => 
+        r.status !== 'CANCELLED' && r.status !== 'COMPLETED'
+      );
+      
+      const sortedList = [...doctorReservations].sort((a, b) => {
+        const order = { 'IN_PROGRESS': 0, 'RECEIVED': 1, 'RESERVED': 2, 'COMPLETED': 3 };
+        return (order[a.status] ?? 4) - (order[b.status] ?? 4);
+      });
+
+      const listContainer = document.getElementById('list-container');
+      
+      if (sortedList.length === 0) {
+        listContainer.innerHTML = \`
+          <div class="col-span-full p-8 text-center text-slate-500 bg-white rounded-2xl border border-slate-200">
+            진료 내역이 없습니다.
+          </div>
+        \`;
+      } else {
+        listContainer.innerHTML = sortedList.map(patient => {
+          let bgClass = 'border-slate-200 hover:border-indigo-300';
+          let iconBg = 'bg-slate-100 text-slate-500';
+          let badgeClass = 'bg-slate-100 text-slate-600';
+          let statusText = '예약';
+          let link = \`treatment-detail.html?id=\${patient.id}\`;
+
+          if (patient.status === 'IN_PROGRESS') {
+            bgClass = 'border-indigo-500 shadow-sm ring-1 ring-indigo-500';
+            iconBg = 'bg-indigo-100 text-indigo-600';
+            badgeClass = 'bg-indigo-600 text-white';
+            statusText = '진료 중';
+          } else if (patient.status === 'RECEIVED') {
+            badgeClass = 'bg-orange-100 text-orange-600';
+            statusText = '진료 대기';
+          }
+
+          let typeClass = 'bg-orange-50 text-orange-600';
+          if (patient.type === 'ONLINE') typeClass = 'bg-blue-50 text-blue-600';
+          else if (patient.type === 'PHONE') typeClass = 'bg-purple-50 text-purple-600';
+
+          return \`
+            <div onclick="window.location.href='\${link}'" class="bg-white rounded-2xl p-6 border transition-all cursor-pointer hover:shadow-md \${bgClass}">
+              <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full flex items-center justify-center \${iconBg}">
+                    <i data-feather="user" class="w-5 h-5"></i>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-slate-800 text-lg">\${patient.name}</h3>
+                    <div class="flex items-center gap-1.5 text-sm text-slate-500 font-medium">
+                      <i data-feather="clock" class="w-3.5 h-3.5"></i>
+                      \${patient.time}
+                    </div>
+                  </div>
+                </div>
+                
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold \${badgeClass}">
+                  \${statusText}
+                </span>
+              </div>
+
+              <div class="bg-slate-50 rounded-xl p-3 text-sm text-slate-600 line-clamp-2 border border-slate-100">
+                \${patient.symptoms || '증상 없음'}
+              </div>
+
+              <div class="mt-4 flex justify-between items-center">
+                <div class="flex gap-2">
+                  \${patient.status === 'RECEIVED' ? \`
+                    <button onclick="event.stopPropagation(); handleStart(\${patient.id})" class="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                      진료 시작
+                    </button>
+                  \` : ''}
+                </div>
+
+                <span class="text-xs font-medium px-2 py-1 rounded-md \${typeClass}">
+                  \${patient.type}
+                </span>
+              </div>
+            </div>
+          \`;
+        }).join('');
+      }
+
+      feather.replace();
+    });
+  </script>
 </body>
 </html>

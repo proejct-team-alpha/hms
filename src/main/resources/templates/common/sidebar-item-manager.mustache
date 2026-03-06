@@ -1,0 +1,35 @@
+{{! S5 — ITEM_MANAGER 사이드 메뉴. 화면 27~29, 37~39 }}
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col h-screen fixed left-0 top-0 z-10">
+  <div class="p-6 border-b border-slate-200">
+    <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+      <i data-feather="activity" class="text-indigo-600"></i>
+      MediCare+
+    </h1>
+  </div>
+  <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+    <div>
+      <div class="text-sm font-bold text-slate-800">물품 담당자</div>
+      <div class="text-xs text-slate-500">접속 중</div>
+    </div>
+    <form action="/logout" method="post" class="inline">
+      <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+      <button type="submit" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="로그아웃">
+        <i data-feather="log-out" class="w-5 h-5"></i>
+      </button>
+    </form>
+  </div>
+  <nav class="flex-1 overflow-y-auto p-4 space-y-1">
+    <a href="/item-manager/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isItemDashboard}}bg-indigo-50 text-indigo-700{{/isItemDashboard}}{{^isItemDashboard}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isItemDashboard}}">
+      <i data-feather="layout" class="w-5 h-5"></i>
+      대시보드
+    </a>
+    <a href="/item-manager/item-list" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isItemList}}bg-indigo-50 text-indigo-700{{/isItemList}}{{^isItemList}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isItemList}}">
+      <i data-feather="package" class="w-5 h-5"></i>
+      물품 목록
+    </a>
+    <a href="/item-manager/item-history" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isItemHistory}}bg-indigo-50 text-indigo-700{{/isItemHistory}}{{^isItemHistory}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isItemHistory}}">
+      <i data-feather="clock" class="w-5 h-5"></i>
+      입출고 내역
+    </a>
+  </nav>
+</aside>

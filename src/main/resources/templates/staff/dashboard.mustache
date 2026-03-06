@@ -1,147 +1,158 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>원무과 대시보드</title>
-    <link rel="stylesheet" href="/css/tailwind.min.css">
-    <script src="/js/lucide.min.js"></script>
-    <script src="/js/chart.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>원무과 대시보드 - MediCare+</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/feather.min.js"></script>
 </head>
-<body class="bg-slate-50 min-h-screen p-6">
-    <div class="max-w-7xl mx-auto space-y-6">
+<body>
+  
+  {{> common/sidebar-staff}}
+
+  <div class="main-content flex-1 flex flex-col ml-64">
+    {{> common/header-staff}}
+    
+    <main class="content-wrapper">
+      <div class="space-y-6 max-w-5xl mx-auto">
         <h1 class="text-2xl font-bold text-slate-800">원무과 대시보드</h1>
         
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-                        <i data-lucide="users" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                        <div class="text-sm font-medium text-slate-500">오늘 총 예약</div>
-                        <div class="text-2xl font-bold text-slate-800">24명</div>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
-                        <i data-lucide="calendar" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                        <div class="text-sm font-medium text-slate-500">접수 대기</div>
-                        <div class="text-2xl font-bold text-slate-800">3명</div>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
-                        <i data-lucide="check-circle-2" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                        <div class="text-sm font-medium text-slate-500">접수 완료</div>
-                        <div class="text-2xl font-bold text-slate-800">18명</div>
-                    </div>
-                </div>
-            </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="stats-container">
+          <!-- Stats injected by JS -->
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <h2 class="text-lg font-bold text-slate-800 mb-6">시간대별 예약 및 접수 현황</h2>
-                <div class="h-64 relative w-full">
-                    <canvas id="timeChart"></canvas>
-                </div>
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <h2 class="text-lg font-bold text-slate-800 mb-6">시간대별 예약 및 접수 현황</h2>
+            <div class="h-64 flex items-center justify-center bg-slate-50 border border-slate-100 rounded-xl">
+              <span class="text-slate-400 text-sm">차트 영역 (HTML 버전에서는 정적 이미지 또는 CSS로 대체)</span>
             </div>
+          </div>
 
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-bold text-slate-800">최근 예약 현황 미리보기</h2>
-                    <a href="reception-list.html" class="text-sm text-indigo-600 font-medium flex items-center gap-1 hover:text-indigo-800">
-                        전체보기 <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                    </a>
-                </div>
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-                        <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
-                            <span class="font-medium text-slate-800">홍길동</span>
-                            <span class="text-sm text-slate-500">내과 / 09:00</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-medium px-2 py-1 rounded-full bg-indigo-100 text-indigo-700">
-                                예약
-                            </span>
-                            <form action="/staff/reception/1/process" method="POST" class="inline">
-                                <input type="hidden" name="reservationId" value="1">
-                                <button type="submit" class="text-xs font-medium px-3 py-1 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors">
-                                    접수하기
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-                        <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
-                            <span class="font-medium text-slate-800">김철수</span>
-                            <span class="text-sm text-slate-500">내과 / 09:30</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-700">
-                                진료 대기
-                            </span>
-                        </div>
-                    </div>
-                </div>
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-lg font-bold text-slate-800">최근 예약 현황 미리보기</h2>
+              <a href="/staff/reception-list" class="text-sm text-indigo-600 font-medium flex items-center gap-1 hover:text-indigo-800">
+                전체보기 <i data-feather="arrow-right" class="w-4 h-4"></i>
+              </a>
             </div>
+            <div class="space-y-3" id="recent-list-container">
+              <!-- Recent list injected by JS -->
+            </div>
+          </div>
         </div>
-    </div>
+      </div>
+    </main>
 
-    <script>
-        lucide.createIcons();
+    {{> common/footer-staff}}
+  </div>
 
-        const ctx = document.getElementById('timeChart').getContext('2d');
-        const labels = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00"];
-        const reservationData = [8, 12, 6, 4, 10, 6];
-        const receptionData = [6, 10, 5, 3, 8, 5];
+  <script src="/js/data.js"></script>
+  <script>
+    function handleReceive(id) {
+      updateReservationStatus(id, 'RECEIVED');
+      window.location.reload();
+    }
 
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: '예약',
-                        data: reservationData,
-                        backgroundColor: '#818cf8',
-                        borderRadius: 4,
-                        barPercentage: 0.6,
-                        categoryPercentage: 0.8
-                    },
-                    {
-                        label: '접수',
-                        data: receptionData,
-                        backgroundColor: '#34d399',
-                        borderRadius: 4,
-                        barPercentage: 0.6,
-                        categoryPercentage: 0.8
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } }
-                },
-                scales: {
-                    x: { grid: { display: false, drawBorder: false }, ticks: { color: '#64748b', font: { size: 12 } } },
-                    y: { grid: { color: '#e2e8f0', drawBorder: false, borderDash: [3, 3] }, ticks: { color: '#64748b', font: { size: 12 } } }
-                }
-            }
-        });
-    </script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const reservations = getReservations();
+      const todayReservations = reservations.filter(r => r.status !== 'CANCELLED');
+      const totalReservations = todayReservations.length;
+      const waitingReservations = todayReservations.filter(r => r.status === 'RESERVED').length;
+      const completedReservations = todayReservations.filter(r => r.status === 'RECEIVED' || r.status === 'IN_PROGRESS' || r.status === 'COMPLETED').length;
+
+      // Render Stats
+      document.getElementById('stats-container').innerHTML = \`
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+              <i data-feather="users" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <div class="text-sm font-medium text-slate-500">오늘 총 예약</div>
+              <div class="text-2xl font-bold text-slate-800">\${totalReservations}명</div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
+              <i data-feather="calendar" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <div class="text-sm font-medium text-slate-500">접수 대기</div>
+              <div class="text-2xl font-bold text-slate-800">\${waitingReservations}명</div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
+              <i data-feather="check-circle" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <div class="text-sm font-medium text-slate-500">접수 완료</div>
+              <div class="text-2xl font-bold text-slate-800">\${completedReservations}명</div>
+            </div>
+          </div>
+        </div>
+      \`;
+
+      // Render Recent List
+      const recentReservations = [...todayReservations]
+        .sort((a, b) => a.time.localeCompare(b.time))
+        .slice(0, 5);
+
+      const recentContainer = document.getElementById('recent-list-container');
+      if (recentReservations.length > 0) {
+        recentContainer.innerHTML = recentReservations.map(res => {
+          let dotClass = 'bg-green-500';
+          let badgeClass = 'bg-green-100 text-green-700';
+          let statusText = '진료 대기';
+
+          if (res.status === 'RESERVED') {
+            dotClass = 'bg-orange-500';
+            badgeClass = 'bg-orange-100 text-orange-700';
+            statusText = '예약';
+          } else if (res.status === 'IN_PROGRESS') {
+            badgeClass = 'bg-purple-100 text-purple-700';
+            statusText = '진료 중';
+          } else if (res.status === 'COMPLETED') {
+            badgeClass = 'bg-blue-100 text-blue-700';
+            statusText = '진료 완료';
+          }
+
+          return \`
+            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+              <div class="flex items-center gap-3">
+                <div class="w-2 h-2 rounded-full \${dotClass}"></div>
+                <span class="font-medium text-slate-800">\${res.name}</span>
+                <span class="text-sm text-slate-500">\${res.dept} / \${res.time}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-medium px-2 py-1 rounded-full \${badgeClass}">
+                  \${statusText}
+                </span>
+                \${res.status === 'RESERVED' ? \`
+                  <button onclick="handleReceive(\${res.id})" class="text-xs font-medium px-3 py-1 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors">
+                    접수하기
+                  </button>
+                \` : ''}
+              </div>
+            </div>
+          \`;
+        }).join('');
+      } else {
+        recentContainer.innerHTML = \`
+          <div class="p-4 text-center text-slate-500">
+            최근 예약이 없습니다.
+          </div>
+        \`;
+      }
+
+      feather.replace();
+    });
+  </script>
 </body>
 </html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>접속 권한 선택 - MediCare+</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/feather.min.js"></script>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-6 relative">
+  {{> common/header-staff}}
+  {{> common/sidebar-staff}}
+
+  <button 
+    onclick="location.href='login.html'"
+    class="absolute top-8 left-8 flex items-center gap-2 text-slate-500 hover:text-slate-800 font-medium"
+  >
+    <i data-feather="arrow-left" class="w-5 h-5"></i>
+    로그아웃
+  </button>
+
+  <div class="w-full max-w-4xl">
+    <div class="text-center mb-12">
+      <div class="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 mx-auto mb-4">
+        <i data-feather="shield" class="w-8 h-8"></i>
+      </div>
+      <h1 class="text-3xl font-bold text-slate-800">접속 권한 선택</h1>
+      <p class="text-slate-500 mt-2 text-lg">이용하실 업무 시스템을 선택해주세요.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <button 
+        onclick="location.href='../staff-html/dashboard.html'"
+        class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group text-left flex flex-col items-center text-center"
+      >
+        <div class="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-4 group-hover:scale-110 transition-transform">
+          <i data-feather="users" class="w-8 h-8"></i>
+        </div>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">원무과</h2>
+        <p class="text-slate-500 text-sm">환자 접수, 예약 관리, 수납 업무</p>
+      </button>
+
+      <button 
+        onclick="location.href='../doctor-html/dashboard.html'"
+        class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all group text-left flex flex-col items-center text-center"
+      >
+        <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mb-4 group-hover:scale-110 transition-transform">
+          <i data-feather="activity" class="w-8 h-8"></i>
+        </div>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">의사</h2>
+        <p class="text-slate-500 text-sm">환자 진료, 처방, 진료 기록 관리</p>
+      </button>
+
+      <button 
+        onclick="location.href='../nurse-html/dashboard.html'"
+        class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-pink-300 hover:shadow-md transition-all group text-left flex flex-col items-center text-center"
+      >
+        <div class="w-16 h-16 bg-pink-50 rounded-2xl flex items-center justify-center text-pink-600 mb-4 group-hover:scale-110 transition-transform">
+          <i data-feather="heart" class="w-8 h-8"></i>
+        </div>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">간호사</h2>
+        <p class="text-slate-500 text-sm">환자 상태 확인, 진료 보조, 처치</p>
+      </button>
+
+      <button 
+        onclick="location.href='../item-manager-html/dashboard.html'"
+        class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-orange-300 hover:shadow-md transition-all group text-left flex flex-col items-center text-center"
+      >
+        <div class="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-600 mb-4 group-hover:scale-110 transition-transform">
+          <i data-feather="package" class="w-8 h-8"></i>
+        </div>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">물품 담당자</h2>
+        <p class="text-slate-500 text-sm">병원 물품 재고 관리, 입출고 관리</p>
+      </button>
+
+      <button 
+        onclick="location.href='../admin-html/dashboard.html'"
+        class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-purple-300 hover:shadow-md transition-all group text-left flex flex-col items-center text-center"
+      >
+        <div class="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600 mb-4 group-hover:scale-110 transition-transform">
+          <i data-feather="settings" class="w-8 h-8"></i>
+        </div>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">관리자</h2>
+        <p class="text-slate-500 text-sm">직원 관리, 진료과 설정, 시스템 관리</p>
+      </button>
+    </div>
+  </div>
+
+  {{> common/footer-staff}}
+  <script>
+    feather.replace();
+  </script>
+</body>
+</html>
