@@ -17,8 +17,10 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -45,18 +47,16 @@ class AdminDashboardControllerTest {
     @Test
     @DisplayName("ROLE_ADMIN can render admin dashboard")
     void dashboard_withAdminRole_rendersDashboardView() throws Exception {
-        // given
+        AdminDashboardStatsResponse stats = new AdminDashboardStatsResponse(7L, 70L, 12L, 4L);
 
-        // when
-        // then
-        mockMvc.perform(get("/admin/dashboard").with(user("admin").roles("ADMIN")))
+        given(adminDashboardStatsService.getDashboardStats()).willReturn(stats);
+
+        mockMvc.perform(get("/admin/dashboard")
+                .with(user("admin").roles("ADMIN"))
+                .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/dashboard"))
-                .andExpect(model().attribute("pageTitle", "Admin Dashboard"))
-                .andExpect(model().attribute("todayReservations", 7L))
-                .andExpect(model().attribute("totalReservations", 70L))
-                .andExpect(model().attribute("totalStaff", 12L))
-                .andExpect(model().attribute("lowStockItems", 4L));
+                .andExpect(request().attribute("model", stats));
     }
 
     @Test

@@ -50,11 +50,12 @@ class AdminDashboardApiControllerTest {
     void dashboardStats_withAdminRole_returnsJson() throws Exception {
         mockMvc.perform(get("/admin/dashboard/stats").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.todayReservations").value(7))
-                .andExpect(jsonPath("$.data.totalReservations").value(70))
-                .andExpect(jsonPath("$.data.totalStaff").value(12))
-                .andExpect(jsonPath("$.data.lowStockItems").value(4));
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.msg").value("성공"))
+                .andExpect(jsonPath("$.body.todayReservations").value(7))
+                .andExpect(jsonPath("$.body.totalReservations").value(70))
+                .andExpect(jsonPath("$.body.totalStaff").value(12))
+                .andExpect(jsonPath("$.body.lowStockItems").value(4));
     }
 
     @Test
