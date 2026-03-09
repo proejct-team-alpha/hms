@@ -6,6 +6,12 @@
   <title>직접 선택 예약 - MediCare+</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
+  {{! [W2-#3 작업 목록] }}
+  {{! DONE 1. Flatpickr CDN 추가 (CSS + JS) }}
+  {{! DONE 2. input type="date" → type="text" readonly 로 교체 }}
+  {{! DONE 3. 의사 change 이벤트에서 availableDays 파싱 + Flatpickr 재초기화 }}
+  <link rel="stylesheet" href="/css/flatpickr.min.css">
+  <script src="/js/flatpickr.min.js"></script>
 </head>
 <body class="min-h-screen flex flex-col">
   {{> common/header-public}}
@@ -101,11 +107,13 @@
                 <div class="relative">
                   <i data-feather="calendar" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
                   <input
-                    type="date"
+                    type="text"
                     id="date"
                     name="reservationDate"
                     required
+                    readonly
                     class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                    placeholder="날짜를 선택해주세요"
                   />
                 </div>
               </div>
@@ -121,11 +129,19 @@
                   >
                     <option value="">선택해주세요</option>
                     <option value="09:00">09:00</option>
+                    <option value="09:30">09:30</option>
                     <option value="10:00">10:00</option>
+                    <option value="10:30">10:30</option>
                     <option value="11:00">11:00</option>
+                    <option value="11:30">11:30</option>
+                    <option value="12:00">12:00</option>
+                    <option value="12:30">12:30</option>
+                    <option value="13:00">13:00</option>
+                    <option value="13:30">13:30</option>
                     <option value="14:00">14:00</option>
+                    <option value="14:30">14:30</option>
                     <option value="15:00">15:00</option>
-                    <option value="16:00">16:00</option>
+                    <option value="15:30">15:30</option>
                   </select>
                 </div>
               </div>
@@ -165,12 +181,26 @@
       document.getElementById('doctor').value = recDoctor;
     }
 
+    // 요일 매핑: JS getDay() 기준 (0=일, 1=월 ... 6=토)
+    const DAY_MAP = { SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6 };
+
+    // Flatpickr 한 번만 초기화 (의사 선택 전: 전체 비활성)
+    // 문자열 선택자('#date')는 배열 반환 → DOM 엘리먼트 직접 전달해야 단일 인스턴스 반환
+    const datePicker = flatpickr(document.getElementById('date'), {
+      dateFormat: 'Y-m-d',
+      animate: false,
+      position: 'below',
+      disable: [() => true]
+    });
+
     // 진료과 변경 시 전문의 동적 조회
     document.getElementById('department').addEventListener('change', function () {
       const departmentId = this.value;
       const doctorSelect = document.getElementById('doctor');
 
       doctorSelect.innerHTML = '<option value="">선택해주세요</option>';
+      datePicker.clear();
+      datePicker.close(); // 캘린더가 열려 전문의 드롭다운을 가리지 않도록 닫기
 
       if (!departmentId) return;
 
@@ -181,9 +211,26 @@
             const option = document.createElement('option');
             option.value = doctor.id;
             option.textContent = doctor.name;
+            option.dataset.availableDays = doctor.availableDays;
             doctorSelect.appendChild(option);
           });
         });
+    });
+
+    // 의사 변경 시 availableDays 파싱 → Flatpickr disable 갱신
+    document.getElementById('doctor').addEventListener('change', function () {
+      const selectedOption = this.options[this.selectedIndex];
+      const availableDaysStr = selectedOption.dataset.availableDays || '';
+
+      const availableDayNums = availableDaysStr
+        .split(',')
+        .map(d => DAY_MAP[d.trim()])
+        .filter(n => n !== undefined);
+
+      datePicker.clear();
+      datePicker.set('disable', [
+        function (date) { return !availableDayNums.includes(date.getDay()); }
+      ]);
     });
   </script>
 </body>
