@@ -137,7 +137,7 @@ public class SecurityConfig {
                         .requestMatchers("/login", "/logout").permitAll()
 
                         // ── 비회원 메인·외부 예약 (§3) ──────────────────────────
-                        .requestMatchers("/", "/reservation/**").permitAll()
+                        .requestMatchers("/", "/reservation/**", "/api/reservation/**").permitAll()
 
                         // ── LLM 증상 분석 — 비회원 AJAX (§4) ───────────────────
                         .requestMatchers("/llm/symptom/**").permitAll()
