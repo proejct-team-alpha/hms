@@ -4,7 +4,6 @@
 HELP.md
 .gradle/
 build/
-!gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
@@ -16,6 +15,9 @@ build/
 *.war
 *.ear
 *.log
+
+# Gradle Wrapper는 예외 (반드시 *.jar 아래에 위치해야 함)
+!gradle/wrapper/gradle-wrapper.jar
 hs_err_pid*
 replay_pid*
 
