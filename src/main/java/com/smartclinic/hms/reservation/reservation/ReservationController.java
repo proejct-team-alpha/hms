@@ -1,5 +1,6 @@
 package com.smartclinic.hms.reservation.reservation;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,19 +15,10 @@ public class ReservationController {
 
     private final ReservationService reservationService;
 
-    /**
-     * 환자 전용 대시보드
-     */
-    @GetMapping("/dashboard")
-    public String dashboard(Model model) {
-        model.addAttribute("pageTitle", "나의 예약 현황");
-        return "reservation/dashboard-patient";
-    }
-
-    @GetMapping("/index")
-    public String index(Model model) {
-        model.addAttribute("pageTitle", "진료 예약 방식 선택");
-        return "reservation/index";
+    @GetMapping("")
+    public String patientChoice(HttpServletRequest request) {
+        request.setAttribute("pageTitle", "진료 예약");
+        return "reservation/patient-choice";
     }
 
     @GetMapping("/symptom-reservation")
