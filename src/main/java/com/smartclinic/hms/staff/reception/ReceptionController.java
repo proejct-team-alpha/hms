@@ -2,15 +2,13 @@ package com.smartclinic.hms.staff.reception;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.smartclinic.hms.staff.reception.dto.ReceptionUpdateRequest;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 @Controller
 @RequestMapping("/staff/reception")
@@ -25,7 +23,7 @@ public class ReceptionController {
         return "staff/reception-list";
     }
 
-    // 접수 처리 화면보기기
+    // 접수 처리 화면보기
     @GetMapping("/detail")
     public String detail() {
         return "staff/reception-detail";
