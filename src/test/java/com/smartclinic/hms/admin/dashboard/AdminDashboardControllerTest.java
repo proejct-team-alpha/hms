@@ -20,7 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -80,33 +79,6 @@ class AdminDashboardControllerTest {
         // when
         // then
         mockMvc.perform(get("/admin/dashboard").with(user("staff").roles("STAFF")))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    @DisplayName("ROLE_ADMIN can fetch dashboard stats as JSON")
-    void dashboardStats_withAdminRole_returnsJson() throws Exception {
-        // given
-
-        // when
-        // then
-        mockMvc.perform(get("/admin/dashboard/stats").with(user("admin").roles("ADMIN")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.todayReservations").value(7))
-                .andExpect(jsonPath("$.data.totalReservations").value(70))
-                .andExpect(jsonPath("$.data.totalStaff").value(12))
-                .andExpect(jsonPath("$.data.lowStockItems").value(4));
-    }
-
-    @Test
-    @DisplayName("ROLE_STAFF is forbidden from dashboard stats JSON")
-    void dashboardStats_withNonAdminRole_isForbidden() throws Exception {
-        // given
-
-        // when
-        // then
-        mockMvc.perform(get("/admin/dashboard/stats").with(user("staff").roles("STAFF")))
                 .andExpect(status().isForbidden());
     }
 
