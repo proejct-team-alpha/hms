@@ -28,8 +28,8 @@ public class ReservationController {
     }
 
     @GetMapping("/direct-reservation")
-    public String directReservation(Model model) {
-        model.addAttribute("pageTitle", "직접 선택 예약");
+    public String directReservation(HttpServletRequest request) {
+        request.setAttribute("pageTitle", "직접 선택 예약");
         return "reservation/direct-reservation";
     }
 
