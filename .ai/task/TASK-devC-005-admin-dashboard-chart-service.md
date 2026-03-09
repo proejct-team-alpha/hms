@@ -2,16 +2,16 @@
 
 ## AI Summary
 
-- 관리자 차트 API 응답(`AdminDashboardChartResponse`) 조립 전용 Service 계층 작업을 정의한다.
-- Service는 Repository 조회 결과를 받아 차트 응답 DTO로 변환/조립하는 책임만 가진다.
+- 관리자 차트 API 응답(`AdminDashboardChartResponse`)을 기존 `AdminDashboardStatsService`에서 조립하는 작업을 정의한다.
+- `AdminDashboardStatsService`에 `getDashboardChart()` 메서드를 추가해 Repository 조회 결과를 차트 응답 DTO로 조립한다.
 - 차트 데이터는 카테고리별 총 개수와 현재 날짜 기준 앞뒤 7일 일별 환자 수를 포함한다.
-- 일별 환자 수는 누락 날짜를 0으로 보정하는 규칙을 서비스 조립 로직에 반영한다.
+- 일별 환자 수는 누락 날짜를 0으로 보정하는 규칙을 기존 서비스 내부 조립 로직에 반영한다.
 - 카드 통계 DTO(`AdminDashboardStatsResponse`)와 차트 DTO(`AdminDashboardChartResponse`)는 분리된 책임으로 유지한다.
 
 ## 1) Task Meta
 
 - Task ID: `TASK-devC-005-admin-dashboard-chart-service`
-- Task Name: `AdminDashboardChartResponse 조립 서비스 설계`
+- Task Name: `AdminDashboardStatsService 차트 응답 조립 메서드 추가`
 - ACTIVE_ROLE: `DEV_C`
 - Scope (URL): `/admin/dashboard/stats`
 - Scope (Module): `admin/dashboard`
@@ -20,7 +20,7 @@
 ## 2) Goal
 
 - Problem: 차트 응답 조립 책임이 Controller 또는 다른 통계 로직과 섞이면 유지보수성과 테스트 용이성이 낮아진다.
-- Expected Outcome: `AdminDashboardChartResponse` 조립 전용 Service 메서드를 설계해 차트 API 응답 책임을 서비스 계층으로 분리한다.
+- Expected Outcome: `AdminDashboardStatsService`에 `AdminDashboardChartResponse` 조립 메서드를 추가해 차트 API 응답 책임을 서비스 계층으로 유지한다.
 - Out of Scope: `admin-dashboard.js` 수정, SSR `/admin/dashboard` 뷰/모델 수정, 카드 통계(`AdminDashboardStatsResponse`) 로직 변경.
 
 ## 3) Context Loading Checklist
@@ -64,7 +64,7 @@
 2. DTO/응답 계약은 일관된 필드명과 구조를 유지한다.
 3. Controller는 서비스 호출 연결 수준으로 최소 변경한다.
 4. Service 테스트는 Mockito 중심으로 작성한다.
-5. 카드 통계 DTO와 차트 DTO 책임을 혼합하지 않는다.
+5. 카드 통계 DTO와 차트 DTO 책임은 분리하되 서비스 클래스는 하나로 유지할 수 있다.
 
 #### doc/SKILL\_{ACTIVE_ROLE}.md (optional)
 
@@ -85,21 +85,21 @@
 Create:
 
 - Controller:
-- Service: `src/main/java/com/smartclinic/hms/admin/dashboard/AdminDashboardChartService.java`
+- Service:
 - Repository:
 - DTO:
 - Template:
 
 Modify:
 
-- Controller: `src/main/java/com/smartclinic/hms/admin/dashboard/AdminDashboardApiController.java` (`/admin/dashboard/chart` 또는 차트 응답 API에서 서비스 호출 연결)
-- Service: `src/main/java/com/smartclinic/hms/admin/dashboard/AdminDashboardStatsService.java` (카드 통계 서비스와 차트 조립 서비스 책임 분리 유지, 필요 시 의존 정리)
+- Controller: `src/main/java/com/smartclinic/hms/admin/dashboard/AdminDashboardApiController.java` (`/admin/dashboard/stats`에서 `AdminDashboardStatsService#getDashboardChart()` 호출 연결)
+- Service: `src/main/java/com/smartclinic/hms/admin/dashboard/AdminDashboardStatsService.java` (`getDashboardChart()` 메서드 추가 및 `AdminDashboardChartResponse` 조립 책임 포함)
 - Repository: `src/main/java/com/smartclinic/hms/admin/item/ItemRepository.java`, `src/main/java/com/smartclinic/hms/admin/reservation/AdminReservationRepository.java` (차트 조립용 조회 메서드 추가 후보 계획만 포함)
 - DTO: `src/main/java/com/smartclinic/hms/admin/dashboard/dto/AdminDashboardChartResponse.java` (기존 중첩 record `CategoryCount`, `DailyPatientCount` 사용 전제)
 
 Test:
 
-- ServiceTest: `src/test/java/com/smartclinic/hms/admin/dashboard/AdminDashboardChartServiceTest.java`
+- ServiceTest: `src/test/java/com/smartclinic/hms/admin/dashboard/AdminDashboardStatsServiceTest.java`
 - ControllerTest: `src/test/java/com/smartclinic/hms/admin/dashboard/AdminDashboardApiControllerTest.java`
 
 ### 4.2 Interface Type
@@ -112,7 +112,7 @@ Test:
 
 Functional
 
-1. Service 메서드는 Repository 조회 결과를 `AdminDashboardChartResponse`로 조립한다.
+1. `AdminDashboardStatsService#getDashboardChart()` 메서드는 Repository 조회 결과를 `AdminDashboardChartResponse`로 조립한다.
 2. 차트 데이터 1: 카테고리명 + 카테고리별 총 개수(`CategoryCount`)를 포함한다.
 3. 차트 데이터 2: 현재 날짜 기준 앞뒤 합계 7일(`D-3 ~ D+3`)의 날짜 + 날짜별 환자 수(`DailyPatientCount`)를 포함한다.
 
@@ -127,8 +127,8 @@ Authorization
 
 ## 5) Implementation Notes (Step B)
 
-- 구조 규칙 적용 여부: `AdminDashboardChartResponse` 조립 책임은 `AdminDashboardChartService`에 한정하고 Controller는 위임만 수행한다.
-- 트랜잭션 정책: 조회 중심 서비스이므로 `@Transactional(readOnly = true)`를 기본 적용한다.
+- 구조 규칙 적용 여부: `AdminDashboardChartResponse` 조립 책임은 기존 `AdminDashboardStatsService` 내부 `getDashboardChart()` 메서드에 두고 Controller는 위임만 수행한다.
+- 트랜잭션 정책: 조회 중심 기존 서비스이므로 `@Transactional(readOnly = true)`를 유지한다.
 - Validation 적용: 조회 결과 매핑 시 7일 범위 날짜 누락분을 0으로 보정하는 조립 규칙을 적용한다.
 - 권한 정책: 차트 API는 기존 `/admin/**` 보안 정책(ROLE_ADMIN)을 그대로 사용한다.
 
@@ -143,7 +143,7 @@ Authorization
 
 ### 6.2 Executed Tests
 
-- 테스트 클래스: 미실행 (계획: `AdminDashboardChartServiceTest`, `AdminDashboardApiControllerTest`)
+- 테스트 클래스: 미실행 (계획: `AdminDashboardStatsServiceTest`, `AdminDashboardApiControllerTest`)
 - 결과: 미실행
 
 ## 7) Report (Step D)
@@ -154,9 +154,9 @@ Authorization
 
 ### 7.2 Implementation Summary
 
-- `AdminDashboardChartResponse` 조립 전용 Service 계층 작업 범위를 정의했다.
+- 기존 `AdminDashboardStatsService`에서 `AdminDashboardChartResponse`를 조립하도록 작업 범위를 정의했다.
 - 서비스가 카테고리별 집계 + 7일 일별 환자 수를 조립하고 누락 날짜를 0으로 보정하도록 명시했다.
-- Controller는 서비스 호출 연결 수준으로만 수정하고, Repository는 조회 메서드 후보 계획만 포함했다.
+- Controller는 `getDashboardChart()` 호출 연결 수준으로만 수정하고, Repository는 조회 메서드 후보 계획만 포함했다.
 - 카드 통계 DTO(`AdminDashboardStatsResponse`)와 차트 DTO(`AdminDashboardChartResponse`) 책임 분리를 유지하도록 명문화했다.
 
 ### 7.3 References + Versions
@@ -175,9 +175,9 @@ Authorization
 
 ### 7.5 TODO / Risk / Escalation
 
-- TODO: `AdminDashboardChartService` 실제 구현 및 Repository 조회 메서드 확정
+- TODO: `AdminDashboardStatsService#getDashboardChart()` 실제 구현 및 Repository 조회 메서드 확정
 - Risk: 날짜 기준(LocalDate.now, timezone)과 7일 범위 정의(`D-3~D+3`) 합의 필요
-- Escalation: 차트 API 경로(`/admin/dashboard/chart` vs 기존 stats 통합) 최종 확정 필요 시 LEAD 협의
+- Escalation: 없음
 
 ## 8) Safety & Ownership Gates
 
