@@ -21,7 +21,9 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:api.github.com)",
-      "Bash(wc -l src/main/java/com/smartclinic/hms/**/*.java src/main/java/com/smartclinic/hms/**/**/*.java src/main/java/com/smartclinic/hms/**/**/**/*.java)"
+      "Bash(wc -l src/main/java/com/smartclinic/hms/**/*.java src/main/java/com/smartclinic/hms/**/**/*.java src/main/java/com/smartclinic/hms/**/**/**/*.java)",
+      "WebFetch(domain:cdn.jsdelivr.net)",
+      "Bash(curl -s \"https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.js\" -o \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms/src/main/resources/static/js/flatpickr.min.js\")"
     ]
   }
 }
