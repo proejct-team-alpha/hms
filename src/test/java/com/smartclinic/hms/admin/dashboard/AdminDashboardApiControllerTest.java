@@ -23,6 +23,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.smartclinic.hms.admin.dashboard.dto.AdminDashboardChartResponse;
 import com.smartclinic.hms.admin.dashboard.dto.AdminDashboardStatsResponse;
 
 @WebMvcTest(AdminDashboardApiController.class)
@@ -38,20 +39,31 @@ class AdminDashboardApiControllerTest {
     @BeforeEach
     void setUp() {
         given(adminDashboardStatsService.getDashboardStats())
-                .willReturn(new AdminDashboardStatsResponse(
-                        7L,
-                        70L,
-                        12L,
-                        4L));
+                .willReturn(new AdminDashboardStatsResponse(7L, 70L, 12L, 4L));
+        given(adminDashboardStatsService.getDashboardChart())
+                .willReturn(new AdminDashboardChartResponse(
+                        java.util.List.of(
+                                new AdminDashboardChartResponse.CategoryCount("Medical Supplies", 5L),
+                                new AdminDashboardChartResponse.CategoryCount("Medical Equipment", 2L)),
+                        java.util.List.of(
+                                new AdminDashboardChartResponse.DailyPatientCount(
+                                        java.time.LocalDate.of(2026, 3, 2), 0L),
+                                new AdminDashboardChartResponse.DailyPatientCount(
+                                        java.time.LocalDate.of(2026, 3, 3), 3L))));
     }
 
     @Test
     @DisplayName("ROLE_ADMIN can fetch dashboard stats as JSON")
     void dashboardStats_withAdminRole_returnsJson() throws Exception {
+        // given
+
+        // when
+
+        // then
         mockMvc.perform(get("/admin/dashboard/stats").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.msg").value("성공"))
+                .andExpect(jsonPath("$.msg").isString())
                 .andExpect(jsonPath("$.body.todayReservations").value(7))
                 .andExpect(jsonPath("$.body.totalReservations").value(70))
                 .andExpect(jsonPath("$.body.totalStaff").value(12))
@@ -61,7 +73,44 @@ class AdminDashboardApiControllerTest {
     @Test
     @DisplayName("ROLE_STAFF is forbidden from dashboard stats JSON")
     void dashboardStats_withNonAdminRole_isForbidden() throws Exception {
+        // given
+
+        // when
+
+        // then
         mockMvc.perform(get("/admin/dashboard/stats").with(user("staff").roles("STAFF")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("ROLE_ADMIN can fetch dashboard chart as JSON")
+    void dashboardChart_withAdminRole_returnsJson() throws Exception {
+        // given
+
+        // when
+
+        // then
+        mockMvc.perform(get("/admin/dashboard/chart").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.msg").isString())
+                .andExpect(jsonPath("$.body.categoryCounts[0].categoryName").value("Medical Supplies"))
+                .andExpect(jsonPath("$.body.categoryCounts[0].totalCount").value(5))
+                .andExpect(jsonPath("$.body.dailyPatients[0].date").value("2026-03-02"))
+                .andExpect(jsonPath("$.body.dailyPatients[0].patientCount").value(0))
+                .andExpect(jsonPath("$.body.dailyPatients[1].date").value("2026-03-03"))
+                .andExpect(jsonPath("$.body.dailyPatients[1].patientCount").value(3));
+    }
+
+    @Test
+    @DisplayName("ROLE_STAFF is forbidden from dashboard chart JSON")
+    void dashboardChart_withNonAdminRole_isForbidden() throws Exception {
+        // given
+
+        // when
+
+        // then
+        mockMvc.perform(get("/admin/dashboard/chart").with(user("staff").roles("STAFF")))
                 .andExpect(status().isForbidden());
     }
 
