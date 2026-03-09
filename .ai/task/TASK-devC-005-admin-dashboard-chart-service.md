@@ -12,10 +12,10 @@
 
 - Task ID: `TASK-devC-005-admin-dashboard-chart-service`
 - Task Name: `AdminDashboardChartResponse 조립 서비스 설계`
-- ACTIVE_ROLE: `{DEV_C}`
-- Scope (URL): (예: /admin/**, /reservation/**) `/admin/dashboard/chart`
-- Scope (Module): (예: admin, reservation) `admin/dashboard`
-- Status: `{TODO}`
+- ACTIVE_ROLE: `DEV_C`
+- Scope (URL): `/admin/dashboard/stats`
+- Scope (Module): `admin/dashboard`
+- Status: `TODO`
 
 ## 2) Goal
 
@@ -104,7 +104,7 @@ Test:
 
 ### 4.2 Interface Type
 
-- Delivery Type: `{JSON API}`
+- Delivery Type: `JSON API`
 - SSR/PRG 적용 여부: 차트 응답 API는 JSON 전용으로 SSR/PRG 미적용
 - 표준 응답 포맷 적용 여부(JSON): `Resp.ok(...)` 기반으로 차트 DTO 반환
 
@@ -136,10 +136,10 @@ Authorization
 
 ### 6.1 Test Plan
 
-- [x] Service 테스트 (Mockito)
+- [ ] Service 테스트 (Mockito)
 - [ ] Controller 테스트 (MockMvc + ROLE)
-- [x] 실패 케이스 최소 1개
-- [x] Given-When-Then 주석 적용
+- [ ] 실패 케이스 최소 1개
+- [ ] Given-When-Then 주석 적용
 
 ### 6.2 Executed Tests
 
