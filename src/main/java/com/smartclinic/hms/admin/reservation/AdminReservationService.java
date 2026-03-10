@@ -23,131 +23,142 @@ import java.util.stream.IntStream;
 @Transactional(readOnly = true)
 public class AdminReservationService {
 
-    private static final int DEFAULT_PAGE = 1;
-    private static final int DEFAULT_SIZE = 10;
+        // 페이지네이션
+        private static final int DEFAULT_PAGE = 1;
+        private static final int DEFAULT_SIZE = 10;
 
-    private static final Map<String, String> STATUS_LABELS = Map.of(
-            "ALL", "전체",
-            "RESERVED", "예약",
-            "RECEIVED", "접수",
-            "COMPLETED", "완료",
-            "CANCELLED", "취소"
-    );
+        // 상태값 라벨
+        private static final Map<String, String> STATUS_LABELS = Map.of(
+                        "ALL", "전체",
+                        "RESERVED", "예약",
+                        "RECEIVED", "접수",
+                        "COMPLETED", "완료",
+                        "CANCELLED", "취소");
+        // repo 선언
+        private final AdminReservationRepository adminReservationRepository;
 
-    private final AdminReservationRepository adminReservationRepository;
+        // 관리자 예약 화면 조회
+        public AdminReservationListResponse getReservationList(int page, int size, String statusParam) {
+                // 페이지네이션
+                int safePage = page < 1 ? DEFAULT_PAGE : page;
+                int safeSize = size < 1 ? DEFAULT_SIZE : size;
 
-    public AdminReservationListResponse getReservationList(int page, int size, String statusParam) {
-        int safePage = page < 1 ? DEFAULT_PAGE : page;
-        int safeSize = size < 1 ? DEFAULT_SIZE : size;
+                // 상태값
+                ReservationStatus status = resolveStatus(statusParam);
+                // 선택된 상태값
+                String selectedStatus = status == null ? "ALL" : status.name();
 
-        ReservationStatus status = resolveStatus(statusParam);
-        String selectedStatus = status == null ? "ALL" : status.name();
+                // 페이지네이션
+                Pageable pageable = PageRequest.of(
+                                safePage - 1,
+                                safeSize,
+                                Sort.by(Sort.Order.desc("reservationDate"), Sort.Order.desc("timeSlot")));
+                // 조회 결과
+                Page<AdminReservationRepository.AdminReservationListProjection> pageResult = adminReservationRepository
+                                .findReservationListPage(status, pageable);
 
-        Pageable pageable = PageRequest.of(
-                safePage - 1,
-                safeSize,
-                Sort.by(Sort.Order.desc("reservationDate"), Sort.Order.desc("timeSlot"))
-        );
+                // DTO 변환
+                List<AdminReservationItemResponse> reservations = pageResult.getContent().stream()
+                                .map(item -> toItemResponse(item))
+                                .toList();
 
-        Page<AdminReservationRepository.AdminReservationListProjection> pageResult =
-                adminReservationRepository.findReservationListPage(status, pageable);
+                // 페이지네이션 정보
+                int currentPage = pageResult.getNumber() + 1;
+                // 총 페이지 수
+                int totalPages = pageResult.getTotalPages();
 
-        List<AdminReservationItemResponse> reservations = pageResult.getContent().stream()
-                .map(this::toItemResponse)
-                .toList();
+                // DTO 변환
+                List<AdminReservationStatusOptionResponse> statusOptions = buildStatusOptions(selectedStatus, safeSize);
+                // DTO 변환
+                List<AdminReservationPageLinkResponse> pageLinks = buildPageLinks(totalPages, currentPage, safeSize,
+                                selectedStatus);
 
-        int currentPage = pageResult.getNumber() + 1;
-        int totalPages = pageResult.getTotalPages();
+                // 이전 페이지, 다음 페이지 여부
+                boolean hasPrevious = pageResult.hasPrevious();
+                boolean hasNext = pageResult.hasNext();
 
-        List<AdminReservationStatusOptionResponse> statusOptions = buildStatusOptions(selectedStatus, safeSize);
-        List<AdminReservationPageLinkResponse> pageLinks = buildPageLinks(totalPages, currentPage, safeSize, selectedStatus);
+                // 이전 페이지, 다음 페이지 URL
+                String previousUrl = hasPrevious
+                                ? buildListUrl(currentPage - 1, safeSize, selectedStatus)
+                                : "";
+                String nextUrl = hasNext
+                                ? buildListUrl(currentPage + 1, safeSize, selectedStatus)
+                                : "";
 
-        boolean hasPrevious = pageResult.hasPrevious();
-        boolean hasNext = pageResult.hasNext();
-
-        String previousUrl = hasPrevious
-                ? buildListUrl(currentPage - 1, safeSize, selectedStatus)
-                : "";
-        String nextUrl = hasNext
-                ? buildListUrl(currentPage + 1, safeSize, selectedStatus)
-                : "";
-
-        return new AdminReservationListResponse(
-                reservations,
-                statusOptions,
-                pageLinks,
-                selectedStatus,
-                pageResult.getTotalElements(),
-                currentPage,
-                safeSize,
-                totalPages,
-                hasPrevious,
-                hasNext,
-                previousUrl,
-                nextUrl
-        );
-    }
-
-    private ReservationStatus resolveStatus(String statusParam) {
-        if (statusParam == null || statusParam.isBlank()) {
-            return null;
+                return new AdminReservationListResponse(
+                                reservations,
+                                statusOptions,
+                                pageLinks,
+                                selectedStatus,
+                                pageResult.getTotalElements(),
+                                currentPage,
+                                safeSize,
+                                totalPages,
+                                hasPrevious,
+                                hasNext,
+                                previousUrl,
+                                nextUrl);
         }
 
-        String normalized = statusParam.trim().toUpperCase(Locale.ROOT);
-        if ("ALL".equals(normalized)) {
-            return null;
+        private ReservationStatus resolveStatus(String statusParam) {
+                if (statusParam == null || statusParam.isBlank()) {
+                        return null;
+                }
+
+                String normalized = statusParam.trim().toUpperCase(Locale.ROOT);
+                if ("ALL".equals(normalized)) {
+                        return null;
+                }
+
+                try {
+                        return ReservationStatus.valueOf(normalized);
+                } catch (IllegalArgumentException ex) {
+                        return null;
+                }
         }
 
-        try {
-            return ReservationStatus.valueOf(normalized);
-        } catch (IllegalArgumentException ex) {
-            return null;
+        private AdminReservationItemResponse toItemResponse(
+                        AdminReservationRepository.AdminReservationListProjection row) {
+                String status = row.getStatus().name();
+
+                return new AdminReservationItemResponse(
+                                row.getId(),
+                                row.getReservationNumber(),
+                                row.getReservationDate().toString(),
+                                row.getTimeSlot(),
+                                row.getPatientName(),
+                                row.getPatientPhone(),
+                                row.getDepartmentName(),
+                                row.getDoctorName(),
+                                status,
+                                STATUS_LABELS.getOrDefault(status, status),
+                                "RESERVED".equals(status),
+                                "RECEIVED".equals(status),
+                                "COMPLETED".equals(status),
+                                "CANCELLED".equals(status));
         }
-    }
 
-    private AdminReservationItemResponse toItemResponse(AdminReservationRepository.AdminReservationListProjection row) {
-        String status = row.getStatus().name();
+        private List<AdminReservationStatusOptionResponse> buildStatusOptions(String selectedStatus, int size) {
+                return List.of("ALL", "RESERVED", "RECEIVED", "COMPLETED", "CANCELLED").stream()
+                                .map(value -> new AdminReservationStatusOptionResponse(
+                                                value,
+                                                STATUS_LABELS.get(value),
+                                                buildListUrl(1, size, value),
+                                                value.equals(selectedStatus)))
+                                .toList();
+        }
 
-        return new AdminReservationItemResponse(
-                row.getId(),
-                row.getReservationNumber(),
-                row.getReservationDate().toString(),
-                row.getTimeSlot(),
-                row.getPatientName(),
-                row.getPatientPhone(),
-                row.getDepartmentName(),
-                row.getDoctorName(),
-                status,
-                STATUS_LABELS.getOrDefault(status, status),
-                "RESERVED".equals(status),
-                "RECEIVED".equals(status),
-                "COMPLETED".equals(status),
-                "CANCELLED".equals(status)
-        );
-    }
+        private List<AdminReservationPageLinkResponse> buildPageLinks(int totalPages, int currentPage, int size,
+                        String selectedStatus) {
+                return IntStream.rangeClosed(1, totalPages)
+                                .mapToObj(page -> new AdminReservationPageLinkResponse(
+                                                page,
+                                                buildListUrl(page, size, selectedStatus),
+                                                page == currentPage))
+                                .toList();
+        }
 
-    private List<AdminReservationStatusOptionResponse> buildStatusOptions(String selectedStatus, int size) {
-        return List.of("ALL", "RESERVED", "RECEIVED", "COMPLETED", "CANCELLED").stream()
-                .map(value -> new AdminReservationStatusOptionResponse(
-                        value,
-                        STATUS_LABELS.get(value),
-                        buildListUrl(1, size, value),
-                        value.equals(selectedStatus)
-                ))
-                .toList();
-    }
-
-    private List<AdminReservationPageLinkResponse> buildPageLinks(int totalPages, int currentPage, int size, String selectedStatus) {
-        return IntStream.rangeClosed(1, totalPages)
-                .mapToObj(page -> new AdminReservationPageLinkResponse(
-                        page,
-                        buildListUrl(page, size, selectedStatus),
-                        page == currentPage
-                ))
-                .toList();
-    }
-
-    private String buildListUrl(int page, int size, String status) {
-        return "/admin/reservation/list?page=" + page + "&size=" + size + "&status=" + status;
-    }
+        private String buildListUrl(int page, int size, String status) {
+                return "/admin/reservation/list?page=" + page + "&size=" + size + "&status=" + status;
+        }
 }
