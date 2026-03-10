@@ -23,7 +23,19 @@
       "WebFetch(domain:api.github.com)",
       "Bash(wc -l src/main/java/com/smartclinic/hms/**/*.java src/main/java/com/smartclinic/hms/**/**/*.java src/main/java/com/smartclinic/hms/**/**/**/*.java)",
       "WebFetch(domain:cdn.jsdelivr.net)",
-      "Bash(curl -s \"https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.js\" -o \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms/src/main/resources/static/js/flatpickr.min.js\")"
+      "Bash(curl -s \"https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.js\" -o \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms/src/main/resources/static/js/flatpickr.min.js\")",
+      "Bash(cp \"C:/Users/G/Downloads/병원소개.jpg\" \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms/src/main/resources/static/images/병원소개.jpg\")",
+      "Bash(cp \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms/침대.jpg\" \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms/src/main/resources/static/images/침대.jpg\")",
+      "Bash(ls \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms/\"*.jpg)",
+      "Bash(cmd /c \"dir /b \"\"c:\\\\workspace\\\\gitstudy_lab\\\\demo\\\\team-demo\\\\team-project-demo\\\\hms\"\"\")",
+      "Bash(powershell -Command \"Get-ChildItem ''c:\\\\workspace\\\\gitstudy_lab\\\\demo\\\\team-demo\\\\team-project-demo\\\\hms'' | Where-Object {$_Extension -eq ''.jpg''} | Select-Object Name\")",
+      "Bash(python3 -c \":*)",
+      "Bash(git -C \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms\" status --short)",
+      "Bash(git -C \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms\" ls-files --others --exclude-standard)",
+      "Bash(git -C \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms\" log --oneline src/main/resources/templates/home/index.mustache)",
+      "Bash(git -C \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms\" show 686aa04:src/main/resources/templates/home/index.mustache)",
+      "Bash(git -C \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms\" show e0dd84e:src/main/resources/templates/home/index.mustache)",
+      "Bash(git -C \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms\" checkout 686aa04 -- src/main/resources/templates/home/index.mustache)"
     ]
   }
 }

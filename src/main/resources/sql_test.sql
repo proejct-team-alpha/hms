@@ -32,6 +32,19 @@ INSERT INTO doctor (id, staff_id, department_id, available_days, specialty) VALU
 (4, 8, 3, 'MON,TUE,WED,THU,FRI', '소아일반'),
 (5, 9, 4, 'MON,TUE,WED,THU,FRI', '이비인후일반');
 
+-- 환자 샘플
+INSERT INTO patient (id, name, phone, email, created_at) VALUES
+(1, '김민준', '010-1111-2222', 'minjun@test.com', CURRENT_TIMESTAMP),
+(2, '이서연', '010-3333-4444', 'seoyeon@test.com', CURRENT_TIMESTAMP),
+(3, '박지호', '010-5555-6666', 'jiho@test.com', CURRENT_TIMESTAMP);
+
+-- 예약 샘플 (RES-YYYYMMDD-XXX 형식)
+INSERT INTO reservation (reservation_number, patient_id, doctor_id, department_id, reservation_date, time_slot, status, source, created_at, updated_at) VALUES
+('RES-20260310-001', 1, 1, 1, '2026-03-20', '09:00', 'RESERVED',  'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('RES-20260310-002', 2, 2, 2, '2026-03-21', '10:00', 'RESERVED',  'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('RES-20260310-003', 3, 4, 3, '2026-03-22', '14:00', 'CANCELLED', 'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('RES-20260310-004', 1, 5, 4, '2026-03-25', '11:00', 'RESERVED',  'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
 -- ==============================================================================
 -- 테스트 로그인 정보
 -- ==============================================================================
