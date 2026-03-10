@@ -117,6 +117,7 @@ public class AdminReservationService {
                 }
         }
 
+        // DTO 변환
         private AdminReservationItemResponse toItemResponse(
                         AdminReservationRepository.AdminReservationListProjection row) {
                 String status = row.getStatus().name();

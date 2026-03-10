@@ -23,7 +23,7 @@
           <p class="text-slate-500">원하시는 예약 방식을 선택해주세요.</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
           <button onclick="location.href='/reservation/symptom-reservation'" class="bg-white p-10 rounded-3xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-300 transition-all group flex flex-col items-center text-center">
             <div class="w-20 h-20 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-6 group-hover:scale-110 transition-transform">
               <i data-feather="activity" class="w-10 h-10"></i>
@@ -43,6 +43,17 @@
             <p class="text-slate-500 leading-relaxed">
               원하시는 진료과와 전문의,<br/>
               예약 시간을 직접 선택하여 예약합니다.
+            </p>
+          </button>
+
+          <button onclick="location.href='/reservation/lookup'" class="bg-white p-10 rounded-3xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-300 transition-all group flex flex-col items-center text-center">
+            <div class="w-20 h-20 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 mb-6 group-hover:scale-110 transition-transform">
+              <i data-feather="search" class="w-10 h-10"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-4">예약 조회</h2>
+            <p class="text-slate-500 leading-relaxed">
+              예약번호 또는 이름과 전화번호로<br/>
+              기존 예약을 조회하고 변경·취소합니다.
             </p>
           </button>
         </div>
