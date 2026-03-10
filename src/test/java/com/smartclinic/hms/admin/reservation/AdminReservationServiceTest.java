@@ -1,6 +1,6 @@
 package com.smartclinic.hms.admin.reservation;
 
-import com.smartclinic.hms.admin.reservation.dto.AdminReservationListView;
+import com.smartclinic.hms.admin.reservation.dto.AdminReservationListResponse;
 import com.smartclinic.hms.domain.Department;
 import com.smartclinic.hms.domain.Doctor;
 import com.smartclinic.hms.domain.Patient;
@@ -32,7 +32,7 @@ class AdminReservationServiceTest {
     private EntityManager entityManager;
 
     @Test
-    @DisplayName("status가 잘못된 값이면 ALL로 fallback 된다")
+    @DisplayName("status媛 ?섎せ??媛믪씠硫?ALL濡?fallback ?쒕떎")
     void invalidStatus_fallbackToAll() {
         // given
         persistReservation("RES-20260310-001", LocalDate.of(2026, 3, 10), "09:00", "RESERVED");
@@ -41,7 +41,7 @@ class AdminReservationServiceTest {
         entityManager.clear();
 
         // when
-        AdminReservationListView result = adminReservationService.getReservationList(1, 10, "INVALID");
+        AdminReservationListResponse result = adminReservationService.getReservationList(1, 10, "INVALID");
 
         // then
         assertThat(result.selectedStatus()).isEqualTo("ALL");
@@ -50,7 +50,7 @@ class AdminReservationServiceTest {
     }
 
     @Test
-    @DisplayName("상태 필터와 기본 정렬(reservationDate DESC, timeSlot DESC)이 적용된다")
+    @DisplayName("?곹깭 ?꾪꽣? 湲곕낯 ?뺣젹(reservationDate DESC, timeSlot DESC)???곸슜?쒕떎")
     void statusFilterAndDefaultSort_applied() {
         // given
         persistReservation("RES-20260310-001", LocalDate.of(2026, 3, 10), "09:00", "RECEIVED");
@@ -61,7 +61,7 @@ class AdminReservationServiceTest {
         entityManager.clear();
 
         // when
-        AdminReservationListView result = adminReservationService.getReservationList(1, 10, "RECEIVED");
+        AdminReservationListResponse result = adminReservationService.getReservationList(1, 10, "RECEIVED");
 
         // then
         assertThat(result.selectedStatus()).isEqualTo("RECEIVED");
@@ -71,7 +71,7 @@ class AdminReservationServiceTest {
     }
 
     @Test
-    @DisplayName("기본 페이징(page=1, size=10)이 적용된다")
+    @DisplayName("湲곕낯 ?섏씠吏?page=1, size=10)???곸슜?쒕떎")
     void defaultPaging_applied() {
         // given
         for (int i = 1; i <= 12; i++) {
@@ -81,7 +81,7 @@ class AdminReservationServiceTest {
         entityManager.clear();
 
         // when
-        AdminReservationListView result = adminReservationService.getReservationList(1, 10, "ALL");
+        AdminReservationListResponse result = adminReservationService.getReservationList(1, 10, "ALL");
 
         // then
         assertThat(result.currentPage()).isEqualTo(1);
@@ -91,23 +91,23 @@ class AdminReservationServiceTest {
     }
 
     private void persistReservation(String reservationNumber, LocalDate date, String timeSlot, String status) {
-        Department department = Department.create("내과-" + reservationNumber, true);
+        Department department = Department.create("?닿낵-" + reservationNumber, true);
         entityManager.persist(department);
 
         Staff doctorStaff = Staff.create(
                 "doctor-" + reservationNumber,
                 "D-" + reservationNumber,
                 "{noop}pw",
-                "의사-" + reservationNumber,
+                "?섏궗-" + reservationNumber,
                 StaffRole.DOCTOR,
                 department
         );
         entityManager.persist(doctorStaff);
 
-        Doctor doctor = Doctor.create(doctorStaff, department, "MON,TUE,WED,THU,FRI", "내과");
+        Doctor doctor = Doctor.create(doctorStaff, department, "MON,TUE,WED,THU,FRI", "?닿낵");
         entityManager.persist(doctor);
 
-        Patient patient = Patient.create("환자-" + reservationNumber, "010-1111-2222", reservationNumber + "@test.com");
+        Patient patient = Patient.create("?섏옄-" + reservationNumber, "010-1111-2222", reservationNumber + "@test.com");
         entityManager.persist(patient);
 
         Reservation reservation = Reservation.create(

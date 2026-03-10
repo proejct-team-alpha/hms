@@ -1,9 +1,9 @@
 package com.smartclinic.hms.admin.reservation;
 
-import com.smartclinic.hms.admin.reservation.dto.AdminReservationListItemView;
-import com.smartclinic.hms.admin.reservation.dto.AdminReservationListView;
-import com.smartclinic.hms.admin.reservation.dto.AdminReservationPageLink;
-import com.smartclinic.hms.admin.reservation.dto.AdminReservationStatusOption;
+import com.smartclinic.hms.admin.reservation.dto.AdminReservationItemResponse;
+import com.smartclinic.hms.admin.reservation.dto.AdminReservationListResponse;
+import com.smartclinic.hms.admin.reservation.dto.AdminReservationPageLinkResponse;
+import com.smartclinic.hms.admin.reservation.dto.AdminReservationStatusOptionResponse;
 import com.smartclinic.hms.domain.ReservationStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -36,7 +36,7 @@ public class AdminReservationService {
 
     private final AdminReservationRepository adminReservationRepository;
 
-    public AdminReservationListView getReservationList(int page, int size, String statusParam) {
+    public AdminReservationListResponse getReservationList(int page, int size, String statusParam) {
         int safePage = page < 1 ? DEFAULT_PAGE : page;
         int safeSize = size < 1 ? DEFAULT_SIZE : size;
 
@@ -52,15 +52,15 @@ public class AdminReservationService {
         Page<AdminReservationRepository.AdminReservationListProjection> pageResult =
                 adminReservationRepository.findReservationListPage(status, pageable);
 
-        List<AdminReservationListItemView> reservations = pageResult.getContent().stream()
-                .map(this::toItemView)
+        List<AdminReservationItemResponse> reservations = pageResult.getContent().stream()
+                .map(this::toItemResponse)
                 .toList();
 
         int currentPage = pageResult.getNumber() + 1;
         int totalPages = pageResult.getTotalPages();
 
-        List<AdminReservationStatusOption> statusOptions = buildStatusOptions(selectedStatus, safeSize);
-        List<AdminReservationPageLink> pageLinks = buildPageLinks(totalPages, currentPage, safeSize, selectedStatus);
+        List<AdminReservationStatusOptionResponse> statusOptions = buildStatusOptions(selectedStatus, safeSize);
+        List<AdminReservationPageLinkResponse> pageLinks = buildPageLinks(totalPages, currentPage, safeSize, selectedStatus);
 
         boolean hasPrevious = pageResult.hasPrevious();
         boolean hasNext = pageResult.hasNext();
@@ -72,7 +72,7 @@ public class AdminReservationService {
                 ? buildListUrl(currentPage + 1, safeSize, selectedStatus)
                 : "";
 
-        return new AdminReservationListView(
+        return new AdminReservationListResponse(
                 reservations,
                 statusOptions,
                 pageLinks,
@@ -105,10 +105,10 @@ public class AdminReservationService {
         }
     }
 
-    private AdminReservationListItemView toItemView(AdminReservationRepository.AdminReservationListProjection row) {
+    private AdminReservationItemResponse toItemResponse(AdminReservationRepository.AdminReservationListProjection row) {
         String status = row.getStatus().name();
 
-        return new AdminReservationListItemView(
+        return new AdminReservationItemResponse(
                 row.getId(),
                 row.getReservationNumber(),
                 row.getReservationDate().toString(),
@@ -126,9 +126,9 @@ public class AdminReservationService {
         );
     }
 
-    private List<AdminReservationStatusOption> buildStatusOptions(String selectedStatus, int size) {
+    private List<AdminReservationStatusOptionResponse> buildStatusOptions(String selectedStatus, int size) {
         return List.of("ALL", "RESERVED", "RECEIVED", "COMPLETED", "CANCELLED").stream()
-                .map(value -> new AdminReservationStatusOption(
+                .map(value -> new AdminReservationStatusOptionResponse(
                         value,
                         STATUS_LABELS.get(value),
                         buildListUrl(1, size, value),
@@ -137,9 +137,9 @@ public class AdminReservationService {
                 .toList();
     }
 
-    private List<AdminReservationPageLink> buildPageLinks(int totalPages, int currentPage, int size, String selectedStatus) {
+    private List<AdminReservationPageLinkResponse> buildPageLinks(int totalPages, int currentPage, int size, String selectedStatus) {
         return IntStream.rangeClosed(1, totalPages)
-                .mapToObj(page -> new AdminReservationPageLink(
+                .mapToObj(page -> new AdminReservationPageLinkResponse(
                         page,
                         buildListUrl(page, size, selectedStatus),
                         page == currentPage

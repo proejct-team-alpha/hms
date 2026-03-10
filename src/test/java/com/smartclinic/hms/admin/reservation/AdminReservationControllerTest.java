@@ -1,8 +1,8 @@
 package com.smartclinic.hms.admin.reservation;
 
-import com.smartclinic.hms.admin.reservation.dto.AdminReservationListView;
-import com.smartclinic.hms.admin.reservation.dto.AdminReservationPageLink;
-import com.smartclinic.hms.admin.reservation.dto.AdminReservationStatusOption;
+import com.smartclinic.hms.admin.reservation.dto.AdminReservationListResponse;
+import com.smartclinic.hms.admin.reservation.dto.AdminReservationPageLinkResponse;
+import com.smartclinic.hms.admin.reservation.dto.AdminReservationStatusOptionResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,13 +41,13 @@ class AdminReservationControllerTest {
     private AdminReservationService adminReservationService;
 
     @Test
-    @DisplayName("기본 파라미터(page=1, size=10)로 예약 목록을 조회한다")
+    @DisplayName("湲곕낯 ?뚮씪誘명꽣(page=1, size=10)濡??덉빟 紐⑸줉??議고쉶?쒕떎")
     void list_usesDefaultPagingAndRendersView() throws Exception {
         // given
-        AdminReservationListView viewModel = new AdminReservationListView(
+        AdminReservationListResponse viewModel = new AdminReservationListResponse(
                 List.of(),
-                List.of(new AdminReservationStatusOption("ALL", "전체", "/admin/reservation/list?page=1&size=10&status=ALL", true)),
-                List.of(new AdminReservationPageLink(1, "/admin/reservation/list?page=1&size=10&status=ALL", true)),
+                List.of(new AdminReservationStatusOptionResponse("ALL", "전체", "/admin/reservation/list?page=1&size=10&status=ALL", true)),
+                List.of(new AdminReservationPageLinkResponse(1, "/admin/reservation/list?page=1&size=10&status=ALL", true)),
                 "ALL",
                 0,
                 1,
@@ -73,10 +73,10 @@ class AdminReservationControllerTest {
     }
 
     @Test
-    @DisplayName("전달된 page, size, status 파라미터를 서비스로 전달한다")
+    @DisplayName("?꾨떖??page, size, status ?뚮씪誘명꽣瑜??쒕퉬?ㅻ줈 ?꾨떖?쒕떎")
     void list_passesRequestParamsToService() throws Exception {
         // given
-        AdminReservationListView viewModel = new AdminReservationListView(
+        AdminReservationListResponse viewModel = new AdminReservationListResponse(
                 List.of(), List.of(), List.of(), "RESERVED", 0, 2, 5, 0,
                 true, false,
                 "/admin/reservation/list?page=1&size=5&status=RESERVED",

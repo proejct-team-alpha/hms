@@ -1,67 +1,63 @@
 # worklog-006
 
-## 1) 작업 전 준수 항목 체크리스트
-- [x] `AGENTS.md` 확인
-- [x] `.ai/memory.md` 확인
-- [x] `doc/PROJECT_STRUCTURE.md` 확인
-- [x] `doc/RULE.md` 확인
-- [x] 구현 전 체크리스트 출력 후 작업 진행
+## 1) ?묒뾽 ??以????ぉ 泥댄겕由ъ뒪??- [x] `AGENTS.md` ?뺤씤
+- [x] `.ai/memory.md` ?뺤씤
+- [x] `doc/PROJECT_STRUCTURE.md` ?뺤씤
+- [x] `doc/RULE.md` ?뺤씤
+- [x] 援ы쁽 ??泥댄겕由ъ뒪??異쒕젰 ???묒뾽 吏꾪뻾
 
-## 2) 구현 범위 (workflow-006)
-- `GET /admin/reservation/list` DB 연동 목록 조회 구현
-- 상태 필터 지원: `ALL`, `RESERVED`, `RECEIVED`, `COMPLETED`, `CANCELLED`
-- 상태 파라미터 invalid/missing 시 `ALL` fallback
-- 페이징 기본값: `page=1`, `size=10`
-- 기본 정렬: `reservationDate DESC`, `timeSlot DESC`
-- Mustache 템플릿을 서버 렌더링 기반으로 전환
+## 2) 援ы쁽 踰붿쐞 (workflow-006)
+- `GET /admin/reservation/list` DB ?곕룞 紐⑸줉 議고쉶 援ы쁽
+- ?곹깭 ?꾪꽣 吏?? `ALL`, `RESERVED`, `RECEIVED`, `COMPLETED`, `CANCELLED`
+- ?곹깭 ?뚮씪誘명꽣 invalid/missing ??`ALL` fallback
+- ?섏씠吏?湲곕낯媛? `page=1`, `size=10`
+- 湲곕낯 ?뺣젹: `reservationDate DESC`, `timeSlot DESC`
+- Mustache ?쒗뵆由우쓣 ?쒕쾭 ?뚮뜑留?湲곕컲?쇰줈 ?꾪솚
 
-## 3) 변경 파일
+## 3) 蹂寃??뚯씪
 - `src/main/java/com/smartclinic/hms/admin/reservation/AdminReservationController.java`
 - `src/main/java/com/smartclinic/hms/admin/reservation/AdminReservationRepository.java`
 - `src/main/java/com/smartclinic/hms/admin/reservation/AdminReservationService.java`
-- `src/main/java/com/smartclinic/hms/admin/reservation/dto/AdminReservationListItemView.java`
-- `src/main/java/com/smartclinic/hms/admin/reservation/dto/AdminReservationListView.java`
-- `src/main/java/com/smartclinic/hms/admin/reservation/dto/AdminReservationPageLink.java`
-- `src/main/java/com/smartclinic/hms/admin/reservation/dto/AdminReservationStatusOption.java`
+- `src/main/java/com/smartclinic/hms/admin/reservation/dto/AdminReservationItemResponse.java`
+- `src/main/java/com/smartclinic/hms/admin/reservation/dto/AdminReservationListResponse.java`
+- `src/main/java/com/smartclinic/hms/admin/reservation/dto/AdminReservationPageLinkResponse.java`
+- `src/main/java/com/smartclinic/hms/admin/reservation/dto/AdminReservationStatusOptionResponse.java`
 - `src/main/resources/templates/admin/reservation-list.mustache`
 - `src/test/java/com/smartclinic/hms/admin/reservation/AdminReservationControllerTest.java`
 - `src/test/java/com/smartclinic/hms/admin/reservation/AdminReservationServiceTest.java`
 
-## 4) 구현 상세
+## 4) 援ы쁽 ?곸꽭
 - Repository
-  - `findReservationListPage(status, pageable)` 추가
-  - 환자/진료과/의사 조인 기반 목록 Projection 조회
-  - 상태 조건은 `:status is null` 패턴으로 `ALL` 처리
+  - `findReservationListPage(status, pageable)` 異붽?
+  - ?섏옄/吏꾨즺怨??섏궗 議곗씤 湲곕컲 紐⑸줉 Projection 議고쉶
+  - ?곹깭 議곌굔? `:status is null` ?⑦꽩?쇰줈 `ALL` 泥섎━
 - Service
-  - `@Transactional(readOnly = true)` 적용
-  - `status` 파싱 로직에서 잘못된 값은 `null` 처리(=ALL)
-  - 페이징/정렬 생성 및 View DTO 매핑
-  - 필터 버튼 URL, 페이지 링크 URL 생성
+  - `@Transactional(readOnly = true)` ?곸슜
+  - `status` ?뚯떛 濡쒖쭅?먯꽌 ?섎せ??媛믪? `null` 泥섎━(=ALL)
+  - ?섏씠吏??뺣젹 ?앹꽦 諛?View DTO 留ㅽ븨
+  - ?꾪꽣 踰꾪듉 URL, ?섏씠吏 留곹겕 URL ?앹꽦
 - Controller
-  - 요청 파라미터(`page`, `size`, `status`) 수신
-  - 서비스 결과를 `model` 속성으로 템플릿 전달
+  - ?붿껌 ?뚮씪誘명꽣(`page`, `size`, `status`) ?섏떊
+  - ?쒕퉬??寃곌낵瑜?`model` ?띿꽦?쇰줈 ?쒗뵆由??꾨떖
 - Template
-  - JS mock 렌더링 제거
-  - 서버 데이터(`model`)로 목록/필터/페이지네이션 렌더링
-  - 빈 목록 상태 메시지 표시
+  - JS mock ?뚮뜑留??쒓굅
+  - ?쒕쾭 ?곗씠??`model`)濡?紐⑸줉/?꾪꽣/?섏씠吏?ㅼ씠???뚮뜑留?  - 鍮?紐⑸줉 ?곹깭 硫붿떆吏 ?쒖떆
 
-## 5) 테스트 결과
-- 실행 명령:
+## 5) ?뚯뒪??寃곌낵
+- ?ㅽ뻾 紐낅졊:
   - `./gradlew test --tests 'com.smartclinic.hms.admin.reservation.*'`
-- 결과:
+- 寃곌낵:
   - `BUILD SUCCESSFUL`
-  - Controller 테스트 2건 통과
-  - Service 테스트 3건 통과
+  - Controller ?뚯뒪??2嫄??듦낵
+  - Service ?뚯뒪??3嫄??듦낵
 
-## 6) 참조 문서
-- 로컬:
+## 6) 李몄“ 臾몄꽌
+- 濡쒖뺄:
   - `AGENTS.md`
   - `.ai/memory.md`
   - `doc/PROJECT_STRUCTURE.md`
   - `doc/RULE.md`
-- 워크플로우:
+- ?뚰겕?뚮줈??
   - `doc/dev-c/workflow/workflow-006.md`
 
-## 7) 남은 TODO / 리스크
-- 현재 목록 화면은 조회 전용이며, 취소/상태 변경 POST 기능은 범위 밖
-- 추가 필터(기간/진료과/검색어)는 다음 워크플로우에서 확장 가능
+## 7) ?⑥? TODO / 由ъ뒪??- ?꾩옱 紐⑸줉 ?붾㈃? 議고쉶 ?꾩슜?대ŉ, 痍⑥냼/?곹깭 蹂寃?POST 湲곕뒫? 踰붿쐞 諛?- 異붽? ?꾪꽣(湲곌컙/吏꾨즺怨?寃?됱뼱)???ㅼ쓬 ?뚰겕?뚮줈?곗뿉???뺤옣 媛??

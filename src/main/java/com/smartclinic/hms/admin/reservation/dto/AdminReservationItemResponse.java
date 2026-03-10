@@ -1,6 +1,6 @@
 package com.smartclinic.hms.admin.reservation.dto;
 
-public record AdminReservationListItemView(
+public record AdminReservationItemResponse(
         Long id,
         String reservationNumber,
         String reservationDate,

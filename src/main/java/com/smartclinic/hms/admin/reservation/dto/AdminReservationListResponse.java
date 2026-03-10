@@ -2,10 +2,10 @@ package com.smartclinic.hms.admin.reservation.dto;
 
 import java.util.List;
 
-public record AdminReservationListView(
-        List<AdminReservationListItemView> reservations,
-        List<AdminReservationStatusOption> statusOptions,
-        List<AdminReservationPageLink> pageLinks,
+public record AdminReservationListResponse(
+        List<AdminReservationItemResponse> reservations,
+        List<AdminReservationStatusOptionResponse> statusOptions,
+        List<AdminReservationPageLinkResponse> pageLinks,
         String selectedStatus,
         long totalCount,
         int currentPage,

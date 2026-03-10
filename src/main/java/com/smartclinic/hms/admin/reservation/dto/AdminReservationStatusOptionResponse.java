@@ -1,6 +1,6 @@
 package com.smartclinic.hms.admin.reservation.dto;
 
-public record AdminReservationStatusOption(
+public record AdminReservationStatusOptionResponse(
         String value,
         String label,
         String url,

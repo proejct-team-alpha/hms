@@ -1,4 +1,4 @@
-﻿# Admin 예약 목록 구현 명세서 (workflow-006)
+# Admin 예약 목록 구현 명세서 (workflow-006)
 
 ## 문제 정의
 관리자 예약 목록(S18)을 구현해야 하며, `GET /admin/reservation/list`에서 전체 예약 목록 조회가 가능해야 한다.

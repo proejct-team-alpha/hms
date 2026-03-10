@@ -1,6 +1,6 @@
 package com.smartclinic.hms.admin.reservation;
 
-import com.smartclinic.hms.admin.reservation.dto.AdminReservationListView;
+import com.smartclinic.hms.admin.reservation.dto.AdminReservationListResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -22,7 +22,7 @@ public class AdminReservationController {
             @RequestParam(required = false) String status,
             HttpServletRequest req
     ) {
-        AdminReservationListView result = adminReservationService.getReservationList(page, size, status);
+        AdminReservationListResponse result = adminReservationService.getReservationList(page, size, status);
         req.setAttribute("model", result);
         return "admin/reservation-list";
     }
