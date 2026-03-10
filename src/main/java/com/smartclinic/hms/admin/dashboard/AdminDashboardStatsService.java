@@ -95,11 +95,9 @@ public class AdminDashboardStatsService {
             LocalDate endDate) {
         Map<LocalDate, Long> dailyPatientCounts = adminReservationRepository.findDailyPatientCounts(startDate, endDate)
                 .stream()
-
-                // 화살표함수 변경
                 .collect(Collectors.toMap(
-                        AdminReservationRepository.DailyPatientCountProjection::getDate,
-                        AdminReservationRepository.DailyPatientCountProjection::getPatientCount));
+                        projection -> projection.getDate(),
+                        projection -> projection.getPatientCount()));
 
         return Stream
                 .iterate(startDate, date -> !date.isAfter(endDate), date -> date.plusDays(1))
