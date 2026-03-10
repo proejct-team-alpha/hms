@@ -92,10 +92,7 @@ class AdminDashboardStatsRepositoryTest {
         long todayReservations = adminReservationRepository.countByReservationDate(today);
         long totalReservations = adminReservationRepository.count();
         long totalActiveStaff = adminStaffRepository.countByActiveTrue();
-        long lowStockItems = itemRepository.findAllProjectedBy()
-                .stream()
-                .filter(item -> item.getQuantity() < item.getMinQuantity())
-                .count();
+        long lowStockItems = itemRepository.countLowStockItems();
 
         // then
         assertThat(todayReservations).isEqualTo(1L);

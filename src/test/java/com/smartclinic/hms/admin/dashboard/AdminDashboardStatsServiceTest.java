@@ -42,10 +42,7 @@ class AdminDashboardStatsServiceTest {
         given(adminReservationRepository.countByReservationDate(today)).willReturn(5L);
         given(adminReservationRepository.count()).willReturn(120L);
         given(adminStaffRepository.countByActiveTrue()).willReturn(18L);
-        given(itemRepository.findAllProjectedBy()).willReturn(java.util.List.of(
-                stock(2, 5),
-                stock(20, 10)
-        ));
+        given(itemRepository.countLowStockItems()).willReturn(1L);
 
         // when
         AdminDashboardStatsResponse response = adminDashboardStatsService.getDashboardStats(today);
@@ -59,7 +56,7 @@ class AdminDashboardStatsServiceTest {
         then(adminReservationRepository).should().countByReservationDate(today);
         then(adminReservationRepository).should().count();
         then(adminStaffRepository).should().countByActiveTrue();
-        then(itemRepository).should().findAllProjectedBy();
+        then(itemRepository).should().countLowStockItems();
     }
 
     @Test
@@ -97,20 +94,6 @@ class AdminDashboardStatsServiceTest {
 
         then(itemRepository).should().findCategoryCounts();
         then(adminReservationRepository).should().findDailyPatientCounts(startDate, endDate);
-    }
-
-    private ItemRepository.StockLevelProjection stock(int quantity, int minQuantity) {
-        return new ItemRepository.StockLevelProjection() {
-            @Override
-            public int getQuantity() {
-                return quantity;
-            }
-
-            @Override
-            public int getMinQuantity() {
-                return minQuantity;
-            }
-        };
     }
 
     private ItemRepository.CategoryCountProjection categoryCount(ItemCategory category, Long totalCount) {

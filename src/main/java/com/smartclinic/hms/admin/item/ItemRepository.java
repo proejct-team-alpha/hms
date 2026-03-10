@@ -9,7 +9,12 @@ import java.util.List;
 
 public interface ItemRepository extends JpaRepository<Item, Long> {
 
-    List<StockLevelProjection> findAllProjectedBy();
+    @Query("""
+            select count(i.id)
+            from Item i
+            where i.quantity < i.minQuantity
+            """)
+    long countLowStockItems();
 
     @Query("""
             select i.category as category, count(i.id) as totalCount
@@ -17,12 +22,6 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             group by i.category
             """)
     List<CategoryCountProjection> findCategoryCounts();
-
-    interface StockLevelProjection {
-        int getQuantity();
-
-        int getMinQuantity();
-    }
 
     interface CategoryCountProjection {
         ItemCategory getCategory();

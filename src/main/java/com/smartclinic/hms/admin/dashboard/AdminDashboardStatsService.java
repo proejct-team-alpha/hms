@@ -22,71 +22,93 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AdminDashboardStatsService {
-    // 날짜 범위
+    // 차트 범위
     private static final long CHART_RANGE_DAYS = 3L;
 
-    // Repository
+    // repo 선언
     private final AdminReservationRepository adminReservationRepository;
     private final AdminStaffRepository adminStaffRepository;
     private final ItemRepository itemRepository;
 
+    // 관리자 대시보드 날짜 지정
     public AdminDashboardStatsResponse getDashboardStats() {
         return getDashboardStats(LocalDate.now());
     }
 
-    // 대시보드드 통계 정보 반환
+    // 관리자 대시보드 통계 조회
     public AdminDashboardStatsResponse getDashboardStats(LocalDate today) {
-
-        // 재고 부족 아이템 개수 계산산
-        long lowStockItemCount = itemRepository.findAllProjectedBy()
-                .stream()
-                .filter(item -> item.getQuantity() < item.getMinQuantity())
-                .count();
-
-        // 관리자 대시보드 통계 정보 반환
         return new AdminDashboardStatsResponse(
-                adminReservationRepository.countByReservationDate(today),
-                adminReservationRepository.count(),
-                adminStaffRepository.countByActiveTrue(),
-                lowStockItemCount);
+                countTodayReservations(today),
+                countTotalReservations(),
+                countActiveStaff(),
+                countLowStockItems());
     }
 
-    // 대시보드 차트 정보 반환 날짜 기본값 오늘
+    // 관리자 대시보드 날짜 지정
     public AdminDashboardChartResponse getDashboardChart() {
         return getDashboardChart(LocalDate.now());
     }
 
-    // 대시보드 차트 정보 반환
+    // 관리자 대시보드 차트 조회
     public AdminDashboardChartResponse getDashboardChart(LocalDate today) {
-        // START 날짜 END 날짜 설정
         LocalDate startDate = today.minusDays(CHART_RANGE_DAYS);
         LocalDate endDate = today.plusDays(CHART_RANGE_DAYS);
 
-        // 카테고리별 아이템 개수 계산
-        List<AdminDashboardChartResponse.CategoryCount> categoryCounts = itemRepository.findCategoryCounts()
+        return new AdminDashboardChartResponse(
+                buildCategoryCounts(),
+                buildDailyPatients(startDate, endDate));
+    }
+
+    // 오늘 날짜의 예약 개수
+    private long countTodayReservations(LocalDate today) {
+        return adminReservationRepository.countByReservationDate(today);
+    }
+
+    // 총 예약 수 조회
+    private long countTotalReservations() {
+        return adminReservationRepository.count();
+    }
+
+    // 활성화된 직원 수 조회
+    private long countActiveStaff() {
+        return adminStaffRepository.countByActiveTrue();
+    }
+
+    // 재고 수 조회
+    private long countLowStockItems() {
+        return itemRepository.countLowStockItems();
+    }
+
+    // 카테고리별 카운트
+    private List<AdminDashboardChartResponse.CategoryCount> buildCategoryCounts() {
+        return itemRepository.findCategoryCounts()
                 .stream()
-                .map(item -> new AdminDashboardChartResponse.CategoryCount(
-                        toCategoryName(item.getCategory()),
-                        item.getTotalCount()))
+                .map(categoryCount -> new AdminDashboardChartResponse.CategoryCount(
+                        toCategoryName(categoryCount.getCategory()),
+                        categoryCount.getTotalCount()))
                 .toList();
-        // 일별 예약자 수 계산
+    }
+
+    // 일별 환자 수
+    private List<AdminDashboardChartResponse.DailyPatientCount> buildDailyPatients(
+            LocalDate startDate,
+            LocalDate endDate) {
         Map<LocalDate, Long> dailyPatientCounts = adminReservationRepository.findDailyPatientCounts(startDate, endDate)
                 .stream()
+
+                // 화살표함수 변경
                 .collect(Collectors.toMap(
                         AdminReservationRepository.DailyPatientCountProjection::getDate,
                         AdminReservationRepository.DailyPatientCountProjection::getPatientCount));
-        // 차트 데이터 생성
-        List<AdminDashboardChartResponse.DailyPatientCount> dailyPatients = Stream
+
+        return Stream
                 .iterate(startDate, date -> !date.isAfter(endDate), date -> date.plusDays(1))
                 .map(date -> new AdminDashboardChartResponse.DailyPatientCount(
                         date,
                         dailyPatientCounts.getOrDefault(date, 0L)))
                 .toList();
-
-        return new AdminDashboardChartResponse(categoryCounts, dailyPatients);
     }
 
-    // 카테고리 이름 변환
     private String toCategoryName(ItemCategory category) {
         return switch (category) {
             case MEDICAL_SUPPLIES -> "의료 소모품";
