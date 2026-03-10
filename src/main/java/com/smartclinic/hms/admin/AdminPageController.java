@@ -8,11 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/admin")
 public class AdminPageController {
 
-    @GetMapping("/reservation-list")
-    public String reservationList() {
-        return "admin/reservation-list";
-    }
-
     @GetMapping("/department-list")
     public String departmentList() {
         return "admin/department-list";
@@ -48,4 +43,3 @@ public class AdminPageController {
         return "admin/item-form";
     }
 }
-
