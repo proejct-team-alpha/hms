@@ -14,7 +14,7 @@
     <div class="max-w-2xl mx-auto">
 
       {{! 예약번호 검색 폼 }}
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-6">
+      <div id="search-section" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-6">
         <div class="flex items-center gap-3 mb-6">
           <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600">
             <i data-feather="x-circle" class="w-6 h-6"></i>
@@ -71,12 +71,19 @@
             <span class="font-medium text-slate-800">{{status}}</span>
           </div>
         </div>
-        <form method="post" action="/reservation/cancel/{{id}}">
-          <button type="submit"
-                  class="w-full py-3 bg-red-500 text-white font-medium rounded-xl hover:bg-red-600 transition-colors shadow-sm">
-            예약 취소
+        <div class="flex gap-3">
+          <button onclick="history.back()"
+                  class="flex-1 py-3 bg-white border border-slate-300 text-slate-600 font-medium rounded-xl hover:bg-slate-50 transition-colors">
+            취소 안 함
           </button>
-        </form>
+          <form method="post" action="/reservation/cancel/{{id}}" class="flex-1">
+            <input type="hidden" name="reservationNumber" value="{{reservationNumber}}"/>
+            <button type="submit"
+                    class="w-full py-3 bg-red-500 text-white font-medium rounded-xl hover:bg-red-600 transition-colors shadow-sm">
+              예약 취소
+            </button>
+          </form>
+        </div>
       </div>
       {{/reservation}}
 
@@ -84,6 +91,11 @@
   </main>
 
   {{> common/footer-public}}
-  <script>feather.replace();</script>
+  <script>
+    feather.replace();
+    if (new URLSearchParams(window.location.search).has('reservationNumber')) {
+      document.getElementById('search-section').classList.add('hidden');
+    }
+  </script>
 </body>
 </html>

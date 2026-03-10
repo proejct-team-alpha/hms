@@ -16,7 +16,7 @@
     <div class="max-w-2xl mx-auto">
 
       {{! 예약번호 검색 폼 }}
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-6">
+      <div id="search-section" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-6">
         <div class="flex items-center gap-3 mb-6">
           <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
             <i data-feather="edit-2" class="w-6 h-6"></i>
@@ -41,6 +41,12 @@
 
       {{! 변경 폼 }}
       {{#reservation}}
+      {{^canModify}}
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-700">
+        이 예약은 현재 <strong>{{status}}</strong> 상태로 변경이 불가합니다.
+      </div>
+      {{/canModify}}
+      {{#canModify}}
       <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
         <h2 class="text-lg font-semibold text-slate-800 mb-2">변경할 정보 입력</h2>
         <p class="text-sm text-slate-500 mb-6">
@@ -92,6 +98,7 @@
           </button>
         </form>
       </div>
+      {{/canModify}}
       {{/reservation}}
 
     </div>
@@ -100,6 +107,9 @@
   {{> common/footer-public}}
   <script>
     feather.replace();
+    if (new URLSearchParams(window.location.search).has('reservationNumber')) {
+      document.getElementById('search-section').classList.add('hidden');
+    }
 
     const DAY_MAP = { SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6 };
     const datePicker = flatpickr(document.getElementById('date'), {

@@ -3,48 +3,286 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MediCare+ - 스마트 병원 예약 및 업무 관리 시스템</title>
+  <title>MediCare+ 병원</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
 </head>
-<body class="min-h-screen flex flex-col">
-  {{> common/header-public}}
+<body class="min-h-screen flex flex-col bg-slate-50">
 
-  <div class="flex-1 flex flex-col items-center justify-center p-6">
-  <div class="text-center mb-12">
-    <div class="w-20 h-20 bg-indigo-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-6 shadow-lg">
-      <i data-feather="activity" class="w-10 h-10"></i>
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-md">
+          <i data-feather="activity" class="w-6 h-6"></i>
+        </div>
+        <span class="text-2xl font-bold text-slate-800 tracking-tight">MediCare+</span>
+      </div>
+
+      <div class="flex items-center gap-6">
+        <button
+          onclick="location.href='/login'"
+          class="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg"
+        >
+          <i data-feather="lock" class="w-4 h-4"></i>
+          직원 로그인
+        </button>
+      </div>
     </div>
-    <h1 class="text-4xl font-bold text-slate-800 mb-4">MediCare+</h1>
-    <p class="text-lg text-slate-500">스마트 병원 예약 및 업무 관리 시스템</p>
-  </div>
+  </header>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
-    <button
-      onclick="location.href='/reservation'"
-      class="bg-white p-10 rounded-3xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-300 transition-all group flex flex-col items-center text-center"
-    >
-      <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mb-6 group-hover:scale-110 transition-transform">
-        <i data-feather="user" class="w-8 h-8"></i>
+  <main class="flex-1">
+    <!-- Hero Section -->
+    <section class="relative bg-white overflow-hidden min-h-screen flex flex-col justify-center">
+      <div class="absolute inset-0 bg-indigo-50/50"></div>
+      <div class="max-w-7xl mx-auto px-6 py-24 md:py-32 relative flex flex-col md:flex-row items-center gap-24">
+        <div class="flex-1 text-center md:text-left">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-sm font-semibold mb-6">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+            </span>
+            스마트 진료 예약 시스템 도입
+          </div>
+          <h1 class="text-4xl md:text-6xl font-bold text-slate-900 leading-tight mb-6">
+            당신의 건강한 내일을<br/>
+            <span class="text-indigo-600">함께 만들어갑니다</span>
+          </h1>
+          <p class="text-lg text-slate-600 mb-10 max-w-xl mx-auto md:mx-0 leading-relaxed">
+            최첨단 의료 장비와 전문 의료진이 환자 중심의 맞춤형 진료를 제공합니다. 빠르고 편리한 스마트 예약 시스템으로 대기 시간을 최소화하세요.
+          </p>
+
+          <div class="flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start">
+            <button
+              onclick="location.href='/reservation'"
+              class="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-3 group"
+            >
+              <i data-feather="calendar" class="w-5 h-5"></i>
+              진료 예약하기
+              <i data-feather="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+            </button>
+            <button
+              onclick="location.href='/reservation/lookup'"
+              class="w-full sm:w-auto px-8 py-4 bg-white text-slate-700 border border-slate-200 rounded-2xl font-bold text-lg hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3"
+            >
+              <i data-feather="search" class="w-5 h-5"></i>
+              예약 조회
+            </button>
+          </div>
+        </div>
+
+        <div class="flex-1 w-full max-w-lg md:max-w-none relative">
+          <!-- Decorative elements -->
+          <div class="absolute inset-0 bg-gradient-to-tr from-indigo-100 to-emerald-50 rounded-3xl transform rotate-3 scale-105"></div>
+          <img src="/images/침대.jpg" alt="Hospital Interior" class="relative rounded-3xl shadow-2xl object-cover h-[400px] w-full" referrerPolicy="no-referrer" />
+
+          <!-- Floating Card -->
+          <div class="absolute -bottom-6 -left-6 bg-white p-6 rounded-2xl shadow-xl border border-slate-100 flex items-center gap-4">
+            <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
+              <i data-feather="check" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <div class="text-sm text-slate-500 font-medium">AI 기반</div>
+              <div class="text-slate-800 font-bold">맞춤형 증상 분석</div>
+            </div>
+          </div>
+        </div>
       </div>
-      <h2 class="text-2xl font-bold text-slate-800 mb-2">환자용</h2>
-      <p class="text-slate-500">진료 예약 및 확인</p>
-    </button>
+    </section>
 
-    <button
-      onclick="location.href='/login'"
-      class="bg-white p-10 rounded-3xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-300 transition-all group flex flex-col items-center text-center"
-    >
-      <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 mb-6 group-hover:scale-110 transition-transform">
-        <i data-feather="shield" class="w-8 h-8"></i>
+    <!-- 병원 소개 Section -->
+    <section class="py-24 bg-slate-50">
+      <div class="max-w-7xl mx-auto px-6">
+        <div class="flex flex-col lg:flex-row gap-16 items-center">
+          <div class="flex-1 relative w-full">
+            <div class="absolute -inset-4 bg-indigo-100 rounded-3xl transform -rotate-3"></div>
+            <img src="/images/병원소개.jpg" alt="병원 전경" class="relative rounded-3xl shadow-xl object-cover h-[400px] md:h-[500px] w-full" referrerPolicy="no-referrer">
+            <div class="absolute -bottom-8 -right-8 bg-white p-6 rounded-2xl shadow-xl border border-slate-100 hidden md:block">
+              <div class="text-4xl font-bold text-indigo-600 mb-1">20+</div>
+              <div class="text-sm text-slate-500 font-medium">년의 진료 경험</div>
+            </div>
+          </div>
+          <div class="flex-1">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-sm font-semibold mb-6">
+              <i data-feather="heart" class="w-4 h-4"></i> About Us
+            </div>
+            <h2 class="text-3xl md:text-4xl font-bold text-slate-800 mb-6 leading-tight">
+              환자의 마음까지 치유하는<br/>
+              <span class="text-indigo-600">따뜻한 병원, 메디케어플러스</span>
+            </h2>
+            <p class="text-lg text-slate-600 mb-10 leading-relaxed">
+              메디케어플러스는 2005년 개원 이래, '환자 중심의 의료'라는 철학을 바탕으로 지역 사회의 건강을 책임져 왔습니다. 단순한 질병 치료를 넘어 환자의 마음까지 어루만지는 전인적 치유를 목표로 합니다.
+            </p>
+            <ul class="space-y-8">
+              <li class="flex gap-5">
+                <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shrink-0">
+                  <i data-feather="award" class="w-7 h-7"></i>
+                </div>
+                <div>
+                  <h4 class="text-xl font-bold text-slate-800 mb-2">보건복지부 인증 의료기관</h4>
+                  <p class="text-slate-600 leading-relaxed">엄격한 기준을 통과하여 의료 서비스 질과 환자 안전 수준을 공식적으로 인정받았습니다.</p>
+                </div>
+              </li>
+              <li class="flex gap-5">
+                <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shrink-0">
+                  <i data-feather="users" class="w-7 h-7"></i>
+                </div>
+                <div>
+                  <h4 class="text-xl font-bold text-slate-800 mb-2">분야별 전문의 협진 시스템</h4>
+                  <p class="text-slate-600 leading-relaxed">풍부한 임상 경험을 갖춘 각 분야별 전문 의료진이 협력하여 최적의 치료법을 제시합니다.</p>
+                </div>
+              </li>
+              <li class="flex gap-5">
+                <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shrink-0">
+                  <i data-feather="monitor" class="w-7 h-7"></i>
+                </div>
+                <div>
+                  <h4 class="text-xl font-bold text-slate-800 mb-2">대학병원급 최첨단 장비</h4>
+                  <p class="text-slate-600 leading-relaxed">정확한 진단과 안전한 치료를 위해 최신 MRI, CT 등 첨단 의료 장비를 도입하고 있습니다.</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
-      <h2 class="text-2xl font-bold text-slate-800 mb-2">직원용</h2>
-      <p class="text-slate-500">업무 시스템 로그인</p>
-    </button>
-  </div>
-  </div>
+    </section>
 
-  {{> common/footer-public}}
+    <!-- 진료 안내 Section -->
+    <section class="py-24 bg-white">
+      <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl font-bold text-slate-800 mb-4">진료 안내</h2>
+          <p class="text-slate-500 max-w-2xl mx-auto text-lg">체계적이고 전문적인 진료 과목으로 여러분의 건강을 책임집니다.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+          <!-- 내과 -->
+          <div class="flex gap-6 p-8 rounded-3xl border border-slate-100 bg-slate-50 hover:bg-white hover:shadow-xl transition-all duration-300">
+            <div class="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 shrink-0">
+              <i data-feather="heart" class="w-8 h-8"></i>
+            </div>
+            <div>
+              <h3 class="text-2xl font-bold text-slate-800 mb-3">내과</h3>
+              <p class="text-slate-600 mb-4 leading-relaxed">소화기, 호흡기, 순환기, 내분비 질환 등 성인병 예방 및 만성 질환을 전문적으로 치료합니다.</p>
+              <ul class="text-sm text-slate-500 space-y-2 font-medium">
+                <li class="flex items-center gap-2"><i data-feather="check-circle" class="w-4 h-4 text-indigo-500"></i> 위/대장 내시경 클리닉</li>
+                <li class="flex items-center gap-2"><i data-feather="check-circle" class="w-4 h-4 text-indigo-500"></i> 고혈압, 당뇨 등 만성질환 관리</li>
+              </ul>
+            </div>
+          </div>
+          <!-- 외과 -->
+          <div class="flex gap-6 p-8 rounded-3xl border border-slate-100 bg-slate-50 hover:bg-white hover:shadow-xl transition-all duration-300">
+            <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 shrink-0">
+              <i data-feather="scissors" class="w-8 h-8"></i>
+            </div>
+            <div>
+              <h3 class="text-2xl font-bold text-slate-800 mb-3">외과</h3>
+              <p class="text-slate-600 mb-4 leading-relaxed">위장관 질환, 대장항문 질환, 유방/갑상선 질환 등에 대한 전문적인 수술 및 치료를 제공합니다.</p>
+              <ul class="text-sm text-slate-500 space-y-2 font-medium">
+                <li class="flex items-center gap-2"><i data-feather="check-circle" class="w-4 h-4 text-blue-500"></i> 최소침습 복강경 수술</li>
+                <li class="flex items-center gap-2"><i data-feather="check-circle" class="w-4 h-4 text-blue-500"></i> 화상 및 외상 전문 치료</li>
+              </ul>
+            </div>
+          </div>
+          <!-- 소아청소년과 -->
+          <div class="flex gap-6 p-8 rounded-3xl border border-slate-100 bg-slate-50 hover:bg-white hover:shadow-xl transition-all duration-300">
+            <div class="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 shrink-0">
+              <i data-feather="smile" class="w-8 h-8"></i>
+            </div>
+            <div>
+              <h3 class="text-2xl font-bold text-slate-800 mb-3">소아청소년과</h3>
+              <p class="text-slate-600 mb-4 leading-relaxed">신생아부터 청소년까지 성장 단계별 맞춤 진료와 예방 접종, 영유아 검진을 실시합니다.</p>
+              <ul class="text-sm text-slate-500 space-y-2 font-medium">
+                <li class="flex items-center gap-2"><i data-feather="check-circle" class="w-4 h-4 text-orange-500"></i> 시기별 영유아 건강검진</li>
+                <li class="flex items-center gap-2"><i data-feather="check-circle" class="w-4 h-4 text-orange-500"></i> 소아 알레르기 및 호흡기 클리닉</li>
+              </ul>
+            </div>
+          </div>
+          <!-- 정형외과 -->
+          <div class="flex gap-6 p-8 rounded-3xl border border-slate-100 bg-slate-50 hover:bg-white hover:shadow-xl transition-all duration-300">
+            <div class="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 shrink-0">
+              <i data-feather="activity" class="w-8 h-8"></i>
+            </div>
+            <div>
+              <h3 class="text-2xl font-bold text-slate-800 mb-3">정형외과</h3>
+              <p class="text-slate-600 mb-4 leading-relaxed">척추, 관절 질환 및 스포츠 손상에 대한 비수술적 치료부터 고난도 수술까지 시행합니다.</p>
+              <ul class="text-sm text-slate-500 space-y-2 font-medium">
+                <li class="flex items-center gap-2"><i data-feather="check-circle" class="w-4 h-4 text-emerald-500"></i> 인공관절 및 관절내시경 수술</li>
+                <li class="flex items-center gap-2"><i data-feather="check-circle" class="w-4 h-4 text-emerald-500"></i> 전문 도수치료 및 재활 센터</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Info Section -->
+    <section class="py-20 bg-slate-50">
+      <div class="max-w-5xl mx-auto px-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+            <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mb-6">
+              <i data-feather="clock" class="w-7 h-7"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-3">진료 시간</h3>
+            <ul class="space-y-2 text-slate-600">
+              <li class="flex justify-between"><span>평일</span> <span class="font-medium">09:00 - 18:00</span></li>
+              <li class="flex justify-between"><span>토요일</span> <span class="font-medium">09:00 - 13:00</span></li>
+              <li class="flex justify-between text-red-500"><span>일/공휴일</span> <span class="font-medium">휴진</span></li>
+              <li class="flex justify-between pt-2 border-t border-slate-100 mt-2"><span>점심시간</span> <span class="font-medium">13:00 - 14:00</span></li>
+            </ul>
+          </div>
+
+          <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+            <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 mb-6">
+              <i data-feather="phone" class="w-7 h-7"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-3">상담 및 문의</h3>
+            <div class="text-3xl font-bold text-indigo-600 mb-4">1588-0000</div>
+            <p class="text-slate-600 text-sm leading-relaxed">
+              예약 변경 및 취소, 기타 문의사항은<br/>
+              고객센터로 연락 주시기 바랍니다.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900 text-slate-400 py-12">
+    <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div class="col-span-1 md:col-span-2">
+        <div class="flex items-center gap-2 text-white mb-4">
+          <i data-feather="activity" class="w-6 h-6"></i>
+          <span class="text-xl font-bold">MediCare+</span>
+        </div>
+        <p class="text-sm leading-relaxed mb-6 max-w-md">
+          환자의 건강과 행복을 최우선으로 생각하는 스마트 병원입니다. 최상의 의료 서비스와 따뜻한 마음으로 여러분과 함께하겠습니다.
+        </p>
+      </div>
+      <div>
+        <h4 class="text-white font-semibold mb-4">바로가기</h4>
+        <ul class="space-y-2 text-sm">
+          <li><a href="#" class="hover:text-white transition-colors">병원소개</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">의료진소개</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">이용안내</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">공지사항</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-white font-semibold mb-4">개인정보</h4>
+        <ul class="space-y-2 text-sm">
+          <li><a href="#" class="hover:text-white transition-colors">개인정보처리방침</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">이용약관</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">환자의 권리와 의무</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-slate-800 text-sm text-center md:text-left flex flex-col md:flex-row justify-between items-center">
+      <p>&copy; 2026 MediCare+ Hospital. All rights reserved.</p>
+    </div>
+  </footer>
+
   <script>
     feather.replace();
   </script>
