@@ -25,6 +25,13 @@
           </div>
         </div>
 
+        {{#successMessage}}
+          <div class="px-4 py-3 rounded-lg border border-green-200 bg-green-50 text-green-700 text-sm">{{successMessage}}</div>
+        {{/successMessage}}
+        {{#errorMessage}}
+          <div class="px-4 py-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm">{{errorMessage}}</div>
+        {{/errorMessage}}
+
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div class="p-4 border-b border-slate-200 flex flex-wrap gap-2 bg-slate-50">
             {{#model.statusOptions}}
@@ -45,6 +52,7 @@
                 <th class="p-4 font-medium">연락처</th>
                 <th class="p-4 font-medium">진료과 / 의사</th>
                 <th class="p-4 font-medium">상태</th>
+                <th class="p-4 font-medium text-right">액션</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-200">
@@ -62,11 +70,26 @@
                     {{#completed}}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">완료</span>{{/completed}}
                     {{#cancelled}}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800">취소</span>{{/cancelled}}
                   </td>
+                  <td class="p-4 text-right">
+                    {{#cancellable}}
+                      <form method="post" action="/admin/reservation/cancel" class="inline-block" onsubmit="return confirm('예약을 취소하시겠습니까?');">
+                        <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                        <input type="hidden" name="reservationId" value="{{id}}">
+                        <input type="hidden" name="page" value="{{model.currentPage}}">
+                        <input type="hidden" name="size" value="{{model.size}}">
+                        <input type="hidden" name="status" value="{{model.selectedStatus}}">
+                        <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors">취소</button>
+                      </form>
+                    {{/cancellable}}
+                    {{^cancellable}}
+                      <button type="button" class="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 text-slate-400 text-sm font-medium rounded-lg cursor-not-allowed" disabled>취소</button>
+                    {{/cancellable}}
+                  </td>
                 </tr>
               {{/model.reservations}}
               {{^model.reservations}}
                 <tr>
-                  <td colspan="7" class="p-8 text-center text-slate-500">조회된 예약이 없습니다.</td>
+                  <td colspan="8" class="p-8 text-center text-slate-500">조회된 예약이 없습니다.</td>
                 </tr>
               {{/model.reservations}}
             </tbody>

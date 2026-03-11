@@ -4,6 +4,7 @@ import com.smartclinic.hms.admin.reservation.dto.AdminReservationItemResponse;
 import com.smartclinic.hms.admin.reservation.dto.AdminReservationListResponse;
 import com.smartclinic.hms.admin.reservation.dto.AdminReservationPageLinkResponse;
 import com.smartclinic.hms.admin.reservation.dto.AdminReservationStatusOptionResponse;
+import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.ReservationStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -129,13 +130,14 @@ public class AdminReservationService {
                                 row.getTimeSlot(),
                                 row.getPatientName(),
                                 row.getPatientPhone(),
-                                row.getDepartmentName(),
-                                row.getDoctorName(),
-                                status,
-                                STATUS_LABELS.getOrDefault(status, status),
-                                "RESERVED".equals(status),
-                                "RECEIVED".equals(status),
-                                "COMPLETED".equals(status),
+                row.getDepartmentName(),
+                row.getDoctorName(),
+                status,
+                STATUS_LABELS.getOrDefault(status, status),
+                "RESERVED".equals(status) || "RECEIVED".equals(status),
+                "RESERVED".equals(status),
+                "RECEIVED".equals(status),
+                "COMPLETED".equals(status),
                                 "CANCELLED".equals(status));
         }
 
@@ -159,7 +161,19 @@ public class AdminReservationService {
                                 .toList();
         }
 
-        private String buildListUrl(int page, int size, String status) {
-                return "/admin/reservation/list?page=" + page + "&size=" + size + "&status=" + status;
+    private String buildListUrl(int page, int size, String status) {
+        return "/admin/reservation/list?page=" + page + "&size=" + size + "&status=" + status;
+    }
+
+    @Transactional
+    public void cancelReservation(Long reservationId) {
+        var reservation = adminReservationRepository.findById(reservationId)
+                .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다. ID: " + reservationId));
+
+        try {
+            reservation.cancel();
+        } catch (IllegalStateException ex) {
+            throw CustomException.invalidStatusTransition(ex.getMessage());
         }
+    }
 }
