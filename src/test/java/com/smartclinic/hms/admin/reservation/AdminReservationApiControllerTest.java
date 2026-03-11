@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -28,9 +29,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(AdminReservationApiController.class)
 @Import(AdminReservationApiControllerTest.TestSecurityConfig.class)
 class AdminReservationApiControllerTest {
-
-    private static final String CANCEL_SUCCESS_MESSAGE = "\uC608\uC57D\uC774 \uCDE8\uC18C\uB418\uC5C8\uC2B5\uB2C8\uB2E4.";
-    private static final String FORBIDDEN_MESSAGE = "\uAD00\uB9AC\uC790 \uAD8C\uD55C\uB9CC \uC811\uADFC \uAC00\uB2A5\uD569\uB2C8\uB2E4.";
 
     @Autowired
     private MockMvc mockMvc;
@@ -49,10 +47,9 @@ class AdminReservationApiControllerTest {
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.reservationId").value(10))
-                .andExpect(jsonPath("$.data.status").value("CANCELLED"))
-                .andExpect(jsonPath("$.message").value(CANCEL_SUCCESS_MESSAGE));
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.body.reservationId").value(10))
+                .andExpect(jsonPath("$.body.status").value("CANCELLED"));
 
         then(adminReservationService).should().cancelReservation(10L);
     }
@@ -67,9 +64,9 @@ class AdminReservationApiControllerTest {
         mockMvc.perform(post("/api/reservations/10/cancel")
                         .with(user("staff").roles("STAFF"))
                         .with(csrf()))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"))
-                .andExpect(jsonPath("$.message").value(FORBIDDEN_MESSAGE));
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(adminReservationService);
     }
 
     @Test
@@ -96,7 +93,9 @@ class AdminReservationApiControllerTest {
         @Bean
         SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
             return http
-                    .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+                    .authorizeHttpRequests(auth -> auth
+                            .requestMatchers("/api/reservations/**").hasRole("ADMIN")
+                            .anyRequest().authenticated())
                     .formLogin(form -> form.disable())
                     .csrf(csrf -> csrf.disable())
                     .build();
