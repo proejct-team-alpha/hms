@@ -11,7 +11,9 @@ import lombok.Getter;
 public class ReservationInfoDto {
     private final Long id;
     private final String reservationNumber;
+    private final Long patientId;
     private final String patientName;
+    private final String patientPhone;
     private final String departmentName;
     private final String doctorName;
     private final String reservationDate;
@@ -22,7 +24,9 @@ public class ReservationInfoDto {
     public ReservationInfoDto(Reservation r) {
         this.id = r.getId();
         this.reservationNumber = r.getReservationNumber();
+        this.patientId = r.getPatient().getId();
         this.patientName = r.getPatient().getName();
+        this.patientPhone = r.getPatient().getPhone();
         this.departmentName = r.getDepartment().getName();
         this.doctorName = r.getDoctor().getStaff().getName();
         this.reservationDate = r.getReservationDate().toString();

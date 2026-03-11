@@ -16,6 +16,14 @@ package com.smartclinic.hms.reservation.reservation;
 // DONE 1. generateReservationNumber() — RES-YYYYMMDD-XXX 형식 (당월 누적)
 // DONE 2. findByReservationNumber(), findByPhoneAndName() → ReservationInfoDto 반환으로 수정
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.smartclinic.hms.doctor.DoctorDto;
 import com.smartclinic.hms.doctor.DoctorRepository;
 import com.smartclinic.hms.domain.Department;
@@ -24,14 +32,8 @@ import com.smartclinic.hms.domain.Patient;
 import com.smartclinic.hms.domain.Reservation;
 import com.smartclinic.hms.domain.ReservationSource;
 import com.smartclinic.hms.domain.ReservationStatus;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -124,10 +126,22 @@ public class ReservationService {
     }
 
     @Transactional
-    public void cancelReservation(Long id) {
+    public ReservationCompleteInfo cancelReservation(Long id) {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
+
+        // 취소 전에 정보 저장
+        ReservationCompleteInfo info = new ReservationCompleteInfo(
+                reservation.getReservationNumber(),
+                reservation.getPatient().getName(),
+                reservation.getDepartment().getName(),
+                reservation.getDoctor().getStaff().getName(),
+                reservation.getReservationDate().toString(),
+                reservation.getTimeSlot()
+        );
+
         reservation.cancel();
+        return info;
     }
 
     @Transactional

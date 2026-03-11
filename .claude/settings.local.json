@@ -36,6 +36,8 @@
       "Bash(git -C \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms\" show 686aa04:src/main/resources/templates/home/index.mustache)",
       "Bash(git -C \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms\" show e0dd84e:src/main/resources/templates/home/index.mustache)",
       "Bash(git -C \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms\" checkout 686aa04 -- src/main/resources/templates/home/index.mustache)"
-    ]
+    ],
+    "deny": [],
+    "ask": []
   }
 }
