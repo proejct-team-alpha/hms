@@ -43,4 +43,11 @@ public class ReceptionService {
         return reservations;
     }
 
+    @Transactional
+    public void createPhoneReservation(PhoneReservationRequestDto request) {
+
+        // TODO: 전화 예약 생성 로직
+        System.out.println("전화 예약 생성 요청: " + request.getName());
+    }
+
 }

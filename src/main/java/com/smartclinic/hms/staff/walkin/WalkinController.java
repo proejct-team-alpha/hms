@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.smartclinic.hms.staff.walkin.dto.WalkinRequestDto;
+
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -14,23 +16,17 @@ public class WalkinController {
 
     private final WalkinService walkinService;
 
-    /**
-     * 방문 접수 화면
-     * GET /staff/walkin
-     */
+    // 방문 접수 화면
     @GetMapping("/walkin-reception")
     public String walkinPage() {
         return "staff/walkin-reception";
     }
 
-    /**
-     * 방문 접수 생성
-     * POST /staff/walkin
-     */
+    // 방문 접수 생성
     @PostMapping("/walkin")
-    public String createWalkin() {
+    public String createWalkin(WalkinRequestDto request) {
 
-        walkinService.createWalkin();
+        walkinService.createWalkin(request);
 
         return "redirect:/staff/reception/list";
     }
