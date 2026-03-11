@@ -1,4 +1,4 @@
-﻿# HMS Controller 규칙
+# HMS Controller 규칙
 
 > **기준**: Spring Boot 4.0.x + Mustache SSR + JSON API
 
