@@ -77,7 +77,8 @@
             취소 안 함
           </button>
           <form method="post" action="/reservation/cancel/{{id}}" class="flex-1">
-            <input type="hidden" name="reservationNumber" value="{{reservationNumber}}"/>
+            {{! CSRF 토큰 }}
+            <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
             <button type="submit"
                     class="w-full py-3 bg-red-500 text-white font-medium rounded-xl hover:bg-red-600 transition-colors shadow-sm">
               예약 취소
