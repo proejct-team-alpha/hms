@@ -1,5 +1,7 @@
 package com.smartclinic.hms.staff.reception;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,8 +24,22 @@ public class ReceptionService {
         Reservation reservation = reservationRepository.findById(request.getReservationId())
                 .orElseThrow(() -> new RuntimeException("예약 없음"));
 
-        // 접수 상태 변경
         reservation.receive();
+    }
+
+    @Transactional
+    public List<Reservation> getReservations() {
+
+        List<Reservation> reservations = reservationRepository.findAll();
+
+        // LAZY 강제 로딩
+        for (Reservation r : reservations) {
+            r.getPatient().getName();
+            r.getDoctor().getStaff().getName();
+            r.getDepartment().getName();
+        }
+
+        return reservations;
     }
 
 }
