@@ -27,7 +27,7 @@ public class AdminReservationService {
         private static final int DEFAULT_PAGE = 1;
         private static final int DEFAULT_SIZE = 10;
 
-        // 상태값 라벨
+        // 상태값 화면에 보여줄 한글 라벨
         private static final Map<String, String> STATUS_LABELS = Map.of(
                         "ALL", "전체",
                         "RESERVED", "예약",
@@ -39,7 +39,7 @@ public class AdminReservationService {
 
         // 관리자 예약 화면 조회
         public AdminReservationListResponse getReservationList(int page, int size, String statusParam) {
-                // 페이지네이션
+                // 잘못된 페이지 번호나 사이즈가 들어와도 기본값으로 보정해서 안전하게 페이지네이션 수행하는 코드
                 int safePage = page < 1 ? DEFAULT_PAGE : page;
                 int safeSize = size < 1 ? DEFAULT_SIZE : size;
 
