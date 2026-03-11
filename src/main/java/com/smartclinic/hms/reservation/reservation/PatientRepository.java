@@ -4,10 +4,11 @@ package com.smartclinic.hms.reservation.reservation;
 // DONE 1. JpaRepository<Patient, Long> 구현
 // DONE 2. findByPhone() 추가
 
-import com.smartclinic.hms.domain.Patient;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
+import com.smartclinic.hms.domain.Patient;
 
 public interface PatientRepository extends JpaRepository<Patient, Long> {
     Optional<Patient> findByPhone(String phone);
