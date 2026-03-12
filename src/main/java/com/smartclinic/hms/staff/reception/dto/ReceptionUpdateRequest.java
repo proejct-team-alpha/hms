@@ -5,7 +5,13 @@ import lombok.Data;
 @Data
 public class ReceptionUpdateRequest {
     private Long reservationId;
-    private String address;
-    private String note;
+
+    public Long getReservationId() {
+        return reservationId;
+    }
+
+    public void setReservationId(Long reservationId) {
+        this.reservationId = reservationId;
+    }
 
 }
