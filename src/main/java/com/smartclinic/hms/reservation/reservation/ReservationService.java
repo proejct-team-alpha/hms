@@ -74,54 +74,65 @@ public class ReservationService {
                                 .toList();
         }
 
-        // RES-YYYYMMDD-XXX 형식 예약번호 생성 (당월 누적 카운트)
+        // RES-YYYYMMDD-XXX-NNNN 형식 예약번호 생성 (당월 누적 카운트 + 나노초 일부 조합으로 동시성 강화)
         public String generateReservationNumber() {
                 LocalDateTime now = LocalDateTime.now();
                 LocalDateTime startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
                 LocalDateTime endOfMonth = startOfMonth.plusMonths(1).minusNanos(1);
+                
+                // 기존 방식: 당월 카운트 + 1
                 long count = reservationRepository.countByCreatedAtBetween(startOfMonth, endOfMonth) + 1;
                 String dateStr = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-                return String.format("RES-%s-%03d", dateStr, count);
+                
+                // 동시성 충돌 방지를 위해 나노초 뒷자리 4개를 추가 (H2 이슈 대응)
+                String nanoStr = String.format("%04d", System.nanoTime() % 10000);
+                
+                return String.format("RES-%s-%03d-%s", dateStr, count, nanoStr);
         }
 
         @Transactional
         public ReservationCompleteInfo createReservation(ReservationCreateForm form) {
-                // 중복 예약 체크 (CANCELLED 제외)
+                // 1. 조기 차단: 중복 예약 체크 (CANCELLED 제외)
                 if (reservationRepository.existsByDoctor_IdAndReservationDateAndTimeSlotAndStatusNot(
-                                form.getDoctorId(), form.getReservationDate(), form.getTimeSlot(),
+                                form.doctorId(), form.reservationDate(), form.timeSlot(),
                                 ReservationStatus.CANCELLED)) {
                         throw new IllegalStateException("이미 예약된 시간대입니다.");
                 }
 
-                // 1. 전화번호로 Patient 조회, 없으면 신규 생성
-                Patient patient = patientRepository.findByPhone(form.getPhone())
+                // 2. 전화번호로 Patient 조회, 없으면 신규 생성
+                Patient patient = patientRepository.findByPhone(form.phone())
                                 .orElseGet(() -> patientRepository.save(
-                                                Patient.create(form.getName(), form.getPhone(), null)));
+                                                Patient.create(form.name(), form.phone(), null)));
 
-                // 2. Doctor, Department 조회
-                Doctor doctor = doctorRepository.findById(form.getDoctorId())
+                // 3. Doctor, Department 조회
+                Doctor doctor = doctorRepository.findById(form.doctorId())
                                 .orElseThrow(() -> new IllegalArgumentException("의사를 찾을 수 없습니다."));
-                Department department = departmentRepository.findById(form.getDepartmentId())
+                Department department = departmentRepository.findById(form.departmentId())
                                 .orElseThrow(() -> new IllegalArgumentException("진료과를 찾을 수 없습니다."));
 
-                // 3. 예약번호 생성 (RES-YYYYMMDD-XXX)
-                String reservationNumber = generateReservationNumber();
+                // 4. 예약번호 생성 및 저장 (H3 TOCTOU 대응을 위해 DB Unique 제약 조건 활용)
+                try {
+                        String reservationNumber = generateReservationNumber();
+                        Reservation reservation = Reservation.create(
+                                        reservationNumber, patient, doctor, department,
+                                        form.reservationDate(), form.timeSlot(),
+                                        ReservationSource.ONLINE);
+                        
+                        reservationRepository.save(reservation);
+                        // 즉시 플러시하여 DB 제약 조건 위반을 조기에 감지
+                        reservationRepository.flush();
 
-                // 4. Reservation 생성 및 저장
-                Reservation reservation = Reservation.create(
-                                reservationNumber, patient, doctor, department,
-                                form.getReservationDate(), form.getTimeSlot(),
-                                ReservationSource.ONLINE);
-                reservationRepository.save(reservation);
-
-                // 5. 트랜잭션 내에서 LAZY 필드 접근 후 DTO 반환 (LazyInitializationException 방지)
-                return new ReservationCompleteInfo(
-                                reservationNumber,
-                                patient.getName(),
-                                department.getName(),
-                                doctor.getStaff().getName(),
-                                form.getReservationDate().toString(),
-                                form.getTimeSlot());
+                        return new ReservationCompleteInfo(
+                                        reservationNumber,
+                                        patient.getName(),
+                                        department.getName(),
+                                        doctor.getStaff().getName(),
+                                        form.reservationDate().toString(),
+                                        form.timeSlot());
+                } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                        // DB Unique 제약 조건(uk_reservation_doctor_date_slot) 위반 시 발생
+                        throw new IllegalStateException("이미 예약된 시간대이거나 중복된 예약번호입니다.");
+                }
         }
 
         @Transactional
@@ -150,31 +161,37 @@ public class ReservationService {
                 Patient patient = old.getPatient();
                 old.cancel();
 
-                // 2. 새 슬롯 중복 체크
+                // 2. 조기 차단: 새 슬롯 중복 체크
                 if (reservationRepository.existsByDoctor_IdAndReservationDateAndTimeSlotAndStatusNot(
-                                form.getDoctorId(), form.getReservationDate(), form.getTimeSlot(),
+                                form.doctorId(), form.reservationDate(), form.timeSlot(),
                                 ReservationStatus.CANCELLED)) {
                         throw new IllegalStateException("이미 예약된 시간대입니다.");
                 }
 
                 // 3. 신규 예약 생성
-                Doctor doctor = doctorRepository.findById(form.getDoctorId())
+                Doctor doctor = doctorRepository.findById(form.doctorId())
                                 .orElseThrow(() -> new IllegalArgumentException("의사를 찾을 수 없습니다."));
-                Department department = departmentRepository.findById(form.getDepartmentId())
+                Department department = departmentRepository.findById(form.departmentId())
                                 .orElseThrow(() -> new IllegalArgumentException("진료과를 찾을 수 없습니다."));
 
-                String reservationNumber = generateReservationNumber();
-                Reservation newReservation = Reservation.create(
-                                reservationNumber, patient, doctor, department,
-                                form.getReservationDate(), form.getTimeSlot(), ReservationSource.ONLINE);
-                reservationRepository.save(newReservation);
+                try {
+                        String reservationNumber = generateReservationNumber();
+                        Reservation newReservation = Reservation.create(
+                                        reservationNumber, patient, doctor, department,
+                                        form.reservationDate(), form.timeSlot(), ReservationSource.ONLINE);
+                        reservationRepository.save(newReservation);
+                        // 즉시 플러시하여 DB 제약 조건 위반 감지
+                        reservationRepository.flush();
 
-                return new ReservationCompleteInfo(
-                                reservationNumber,
-                                patient.getName(),
-                                department.getName(),
-                                doctor.getStaff().getName(),
-                                form.getReservationDate().toString(),
-                                form.getTimeSlot());
+                        return new ReservationCompleteInfo(
+                                        reservationNumber,
+                                        patient.getName(),
+                                        department.getName(),
+                                        doctor.getStaff().getName(),
+                                        form.reservationDate().toString(),
+                                        form.timeSlot());
+                } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                        throw new IllegalStateException("이미 예약된 시간대이거나 중복된 예약번호입니다.");
+                }
         }
 }

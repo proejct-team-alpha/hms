@@ -163,8 +163,20 @@ public class ReservationController {
 
     @PostMapping("/modify/{id}")
     public String modifyReservation(@PathVariable("id") Long id,
-                                    @ModelAttribute ReservationUpdateForm form,
+                                    @Valid @ModelAttribute ReservationUpdateForm form,
+                                    BindingResult bindingResult,
+                                    HttpServletRequest request,
                                     RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getAllErrors().stream()
+                    .map(e -> e.getDefaultMessage())
+                    .collect(Collectors.joining(" "));
+            request.setAttribute("pageTitle", "예약 변경");
+            request.setAttribute("errorMessage", errorMessage);
+            // 기존 예약 정보를 다시 조회하여 폼에 전달해야 할 수도 있으나, 
+            // 현재 구조에서는 에러 발생 시 원래 페이지로 돌아가 에러를 보여주는 방식을 유지합니다.
+            return "reservation/reservation-modify";
+        }
         ReservationCompleteInfo info = reservationService.updateReservation(id, form);
         redirectAttributes.addAttribute("reservationNumber", info.getReservationNumber());
         redirectAttributes.addAttribute("name",       info.getPatientName());
