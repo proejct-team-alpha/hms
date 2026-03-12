@@ -35,7 +35,12 @@
       "Bash(git -C \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms\" log --oneline src/main/resources/templates/home/index.mustache)",
       "Bash(git -C \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms\" show 686aa04:src/main/resources/templates/home/index.mustache)",
       "Bash(git -C \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms\" show e0dd84e:src/main/resources/templates/home/index.mustache)",
-      "Bash(git -C \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms\" checkout 686aa04 -- src/main/resources/templates/home/index.mustache)"
+      "Bash(git -C \"c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms\" checkout 686aa04 -- src/main/resources/templates/home/index.mustache)",
+      "Bash(./gradlew test:*)",
+      "Bash(find c:/workspace/gitstudy_lab/demo/team-demo/team-project-demo/hms/build/reports/tests/test/com.smartclinic.hms.reservation.reservation.* -name \"*.html\")",
+      "Bash(xargs grep:*)",
+      "Bash(for f:*)",
+      "Bash(do grep:*)"
     ],
     "deny": [],
     "ask": []
