@@ -42,7 +42,7 @@
                 <label class="block text-sm font-medium text-slate-700 mb-2">연락처</label>
                 <div class="relative">
                   <i data-feather="phone" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input type="tel" id="phone" name="phone" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="010-1234-5678" />
+                  <input type="tel" id="phone" name="phone" required pattern="[0-9]{3}-[0-9]{4}-[0-9]{4}" maxlength="13" inputmode="numeric" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="010-1234-5678" />
                 </div>
               </div>
             </div>
@@ -82,7 +82,7 @@
                 <label class="block text-sm font-medium text-slate-700 mb-2">예약 날짜</label>
                 <div class="relative">
                   <i data-feather="calendar" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input type="date" id="date" name="date" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" />
+                  <input type="date" id="date" name="date" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" min="{{today}}" value="{{today}}"/>
                 </div>
               </div>
               <div>
