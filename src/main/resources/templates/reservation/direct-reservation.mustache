@@ -173,18 +173,51 @@
 
     // URL 파라미터에서 AI 추천 정보 가져오기
     const urlParams = new URLSearchParams(window.location.search);
-    const recDept = urlParams.get('dept');
+    const recDept   = urlParams.get('dept');
     const recDoctor = urlParams.get('doctor');
+    const recTime   = urlParams.get('time');
+
+    // W3-4: 진료과 이름 → ID 매핑 (direct-reservation 드롭다운 기준)
+    const DEPT_ID_MAP = { '내과': '1', '외과': '2', '소아과': '3', '이비인후과': '4' };
 
     if (recDept && recDoctor) {
       const infoBox = document.getElementById('ai-recommendation-info');
       infoBox.classList.remove('hidden');
       infoBox.classList.add('flex');
-      document.getElementById('info-dept').innerText = recDept;
+      document.getElementById('info-dept').innerText   = recDept;
       document.getElementById('info-doctor').innerText = recDoctor;
 
-      document.getElementById('department').value = recDept;
-      document.getElementById('doctor').value = recDoctor;
+      // 진료과 자동 선택 (이름 → ID 변환)
+      const deptId = DEPT_ID_MAP[recDept];
+      if (deptId) {
+        const deptSelect = document.getElementById('department');
+        deptSelect.value = deptId;
+
+        // 의사 목록 fetch 후 추천 의사 자동 선택
+        const doctorSelect = document.getElementById('doctor');
+        fetch(`/api/reservation/doctors?departmentId=${deptId}`)
+          .then(res => res.json())
+          .then(doctors => {
+            doctors.forEach(doctor => {
+              const option = document.createElement('option');
+              option.value = doctor.id;
+              option.textContent = doctor.name;
+              option.dataset.availableDays = doctor.availableDays;
+              doctorSelect.appendChild(option);
+            });
+            // 추천 의사명으로 option 탐색 후 선택
+            const matched = Array.from(doctorSelect.options).find(o => o.textContent === recDoctor);
+            if (matched) {
+              doctorSelect.value = matched.value;
+              doctorSelect.dispatchEvent(new Event('change'));
+            }
+          });
+      }
+    }
+
+    // W3-4: 추천 시간 자동 선택
+    if (recTime) {
+      document.getElementById('time').value = recTime;
     }
 
     // 요일 매핑: JS getDay() 기준 (0=일, 1=월 ... 6=토)
