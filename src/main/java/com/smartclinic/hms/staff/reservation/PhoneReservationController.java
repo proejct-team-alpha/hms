@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import com.smartclinic.hms.staff.reception.ReceptionService;
 import com.smartclinic.hms.staff.reservation.dto.PhoneReservationRequestDto;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -29,7 +30,7 @@ public class PhoneReservationController {
 
     // 전화 예약 생성
     @PostMapping("/create")
-    public String createPhoneReservation(PhoneReservationRequestDto request) {
+    public String createPhoneReservation(@Valid PhoneReservationRequestDto request) {
 
         receptionService.createPhoneReservation(request);
 

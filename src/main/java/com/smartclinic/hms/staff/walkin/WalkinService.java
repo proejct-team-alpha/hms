@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class WalkinService {
 
         private final ReservationRepository reservationRepository;
@@ -32,6 +32,7 @@ public class WalkinService {
         private final ReservationNumberGenerator reservationNumberGenerator;
 
         // 방문 접수 생성
+        @Transactional
         public void createWalkin(WalkinRequestDto request) {
 
                 // 1. 기존 환자 조회 (없으면 신규 생성)
@@ -44,11 +45,11 @@ public class WalkinService {
 
                 // 2. 의사 조회
                 Doctor doctor = doctorRepository.findById(request.getDoctorId())
-                                .orElseThrow();
+                                .orElseThrow(() -> new RuntimeException("의사를 찾을 수 없습니다."));
 
                 // 3. 진료과 조회
                 Department department = departmentRepository.findById(request.getDepartmentId())
-                                .orElseThrow();
+                                .orElseThrow(() -> new RuntimeException("진료과를 찾을 수 없습니다."));
 
                 // 4. 방문 접수는 오늘 날짜
                 LocalDate reservationDate = LocalDate.now();

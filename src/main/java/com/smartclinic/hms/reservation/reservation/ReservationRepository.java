@@ -37,4 +37,14 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
     long countByReservationDate(LocalDate reservationDate);
+
+    @Query("""
+            SELECT r
+            FROM Reservation r
+            JOIN FETCH r.patient
+            JOIN FETCH r.doctor d
+            JOIN FETCH d.staff
+            JOIN FETCH r.department
+            """)
+    List<Reservation> findAllWithDetails();
 }

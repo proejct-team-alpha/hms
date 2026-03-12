@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.smartclinic.hms.staff.walkin.dto.WalkinRequestDto;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -39,7 +40,7 @@ public class WalkinController {
 
     // 방문 접수 생성
     @PostMapping("/walkin")
-    public String createWalkin(WalkinRequestDto request) {
+    public String createWalkin(@Valid WalkinRequestDto request) {
 
         walkinService.createWalkin(request);
 
