@@ -9,8 +9,8 @@ public class PhoneReservationRequestDto {
     private String phone;
     private String email;
 
-    private String department;
-    private String doctor;
+    private Long departmentId;
+    private Long doctorId;
 
     private String date;
     private String time;
