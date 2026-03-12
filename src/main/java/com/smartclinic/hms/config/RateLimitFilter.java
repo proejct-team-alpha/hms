@@ -6,11 +6,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -26,12 +31,16 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
 
+    @Value("${hms.rate-limit.trust-proxy:false}")
+    private boolean trustProxy;
+
     private static final int LOGIN_LIMIT = 10;
     private static final int LLM_SYMPTOM_LIMIT = 20;
     private static final int DEFAULT_LIMIT = 100;
     private static final long WINDOW_MS = 60_000L;
 
     private final ConcurrentHashMap<String, Bucket> buckets = new ConcurrentHashMap<>();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -59,13 +68,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.setCharacterEncoding("UTF-8");
 
-            String json = "{\"success\":false,"
-                    + "\"errorCode\":\"RATE_LIMIT_EXCEEDED\","
-                    + "\"message\":\"요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.\","
-                    + "\"timestamp\":\"" + Instant.now() + "\","
-                    + "\"path\":\"" + path.replace("\"", "\\\"") + "\"}";
+            Map<String, Object> error = Map.of(
+                    "success", false,
+                    "errorCode", "RATE_LIMIT_EXCEEDED",
+                    "message", "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+                    "timestamp", Instant.now().toString(),
+                    "path", path
+            );
 
-            response.getWriter().write(json);
+            objectMapper.writeValue(response.getOutputStream(), error);
             return;
         }
 
@@ -93,11 +104,20 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private String resolveClientIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
-            return xForwardedFor.split(",")[0].trim();
+        if (trustProxy) {
+            String xForwardedFor = request.getHeader("X-Forwarded-For");
+            if (xForwardedFor != null && !xForwardedFor.isBlank()) {
+                return xForwardedFor.split(",")[0].trim();
+            }
         }
         return request.getRemoteAddr();
+    }
+
+    /** 만료된 버킷 정리 — 2분마다 실행 */
+    @Scheduled(fixedRate = 120_000)
+    public void cleanupExpiredBuckets() {
+        long now = System.currentTimeMillis();
+        buckets.entrySet().removeIf(e -> now - e.getValue().windowStart > WINDOW_MS * 2);
     }
 
     /** 정적 리소스는 Rate Limit 제외 */
