@@ -113,13 +113,22 @@ public class ReservationController {
     }
 
     @PostMapping("/cancel/{id}")
-    public String cancelReservation(@PathVariable Long id,
-                                    @RequestParam(required = false) String reservationNumber) {
-        reservationService.cancelReservation(id);
-        if (reservationNumber != null && !reservationNumber.isBlank()) {
-            return "redirect:/reservation/lookup?reservationNumber=" + reservationNumber;
-        }
-        return "redirect:/reservation";
+    public String cancelReservation(@PathVariable("id") Long id,
+                                    RedirectAttributes redirectAttributes) {
+        ReservationCompleteInfo info = reservationService.cancelReservation(id);
+        redirectAttributes.addAttribute("reservationNumber", info.getReservationNumber());
+        redirectAttributes.addAttribute("name",       info.getPatientName());
+        redirectAttributes.addAttribute("department", info.getDepartmentName());
+        redirectAttributes.addAttribute("doctor",     info.getDoctorName());
+        redirectAttributes.addAttribute("date",       info.getReservationDate());
+        redirectAttributes.addAttribute("time",       info.getTimeSlot());
+        return "redirect:/reservation/cancel-complete";
+    }
+
+    @GetMapping("/cancel-complete")
+    public String cancelComplete(HttpServletRequest request) {
+        request.setAttribute("pageTitle", "예약 취소 완료");
+        return "reservation/reservation-cancel-complete";
     }
 
     @GetMapping("/modify")
@@ -137,15 +146,22 @@ public class ReservationController {
     }
 
     @PostMapping("/modify/{id}")
-    public String modifyReservation(@PathVariable Long id,
+    public String modifyReservation(@PathVariable("id") Long id,
                                     @ModelAttribute ReservationUpdateForm form,
                                     RedirectAttributes redirectAttributes) {
         ReservationCompleteInfo info = reservationService.updateReservation(id, form);
+        redirectAttributes.addAttribute("reservationNumber", info.getReservationNumber());
         redirectAttributes.addAttribute("name",       info.getPatientName());
         redirectAttributes.addAttribute("department", info.getDepartmentName());
         redirectAttributes.addAttribute("doctor",     info.getDoctorName());
         redirectAttributes.addAttribute("date",       info.getReservationDate());
         redirectAttributes.addAttribute("time",       info.getTimeSlot());
-        return "redirect:/reservation/complete";
+        return "redirect:/reservation/modify-complete";
+    }
+
+    @GetMapping("/modify-complete")
+    public String modifyComplete(HttpServletRequest request) {
+        request.setAttribute("pageTitle", "예약 변경 완료");
+        return "reservation/reservation-modify-complete";
     }
 }
