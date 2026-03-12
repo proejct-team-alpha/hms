@@ -34,7 +34,7 @@ INSERT INTO doctor (id, staff_id, department_id, available_days, specialty) VALU
 
 -- 환자 샘플
 INSERT INTO patient (id, name, phone, email, created_at) VALUES
-(1, '김명명준', '010-1111-2222', 'minjun@test.com', CURRENT_TIMESTAMP),
+(1, '김명준', '010-1111-2222', 'minjun@test.com', CURRENT_TIMESTAMP),
 (2, '이서연', '010-3333-4444', 'seoyeon@test.com', CURRENT_TIMESTAMP),
 (3, '박지호', '010-5555-6666', 'jiho@test.com', CURRENT_TIMESTAMP);
 
