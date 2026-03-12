@@ -41,6 +41,12 @@
           <form id="reservation-form" method="POST" action="/reservation/create" class="space-y-6">
             {{! CSRF 토큰 }}
             <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+            {{#errorMessage}}
+            <div class="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+              <i data-feather="alert-circle" class="w-4 h-4 shrink-0"></i>
+              <span>{{errorMessage}}</span>
+            </div>
+            {{/errorMessage}}
             <div class="grid grid-cols-2 gap-6">
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">환자 성함</label>
