@@ -17,7 +17,12 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
 
+/**
+ * 예약 서비스 테스트
+ * 프로젝트 규칙(rule_test.md §3.6.4)에 따라 클래스 레벨 @DisplayName 추가
+ */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("비회원 예약 서비스 테스트")
 class ReservationServiceTest {
 
     @Mock DoctorRepository doctorRepository;
@@ -34,13 +39,15 @@ class ReservationServiceTest {
 
     @BeforeEach
     void setUp() {
-        form = new ReservationCreateForm();
-        form.setName("홍길동");
-        form.setPhone("01012345678");
-        form.setDepartmentId(1L);
-        form.setDoctorId(1L);
-        form.setReservationDate(LocalDate.of(2026, 4, 1));
-        form.setTimeSlot("09:00");
+        // ReservationCreateForm이 record로 변경됨에 따라 생성자를 통해 초기화
+        form = new ReservationCreateForm(
+            "홍길동",
+            "01012345678",
+            1L,
+            1L,
+            LocalDate.of(2026, 4, 1),
+            "09:00"
+        );
 
         department = Department.create("내과", true);
         Staff staff = Staff.create("doctor1", "D001", "{noop}pw", "김내과", StaffRole.DOCTOR, department);
