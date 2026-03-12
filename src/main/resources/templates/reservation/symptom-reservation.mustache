@@ -9,7 +9,7 @@
 </head>
 <body class="min-h-screen flex flex-col">
   {{> common/header-public}}
-  
+
   <main class="flex-1 overflow-y-auto p-8">
     <div class="max-w-5xl mx-auto">
       <div class="max-w-2xl mx-auto">
@@ -49,15 +49,19 @@
                 <div class="w-full">
                   <h3 class="text-lg font-semibold text-indigo-900">AI 추천 결과</h3>
                   <p class="text-indigo-700 mt-1 mb-4">입력하신 증상에 가장 적합한 진료과와 전문의입니다.</p>
-                  
-                  <div class="grid grid-cols-2 gap-4 mb-6">
+
+                  <div class="grid grid-cols-3 gap-4 mb-6">
                     <div class="bg-white p-4 rounded-lg border border-indigo-100">
                       <div class="text-sm text-slate-500 mb-1">추천 진료과</div>
-                      <div id="rec-dept" class="font-semibold text-slate-800">내과</div>
+                      <div id="rec-dept" class="font-semibold text-slate-800"></div>
                     </div>
                     <div class="bg-white p-4 rounded-lg border border-indigo-100">
                       <div class="text-sm text-slate-500 mb-1">추천 전문의</div>
-                      <div id="rec-doctor" class="font-semibold text-slate-800">김의사 원장</div>
+                      <div id="rec-doctor" class="font-semibold text-slate-800"></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg border border-indigo-100">
+                      <div class="text-sm text-slate-500 mb-1">추천 시간</div>
+                      <div id="rec-time" class="font-semibold text-slate-800"></div>
                     </div>
                   </div>
 
@@ -68,6 +72,13 @@
                     이 정보로 예약 진행하기
                     <i data-feather="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
                   </button>
+
+                  {{! [W3-6 작업 목록] }}
+                  {{! DONE 1. HTML: 면책 고지 문구 추가 }}
+                  <p class="mt-4 text-xs text-slate-400 text-center flex items-center justify-center gap-1">
+                    <i data-feather="info" class="w-3 h-3"></i>
+                    AI 추천은 참고용이며, 의학적 진단이 아닙니다.
+                  </p>
                 </div>
               </div>
             </div>
@@ -77,45 +88,117 @@
     </div>
   </main>
 
+  {{! [W3-5 작업 목록] }}
+  {{! DONE 1. HTML: #error-toast 요소 추가 }}
+  <div id="error-toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-3 bg-slate-800 text-white rounded-xl shadow-lg text-sm z-50">
+    <i data-feather="alert-circle" class="w-4 h-4 text-red-400 shrink-0"></i>
+    <span>AI 분석에 실패했습니다. 잠시 후 직접 선택 화면으로 이동합니다.</span>
+  </div>
+
   {{> common/footer-public}}
   <script>
+    {{! [W3-1 작업 목록] }}
+    {{! DONE 1. SYMPTOM_MAP 키워드 매핑 테이블 정의 }}
+    {{! DONE 2. analyzeSymptom(text) 함수 구현 }}
+    {{! DONE 3. analyzeBtn click 핸들러에서 analyzeSymptom 호출 후 DOM 업데이트 }}
+    {{! DONE 4. proceedToDirect() URL 버그 수정 (/reservation/direct-reservation) }}
+
+    {{! [W3-2 작업 목록] }}
+    {{! DONE 1. callSymptomApi(text) async 함수 정의 (더미 Promise, W4에서 실제 fetch로 교체) }}
+    {{! DONE 2. analyzeBtn click 핸들러 async/await 구조로 변경 }}
+    {{! DONE 3. try/catch 오류 처리 골격 추가 }}
+
+    {{! [W3-3 작업 목록] }}
+    {{! DONE 1. HTML: rec-time 카드 추가 }}
+    {{! DONE 2. JS: SYMPTOM_MAP에 time 필드 추가 }}
+    {{! DONE 3. JS: callSymptomApi 결과에서 rec-time DOM 업데이트 }}
+
+    {{! [W3-4 작업 목록] }}
+    {{! DONE 1. proceedToDirect()에 time 파라미터 추가 }}
+
+    {{! [W3-5 작업 목록] }}
+    {{! DONE 2. JS: catch 블록 toast 표시 + 3초 후 이동 }}
+
     feather.replace();
 
     const symptomInput = document.getElementById('symptom-input');
-    const analyzeBtn = document.getElementById('analyze-btn');
-    const analyzeText = document.getElementById('analyze-text');
+    const analyzeBtn   = document.getElementById('analyze-btn');
+    const analyzeText  = document.getElementById('analyze-text');
     const recommendationResult = document.getElementById('recommendation-result');
+    const errorToast   = document.getElementById('error-toast');
 
-    // 초기 상태
     analyzeBtn.disabled = true;
 
     symptomInput.addEventListener('input', (e) => {
       analyzeBtn.disabled = e.target.value.trim() === '';
     });
 
-    analyzeBtn.addEventListener('click', () => {
-      if (!symptomInput.value.trim()) return;
-      
-      // 로딩 상태
+    // 키워드 → 진료과/의사/시간 매핑 (실제 드롭다운 4개 진료과 기준)
+    const SYMPTOM_MAP = [
+      { keywords: ['열', '기침', '감기', '콧물', '목', '인후'], dept: '내과',       doctor: '의사이영희', time: '09:00' },
+      { keywords: ['수술', '상처', '외상', '찢김', '골절', '뼈'], dept: '외과',     doctor: '의사김민준', time: '10:00' },
+      { keywords: ['아이', '어린이', '소아', '유아'],             dept: '소아과',    doctor: '의사최지우', time: '11:00' },
+      { keywords: ['귀', '코막힘', '이비인후', '코', '귀통증'],  dept: '이비인후과', doctor: '의사이준혁', time: '14:00' },
+    ];
+    const DEFAULT_RESULT = { dept: '내과', doctor: '의사이영희', time: '09:00' };
+
+    function analyzeSymptom(text) {
+      for (const entry of SYMPTOM_MAP) {
+        if (entry.keywords.some(kw => text.includes(kw))) {
+          return { dept: entry.dept, doctor: entry.doctor, time: entry.time };
+        }
+      }
+      return DEFAULT_RESULT;
+    }
+
+    // W4에서 실제 POST /llm/symptom/analyze 연동으로 교체 예정
+    // async function callSymptomApi(symptomText) {
+    //   const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
+    //   return fetch('/llm/symptom/analyze', {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+    //     body: JSON.stringify({ symptom: symptomText })
+    //   }).then(res => res.json());
+    // }
+    async function callSymptomApi(symptomText) {
+      return new Promise(resolve => {
+        setTimeout(() => resolve(analyzeSymptom(symptomText)), 1500);
+      });
+    }
+
+    analyzeBtn.addEventListener('click', async () => {
+      const text = symptomInput.value.trim();
+      if (!text) return;
+
       analyzeBtn.disabled = true;
       analyzeBtn.innerHTML = `
         <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
         AI가 분석 중입니다...
       `;
-      
-      // 시뮬레이션
-      setTimeout(() => {
-        analyzeBtn.innerHTML = '증상 분석 완료';
+
+      try {
+        const result = await callSymptomApi(text);
+        document.getElementById('rec-dept').textContent   = result.dept;
+        document.getElementById('rec-doctor').textContent = result.doctor;
+        document.getElementById('rec-time').textContent   = result.time;
         recommendationResult.classList.remove('hidden');
         feather.replace();
-      }, 1500);
+        analyzeBtn.innerHTML = '증상 분석 완료';
+      } catch (e) {
+        // W3-5 폴백 UI: toast 표시 후 3초 후 직접 선택 화면으로 이동
+        errorToast.classList.remove('hidden');
+        feather.replace();
+        setTimeout(() => {
+          location.href = '/reservation/direct-reservation';
+        }, 3000);
+      }
     });
 
     function proceedToDirect() {
-      const dept = document.getElementById('rec-dept').innerText;
-      const doctor = document.getElementById('rec-doctor').innerText;
-      // URL 파라미터로 전달
-      location.href = \`direct-reservation.html?dept=\${encodeURIComponent(dept)}&doctor=\${encodeURIComponent(doctor)}\`;
+      const dept   = document.getElementById('rec-dept').textContent;
+      const doctor = document.getElementById('rec-doctor').textContent;
+      const time   = document.getElementById('rec-time').textContent;
+      location.href = `/reservation/direct-reservation?dept=${encodeURIComponent(dept)}&doctor=${encodeURIComponent(doctor)}&time=${encodeURIComponent(time)}`;
     }
   </script>
 </body>
