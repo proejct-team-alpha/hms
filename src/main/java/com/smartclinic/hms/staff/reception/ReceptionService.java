@@ -16,6 +16,7 @@ import com.smartclinic.hms.domain.ReservationSource;
 import com.smartclinic.hms.reservation.reservation.DepartmentRepository;
 import com.smartclinic.hms.reservation.reservation.PatientRepository;
 import com.smartclinic.hms.reservation.reservation.ReservationRepository;
+import com.smartclinic.hms.staff.reception.dto.ReceptionUpdateRequest;
 import com.smartclinic.hms.staff.reservation.dto.PhoneReservationRequestDto;
 
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class ReceptionService {
     private final PatientRepository patientRepository;
     private final ReservationNumberGenerator reservationNumberGenerator;
 
+    // 전화 예약 생성
     @Transactional
     public void createPhoneReservation(PhoneReservationRequestDto request) {
 
@@ -75,5 +77,31 @@ public class ReceptionService {
                 ReservationSource.PHONE);
 
         reservationRepository.save(reservation);
+    }
+
+    // 접수 목록 조회
+    @Transactional
+    public List<Reservation> getReservations() {
+
+        List<Reservation> reservations = reservationRepository.findAll();
+
+        // LAZY 로딩 방지
+        for (Reservation r : reservations) {
+            r.getPatient().getName();
+            r.getDoctor().getStaff().getName();
+            r.getDepartment().getName();
+        }
+
+        return reservations;
+    }
+
+    // 접수 처리
+    @Transactional
+    public void receive(ReceptionUpdateRequest request) {
+
+        Reservation reservation = reservationRepository.findById(request.getReservationId())
+                .orElseThrow(() -> new RuntimeException("예약 없음"));
+        reservation.receive();
+
     }
 }
