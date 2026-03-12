@@ -11,11 +11,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -40,7 +37,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final long WINDOW_MS = 60_000L;
 
     private final ConcurrentHashMap<String, Bucket> buckets = new ConcurrentHashMap<>();
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -68,15 +64,18 @@ public class RateLimitFilter extends OncePerRequestFilter {
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.setCharacterEncoding("UTF-8");
 
-            Map<String, Object> error = Map.of(
-                    "success", false,
-                    "errorCode", "RATE_LIMIT_EXCEEDED",
-                    "message", "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
-                    "timestamp", Instant.now().toString(),
-                    "path", path
-            );
+            String safePath = path.replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\n", "")
+                    .replace("\r", "");
 
-            objectMapper.writeValue(response.getOutputStream(), error);
+            String json = "{\"success\":false,"
+                    + "\"errorCode\":\"RATE_LIMIT_EXCEEDED\","
+                    + "\"message\":\"요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.\","
+                    + "\"timestamp\":\"" + Instant.now() + "\","
+                    + "\"path\":\"" + safePath + "\"}";
+
+            response.getWriter().write(json);
             return;
         }
 
