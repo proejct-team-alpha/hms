@@ -7,38 +7,120 @@
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
 </head>
-<body>
-  
+<body class="min-h-screen flex">
   {{> common/sidebar-nurse}}
 
   <div class="main-content flex-1 flex flex-col ml-64">
     {{> common/header-staff}}
-    
-    <main class="content-wrapper">
+
+    <main class="content-wrapper flex-1 p-6">
       <div class="space-y-6 max-w-5xl mx-auto">
         <h1 class="text-2xl font-bold text-slate-800">간호사 대시보드</h1>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="stats-container">
-          <!-- Stats injected by JS -->
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                <i data-feather="users" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <div class="text-sm font-medium text-slate-500">오늘 담당 환자</div>
+                <div class="text-2xl font-bold text-slate-800">{{dashboard.totalToday}}명</div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
+                <i data-feather="clipboard" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <div class="text-sm font-medium text-slate-500">진료 대기 환자</div>
+                <div class="text-2xl font-bold text-slate-800">{{dashboard.waitingCount}}명</div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
+                <i data-feather="activity" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <div class="text-sm font-medium text-slate-500">특이사항 환자</div>
+                <div class="text-2xl font-bold text-slate-800">{{dashboard.specialCount}}명</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- 시간대별 환자 유입 현황 차트 -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
             <h2 class="text-lg font-bold text-slate-800 mb-6">시간대별 환자 유입 현황</h2>
-            <div class="h-64 flex items-center justify-center bg-slate-50 border border-slate-100 rounded-xl">
-              <span class="text-slate-400 text-sm">차트 영역 (HTML 버전에서는 정적 이미지 또는 CSS로 대체)</span>
+            <div class="relative" style="height: 200px;">
+              <svg viewBox="0 0 560 180" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                <defs>
+                  <linearGradient id="nurseChartGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#6366f1" stop-opacity="0.3"/>
+                    <stop offset="100%" stop-color="#6366f1" stop-opacity="0.02"/>
+                  </linearGradient>
+                </defs>
+                <!-- 격자선 -->
+                <line x1="40" y1="20" x2="540" y2="20" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
+                <line x1="40" y1="55" x2="540" y2="55" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
+                <line x1="40" y1="90" x2="540" y2="90" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
+                <line x1="40" y1="125" x2="540" y2="125" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
+                <!-- Y축 레이블 -->
+                <text x="30" y="24" text-anchor="end" fill="#94a3b8" font-size="10">16</text>
+                <text x="30" y="59" text-anchor="end" fill="#94a3b8" font-size="10">12</text>
+                <text x="30" y="94" text-anchor="end" fill="#94a3b8" font-size="10">8</text>
+                <text x="30" y="129" text-anchor="end" fill="#94a3b8" font-size="10">4</text>
+                <text x="30" y="160" text-anchor="end" fill="#94a3b8" font-size="10">0</text>
+                <!-- 그라디언트 영역 -->
+                <path d="M40,148 C100,130 130,30 200,30 C250,30 260,90 300,95 C340,100 370,20 420,22 C460,24 500,95 540,100 L540,155 L40,155 Z"
+                      fill="url(#nurseChartGrad)"/>
+                <!-- 라인 -->
+                <path d="M40,148 C100,130 130,30 200,30 C250,30 260,90 300,95 C340,100 370,20 420,22 C460,24 500,95 540,100"
+                      fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <!-- X축 레이블 -->
+                <text x="40" y="172" text-anchor="middle" fill="#94a3b8" font-size="10">09:00</text>
+                <text x="120" y="172" text-anchor="middle" fill="#94a3b8" font-size="10">10:00</text>
+                <text x="200" y="172" text-anchor="middle" fill="#94a3b8" font-size="10">11:00</text>
+                <text x="280" y="172" text-anchor="middle" fill="#94a3b8" font-size="10">12:00</text>
+                <text x="360" y="172" text-anchor="middle" fill="#94a3b8" font-size="10">13:00</text>
+                <text x="440" y="172" text-anchor="middle" fill="#94a3b8" font-size="10">14:00</text>
+                <text x="540" y="172" text-anchor="middle" fill="#94a3b8" font-size="10">16:00</text>
+              </svg>
             </div>
           </div>
 
+          <!-- 진료 대기 환자 목록 -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
             <div class="flex justify-between items-center mb-4">
               <h2 class="text-lg font-bold text-slate-800">진료 대기 환자 (시간순)</h2>
-              <a href="reception-list.html" class="text-sm text-indigo-600 font-medium flex items-center gap-1 hover:text-indigo-800">
+              <a href="/nurse/reception-list" class="text-sm text-indigo-600 font-medium flex items-center gap-1 hover:text-indigo-800">
                 전체보기 <i data-feather="arrow-right" class="w-4 h-4"></i>
               </a>
             </div>
-            <div class="space-y-3" id="waiting-list-container">
-              <!-- Waiting list injected by JS -->
+            <div class="space-y-3">
+              {{#dashboard.waitingList}}
+              <a href="/nurse/patient-detail?id={{id}}" class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 hover:bg-indigo-50 hover:border-indigo-200 transition-all cursor-pointer group">
+                <div class="flex items-center gap-3">
+                  <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                  <span class="font-medium text-slate-800 group-hover:text-indigo-700">{{patientName}}</span>
+                  <span class="text-sm text-slate-500">{{departmentName}} / {{timeSlot}}</span>
+                </div>
+                <span class="text-xs font-medium px-2 py-1 rounded-full bg-yellow-100 text-yellow-800">
+                  {{statusText}}
+                </span>
+              </a>
+              {{/dashboard.waitingList}}
+              {{^dashboard.waitingList}}
+              <div class="p-4 text-center text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                대기 중인 환자가 없습니다.
+              </div>
+              {{/dashboard.waitingList}}
             </div>
           </div>
         </div>
@@ -48,87 +130,6 @@
     {{> common/footer-staff}}
   </div>
 
-  <script src="/js/data.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const reservations = getReservations();
-      const todayReservations = reservations.filter(r => r.status !== 'CANCELLED');
-      const receivedReservations = todayReservations.filter(r => r.status === 'RECEIVED' || r.status === 'IN_PROGRESS' || r.status === 'COMPLETED');
-      const specialIssueReservations = todayReservations.filter(r => r.symptoms && r.symptoms.length > 10);
-
-      // Render Stats
-      document.getElementById('stats-container').innerHTML = \`
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-              <i data-feather="users" class="w-6 h-6"></i>
-            </div>
-            <div>
-              <div class="text-sm font-medium text-slate-500">오늘 담당 환자</div>
-              <div class="text-2xl font-bold text-slate-800">\${todayReservations.length}명</div>
-            </div>
-          </div>
-        </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
-              <i data-feather="clipboard" class="w-6 h-6"></i>
-            </div>
-            <div>
-              <div class="text-sm font-medium text-slate-500">진료 대기 환자</div>
-              <div class="text-2xl font-bold text-slate-800">\${receivedReservations.length}명</div>
-            </div>
-          </div>
-        </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
-              <i data-feather="activity" class="w-6 h-6"></i>
-            </div>
-            <div>
-              <div class="text-sm font-medium text-slate-500">특이사항 환자</div>
-              <div class="text-2xl font-bold text-slate-800">\${specialIssueReservations.length}명</div>
-            </div>
-          </div>
-        </div>
-      \`;
-
-      // Render Waiting List
-      const waitingPatients = [...todayReservations]
-        .filter(r => r.status === 'RECEIVED')
-        .sort((a, b) => a.time.localeCompare(b.time))
-        .slice(0, 5);
-
-      const waitingContainer = document.getElementById('waiting-list-container');
-      if (waitingPatients.length > 0) {
-        waitingContainer.innerHTML = waitingPatients.map(res => {
-          let dotClass = 'bg-green-500';
-          let badgeClass = 'bg-green-100 text-green-700';
-          let statusText = '진료 대기';
-
-          return \`
-            <a href="patient-detail.html?id=\${res.id}" class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 hover:bg-indigo-50 hover:border-indigo-200 transition-all cursor-pointer group">
-              <div class="flex items-center gap-3">
-                <div class="w-2 h-2 rounded-full \${dotClass}"></div>
-                <span class="font-medium text-slate-800 group-hover:text-indigo-700">\${res.name}</span>
-                <span class="text-sm text-slate-500">\${res.dept} / \${res.time}</span>
-              </div>
-              <span class="text-xs font-medium px-2 py-1 rounded-full \${badgeClass}">
-                \${statusText}
-              </span>
-            </a>
-          \`;
-        }).join('');
-      } else {
-        waitingContainer.innerHTML = \`
-          <div class="p-4 text-center text-slate-500">
-            대기 중인 환자가 없습니다.
-          </div>
-        \`;
-      }
-
-      feather.replace();
-    });
-  </script>
+  <script>feather.replace();</script>
 </body>
 </html>

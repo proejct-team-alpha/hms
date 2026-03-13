@@ -25,7 +25,15 @@
     </a>
     <a href="/nurse/reception-list" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isNurseReception}}bg-indigo-50 text-indigo-700{{/isNurseReception}}{{^isNurseReception}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isNurseReception}}">
       <i data-feather="clipboard" class="w-5 h-5"></i>
-      오늘 예약 현황
+      예약 현황
+    </a>
+    <a href="/nurse/chatbot" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isNurseChatbot}}bg-indigo-50 text-indigo-700{{/isNurseChatbot}}{{^isNurseChatbot}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isNurseChatbot}}">
+      <i data-feather="message-circle" class="w-5 h-5"></i>
+      AI 챗봇
+    </a>
+    <a href="/nurse/mypage" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isNurseMypage}}bg-indigo-50 text-indigo-700{{/isNurseMypage}}{{^isNurseMypage}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isNurseMypage}}">
+      <i data-feather="settings" class="w-5 h-5"></i>
+      내 정보 관리
     </a>
   </nav>
 </aside>

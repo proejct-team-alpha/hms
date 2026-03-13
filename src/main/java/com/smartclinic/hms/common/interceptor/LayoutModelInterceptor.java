@@ -80,7 +80,9 @@ public class LayoutModelInterceptor implements HandlerInterceptor {
         mav.addObject("isDoctorMypage", path.startsWith("/doctor/mypage"));
 
         mav.addObject("isNurseDashboard", path.equals("/nurse/dashboard"));
-        mav.addObject("isNurseReception", path.startsWith("/nurse/reception") || path.contains("reception-list"));
+        mav.addObject("isNurseReception", path.startsWith("/nurse/reception") || path.contains("reception-list") || path.startsWith("/nurse/patient-detail"));
+        mav.addObject("isNurseChatbot", path.startsWith("/nurse/chatbot"));
+        mav.addObject("isNurseMypage", path.startsWith("/nurse/mypage"));
 
         mav.addObject("isAdminDashboard", path.equals("/admin/dashboard"));
         mav.addObject("isAdminReservation", path.startsWith("/admin/reservation"));
@@ -90,8 +92,10 @@ public class LayoutModelInterceptor implements HandlerInterceptor {
         mav.addObject("isAdminItem", path.startsWith("/item-manager"));
 
         mav.addObject("isItemDashboard", path.equals("/item-manager/dashboard"));
-        mav.addObject("isItemList", path.startsWith("/item-manager/item-list") || path.contains("item-list") || path.contains("item-form"));
-        mav.addObject("isItemHistory", path.startsWith("/item-manager/item-history") || path.contains("item-history"));
+        mav.addObject("isItemList", path.startsWith("/item-manager/item-list"));
+        mav.addObject("isItemForm", path.startsWith("/item-manager/item-form"));
+        mav.addObject("isItemHistory", path.startsWith("/item-manager/item-history"));
+        mav.addObject("isItemMypage", path.startsWith("/item-manager/mypage"));
     }
 
     private static String resolveRoleLabel(Authentication auth) {
