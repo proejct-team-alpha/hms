@@ -111,26 +111,34 @@ public class ReceptionService {
         reservation.receive();
     }
 
-    // 오늘 예약 목록 (취소 제외 or 특정 상태)
-    public List<StaffReservationDto> getTodayReservations(String status) {
-        LocalDate today = LocalDate.now();
+    // 날짜별 예약 목록 (date=null이면 오늘 이후 전체, 취소 제외 or 특정 상태)
+    public List<StaffReservationDto> getReservations(LocalDate date, String status) {
         List<Reservation> reservations;
-        if (status == null || status.isBlank()) {
-            reservations = reservationRepository.findTodayExcludingStatus(today, ReservationStatus.CANCELLED);
+        if (date == null) {
+            LocalDate today = LocalDate.now();
+            if (status == null || status.isBlank()) {
+                reservations = reservationRepository.findFromDateExcludingStatus(today, ReservationStatus.CANCELLED);
+            } else {
+                reservations = reservationRepository.findFromDateByStatus(today, ReservationStatus.valueOf(status));
+            }
         } else {
-            reservations = reservationRepository.findTodayByStatus(today, ReservationStatus.valueOf(status));
+            if (status == null || status.isBlank()) {
+                reservations = reservationRepository.findTodayExcludingStatus(date, ReservationStatus.CANCELLED);
+            } else {
+                reservations = reservationRepository.findTodayByStatus(date, ReservationStatus.valueOf(status));
+            }
         }
         return reservations.stream().map(StaffReservationDto::new).collect(Collectors.toList());
     }
 
     // 상태 필터 탭 목록
-    public List<StaffStatusFilter> getStatusFilters(String selected) {
+    public List<StaffStatusFilter> getStatusFilters(String selected, String date) {
         String s = (selected == null) ? "" : selected;
         return List.of(
-                new StaffStatusFilter("전체", "", s),
-                new StaffStatusFilter("접수 대기", "RESERVED", s),
-                new StaffStatusFilter("진료 대기", "RECEIVED", s),
-                new StaffStatusFilter("진료 완료", "COMPLETED", s));
+                new StaffStatusFilter("전체", "", s, date),
+                new StaffStatusFilter("접수 대기", "RESERVED", s, date),
+                new StaffStatusFilter("진료 대기", "RECEIVED", s, date),
+                new StaffStatusFilter("진료 완료", "COMPLETED", s, date));
     }
 
     // 예약 상세 조회

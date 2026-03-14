@@ -1,28 +1,24 @@
 package com.smartclinic.hms.admin.item;
 
-import com.smartclinic.hms.item.ItemManagerRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/admin/item")
 public class AdminItemController {
 
-    private final ItemManagerRepository itemManagerRepository;
+    private final AdminItemService adminItemService;
 
     @GetMapping("/list")
     public String list(Model model) {
-        List<AdminItemDto> items = itemManagerRepository.findAllByOrderByNameAsc()
-                .stream()
-                .map(AdminItemDto::new)
-                .collect(Collectors.toList());
+        List<AdminItemDto> items = adminItemService.getItemList();
         model.addAttribute("items", items);
         model.addAttribute("hasItems", !items.isEmpty());
         model.addAttribute("pageTitle", "물품 관리");

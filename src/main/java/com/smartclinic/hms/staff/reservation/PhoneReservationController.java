@@ -7,6 +7,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.smartclinic.hms.staff.reception.ReceptionService;
 import com.smartclinic.hms.staff.reservation.dto.PhoneReservationRequestDto;
@@ -31,10 +32,10 @@ public class PhoneReservationController {
 
     // 전화 예약 생성
     @PostMapping("/create")
-    public String createPhoneReservation(PhoneReservationRequestDto request) {
-
+    public String createPhoneReservation(PhoneReservationRequestDto request,
+                                         RedirectAttributes redirectAttributes) {
         receptionService.createPhoneReservation(request);
-
-        return "redirect:/staff/reception/list";
+        redirectAttributes.addFlashAttribute("message", "전화 예약이 완료되었습니다.");
+        return "redirect:/staff/reception/list?date=" + request.getDate();
     }
 }

@@ -1,27 +1,24 @@
 package com.smartclinic.hms.admin.staff;
 
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/admin/staff")
 public class AdminStaffController {
 
-    private final AdminStaffRepository adminStaffRepository;
+    private final AdminStaffService adminStaffService;
 
     @GetMapping("/list")
     public String list(Model model) {
-        List<AdminStaffDto> staffList = adminStaffRepository.findAllWithDepartment()
-                .stream()
-                .map(AdminStaffDto::new)
-                .collect(Collectors.toList());
+        List<AdminStaffDto> staffList = adminStaffService.getStaffList();
         model.addAttribute("staffList", staffList);
         model.addAttribute("hasStaff", !staffList.isEmpty());
         model.addAttribute("pageTitle", "직원 관리");

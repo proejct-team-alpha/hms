@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface ItemRepository extends JpaRepository<Item, Long> {
 
+    List<Item> findAllByOrderByNameAsc();
+
     @Query("""
             select count(i.id)
             from Item i

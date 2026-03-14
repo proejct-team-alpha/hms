@@ -44,6 +44,12 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date AND r.status = :status ORDER BY r.timeSlot")
     List<Reservation> findTodayByStatus(@Param("date") LocalDate date, @Param("status") ReservationStatus status);
 
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate >= :fromDate AND r.status <> :excluded ORDER BY r.reservationDate, r.timeSlot")
+    List<Reservation> findFromDateExcludingStatus(@Param("fromDate") LocalDate fromDate, @Param("excluded") ReservationStatus excluded);
+
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate >= :fromDate AND r.status = :status ORDER BY r.reservationDate, r.timeSlot")
+    List<Reservation> findFromDateByStatus(@Param("fromDate") LocalDate fromDate, @Param("status") ReservationStatus status);
+
     @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.id = :id")
     Optional<Reservation> findByIdWithDetails(@Param("id") Long id);
 }
