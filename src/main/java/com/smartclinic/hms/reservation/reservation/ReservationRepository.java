@@ -37,4 +37,13 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
     long countByReservationDate(LocalDate reservationDate);
+
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date AND r.status <> :excluded ORDER BY r.timeSlot")
+    List<Reservation> findTodayExcludingStatus(@Param("date") LocalDate date, @Param("excluded") ReservationStatus excluded);
+
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date AND r.status = :status ORDER BY r.timeSlot")
+    List<Reservation> findTodayByStatus(@Param("date") LocalDate date, @Param("status") ReservationStatus status);
+
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.id = :id")
+    Optional<Reservation> findByIdWithDetails(@Param("id") Long id);
 }

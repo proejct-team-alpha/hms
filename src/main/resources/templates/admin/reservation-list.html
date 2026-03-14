@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>예약 취소 관리 - MediCare+</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/feather-icons"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  
+  <script src="components/sidebar.js"></script>
+
+  <div class="main-content">
+    <script src="components/header.js"></script>
+    
+    <main class="content-wrapper">
+      <div class="space-y-6 max-w-6xl mx-auto">
+        <div class="flex items-center gap-3 mb-8">
+          <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+            <i data-feather="calendar" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-slate-800">예약 취소 관리</h1>
+            <p class="text-slate-500 mt-1">모든 예약을 조회하고 취소할 수 있습니다.</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-4 border-b border-slate-200 flex flex-col md:flex-row justify-between items-center bg-slate-50 gap-4">
+            <div class="flex flex-wrap gap-2" id="filter-buttons">
+              <button data-filter="ALL" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-slate-800 text-white">
+                전체
+              </button>
+              <button data-filter="RESERVED" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100">
+                예약
+              </button>
+              <button data-filter="RECEIVED" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100">
+                접수
+              </button>
+              <button data-filter="COMPLETED" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100">
+                완료
+              </button>
+              <button data-filter="CANCELLED" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100">
+                취소
+              </button>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="relative">
+                <i data-feather="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                <input 
+                  type="text" 
+                  id="search-input"
+                  placeholder="환자명 검색..." 
+                  class="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-64"
+                />
+              </div>
+            </div>
+          </div>
+
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
+                <th class="p-4 font-medium">시간</th>
+                <th class="p-4 font-medium">환자명</th>
+                <th class="p-4 font-medium">연락처</th>
+                <th class="p-4 font-medium">진료과 / 전문의</th>
+                <th class="p-4 font-medium">상태</th>
+                <th class="p-4 font-medium text-right">액션</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200" id="reservation-list-container">
+              <!-- Injected by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <script src="components/footer.js"></script>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      let reservations = getReservations();
+      let currentFilter = 'ALL';
+      let searchQuery = '';
+
+      const listContainer = document.getElementById('reservation-list-container');
+      const filterBtns = document.querySelectorAll('.filter-btn');
+      const searchInput = document.getElementById('search-input');
+
+      function renderList() {
+        const filtered = reservations.filter(r => {
+          const matchFilter = currentFilter === 'ALL' || r.status === currentFilter;
+          const matchSearch = r.name.toLowerCase().includes(searchQuery.toLowerCase());
+          return matchFilter && matchSearch;
+        });
+
+        if (filtered.length > 0) {
+          listContainer.innerHTML = filtered.map(res => {
+            let statusBadge = '';
+            let actionButtons = '';
+
+            if (res.status === 'RESERVED') {
+              statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800">RESERVED</span>';
+              actionButtons = `
+                <button onclick="handleReceive(${res.id})" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 text-sm font-medium rounded-lg hover:bg-green-100 transition-colors">다시 접수</button>
+                <button onclick="handleCancel(${res.id}, '${res.status}')" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors"><i data-feather="x-circle" class="w-4 h-4"></i>취소</button>
+              `;
+            } else if (res.status === 'RECEIVED') {
+              statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800">RECEIVED</span>';
+              actionButtons = `
+                <button onclick="handleCancel(${res.id}, '${res.status}')" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors"><i data-feather="x-circle" class="w-4 h-4"></i>취소</button>
+              `;
+            } else if (res.status === 'COMPLETED') {
+              statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">COMPLETED</span>';
+              actionButtons = `
+                <button disabled class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors opacity-50 cursor-not-allowed"><i data-feather="x-circle" class="w-4 h-4"></i>취소</button>
+              `;
+            } else if (res.status === 'IN_PROGRESS') {
+              statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800">IN_PROGRESS</span>';
+              actionButtons = `
+                <button onclick="handleCancel(${res.id}, '${res.status}')" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors"><i data-feather="x-circle" class="w-4 h-4"></i>취소</button>
+              `;
+            } else if (res.status === 'CANCELLED') {
+              statusBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800">CANCELLED</span>';
+              actionButtons = `
+                <button onclick="handleReceive(${res.id})" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 text-sm font-medium rounded-lg hover:bg-green-100 transition-colors">다시 접수</button>
+                <button disabled class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors opacity-50 cursor-not-allowed"><i data-feather="x-circle" class="w-4 h-4"></i>취소</button>
+              `;
+            }
+
+            return `
+              <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="openModal(${res.id})">
+                <td class="p-4 text-sm font-medium text-slate-900">${res.time}</td>
+                <td class="p-4 text-sm font-semibold text-slate-800">${res.name}</td>
+                <td class="p-4 text-sm text-slate-600">${res.phone}</td>
+                <td class="p-4 text-sm text-slate-600">${res.dept} / ${res.doctor}</td>
+                <td class="p-4">${statusBadge}</td>
+                <td class="p-4 text-right" onclick="event.stopPropagation()">
+                  <div class="flex items-center justify-end gap-2">
+                    ${actionButtons}
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        } else {
+          listContainer.innerHTML = `
+            <tr>
+              <td colspan="6" class="p-8 text-center text-slate-500">
+                검색 결과가 없습니다.
+              </td>
+            </tr>
+          `;
+        }
+        feather.replace();
+      }
+
+      function updateFilterButtons() {
+        filterBtns.forEach(btn => {
+          const filter = btn.dataset.filter;
+          if (filter === currentFilter) {
+            if (filter === 'ALL') btn.className = "filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-slate-800 text-white";
+            else if (filter === 'RESERVED') btn.className = "filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-indigo-600 text-white";
+            else if (filter === 'RECEIVED') btn.className = "filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-green-600 text-white";
+            else if (filter === 'COMPLETED') btn.className = "filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-blue-600 text-white";
+            else if (filter === 'CANCELLED') btn.className = "filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-red-600 text-white";
+          } else {
+            btn.className = "filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100";
+          }
+        });
+      }
+
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          currentFilter = e.target.dataset.filter;
+          updateFilterButtons();
+          renderList();
+        });
+      });
+
+      searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value;
+        renderList();
+      });
+
+      window.handleCancel = function(id, status) {
+        if (status === 'COMPLETED') {
+          alert('진료가 완료된 예약은 취소할 수 없습니다.');
+          return;
+        }
+        if (window.confirm('정말 이 예약을 취소하시겠습니까?')) {
+          updateReservationStatus(id, 'CANCELLED');
+          reservations = getReservations();
+          renderList();
+          alert('예약이 취소되었습니다. (CANCELLED)');
+        }
+      };
+
+      window.handleReceive = function(id) {
+        if (window.confirm('이 예약을 접수 상태로 변경하시겠습니까?')) {
+          updateReservationStatus(id, 'RECEIVED');
+          reservations = getReservations();
+          renderList();
+          alert('접수 처리되었습니다.');
+        }
+      };
+
+      window.openModal = function(id) {
+        // Simple alert for now, can implement full modal if needed
+        const res = reservations.find(r => r.id === id);
+        alert(`예약 상세 정보:\n\n이름: ${res.name}\n연락처: ${res.phone}\n진료과: ${res.dept}\n담당의: ${res.doctor}\n시간: ${res.time}\n상태: ${res.status}\n증상: ${res.symptoms}`);
+      };
+
+      renderList();
+    });
+  </script>
+</body>
+</html>

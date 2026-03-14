@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>예약 환자 목록 - MediCare+</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/feather.min.js"></script>
+</head>
+<body class="min-h-screen flex">
+  {{> common/sidebar-staff}}
+
+  <div class="main-content flex-1 flex flex-col ml-64">
+    {{> common/header-staff}}
+
+    <main class="content-wrapper flex-1 p-6">
+      <div class="space-y-6 max-w-5xl mx-auto">
+        <div class="flex justify-between items-center">
+          <h1 class="text-2xl font-bold text-slate-800">예약 환자 목록</h1>
+          <div class="flex gap-3">
+            <a href="/staff/walkin-reception" class="px-4 py-2 bg-indigo-50 text-indigo-700 font-medium rounded-lg hover:bg-indigo-100 transition-colors">
+              방문 접수
+            </a>
+            <a href="/staff/reservation/phone-reservation" class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+              전화 예약
+            </a>
+          </div>
+        </div>
+
+        {{#message}}
+        <div class="p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl text-sm">{{message}}</div>
+        {{/message}}
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-4 border-b border-slate-200 flex gap-2 bg-slate-50">
+            {{#filters}}
+            <a href="/staff/reception/list?status={{value}}" class="{{cssClass}} transition-colors">
+              {{label}}
+            </a>
+            {{/filters}}
+          </div>
+
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
+                <th class="p-4 font-medium">시간</th>
+                <th class="p-4 font-medium">환자명</th>
+                <th class="p-4 font-medium">연락처</th>
+                <th class="p-4 font-medium">예약 구분</th>
+                <th class="p-4 font-medium">진료과 / 전문의</th>
+                <th class="p-4 font-medium">상태</th>
+                <th class="p-4 font-medium text-right">비고</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">
+              {{#reservations}}
+              <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="location.href='/staff/reception/detail?id={{id}}'">
+                <td class="p-4 text-sm font-medium text-slate-900">{{timeSlot}}</td>
+                <td class="p-4 text-sm font-semibold text-slate-800">{{patientName}}</td>
+                <td class="p-4 text-sm text-slate-600">{{patientPhone}}</td>
+                <td class="p-4">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{sourceBadgeClass}}">
+                    {{sourceText}}
+                  </span>
+                </td>
+                <td class="p-4 text-sm text-slate-600">{{departmentName}} / {{doctorName}}</td>
+                <td class="p-4">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{statusBadgeClass}}">
+                    {{statusText}}
+                  </span>
+                </td>
+                <td class="p-4 text-right">
+                  <div class="flex justify-end gap-2" onclick="event.stopPropagation()">
+                    {{#canReceive}}
+                    <form method="post" action="/staff/reception/receive">
+                      <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                      <input type="hidden" name="reservationId" value="{{id}}">
+                      <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 text-sm font-medium rounded-lg hover:bg-green-100 transition-colors">
+                        <i data-feather="check-circle" class="w-4 h-4"></i> 접수
+                      </button>
+                    </form>
+                    {{/canReceive}}
+                    {{#canCancel}}
+                    <form method="post" action="/staff/reception/cancel" onsubmit="return confirm('예약을 취소하시겠습니까?')">
+                      <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                      <input type="hidden" name="id" value="{{id}}">
+                      <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors">
+                        <i data-feather="x-circle" class="w-4 h-4"></i> 취소
+                      </button>
+                    </form>
+                    {{/canCancel}}
+                  </div>
+                </td>
+              </tr>
+              {{/reservations}}
+              {{^reservations}}
+              <tr>
+                <td colspan="7" class="p-8 text-center text-slate-500">
+                  오늘 예약된 환자가 없습니다.
+                </td>
+              </tr>
+              {{/reservations}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    {{> common/footer-staff}}
+  </div>
+
+  <script>feather.replace();</script>
+</body>
+</html>

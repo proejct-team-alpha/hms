@@ -3,199 +3,93 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>직원 등록/수정 - MediCare+</title>
+  <title>직원 등록 - MediCare+</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
 </head>
-<body>
-  
+<body class="min-h-screen flex">
   {{> common/sidebar-admin}}
 
   <div class="main-content flex-1 flex flex-col ml-64">
     {{> common/header-staff}}
-    
-    <main class="content-wrapper">
+
+    <main class="content-wrapper flex-1 p-6">
       <div class="max-w-2xl mx-auto space-y-6">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
-              <i data-feather="users" class="w-6 h-6"></i>
-            </div>
-            <div>
-              <h1 class="text-2xl font-bold text-slate-800" id="page-title">직원 등록</h1>
-              <p class="text-slate-500 mt-1">시스템 접속 권한을 부여하고 정보를 관리합니다.</p>
-            </div>
-          </div>
-          <a href="staff-list.html" class="text-sm font-medium text-slate-500 hover:text-slate-700">
-            목록으로 돌아가기
+
+        <div class="flex items-center gap-3">
+          <a href="/admin/staff/list" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+            <i data-feather="arrow-left" class="w-5 h-5"></i>
           </a>
+          <div>
+            <h1 class="text-2xl font-bold text-slate-800">직원 등록</h1>
+            <p class="text-slate-500 mt-1">새 직원 정보를 입력하세요.</p>
+          </div>
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-          <form id="staff-form" class="space-y-6">
-            <div class="grid grid-cols-2 gap-6">
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">이름</label>
-                <div class="relative">
-                  <i data-feather="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input
-                    type="text"
-                    id="staff-name"
-                    required
-                    class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                    placeholder="예: 김의사"
-                  />
-                </div>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">연락처</label>
-                <div class="relative">
-                  <i data-feather="phone" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input
-                    type="tel"
-                    id="staff-phone"
-                    required
-                    class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                    placeholder="010-1234-5678"
-                  />
-                </div>
-              </div>
+          <form method="post" action="/admin/staff" class="space-y-5">
+            <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-1.5">이름 <span class="text-red-500">*</span></label>
+              <input type="text" name="name" required
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"
+                placeholder="이름을 입력하세요">
             </div>
 
-            <div class="grid grid-cols-2 gap-6">
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">시스템 권한 (Role)</label>
-                <select
-                  id="staff-role"
-                  required
-                  class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white font-medium"
-                >
-                  <option value="STAFF">일반직원</option>
-                  <option value="DOCTOR">의사</option>
-                  <option value="NURSE">간호사</option>
-                  <option value="ADMIN">관리자</option>
-                  <option value="ITEM_MANAGER">물품담당자</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">부서 / 진료과</label>
-                <div class="relative">
-                  <i data-feather="briefcase" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input
-                    type="text"
-                    id="staff-dept"
-                    required
-                    class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                    placeholder="예: 내과, 원무과"
-                  />
-                </div>
-              </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-1.5">아이디 <span class="text-red-500">*</span></label>
+              <input type="text" name="username" required
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"
+                placeholder="아이디를 입력하세요">
             </div>
 
-            <div class="pt-6 border-t border-slate-200">
-              <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <i data-feather="lock" class="w-4 h-4 text-indigo-500"></i>
-                접속 비밀번호 설정
-              </h3>
-              <div class="grid grid-cols-2 gap-6">
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">새 비밀번호</label>
-                  <input
-                    type="password"
-                    id="staff-password"
-                    class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                    placeholder="비밀번호 입력"
-                  />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">비밀번호 확인</label>
-                  <input
-                    type="password"
-                    id="staff-confirm-password"
-                    class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                    placeholder="비밀번호 재입력"
-                  />
-                </div>
-              </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-1.5">비밀번호 <span class="text-red-500">*</span></label>
+              <input type="password" name="password" required
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"
+                placeholder="비밀번호를 입력하세요">
             </div>
 
-            <div class="pt-6 border-t border-slate-200 flex justify-end gap-3">
-              <a href="staff-list.html" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors">
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-1.5">사번 <span class="text-red-500">*</span></label>
+              <input type="text" name="employeeNumber" required
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"
+                placeholder="사번을 입력하세요">
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-1.5">직책 <span class="text-red-500">*</span></label>
+              <select name="role" required
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 bg-white">
+                <option value="">직책을 선택하세요</option>
+                <option value="ADMIN">관리자</option>
+                <option value="DOCTOR">의사</option>
+                <option value="NURSE">간호사</option>
+                <option value="STAFF">원무과</option>
+                <option value="ITEM_MANAGER">물품관리</option>
+              </select>
+            </div>
+
+            <div class="flex gap-3 pt-4">
+              <button type="submit"
+                class="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors">
+                등록
+              </button>
+              <a href="/admin/staff/list"
+                class="flex-1 py-2.5 bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-200 transition-colors text-center">
                 취소
               </a>
-              <button type="submit" class="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2">
-                <i data-feather="save" class="w-5 h-5"></i>
-                저장하기
-              </button>
             </div>
           </form>
         </div>
+
       </div>
     </main>
 
     {{> common/footer-staff}}
   </div>
 
-  <script src="/js/data.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const id = urlParams.get('id');
-      
-      const form = document.getElementById('staff-form');
-      const nameInput = document.getElementById('staff-name');
-      const phoneInput = document.getElementById('staff-phone');
-      const roleInput = document.getElementById('staff-role');
-      const deptInput = document.getElementById('staff-dept');
-      const passwordInput = document.getElementById('staff-password');
-      const confirmPasswordInput = document.getElementById('staff-confirm-password');
-      const pageTitle = document.getElementById('page-title');
-
-      if (id) {
-        pageTitle.textContent = '직원 정보 수정';
-        passwordInput.placeholder = '변경할 경우에만 입력';
-        passwordInput.required = false;
-        confirmPasswordInput.required = false;
-
-        const staff = getStaffById(id);
-        if (staff) {
-          nameInput.value = staff.name;
-          phoneInput.value = staff.phone;
-          roleInput.value = staff.role;
-          deptInput.value = staff.dept;
-        }
-      } else {
-        passwordInput.required = true;
-        confirmPasswordInput.required = true;
-      }
-
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        if (passwordInput.value !== confirmPasswordInput.value) {
-          alert('비밀번호가 일치하지 않습니다.');
-          return;
-        }
-
-        const data = {
-          name: nameInput.value,
-          phone: phoneInput.value,
-          role: roleInput.value,
-          dept: deptInput.value,
-        };
-
-        if (id) {
-          updateStaff(id, data);
-        } else {
-          addStaff(data);
-        }
-
-        alert('직원 정보가 저장되었습니다.');
-        window.location.href = 'staff-list.html';
-      });
-
-      feather.replace();
-    });
-  </script>
+  <script>feather.replace();</script>
 </body>
 </html>

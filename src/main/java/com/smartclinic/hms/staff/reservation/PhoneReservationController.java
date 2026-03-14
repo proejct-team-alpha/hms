@@ -23,6 +23,8 @@ public class PhoneReservationController {
     // 전화 예약 등록 화면
     @GetMapping("/phone-reservation")
     public String phoneReservation(Model model) {
+        model.addAttribute("departments", receptionService.getAllDepartments());
+        model.addAttribute("doctors", receptionService.getAllDoctors());
         model.addAttribute("today", LocalDate.now());
         return "staff/phone-reservation";
     }

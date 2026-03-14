@@ -72,6 +72,7 @@ public class LayoutModelInterceptor implements HandlerInterceptor {
         mav.addObject("isStaffReception", path.startsWith("/staff/reception") || path.startsWith("/staff/reception-list"));
         mav.addObject("isStaffPhone", path.contains("/staff/phone") || path.contains("phone-reservation"));
         mav.addObject("isStaffWalkin", path.contains("/staff/walkin") || path.contains("walkin-reception"));
+        mav.addObject("isStaffMypage", path.startsWith("/staff/mypage"));
 
         mav.addObject("isDoctorDashboard", path.equals("/doctor/dashboard"));
         mav.addObject("isDoctorTreatment", path.startsWith("/doctor/treatment") || path.contains("treatment"));
