@@ -14,6 +14,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * IP 기반 Rate Limiting 필터 — 토큰 버킷 방식
@@ -50,16 +51,19 @@ public class RateLimitFilter extends OncePerRequestFilter {
         int limit = resolveLimit(path, method);
         String bucketKey = clientIp + ":" + resolveBucketCategory(path, method);
 
-        Bucket bucket = buckets.compute(bucketKey, (key, existing) -> {
+        AtomicInteger capturedCount = new AtomicInteger();
+        buckets.compute(bucketKey, (key, existing) -> {
             long now = System.currentTimeMillis();
             if (existing == null || now - existing.windowStart > WINDOW_MS) {
+                capturedCount.set(1);
                 return new Bucket(now, 1);
             }
             existing.count++;
+            capturedCount.set(existing.count);
             return existing;
         });
 
-        if (bucket.count > limit) {
+        if (capturedCount.get() > limit) {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.setCharacterEncoding("UTF-8");

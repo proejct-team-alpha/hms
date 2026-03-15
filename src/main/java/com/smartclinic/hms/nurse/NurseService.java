@@ -1,10 +1,13 @@
 package com.smartclinic.hms.nurse;
 
+import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.Patient;
 import com.smartclinic.hms.domain.Reservation;
 import com.smartclinic.hms.domain.ReservationStatus;
 import com.smartclinic.hms.nurse.dto.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,12 +16,12 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class NurseService {
 
     private final NurseReservationRepository reservationRepository;
     private final NursePatientRepository patientRepository;
 
-    @Transactional(readOnly = true)
     public NurseDashboardDto getDashboard() {
         LocalDate today = LocalDate.now();
         List<Reservation> all = reservationRepository.findTodayNonCancelled(today, ReservationStatus.CANCELLED);
@@ -35,20 +38,20 @@ public class NurseService {
         return new NurseDashboardDto(all.size(), waitingList.size(), specialCount, waitingList);
     }
 
-    @Transactional(readOnly = true)
-    public List<NurseReservationDto> getReceptionList(String status) {
+    public Page<NurseReservationDto> getReceptionPage(String status, int page) {
         LocalDate today = LocalDate.now();
+        PageRequest pageable = PageRequest.of(page, 10);
         if (status == null || status.isBlank()) {
-            return reservationRepository.findTodayNonCancelled(today, ReservationStatus.CANCELLED)
-                    .stream().map(NurseReservationDto::new).toList();
+            return reservationRepository.findTodayNonCancelledPage(today, ReservationStatus.CANCELLED, pageable)
+                    .map(NurseReservationDto::new);
         }
         try {
             ReservationStatus st = ReservationStatus.valueOf(status);
-            return reservationRepository.findTodayByStatus(today, st)
-                    .stream().map(NurseReservationDto::new).toList();
+            return reservationRepository.findTodayByStatusPage(today, st, pageable)
+                    .map(NurseReservationDto::new);
         } catch (IllegalArgumentException e) {
-            return reservationRepository.findTodayNonCancelled(today, ReservationStatus.CANCELLED)
-                    .stream().map(NurseReservationDto::new).toList();
+            return reservationRepository.findTodayNonCancelledPage(today, ReservationStatus.CANCELLED, pageable)
+                    .map(NurseReservationDto::new);
         }
     }
 
@@ -62,24 +65,23 @@ public class NurseService {
         );
     }
 
-    @Transactional(readOnly = true)
     public NursePatientDto getPatientDetail(Long reservationId) {
         Reservation r = reservationRepository.findByIdWithDetails(reservationId)
-                .orElseThrow(() -> new IllegalArgumentException("예약 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> CustomException.notFound("예약 정보를 찾을 수 없습니다."));
         return new NursePatientDto(r);
     }
 
     @Transactional
     public void receiveReservation(Long reservationId) {
         Reservation r = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new IllegalArgumentException("예약 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> CustomException.notFound("예약 정보를 찾을 수 없습니다."));
         r.receive();
     }
 
     @Transactional
     public void updatePatient(Long patientId, String phone, String address, String note) {
         Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new IllegalArgumentException("환자 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> CustomException.notFound("환자 정보를 찾을 수 없습니다."));
         patient.updateInfo(patient.getName(), phone, patient.getEmail(), address, note);
     }
 }

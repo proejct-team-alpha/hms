@@ -1,13 +1,15 @@
 package com.smartclinic.hms.nurse;
 
+import com.smartclinic.hms.nurse.dto.NursePageLinkDto;
 import com.smartclinic.hms.nurse.dto.NursePatientDto;
-import com.smartclinic.hms.nurse.dto.NurseReservationDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -18,10 +20,29 @@ public class NurseReceptionController {
     private final NurseService nurseService;
 
     @GetMapping("/reception-list")
-    public String receptionList(@RequestParam(required = false) String status, Model model) {
-        List<NurseReservationDto> reservations = nurseService.getReceptionList(status);
-        model.addAttribute("reservations", reservations);
+    public String receptionList(@RequestParam(required = false) String status,
+                                @RequestParam(defaultValue = "0") int page,
+                                Model model) {
+        Page<com.smartclinic.hms.nurse.dto.NurseReservationDto> resultPage =
+                nurseService.getReceptionPage(status, page);
+
+        String baseUrl = (status != null && !status.isBlank())
+                ? "/nurse/reception-list?status=" + status + "&page="
+                : "/nurse/reception-list?page=";
+
+        int totalPages = resultPage.getTotalPages();
+        List<NursePageLinkDto> pageLinks = new ArrayList<>();
+        for (int i = 0; i < totalPages; i++) {
+            pageLinks.add(new NursePageLinkDto(i + 1, i == page, baseUrl + i));
+        }
+
+        model.addAttribute("reservations", resultPage.getContent());
         model.addAttribute("statusFilters", nurseService.getStatusFilters(status));
+        model.addAttribute("hasPrev", page > 0);
+        model.addAttribute("prevUrl", baseUrl + (page - 1));
+        model.addAttribute("hasNext", page < totalPages - 1);
+        model.addAttribute("nextUrl", baseUrl + (page + 1));
+        model.addAttribute("pageLinks", pageLinks);
         model.addAttribute("pageTitle", "오늘 예약 현황");
         return "nurse/reception-list";
     }

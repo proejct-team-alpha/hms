@@ -80,6 +80,19 @@
             </div>
           {{/reservations}}
         </div>
+
+        <!-- 페이징 -->
+        <div class="flex items-center justify-center gap-1 py-4">
+          {{#hasPrev}}
+          <a href="{{prevUrl}}" class="px-3 py-1.5 rounded-lg text-sm text-slate-600 border border-slate-300 bg-white hover:bg-slate-100 transition-colors">이전</a>
+          {{/hasPrev}}
+          {{#pageLinks}}
+          <a href="{{url}}" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors {{#current}}bg-indigo-600 text-white{{/current}}{{^current}}text-slate-600 border border-slate-300 bg-white hover:bg-slate-100{{/current}}">{{num}}</a>
+          {{/pageLinks}}
+          {{#hasNext}}
+          <a href="{{nextUrl}}" class="px-3 py-1.5 rounded-lg text-sm text-slate-600 border border-slate-300 bg-white hover:bg-slate-100 transition-colors">다음</a>
+          {{/hasNext}}
+        </div>
       </div>
     </main>
 

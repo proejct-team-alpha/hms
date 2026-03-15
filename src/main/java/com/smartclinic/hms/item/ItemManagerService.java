@@ -1,5 +1,6 @@
 package com.smartclinic.hms.item;
 
+import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.Item;
 import com.smartclinic.hms.domain.ItemCategory;
 import com.smartclinic.hms.item.dto.*;
@@ -11,11 +12,11 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ItemManagerService {
 
     private final ItemManagerRepository itemRepository;
 
-    @Transactional(readOnly = true)
     public ItemDashboardDto getDashboard() {
         List<Item> all = itemRepository.findAllByOrderByNameAsc();
         List<Item> lowStock = itemRepository.findLowStockItems();
@@ -27,7 +28,6 @@ public class ItemManagerService {
         );
     }
 
-    @Transactional(readOnly = true)
     public List<ItemListDto> getItemList(String category) {
         if (category == null || category.isBlank()) {
             return itemRepository.findAllByOrderByNameAsc().stream()
@@ -56,11 +56,10 @@ public class ItemManagerService {
         );
     }
 
-    @Transactional(readOnly = true)
     public ItemFormDto getItemForm(Long id) {
         if (id == null) return new ItemFormDto();
         Item item = itemRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("물품을 찾을 수 없습니다."));
+                .orElseThrow(() -> CustomException.notFound("물품을 찾을 수 없습니다. ID: " + id));
         return new ItemFormDto(item);
     }
 
@@ -71,7 +70,7 @@ public class ItemManagerService {
             itemRepository.save(Item.create(name, cat, quantity, minQuantity));
         } else {
             Item item = itemRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("물품을 찾을 수 없습니다."));
+                    .orElseThrow(() -> CustomException.notFound("물품을 찾을 수 없습니다. ID: " + id));
             item.update(name, cat, quantity, minQuantity);
         }
     }

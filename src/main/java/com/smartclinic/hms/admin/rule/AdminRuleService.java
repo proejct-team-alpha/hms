@@ -6,6 +6,9 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.smartclinic.hms.domain.HospitalRule;
+import com.smartclinic.hms.domain.HospitalRuleCategory;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -20,5 +23,10 @@ public class AdminRuleService {
                 .stream()
                 .map(AdminRuleDto::new)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void createRule(String title, String content, String category) {
+        hospitalRuleRepository.save(HospitalRule.create(title, content, HospitalRuleCategory.valueOf(category)));
     }
 }

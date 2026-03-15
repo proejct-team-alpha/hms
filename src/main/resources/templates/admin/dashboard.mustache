@@ -18,7 +18,7 @@
       <div class="space-y-4">
 
         <!-- 통계 카드 4개 (한 줄 가로 배치) -->
-        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px;">
+        <div class="grid grid-cols-4 gap-3">
 
           <!-- 오늘 예약 -->
           <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
@@ -79,7 +79,7 @@
         </div>
 
         <!-- 차트 영역 (2열) -->
-        <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:16px;">
+        <div class="grid grid-cols-2 gap-4">
 
           <!-- 일별 환자 수 추이 -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
@@ -109,9 +109,11 @@
 
   <script>feather.replace();</script>
   <script>
-    fetch('/admin/dashboard/chart')
-      .then(r => r.json())
-      .then(resp => {
+    (async () => {
+      try {
+        const r = await fetch('/admin/dashboard/chart');
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const resp = await r.json();
         const data = resp.data || resp;
 
         const dailyLabels = (data.dailyPatients || []).map(d => {
@@ -184,8 +186,10 @@
             }
           }
         });
-      })
-      .catch(e => console.warn('차트 데이터 로드 실패:', e));
+      } catch (e) {
+        console.warn('차트 데이터 로드 실패:', e);
+      }
+    })();
   </script>
 </body>
 </html>

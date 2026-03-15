@@ -5,7 +5,9 @@ import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,5 +31,13 @@ public class AdminRuleController {
     public String form(Model model) {
         model.addAttribute("pageTitle", "규칙 등록");
         return "admin/rule-form";
+    }
+
+    @PostMapping("/form")
+    public String create(@RequestParam String title,
+                         @RequestParam String content,
+                         @RequestParam String category) {
+        adminRuleService.createRule(title, content, category);
+        return "redirect:/admin/rule/list";
     }
 }
