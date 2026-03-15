@@ -14,19 +14,24 @@ package com.smartclinic.hms.reservation.reservation;
 // DONE 1. POST /reservation/create — reservationNumber RedirectAttributes 추가
 // DONE 2. GET /reservation/lookup — 예약번호 단건 / 이름+전화번호 목록 조회
 
+// [W2-#8 작업 목록]
+// DONE 1. POST /reservation/create — @Valid + BindingResult 적용, 에러 시 폼 재표시
+
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RequestMapping("/reservation")
 @RequiredArgsConstructor
@@ -60,8 +65,19 @@ public class ReservationController {
     }
 
     @PostMapping("/create")
-    public String createReservation(@ModelAttribute ReservationCreateForm form,
+    public String createReservation(@Valid @ModelAttribute ReservationCreateForm form,
+                                    BindingResult bindingResult,
+                                    HttpServletRequest request,
                                     RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getAllErrors().stream()
+                    .map(e -> e.getDefaultMessage())
+                    .collect(Collectors.joining(" "));
+            request.setAttribute("pageTitle", "직접 선택 예약");
+            request.setAttribute("errorMessage", errorMessage);
+            return "reservation/direct-reservation";
+        }
+
         ReservationCompleteInfo info = reservationService.createReservation(form);
 
         redirectAttributes.addAttribute("reservationNumber", info.getReservationNumber());
@@ -147,8 +163,20 @@ public class ReservationController {
 
     @PostMapping("/modify/{id}")
     public String modifyReservation(@PathVariable("id") Long id,
-                                    @ModelAttribute ReservationUpdateForm form,
+                                    @Valid @ModelAttribute ReservationUpdateForm form,
+                                    BindingResult bindingResult,
+                                    HttpServletRequest request,
                                     RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getAllErrors().stream()
+                    .map(e -> e.getDefaultMessage())
+                    .collect(Collectors.joining(" "));
+            request.setAttribute("pageTitle", "예약 변경");
+            request.setAttribute("errorMessage", errorMessage);
+            // 기존 예약 정보를 다시 조회하여 폼에 전달해야 할 수도 있으나, 
+            // 현재 구조에서는 에러 발생 시 원래 페이지로 돌아가 에러를 보여주는 방식을 유지합니다.
+            return "reservation/reservation-modify";
+        }
         ReservationCompleteInfo info = reservationService.updateReservation(id, form);
         redirectAttributes.addAttribute("reservationNumber", info.getReservationNumber());
         redirectAttributes.addAttribute("name",       info.getPatientName());

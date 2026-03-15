@@ -13,6 +13,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.smartclinic.hms.domain.Reservation;
 import com.smartclinic.hms.staff.reception.dto.ReceptionUpdateRequest;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -40,7 +41,7 @@ public class ReceptionController {
 
     // 접수 처리 하기
     @PostMapping("/receive")
-    public String receive(@ModelAttribute ReceptionUpdateRequest request,
+    public String receive(@Valid @ModelAttribute ReceptionUpdateRequest request,
             RedirectAttributes redirectAttributes) {
 
         receptionService.receive(request);

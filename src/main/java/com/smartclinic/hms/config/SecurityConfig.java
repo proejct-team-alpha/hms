@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -77,6 +78,7 @@ public class SecurityConfig {
 
     @Bean
     @Order(1)
+    @Profile("dev")
     SecurityFilterChain h2ConsoleFilterChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher("/h2-console/**")
@@ -110,7 +112,7 @@ public class SecurityConfig {
                         .contentSecurityPolicy(csp -> csp
                                 .policyDirectives(
                                         "default-src 'self'; " +
-                                                "script-src 'self' 'unsafe-inline'; " +
+                                                "script-src 'self'; " +
                                                 "style-src 'self' 'unsafe-inline'; " +
                                                 "img-src 'self' data:; " +
                                                 "font-src 'self'; " +
