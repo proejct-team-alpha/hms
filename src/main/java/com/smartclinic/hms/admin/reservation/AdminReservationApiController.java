@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/reservations")
+@RequestMapping("/admin/api/reservations")
 public class AdminReservationApiController {
 
     private static final String CANCELLED_STATUS = "CANCELLED";

@@ -43,7 +43,7 @@ class AdminReservationApiControllerTest {
 
         // when
         // then
-        mockMvc.perform(post("/api/reservations/10/cancel")
+        mockMvc.perform(post("/admin/api/reservations/10/cancel")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isOk())
@@ -61,7 +61,7 @@ class AdminReservationApiControllerTest {
 
         // when
         // then
-        mockMvc.perform(post("/api/reservations/10/cancel")
+        mockMvc.perform(post("/admin/api/reservations/10/cancel")
                         .with(user("staff").roles("STAFF"))
                         .with(csrf()))
                 .andExpect(status().isForbidden());
@@ -78,7 +78,7 @@ class AdminReservationApiControllerTest {
 
         // when
         // then
-        mockMvc.perform(post("/api/reservations/999/cancel")
+        mockMvc.perform(post("/admin/api/reservations/999/cancel")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isNotFound())
@@ -94,7 +94,7 @@ class AdminReservationApiControllerTest {
         SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
             return http
                     .authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/api/reservations/**").hasRole("ADMIN")
+                            .requestMatchers("/admin/**").hasRole("ADMIN")
                             .anyRequest().authenticated())
                     .formLogin(form -> form.disable())
                     .csrf(csrf -> csrf.disable())

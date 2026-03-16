@@ -142,7 +142,6 @@ public class SecurityConfig {
                         .requestMatchers("/", "/reservation/**", "/api/reservation/**").permitAll()
 
                         // 관리자 예약 취소 API
-                        .requestMatchers("/api/reservations/**").hasRole("ADMIN")
 
                         // ── LLM 증상 분석 — 비회원 AJAX (§4) ───────────────────
                         .requestMatchers("/llm/symptom/**").permitAll()
