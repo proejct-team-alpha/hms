@@ -1,15 +1,23 @@
 package com.smartclinic.hms.admin.staff;
 
+import com.smartclinic.hms.admin.staff.dto.AdminStaffDepartmentOptionResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffFilterOptionResponse;
+import com.smartclinic.hms.admin.staff.dto.AdminStaffFormOptionResponse;
+import com.smartclinic.hms.admin.staff.dto.AdminStaffFormResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffItemResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffListResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffPageLinkResponse;
+import com.smartclinic.hms.admin.staff.dto.CreateAdminStaffRequest;
+import com.smartclinic.hms.common.exception.CustomException;
+import com.smartclinic.hms.domain.Department;
+import com.smartclinic.hms.domain.Staff;
 import com.smartclinic.hms.domain.StaffRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -29,7 +37,9 @@ public class AdminStaffService {
     private static final String ALL = "ALL";
     private static final String ACTIVE = "ACTIVE";
     private static final String INACTIVE = "INACTIVE";
+    private static final String DEFAULT_ROLE = "STAFF";
     private static final String NO_DEPARTMENT_LABEL = "-";
+    private static final String STAFF_CREATED_MESSAGE = "직원이 등록되었습니다.";
 
     private static final Map<StaffRole, String> ROLE_LABELS = Map.of(
             StaffRole.ADMIN, "관리자",
@@ -40,6 +50,8 @@ public class AdminStaffService {
     );
 
     private final AdminStaffRepository adminStaffRepository;
+    private final AdminStaffDepartmentRepository adminStaffDepartmentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public AdminStaffListResponse getStaffList(int page, int size, String keyword, String roleParam, String employmentStatusParam) {
         int safePage = page < 1 ? DEFAULT_PAGE : page;
@@ -90,6 +102,53 @@ public class AdminStaffService {
         );
     }
 
+    public AdminStaffFormResponse getCreateForm() {
+        return buildCreateFormResponse(
+                "",
+                "",
+                "",
+                DEFAULT_ROLE,
+                null,
+                true
+        );
+    }
+
+    public AdminStaffFormResponse getCreateForm(CreateAdminStaffRequest request) {
+        return buildCreateFormResponse(
+                request.username(),
+                request.name(),
+                request.employeeNumber(),
+                request.role(),
+                request.departmentId(),
+                request.active()
+        );
+    }
+
+    @Transactional
+    public String createStaff(CreateAdminStaffRequest request) {
+        validateDuplicateUsername(request.username());
+        validateDuplicateEmployeeNumber(request.employeeNumber());
+
+        StaffRole role = resolveRequiredRole(request.role());
+        Department department = resolveDepartment(request.departmentId());
+
+        Staff staff = Staff.create(
+                request.username().trim(),
+                request.employeeNumber().trim(),
+                passwordEncoder.encode(request.password()),
+                request.name().trim(),
+                role,
+                department
+        );
+
+        if (!request.active()) {
+            staff.update(staff.getName(), department, false);
+        }
+
+        adminStaffRepository.save(staff);
+        return STAFF_CREATED_MESSAGE;
+    }
+
     private String normalizeKeyword(String keyword) {
         if (keyword == null || keyword.isBlank()) {
             return null;
@@ -114,6 +173,14 @@ public class AdminStaffService {
         }
     }
 
+    private StaffRole resolveRequiredRole(String roleParam) {
+        StaffRole role = resolveRole(roleParam);
+        if (role == null) {
+            throw CustomException.badRequest("VALIDATION_ERROR", "유효한 역할을 선택해주세요.");
+        }
+        return role;
+    }
+
     private Boolean resolveActive(String employmentStatusParam) {
         if (employmentStatusParam == null || employmentStatusParam.isBlank()) {
             return null;
@@ -126,6 +193,27 @@ public class AdminStaffService {
             case INACTIVE -> false;
             default -> null;
         };
+    }
+
+    private Department resolveDepartment(Long departmentId) {
+        if (departmentId == null) {
+            return null;
+        }
+
+        return adminStaffDepartmentRepository.findByIdAndActiveTrue(departmentId)
+                .orElseThrow(() -> CustomException.badRequest("VALIDATION_ERROR", "유효한 부서를 선택해주세요."));
+    }
+
+    private void validateDuplicateUsername(String username) {
+        if (adminStaffRepository.existsByUsername(username.trim())) {
+            throw CustomException.conflict("DUPLICATE_USERNAME", "이미 사용 중인 로그인 아이디입니다.");
+        }
+    }
+
+    private void validateDuplicateEmployeeNumber(String employeeNumber) {
+        if (adminStaffRepository.existsByEmployeeNumber(employeeNumber.trim())) {
+            throw CustomException.conflict("DUPLICATE_EMPLOYEE_NUMBER", "이미 사용 중인 사번입니다.");
+        }
     }
 
     private AdminStaffItemResponse toItemResponse(AdminStaffRepository.AdminStaffListProjection projection) {
@@ -169,6 +257,67 @@ public class AdminStaffService {
                         role,
                         ALL.equals(role) ? "전체 역할" : ROLE_LABELS.get(StaffRole.valueOf(role)),
                         role.equals(selectedRole)))
+                .toList();
+    }
+
+    private AdminStaffFormResponse buildCreateFormResponse(
+            String username,
+            String name,
+            String employeeNumber,
+            String selectedRole,
+            Long selectedDepartmentId,
+            boolean active
+    ) {
+        String normalizedRole = (selectedRole == null || selectedRole.isBlank()) ? DEFAULT_ROLE : selectedRole;
+
+        return new AdminStaffFormResponse(
+                "직원 등록",
+                "/admin/staff/create",
+                "등록하기",
+                username,
+                name,
+                employeeNumber,
+                normalizedRole,
+                selectedDepartmentId,
+                active,
+                buildFormRoleOptions(normalizedRole),
+                buildDepartmentOptions(selectedDepartmentId),
+                buildEmploymentStatusFormOptions(active)
+        );
+    }
+
+    private List<AdminStaffFormOptionResponse> buildFormRoleOptions(String selectedRole) {
+        return List.of(
+                        StaffRole.ADMIN.name(),
+                        StaffRole.DOCTOR.name(),
+                        StaffRole.NURSE.name(),
+                        StaffRole.STAFF.name(),
+                        StaffRole.ITEM_MANAGER.name()
+                )
+                .stream()
+                .map(role -> new AdminStaffFormOptionResponse(
+                        role,
+                        ROLE_LABELS.get(StaffRole.valueOf(role)),
+                        role.equals(selectedRole)))
+                .toList();
+    }
+
+    private List<AdminStaffDepartmentOptionResponse> buildDepartmentOptions(Long selectedDepartmentId) {
+        return adminStaffDepartmentRepository.findByActiveTrueOrderByNameAsc()
+                .stream()
+                .map(department -> new AdminStaffDepartmentOptionResponse(
+                        department.getId(),
+                        department.getName(),
+                        department.getId().equals(selectedDepartmentId)))
+                .toList();
+    }
+
+    private List<AdminStaffFormOptionResponse> buildEmploymentStatusFormOptions(boolean active) {
+        return List.of(
+                        new AdminStaffFormOptionResponse("true", "재직", active),
+                        new AdminStaffFormOptionResponse("false", "비활성", !active)
+                )
+                .stream()
                 .toList();
     }
 

@@ -12,6 +12,10 @@ public interface AdminStaffRepository extends JpaRepository<Staff, Long> {
 
     long countByActiveTrue();
 
+    boolean existsByUsername(String username);
+
+    boolean existsByEmployeeNumber(String employeeNumber);
+
     @Query("""
             select
                 s.id as id,
