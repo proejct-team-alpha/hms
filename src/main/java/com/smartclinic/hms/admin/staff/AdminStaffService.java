@@ -1,5 +1,6 @@
 package com.smartclinic.hms.admin.staff;
 
+import com.smartclinic.hms.admin.department.AdminDepartmentRepository;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffDepartmentOptionResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffFilterOptionResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffFormOptionResponse;
@@ -50,7 +51,7 @@ public class AdminStaffService {
     );
 
     private final AdminStaffRepository adminStaffRepository;
-    private final AdminStaffDepartmentRepository adminStaffDepartmentRepository;
+    private final AdminDepartmentRepository adminDepartmentRepository;
     private final PasswordEncoder passwordEncoder;
 
     public AdminStaffListResponse getStaffList(int page, int size, String keyword, String roleParam, String employmentStatusParam) {
@@ -200,7 +201,7 @@ public class AdminStaffService {
             return null;
         }
 
-        return adminStaffDepartmentRepository.findByIdAndActiveTrue(departmentId)
+        return adminDepartmentRepository.findByIdAndActiveTrue(departmentId)
                 .orElseThrow(() -> CustomException.badRequest("VALIDATION_ERROR", "유효한 부서를 선택해주세요."));
     }
 
@@ -303,7 +304,7 @@ public class AdminStaffService {
     }
 
     private List<AdminStaffDepartmentOptionResponse> buildDepartmentOptions(Long selectedDepartmentId) {
-        return adminStaffDepartmentRepository.findByActiveTrueOrderByNameAsc()
+        return adminDepartmentRepository.findByActiveTrueOrderByNameAsc()
                 .stream()
                 .map(department -> new AdminStaffDepartmentOptionResponse(
                         department.getId(),
