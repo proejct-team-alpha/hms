@@ -118,8 +118,8 @@
                     name="reservationDate"
                     required
                     readonly
-                    class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                    placeholder="날짜를 선택해주세요"
+                    class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl outline-none bg-slate-100 cursor-not-allowed text-slate-400"
+                    placeholder="전문의 선택 후 날짜를 선택하세요"
                   />
                 </div>
               </div>
@@ -209,7 +209,7 @@
             const matched = Array.from(doctorSelect.options).find(o => o.textContent === recDoctor);
             if (matched) {
               doctorSelect.value = matched.value;
-              doctorSelect.dispatchEvent(new Event('change'));
+              doctorSelect.dispatchEvent(new Event('change')); // 날짜 picker 활성화 포함
             }
           });
       }
@@ -223,10 +223,25 @@
     // 요일 매핑: JS getDay() 기준 (0=일, 1=월 ... 6=토)
     const DAY_MAP = { SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6 };
 
+    const dateInput = document.getElementById('date');
+
+    function enableDatePicker() {
+      dateInput.classList.remove('bg-slate-100', 'cursor-not-allowed', 'text-slate-400');
+      dateInput.classList.add('bg-white', 'cursor-pointer', 'focus:ring-2', 'focus:ring-indigo-500', 'focus:border-indigo-500');
+      dateInput.placeholder = '날짜를 선택해주세요';
+    }
+
+    function disableDatePicker() {
+      dateInput.classList.remove('bg-white', 'cursor-pointer', 'focus:ring-2', 'focus:ring-indigo-500', 'focus:border-indigo-500');
+      dateInput.classList.add('bg-slate-100', 'cursor-not-allowed', 'text-slate-400');
+      dateInput.placeholder = '전문의 선택 후 날짜를 선택하세요';
+    }
+
     // Flatpickr 한 번만 초기화 (의사 선택 전: 전체 비활성)
     // 문자열 선택자('#date')는 배열 반환 → DOM 엘리먼트 직접 전달해야 단일 인스턴스 반환
-    const datePicker = flatpickr(document.getElementById('date'), {
+    const datePicker = flatpickr(dateInput, {
       dateFormat: 'Y-m-d',
+      minDate: 'today',
       animate: false,
       position: 'below',
       disable: [() => true]
@@ -240,6 +255,7 @@
       doctorSelect.innerHTML = '<option value="">선택해주세요</option>';
       datePicker.clear();
       datePicker.close(); // 캘린더가 열려 전문의 드롭다운을 가리지 않도록 닫기
+      disableDatePicker();
 
       if (!departmentId) return;
 
@@ -267,9 +283,15 @@
         .filter(n => n !== undefined);
 
       datePicker.clear();
-      datePicker.set('disable', [
-        function (date) { return !availableDayNums.includes(date.getDay()); }
-      ]);
+      if (availableDayNums.length > 0) {
+        datePicker.set('disable', [
+          function (date) { return !availableDayNums.includes(date.getDay()); }
+        ]);
+        enableDatePicker();
+      } else {
+        datePicker.set('disable', [() => true]);
+        disableDatePicker();
+      }
     });
   </script>
 </body>

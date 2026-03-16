@@ -7,17 +7,21 @@
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
 </head>
-<body>
-  
+<body class="min-h-screen flex">
   {{> common/sidebar-staff}}
 
   <div class="main-content flex-1 flex flex-col ml-64">
     {{> common/header-staff}}
-    
-    <main class="content-wrapper">
-      <div class="space-y-6 max-w-5xl mx-auto">
+
+    <main class="content-wrapper flex-1 p-6">
+      <div class="space-y-5 max-w-6xl mx-auto">
+
+        {{! 헤더 }}
         <div class="flex justify-between items-center">
-          <h1 class="text-2xl font-bold text-slate-800">예약 환자 목록</h1>
+          <div>
+            <h1 class="text-2xl font-bold text-slate-800">예약 환자 목록</h1>
+            <p class="text-sm text-slate-500 mt-0.5">총 {{totalCount}}건</p>
+          </div>
           <div class="flex gap-3">
             <a href="/staff/walkin-reception" class="px-4 py-2 bg-indigo-50 text-indigo-700 font-medium rounded-lg hover:bg-indigo-100 transition-colors">
               방문 접수
@@ -28,31 +32,41 @@
           </div>
         </div>
 
+        {{! 날짜 네비게이션 }}
+        <div class="flex items-center justify-center gap-3">
+          {{#hasDate}}
+          <a href="/staff/reception/list?date={{prevDate}}&status={{currentStatus}}" class="w-9 h-9 flex items-center justify-center rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-600 transition-colors">
+            <i data-feather="chevron-left" class="w-5 h-5"></i>
+          </a>
+          {{/hasDate}}
+          <span class="text-base font-semibold text-slate-800 px-2">{{selectedDate}}</span>
+          {{#hasDate}}
+          <a href="/staff/reception/list?date={{nextDate}}&status={{currentStatus}}" class="w-9 h-9 flex items-center justify-center rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-600 transition-colors">
+            <i data-feather="chevron-right" class="w-5 h-5"></i>
+          </a>
+          <a href="/staff/reception/list?status={{currentStatus}}" class="ml-1 px-3 py-1.5 text-xs font-medium text-slate-500 border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors">전체 보기</a>
+          {{/hasDate}}
+          {{^hasDate}}
+          <a href="/staff/reception/list?date={{todayDate}}&status={{currentStatus}}" class="ml-1 px-3 py-1.5 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors">오늘만 보기</a>
+          {{/hasDate}}
+        </div>
+
+        {{#message}}
+        <div class="p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl text-sm">{{message}}</div>
+        {{/message}}
+
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-            <div class="flex gap-2" id="filter-container">
-              <button onclick="setFilter('ALL')" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-slate-800 text-white" data-filter="ALL">전체</button>
-              <button onclick="setFilter('RESERVED')" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100" data-filter="RESERVED">예약 (접수 대기)</button>
-              <button onclick="setFilter('RECEIVED')" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100" data-filter="RECEIVED">진료 대기</button>
-              <button onclick="setFilter('COMPLETED')" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100" data-filter="COMPLETED">진료 완료</button>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="relative">
-                <i data-feather="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                <input 
-                  type="text" 
-                  id="search-input"
-                  placeholder="환자명 또는 연락처 검색..." 
-                  class="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-64"
-                  oninput="handleSearch()"
-                />
-              </div>
-            </div>
+          {{! 상태 필터 탭 }}
+          <div class="p-4 border-b border-slate-200 flex gap-2 bg-slate-50">
+            {{#filters}}
+            <a href="{{href}}" class="{{cssClass}} transition-colors">{{label}}</a>
+            {{/filters}}
           </div>
 
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
+                <th class="p-4 font-medium">날짜</th>
                 <th class="p-4 font-medium">시간</th>
                 <th class="p-4 font-medium">환자명</th>
                 <th class="p-4 font-medium">연락처</th>
@@ -63,217 +77,91 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-200">
-
-{{#reservations}}
-<tr class="hover:bg-slate-50">
-
-<td class="p-4 text-sm font-medium text-slate-900">
-{{timeSlot}}
-</td>
-
-<td class="p-4 text-sm font-semibold text-slate-800">
-{{patient.name}}
-</td>
-
-<td class="p-4 text-sm text-slate-600">
-{{patient.phone}}
-</td>
-
-<td class="p-4 text-sm text-slate-600">
-{{source}}
-</td>
-
-<td class="p-4 text-sm text-slate-600">
-{{department.name}} / {{doctor.staff.name}}
-</td>
-
-<td class="p-4 text-sm text-slate-600">
-{{statusKor}}
-</td>
-
-<td class="p-4 text-right">
-
-{{#showReceiveBtn}}
-<form action="/staff/reception/receive" method="post">
-<input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
-<input type="hidden" name="reservationId" value="{{id}}">
-<button type="submit" class="px-3 py-1 bg-green-500 text-white rounded">
-접수
-</button>
-</form>
-{{/showReceiveBtn}}
-
-{{^showReceiveBtn}}
-<button class="px-3 py-1 bg-gray-400 text-white rounded" disabled>
-접수완료
-</button>
-{{/showReceiveBtn}}
-
-</td>
-
-</tr>
-{{/reservations}}
-
-</tbody>
+              {{#reservations}}
+              <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="location.href='/staff/reception/detail?id={{id}}'">
+                <td class="p-4 text-sm text-slate-600">{{reservationDate}}</td>
+                <td class="p-4 text-sm font-medium text-slate-900">{{timeSlot}}</td>
+                <td class="p-4 text-sm font-semibold text-slate-800">{{patientName}}</td>
+                <td class="p-4 text-sm text-slate-600">{{patientPhone}}</td>
+                <td class="p-4">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{sourceBadgeClass}}">
+                    {{sourceText}}
+                  </span>
+                </td>
+                <td class="p-4 text-sm text-slate-600">{{departmentName}} / {{doctorName}}</td>
+                <td class="p-4">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{statusBadgeClass}}">
+                    {{statusText}}
+                  </span>
+                </td>
+                <td class="p-4 text-right">
+                  <div class="flex justify-end gap-2" onclick="event.stopPropagation()">
+                    {{#canReceive}}
+                    <form method="post" action="/staff/reception/receive">
+                      <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                      <input type="hidden" name="reservationId" value="{{id}}">
+                      <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 text-sm font-medium rounded-lg hover:bg-green-100 transition-colors">
+                        <i data-feather="check-circle" class="w-4 h-4"></i> 접수
+                      </button>
+                    </form>
+                    {{/canReceive}}
+                    {{#canCancel}}
+                    <form method="post" action="/staff/reception/cancel" onsubmit="return confirm('예약을 취소하시겠습니까?')">
+                      <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                      <input type="hidden" name="id" value="{{id}}">
+                      <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors">
+                        <i data-feather="x-circle" class="w-4 h-4"></i> 취소
+                      </button>
+                    </form>
+                    {{/canCancel}}
+                  </div>
+                </td>
+              </tr>
+              {{/reservations}}
+              {{^reservations}}
+              <tr>
+                <td colspan="8" class="p-8 text-center text-slate-500">
+                  {{selectedDate}} 예약된 환자가 없습니다.
+                </td>
+              </tr>
+              {{/reservations}}
+            </tbody>
           </table>
-          
-          <div class="p-4 border-t border-slate-200 flex justify-center" id="pagination-container">
-            <!-- Pagination injected by JS -->
+
+          {{! 페이징 }}
+          <div class="px-4 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+            <span class="text-sm text-slate-500">{{pageInfo}} 페이지</span>
+            <div class="flex gap-2">
+              {{#hasPrev}}
+              <a href="{{prevPageUrl}}" class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors">
+                <i data-feather="chevron-left" class="w-4 h-4"></i> 이전
+              </a>
+              {{/hasPrev}}
+              {{^hasPrev}}
+              <span class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-slate-300 bg-white border border-slate-200 rounded-lg cursor-not-allowed">
+                <i data-feather="chevron-left" class="w-4 h-4"></i> 이전
+              </span>
+              {{/hasPrev}}
+              {{#hasNext}}
+              <a href="{{nextPageUrl}}" class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors">
+                다음 <i data-feather="chevron-right" class="w-4 h-4"></i>
+              </a>
+              {{/hasNext}}
+              {{^hasNext}}
+              <span class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-slate-300 bg-white border border-slate-200 rounded-lg cursor-not-allowed">
+                다음 <i data-feather="chevron-right" class="w-4 h-4"></i>
+              </span>
+              {{/hasNext}}
+            </div>
           </div>
         </div>
+
       </div>
     </main>
 
     {{> common/footer-staff}}
   </div>
-<!--
-  <script src="/js/data.js"></script>
-  <script>
-    let currentFilter = 'ALL';
-    let currentSearch = '';
-    let currentPage = 1;
-    const itemsPerPage = 5;
 
-    function setFilter(filter) {
-      currentFilter = filter;
-      currentPage = 1;
-      
-      // Update button styles
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.className = 'filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100';
-      });
-      
-      const activeBtn = document.querySelector(`.filter-btn[data-filter="\${filter}"]`);
-      if (filter === 'ALL') activeBtn.className = 'filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-slate-800 text-white';
-      else if (filter === 'RESERVED') activeBtn.className = 'filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-indigo-600 text-white';
-      else if (filter === 'RECEIVED') activeBtn.className = 'filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-green-600 text-white';
-      else if (filter === 'COMPLETED') activeBtn.className = 'filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-blue-600 text-white';
-
-      renderTable();
-    }
-
-    function handleSearch() {
-      currentSearch = document.getElementById('search-input').value.toLowerCase();
-      currentPage = 1;
-      renderTable();
-    }
-
-    function handleReceive(event, id) {
-      event.stopPropagation();
-      updateReservationStatus(id, 'RECEIVED');
-      renderTable();
-    }
-
-    function handleCancel(event, id) {
-      event.stopPropagation();
-      if (confirm('정말 이 예약을 취소하시겠습니까?')) {
-        updateReservationStatus(id, 'CANCELLED');
-        alert('예약이 취소되었습니다.');
-        renderTable();
-      }
-    }
-
-    function renderTable() {
-      const reservations = getReservations();
-      
-      const filtered = reservations.filter(r => {
-        const matchFilter = currentFilter === 'ALL' ? (r.status === 'RESERVED' || r.status === 'RECEIVED' || r.status === 'COMPLETED') : r.status === currentFilter;
-        const matchSearch = r.name.toLowerCase().includes(currentSearch) || r.phone.includes(currentSearch);
-        return matchFilter && matchSearch && r.status !== 'CANCELLED';
-      });
-
-      const sorted = [...filtered].sort((a, b) => {
-        const order = { 'RECEIVED': 0, 'RESERVED': 1, 'COMPLETED': 2 };
-        return (order[a.status] ?? 3) - (order[b.status] ?? 3);
-      });
-
-      const totalPages = Math.ceil(sorted.length / itemsPerPage);
-      const currentItems = sorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-      const tbody = document.getElementById('table-body');
-      
-      if (currentItems.length === 0) {
-        tbody.innerHTML = \`
-          <tr>
-            <td colspan="7" class="p-8 text-center text-slate-500">
-              검색 결과가 없습니다.
-            </td>
-          </tr>
-        \`;
-      } else {
-        tbody.innerHTML = currentItems.map(res => {
-          let typeClass = 'bg-orange-100 text-orange-800';
-          if (res.type === 'ONLINE') typeClass = 'bg-blue-100 text-blue-800';
-          else if (res.type === 'PHONE') typeClass = 'bg-purple-100 text-purple-800';
-
-          let statusHtml = '';
-          if (res.status === 'RESERVED') {
-            statusHtml = \`<span class="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600"><i data-feather="clock" class="w-4 h-4"></i>예약</span>\`;
-          } else if (res.status === 'RECEIVED') {
-            statusHtml = \`<span class="inline-flex items-center gap-1.5 text-sm font-medium text-green-600"><i data-feather="check-circle" class="w-4 h-4"></i>진료 대기</span>\`;
-          } else if (res.status === 'IN_PROGRESS') {
-            statusHtml = \`<span class="inline-flex items-center gap-1.5 text-sm font-medium text-purple-600"><i data-feather="activity" class="w-4 h-4"></i>진료 중</span>\`;
-          } else {
-            statusHtml = \`<span class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600"><i data-feather="check-circle" class="w-4 h-4"></i>진료 완료</span>\`;
-          }
-
-          let actionHtml = '';
-          if (res.status === 'RESERVED') {
-            actionHtml += \`
-              <button onclick="handleReceive(event, \${res.id})" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 text-sm font-medium rounded-lg hover:bg-green-100 transition-colors">
-                <i data-feather="check-circle" class="w-4 h-4"></i> 접수
-              </button>
-            \`;
-          }
-          if (res.status === 'RESERVED' || res.status === 'RECEIVED') {
-            actionHtml += \`
-              <button onclick="handleCancel(event, \${res.id})" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors">
-                <i data-feather="x-circle" class="w-4 h-4"></i> 취소
-              </button>
-            \`;
-          }
-
-          return \`
-            <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="window.location.href='reception-detail.html?id=\${res.id}'">
-              <td class="p-4 text-sm font-medium text-slate-900">\${res.time}</td>
-              <td class="p-4 text-sm font-semibold text-slate-800">\${res.name}</td>
-              <td class="p-4 text-sm text-slate-600">\${res.phone}</td>
-              <td class="p-4">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium \${typeClass}">
-                  \${res.type}
-                </span>
-              </td>
-              <td class="p-4 text-sm text-slate-600">\${res.dept} / \${res.doctor}</td>
-              <td class="p-4">\${statusHtml}</td>
-              <td class="p-4 text-right">
-                <div class="flex justify-end gap-2">
-                  \${actionHtml}
-                </div>
-              </td>
-            </tr>
-          \`;
-        }).join('');
-      }
-
-      // Simple pagination render
-      const paginationContainer = document.getElementById('pagination-container');
-      if (totalPages > 1) {
-        let pagesHtml = '';
-        for (let i = 1; i <= totalPages; i++) {
-          pagesHtml += \`<button onclick="currentPage=\${i}; renderTable()" class="px-3 py-1 mx-1 rounded \${currentPage === i ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}">\${i}</button>\`;
-        }
-        paginationContainer.innerHTML = pagesHtml;
-      } else {
-        paginationContainer.innerHTML = '';
-      }
-
-      feather.replace();
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      renderTable();
-    });
-  </script>
-  -->
+  <script>feather.replace();</script>
 </body>
 </html>

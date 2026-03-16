@@ -112,7 +112,7 @@ public class SecurityConfig {
                         .contentSecurityPolicy(csp -> csp
                                 .policyDirectives(
                                         "default-src 'self'; " +
-                                                "script-src 'self'; " +
+                                                "script-src 'self' 'unsafe-inline'; " +
                                                 "style-src 'self' 'unsafe-inline'; " +
                                                 "img-src 'self' data:; " +
                                                 "font-src 'self'; " +
@@ -132,8 +132,6 @@ public class SecurityConfig {
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
                         // Spring MVC 에러 페이지
                         .requestMatchers("/error/**").permitAll()
-                        // 샘플 참고 코드 (개발용)
-                        .requestMatchers("/sample/**").permitAll()
 
                         // ── 인증 화면 (§2) ──────────────────────────────────────
                         .requestMatchers("/login", "/logout").permitAll()

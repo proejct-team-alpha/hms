@@ -2,9 +2,12 @@ package com.smartclinic.hms.config;
 
 import com.smartclinic.hms.common.interceptor.LayoutModelInterceptor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.time.Clock;
 
 /**
  * ════════════════════════════════════════════════════════════════════════════
@@ -21,6 +24,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final LayoutModelInterceptor layoutModelInterceptor;
+
+    @Bean
+    Clock clock() {
+        return Clock.systemDefaultZone();
+    }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {

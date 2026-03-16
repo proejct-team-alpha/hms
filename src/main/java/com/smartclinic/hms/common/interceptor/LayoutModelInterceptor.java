@@ -2,6 +2,7 @@ package com.smartclinic.hms.common.interceptor;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -37,7 +38,7 @@ public class LayoutModelInterceptor implements HandlerInterceptor {
         }
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() != null) {
+        if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
             String loginName = auth.getName();
             boolean isAdmin = hasRole(auth, "ADMIN");
             boolean isDoctor = hasRole(auth, "DOCTOR");
@@ -72,13 +73,18 @@ public class LayoutModelInterceptor implements HandlerInterceptor {
         mav.addObject("isStaffReception", path.startsWith("/staff/reception") || path.startsWith("/staff/reception-list"));
         mav.addObject("isStaffPhone", path.contains("/staff/phone") || path.contains("phone-reservation"));
         mav.addObject("isStaffWalkin", path.contains("/staff/walkin") || path.contains("walkin-reception"));
+        mav.addObject("isStaffMypage", path.startsWith("/staff/mypage"));
 
         mav.addObject("isDoctorDashboard", path.equals("/doctor/dashboard"));
         mav.addObject("isDoctorTreatment", path.startsWith("/doctor/treatment") || path.contains("treatment"));
         mav.addObject("isDoctorCompleted", path.contains("/doctor/completed") || path.contains("completed-list"));
+        mav.addObject("isDoctorChatbot", path.startsWith("/doctor/chatbot"));
+        mav.addObject("isDoctorMypage", path.startsWith("/doctor/mypage"));
 
         mav.addObject("isNurseDashboard", path.equals("/nurse/dashboard"));
-        mav.addObject("isNurseReception", path.startsWith("/nurse/reception") || path.contains("reception-list"));
+        mav.addObject("isNurseReception", path.startsWith("/nurse/reception") || path.contains("reception-list") || path.startsWith("/nurse/patient-detail"));
+        mav.addObject("isNurseChatbot", path.startsWith("/nurse/chatbot"));
+        mav.addObject("isNurseMypage", path.startsWith("/nurse/mypage"));
 
         mav.addObject("isAdminDashboard", path.equals("/admin/dashboard"));
         mav.addObject("isAdminReservation", path.startsWith("/admin/reservation"));
@@ -88,8 +94,10 @@ public class LayoutModelInterceptor implements HandlerInterceptor {
         mav.addObject("isAdminItem", path.startsWith("/item-manager"));
 
         mav.addObject("isItemDashboard", path.equals("/item-manager/dashboard"));
-        mav.addObject("isItemList", path.startsWith("/item-manager/item-list") || path.contains("item-list") || path.contains("item-form"));
-        mav.addObject("isItemHistory", path.startsWith("/item-manager/item-history") || path.contains("item-history"));
+        mav.addObject("isItemList", path.startsWith("/item-manager/item-list"));
+        mav.addObject("isItemForm", path.startsWith("/item-manager/item-form"));
+        mav.addObject("isItemHistory", path.startsWith("/item-manager/item-history"));
+        mav.addObject("isItemMypage", path.startsWith("/item-manager/mypage"));
     }
 
     private static String resolveRoleLabel(Authentication auth) {

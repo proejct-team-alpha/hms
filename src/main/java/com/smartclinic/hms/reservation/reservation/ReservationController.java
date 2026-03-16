@@ -173,8 +173,8 @@ public class ReservationController {
                     .collect(Collectors.joining(" "));
             request.setAttribute("pageTitle", "예약 변경");
             request.setAttribute("errorMessage", errorMessage);
-            // 기존 예약 정보를 다시 조회하여 폼에 전달해야 할 수도 있으나, 
-            // 현재 구조에서는 에러 발생 시 원래 페이지로 돌아가 에러를 보여주는 방식을 유지합니다.
+            reservationService.findById(id)
+                    .ifPresent(r -> request.setAttribute("reservation", r));
             return "reservation/reservation-modify";
         }
         ReservationCompleteInfo info = reservationService.updateReservation(id, form);

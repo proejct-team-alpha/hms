@@ -1,9 +1,9 @@
 package com.smartclinic.hms.admin.reservation;
 
 import com.smartclinic.hms.admin.reservation.dto.AdminReservationListResponse;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,13 +17,14 @@ public class AdminReservationController {
 
     @GetMapping("/list")
     public String list(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String status,
-            HttpServletRequest req
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "status", required = false) String status,
+            Model model
     ) {
         AdminReservationListResponse result = adminReservationService.getReservationList(page, size, status);
-        req.setAttribute("model", result);
+        model.addAttribute("data", result);
+        model.addAttribute("pageTitle", "전체 예약 목록");
         return "admin/reservation-list";
     }
 }

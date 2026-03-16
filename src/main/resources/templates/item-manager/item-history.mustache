@@ -7,18 +7,17 @@
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
 </head>
-<body>
-  
+<body class="min-h-screen flex">
   {{> common/sidebar-item-manager}}
 
   <div class="main-content flex-1 flex flex-col ml-64">
     {{> common/header-staff}}
-    
-    <main class="content-wrapper">
+
+    <main class="content-wrapper flex-1 p-6">
       <div class="space-y-6 max-w-6xl mx-auto">
         <div class="flex items-center gap-3 mb-8">
           <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
-            <i data-feather="package" class="w-6 h-6"></i>
+            <i data-feather="clock" class="w-6 h-6"></i>
           </div>
           <div>
             <h1 class="text-2xl font-bold text-slate-800">물품 입출고 내역</h1>
@@ -27,46 +26,13 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-            <div class="flex gap-2" id="filter-buttons">
-              <button data-filter="ALL" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-slate-800 text-white">
-                전체
-              </button>
-              <button data-filter="IN" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100">
-                입고
-              </button>
-              <button data-filter="OUT" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100">
-                출고
-              </button>
+          <div class="p-8 text-center">
+            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <i data-feather="clock" class="w-8 h-8 text-slate-400"></i>
             </div>
-            <div class="flex items-center gap-2">
-              <div class="relative">
-                <i data-feather="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                <input 
-                  type="text" 
-                  id="search-input"
-                  placeholder="물품명 검색..." 
-                  class="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-64"
-                />
-              </div>
-            </div>
+            <h2 class="text-lg font-semibold text-slate-700 mb-2">입출고 내역 기능 준비 중</h2>
+            <p class="text-sm text-slate-500">입출고 이력 관리 기능은 추후 제공될 예정입니다.</p>
           </div>
-
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
-                <th class="p-4 font-medium">일시</th>
-                <th class="p-4 font-medium">구분</th>
-                <th class="p-4 font-medium">물품명</th>
-                <th class="p-4 font-medium text-right">수량</th>
-                <th class="p-4 font-medium">담당자</th>
-                <th class="p-4 font-medium">비고</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-200" id="history-list-container">
-              <!-- Injected by JS -->
-            </tbody>
-          </table>
         </div>
       </div>
     </main>
@@ -74,95 +40,6 @@
     {{> common/footer-staff}}
   </div>
 
-  <script src="/js/data.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const history = getHistory();
-      let currentFilter = 'ALL';
-      let searchQuery = '';
-
-      const listContainer = document.getElementById('history-list-container');
-      const filterBtns = document.querySelectorAll('.filter-btn');
-      const searchInput = document.getElementById('search-input');
-
-      function renderList() {
-        const filtered = history.filter(h => {
-          const matchFilter = currentFilter === 'ALL' || h.type === currentFilter;
-          const matchSearch = h.itemName.toLowerCase().includes(searchQuery.toLowerCase());
-          return matchFilter && matchSearch;
-        });
-
-        if (filtered.length > 0) {
-          listContainer.innerHTML = filtered.map(h => {
-            const isIN = h.type === 'IN';
-            const badgeClass = isIN ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-            const icon = isIN ? 'arrow-down-right' : 'arrow-up-right';
-            const text = isIN ? '입고' : '출고';
-            const quantityClass = isIN ? 'text-green-600' : 'text-red-600';
-            const sign = isIN ? '+' : '-';
-
-            return `
-              <tr class="hover:bg-slate-50 transition-colors">
-                <td class="p-4 text-sm text-slate-600">${h.date}</td>
-                <td class="p-4">
-                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${badgeClass}">
-                    <i data-feather="${icon}" class="w-3 h-3"></i>
-                    ${text}
-                  </span>
-                </td>
-                <td class="p-4 text-sm font-semibold text-slate-800">${h.itemName}</td>
-                <td class="p-4 text-sm font-bold text-right ${quantityClass}">
-                  ${sign}${h.quantity}
-                </td>
-                <td class="p-4 text-sm text-slate-600">${h.manager}</td>
-                <td class="p-4 text-sm text-slate-500">${h.note || '-'}</td>
-              </tr>
-            `;
-          }).join('');
-        } else {
-          listContainer.innerHTML = `
-            <tr>
-              <td colspan="6" class="p-8 text-center text-slate-500">
-                검색 결과가 없습니다.
-              </td>
-            </tr>
-          `;
-        }
-        feather.replace();
-      }
-
-      function updateFilterButtons() {
-        filterBtns.forEach(btn => {
-          const filter = btn.dataset.filter;
-          if (filter === currentFilter) {
-            if (filter === 'ALL') {
-              btn.className = "filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-slate-800 text-white";
-            } else if (filter === 'IN') {
-              btn.className = "filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-green-600 text-white";
-            } else {
-              btn.className = "filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-red-600 text-white";
-            }
-          } else {
-            btn.className = "filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100";
-          }
-        });
-      }
-
-      filterBtns.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          currentFilter = e.target.dataset.filter;
-          updateFilterButtons();
-          renderList();
-        });
-      });
-
-      searchInput.addEventListener('input', (e) => {
-        searchQuery = e.target.value;
-        renderList();
-      });
-
-      renderList();
-    });
-  </script>
+  <script>feather.replace();</script>
 </body>
 </html>

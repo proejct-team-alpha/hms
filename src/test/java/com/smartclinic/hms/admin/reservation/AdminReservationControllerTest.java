@@ -26,7 +26,7 @@ import static org.mockito.BDDMockito.then;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -67,7 +67,7 @@ class AdminReservationControllerTest {
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/reservation-list"))
-                .andExpect(request().attribute("model", viewModel));
+                .andExpect(model().attribute("data", viewModel));
 
         then(adminReservationService).should().getReservationList(1, 10, null);
     }
@@ -94,7 +94,7 @@ class AdminReservationControllerTest {
                 .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/reservation-list"))
-                .andExpect(request().attribute("model", viewModel));
+                .andExpect(model().attribute("data", viewModel));
 
         then(adminReservationService).should().getReservationList(2, 5, "RESERVED");
     }

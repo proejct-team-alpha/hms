@@ -1,8 +1,9 @@
 package com.smartclinic.hms.admin.dashboard;
 
 import com.smartclinic.hms.admin.item.ItemRepository;
-import com.smartclinic.hms.admin.reservation.AdminReservationRepository;
 import com.smartclinic.hms.admin.staff.AdminStaffRepository;
+import com.smartclinic.hms.reservation.reservation.ReservationRepository;
+import java.time.Clock;
 import com.smartclinic.hms.admin.dashboard.dto.AdminDashboardChartResponse;
 import com.smartclinic.hms.admin.dashboard.dto.AdminDashboardStatsResponse;
 import com.smartclinic.hms.domain.ItemCategory;
@@ -23,13 +24,16 @@ import static org.mockito.BDDMockito.then;
 class AdminDashboardStatsServiceTest {
 
     @Mock
-    private AdminReservationRepository adminReservationRepository;
+    private ReservationRepository adminReservationRepository;
 
     @Mock
     private AdminStaffRepository adminStaffRepository;
 
     @Mock
     private ItemRepository itemRepository;
+
+    @Mock
+    private Clock clock;
 
     @InjectMocks
     private AdminDashboardStatsService adminDashboardStatsService;
@@ -110,8 +114,8 @@ class AdminDashboardStatsServiceTest {
         };
     }
 
-    private AdminReservationRepository.DailyPatientCountProjection dailyCount(LocalDate date, Long patientCount) {
-        return new AdminReservationRepository.DailyPatientCountProjection() {
+    private ReservationRepository.DailyPatientCountProjection dailyCount(LocalDate date, Long patientCount) {
+        return new ReservationRepository.DailyPatientCountProjection() {
             @Override
             public LocalDate getDate() {
                 return date;

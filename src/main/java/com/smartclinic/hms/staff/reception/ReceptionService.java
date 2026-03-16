@@ -2,6 +2,7 @@ package com.smartclinic.hms.staff.reception;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,9 +14,15 @@ import com.smartclinic.hms.domain.Doctor;
 import com.smartclinic.hms.domain.Patient;
 import com.smartclinic.hms.domain.Reservation;
 import com.smartclinic.hms.domain.ReservationSource;
+import com.smartclinic.hms.domain.ReservationStatus;
 import com.smartclinic.hms.reservation.reservation.DepartmentRepository;
 import com.smartclinic.hms.reservation.reservation.PatientRepository;
 import com.smartclinic.hms.reservation.reservation.ReservationRepository;
+import com.smartclinic.hms.staff.dto.StaffDashboardDto;
+import com.smartclinic.hms.staff.dto.StaffDepartmentOptionDto;
+import com.smartclinic.hms.staff.dto.StaffDoctorOptionDto;
+import com.smartclinic.hms.staff.dto.StaffReservationDto;
+import com.smartclinic.hms.staff.dto.StaffStatusFilter;
 import com.smartclinic.hms.staff.reception.dto.ReceptionUpdateRequest;
 import com.smartclinic.hms.staff.reservation.dto.PhoneReservationRequestDto;
 
@@ -79,13 +86,6 @@ public class ReceptionService {
         reservationRepository.save(reservation);
     }
 
-    // 접수 목록 조회
-    public List<Reservation> getReservations() {
-
-        // fetch join 쿼리 사용
-        return reservationRepository.findAllWithDetails();
-    }
-
     // 접수 처리
     @Transactional
     public void receive(ReceptionUpdateRequest request) {
@@ -93,6 +93,84 @@ public class ReceptionService {
         Reservation reservation = reservationRepository.findById(request.getReservationId())
                 .orElseThrow(() -> new RuntimeException("예약을 찾을 수 없습니다."));
         reservation.receive();
+    }
 
+    // 날짜별 예약 목록 (date=null이면 오늘 이후 전체, 취소 제외 or 특정 상태)
+    public List<StaffReservationDto> getReservations(LocalDate date, String status) {
+        List<Reservation> reservations;
+        if (date == null) {
+            LocalDate today = LocalDate.now();
+            if (status == null || status.isBlank()) {
+                reservations = reservationRepository.findFromDateExcludingStatus(today, ReservationStatus.CANCELLED);
+            } else {
+                reservations = reservationRepository.findFromDateByStatus(today, ReservationStatus.valueOf(status));
+            }
+        } else {
+            if (status == null || status.isBlank()) {
+                reservations = reservationRepository.findTodayExcludingStatus(date, ReservationStatus.CANCELLED);
+            } else {
+                reservations = reservationRepository.findTodayByStatus(date, ReservationStatus.valueOf(status));
+            }
+        }
+        return reservations.stream().map(StaffReservationDto::new).collect(Collectors.toList());
+    }
+
+    // 상태 필터 탭 목록
+    public List<StaffStatusFilter> getStatusFilters(String selected, String date) {
+        String s = (selected == null) ? "" : selected;
+        return List.of(
+                new StaffStatusFilter("전체", "", s, date),
+                new StaffStatusFilter("접수 대기", "RESERVED", s, date),
+                new StaffStatusFilter("진료 대기", "RECEIVED", s, date),
+                new StaffStatusFilter("진료 완료", "COMPLETED", s, date));
+    }
+
+    // 예약 상세 조회
+    public StaffReservationDto getDetail(Long id) {
+        Reservation r = reservationRepository.findByIdWithDetails(id)
+                .orElseThrow(() -> new RuntimeException("예약 없음"));
+        return new StaffReservationDto(r);
+    }
+
+    // 예약 취소
+    @Transactional
+    public void cancel(Long id) {
+        Reservation r = reservationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("예약 없음"));
+        r.cancel();
+    }
+
+    // 대시보드 통계
+    public StaffDashboardDto getDashboard() {
+        LocalDate today = LocalDate.now();
+        List<Reservation> all = reservationRepository.findTodayExcludingStatus(today, ReservationStatus.CANCELLED);
+        int total = all.size();
+        int waiting = (int) all.stream().filter(r -> r.getStatus() == ReservationStatus.RESERVED).count();
+        int received = (int) all.stream().filter(r -> r.getStatus() == ReservationStatus.RECEIVED).count();
+        List<StaffReservationDto> recent = all.stream()
+                .limit(5)
+                .map(StaffReservationDto::new)
+                .collect(Collectors.toList());
+        return new StaffDashboardDto(total, waiting, received, recent);
+    }
+
+    // 폼용 진료과 목록
+    public List<StaffDepartmentOptionDto> getAllDepartments() {
+        return departmentRepository.findAll().stream()
+                .filter(Department::isActive)
+                .map(StaffDepartmentOptionDto::new)
+                .collect(Collectors.toList());
+    }
+
+    // 폼용 의사 목록
+    public List<StaffDoctorOptionDto> getAllDoctors() {
+        return doctorRepository.findAllWithDetails().stream()
+                .map(StaffDoctorOptionDto::new)
+                .collect(Collectors.toList());
+    }
+
+    public List<Reservation> getReservations() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getReservations'");
     }
 }
