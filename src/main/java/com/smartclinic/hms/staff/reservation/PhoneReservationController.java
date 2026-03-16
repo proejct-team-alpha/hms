@@ -12,6 +12,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.smartclinic.hms.staff.reception.ReceptionService;
 import com.smartclinic.hms.staff.reservation.dto.PhoneReservationRequestDto;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -32,8 +33,13 @@ public class PhoneReservationController {
 
     // 전화 예약 생성
     @PostMapping("/create")
+<<<<<<< HEAD
     public String createPhoneReservation(PhoneReservationRequestDto request,
                                          RedirectAttributes redirectAttributes) {
+=======
+    public String createPhoneReservation(@Valid PhoneReservationRequestDto request) {
+
+>>>>>>> dev
         receptionService.createPhoneReservation(request);
         redirectAttributes.addFlashAttribute("message", "전화 예약이 완료되었습니다.");
         return "redirect:/staff/reception/list?date=" + request.getDate();

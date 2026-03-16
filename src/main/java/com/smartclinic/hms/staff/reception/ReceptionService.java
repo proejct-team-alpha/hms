@@ -59,11 +59,11 @@ public class ReceptionService {
 
         // 3️ 의사 조회
         Doctor doctor = doctorRepository.findById(request.getDoctorId())
-                .orElseThrow(() -> new RuntimeException("의사 없음"));
+                .orElseThrow(() -> new RuntimeException("의사를 찾을 수 없습니다."));
 
         // 4️ 진료과 조회
         Department department = departmentRepository.findById(request.getDepartmentId())
-                .orElseThrow(() -> new RuntimeException("진료과 없음"));
+                .orElseThrow(() -> new RuntimeException("진료과를 찾을 수 없습니다."));
 
         // 5️ 예약 날짜
         LocalDate reservationDate = LocalDate.parse(request.getDate());
@@ -87,19 +87,10 @@ public class ReceptionService {
     }
 
     // 접수 목록 조회
-    @Transactional
     public List<Reservation> getReservations() {
 
-        List<Reservation> reservations = reservationRepository.findAll();
-
-        // LAZY 로딩 방지
-        for (Reservation r : reservations) {
-            r.getPatient().getName();
-            r.getDoctor().getStaff().getName();
-            r.getDepartment().getName();
-        }
-
-        return reservations;
+        // fetch join 쿼리 사용
+        return reservationRepository.findAllWithDetails();
     }
 
     // 접수 처리
@@ -107,7 +98,7 @@ public class ReceptionService {
     public void receive(ReceptionUpdateRequest request) {
 
         Reservation reservation = reservationRepository.findById(request.getReservationId())
-                .orElseThrow(() -> new RuntimeException("예약 없음"));
+                .orElseThrow(() -> new RuntimeException("예약을 찾을 수 없습니다."));
         reservation.receive();
     }
 

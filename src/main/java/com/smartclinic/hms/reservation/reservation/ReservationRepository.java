@@ -40,6 +40,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     long countByReservationDate(LocalDate reservationDate);
 
+<<<<<<< HEAD
     @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date AND r.status <> :excluded ORDER BY r.timeSlot")
     List<Reservation> findTodayExcludingStatus(@Param("date") LocalDate date, @Param("excluded") ReservationStatus excluded);
 
@@ -111,4 +112,15 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         String getDoctorName();
         ReservationStatus getStatus();
     }
+=======
+    @Query("""
+            SELECT r
+            FROM Reservation r
+            JOIN FETCH r.patient
+            JOIN FETCH r.doctor d
+            JOIN FETCH d.staff
+            JOIN FETCH r.department
+            """)
+    List<Reservation> findAllWithDetails();
+>>>>>>> dev
 }
