@@ -31,6 +31,7 @@ public class AdminReservationController {
             HttpServletRequest req) {
         AdminReservationListResponse result = adminReservationService.getReservationList(page, size, status);
         req.setAttribute("model", result);
+        req.setAttribute("pageTitle", "예약 목록");
         return "admin/reservation-list";
     }
 
