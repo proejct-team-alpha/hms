@@ -68,8 +68,21 @@
                 <td class="p-4 text-sm text-slate-600">
                   <span class="px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-medium">{{categoryText}}</span>
                 </td>
-                <td class="p-4 text-sm font-bold text-right {{#lowStock}}text-red-600{{/lowStock}}{{^lowStock}}text-slate-800{{/lowStock}}">
-                  {{quantity}}개
+                <td class="p-4 text-sm text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    <span class="font-bold {{#lowStock}}text-red-600{{/lowStock}}{{^lowStock}}text-slate-800{{/lowStock}}">{{quantity}}개</span>
+                    <form method="post" action="/item-manager/item/restock" class="flex items-center gap-1">
+                      <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                      <input type="hidden" name="id" value="{{id}}">
+                      <input type="hidden" name="redirectTo" value="/item-manager/item-list">
+                      <input type="number" name="amount" min="1" placeholder="입고"
+                             class="w-16 px-2 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-400 text-center">
+                      <button type="submit"
+                              class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-md transition-colors whitespace-nowrap">
+                        입고
+                      </button>
+                    </form>
+                  </div>
                 </td>
                 <td class="p-4 text-sm text-slate-500 text-right">{{minQuantity}}개</td>
                 <td class="p-4 text-center">

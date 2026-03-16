@@ -45,17 +45,47 @@ public class ItemManagerController {
     public String saveItem(@RequestParam(name = "id", required = false) Long id,
                            @RequestParam("name") String name,
                            @RequestParam("category") String category,
-                           @RequestParam("quantity") int quantity,
-                           @RequestParam("minQuantity") int minQuantity,
+                           @RequestParam("quantity") String quantityStr,
+                           @RequestParam("minQuantity") String minQuantityStr,
                            RedirectAttributes ra) {
+        String redirectForm = "redirect:/item-manager/item-form" + (id != null ? "?id=" + id : "");
         try {
+            int quantity = parseQuantity(quantityStr, "재고 수량");
+            int minQuantity = parseQuantity(minQuantityStr, "최소 수량");
             itemService.saveItem(id, name, category, quantity, minQuantity);
             ra.addFlashAttribute("message", "물품이 저장되었습니다.");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/item-manager/item-form" + (id != null ? "?id=" + id : "");
+            return redirectForm;
         }
         return "redirect:/item-manager/item-list";
+    }
+
+    private int parseQuantity(String value, String fieldName) {
+        try {
+            long parsed = Long.parseLong(value.trim());
+            if (parsed < 0 || parsed > Integer.MAX_VALUE) {
+                throw new IllegalArgumentException(fieldName + "은(는) 0 이상 2,147,483,647 이하여야 합니다.");
+            }
+            return (int) parsed;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(fieldName + "에 올바른 숫자를 입력해주세요.");
+        }
+    }
+
+    @PostMapping("/item/restock")
+    public String restockItem(@RequestParam("id") Long id,
+                              @RequestParam("amount") String amountStr,
+                              @RequestParam(name = "redirectTo", defaultValue = "/item-manager/dashboard") String redirectTo,
+                              RedirectAttributes ra) {
+        try {
+            int amount = parseQuantity(amountStr, "입고 수량");
+            itemService.restockItem(id, amount);
+            ra.addFlashAttribute("message", "물품이 입고되었습니다.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:" + redirectTo;
     }
 
     @PostMapping("/item/delete")

@@ -57,6 +57,21 @@ INSERT INTO treatment_record (reservation_id, doctor_id, diagnosis, prescription
 SELECT r.id, 1, '상기도염', '해열제 3일치, 항생제 5일치 처방', '3일 후 재진 권고', CURRENT_TIMESTAMP
 FROM reservation r WHERE r.reservation_number = 'RES-20260314-000';
 
+-- 물품 샘플 (item01 물품 담당자 기능 테스트용)
+-- 재고 부족(quantity < min_quantity): 주사기, 알코올솜, 혈압계
+-- 정상 재고: 나머지
+INSERT INTO item (name, category, quantity, min_quantity, created_at, updated_at) VALUES
+('주사기 (5ml)',       'MEDICAL_SUPPLIES',  8,  50, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('알코올솜',           'MEDICAL_SUPPLIES',  20, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('일회용 장갑 (M)',    'MEDICAL_SUPPLIES',  150, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('거즈 패드',          'MEDICAL_SUPPLIES',  200, 80, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('혈압계',             'MEDICAL_EQUIPMENT', 2,  5,  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('체온계',             'MEDICAL_EQUIPMENT', 10, 5,  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('청진기',             'MEDICAL_EQUIPMENT', 8,  3,  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('A4 용지 (박스)',     'GENERAL_SUPPLIES',  5,  2,  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('볼펜',               'GENERAL_SUPPLIES',  30, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('마스크 (KF94)',      'MEDICAL_SUPPLIES',  3,  50, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
 -- ==============================================================================
 -- 테스트 로그인 정보
 -- ==============================================================================
