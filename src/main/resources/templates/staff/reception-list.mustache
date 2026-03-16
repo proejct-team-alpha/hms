@@ -88,11 +88,12 @@
 </td>
 
 <td class="p-4 text-sm text-slate-600">
-{{status}}
+{{statusKor}}
 </td>
 
 <td class="p-4 text-right">
 
+{{#showReceiveBtn}}
 <form action="/staff/reception/receive" method="post">
 <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
 <input type="hidden" name="reservationId" value="{{id}}">
@@ -100,6 +101,13 @@
 접수
 </button>
 </form>
+{{/showReceiveBtn}}
+
+{{^showReceiveBtn}}
+<button class="px-3 py-1 bg-gray-400 text-white rounded" disabled>
+접수완료
+</button>
+{{/showReceiveBtn}}
 
 </td>
 

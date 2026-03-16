@@ -1,6 +1,8 @@
 package com.smartclinic.hms.staff.reception;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.smartclinic.hms.domain.Reservation;
+import com.smartclinic.hms.domain.ReservationStatus;
 import com.smartclinic.hms.staff.reception.dto.ReceptionUpdateRequest;
 
 import jakarta.validation.Valid;
@@ -28,7 +31,35 @@ public class ReceptionController {
     public String list(Model model) {
 
         List<Reservation> reservations = receptionService.getReservations();
-        model.addAttribute("reservations", reservations);
+
+        List<Map<String, Object>> viewReservations = reservations.stream().map(r -> {
+
+            Map<String, Object> map = new HashMap<>();
+
+            map.put("id", r.getId());
+            map.put("timeSlot", r.getTimeSlot());
+            map.put("patient", r.getPatient());
+            map.put("doctor", r.getDoctor());
+            map.put("department", r.getDepartment());
+            map.put("source", r.getSource());
+            map.put("status", r.getStatus());
+
+            String statusKor = switch (r.getStatus()) {
+                case RESERVED -> "예약";
+                case RECEIVED -> "접수완료";
+                case CANCELLED -> "취소";
+                case COMPLETED -> "진료완료";
+            };
+
+            map.put("statusKor", statusKor);
+
+            map.put("showReceiveBtn", r.getStatus() == ReservationStatus.RESERVED);
+
+            return map;
+
+        }).toList();
+
+        model.addAttribute("reservations", viewReservations);
 
         return "staff/reception-list";
     }
