@@ -12,6 +12,8 @@ public class DoctorMypageDto {
     private final String department;
     private final String specialty;
     private final String availableDays;
+    private final String email;
+    private final String phone;
 
     public DoctorMypageDto(Doctor doctor) {
         this.name = doctor.getStaff().getName();
@@ -20,6 +22,8 @@ public class DoctorMypageDto {
         this.department = doctor.getDepartment() != null ? doctor.getDepartment().getName() : "-";
         this.specialty = doctor.getSpecialty() != null ? doctor.getSpecialty() : "-";
         this.availableDays = formatAvailableDays(doctor.getAvailableDays());
+        this.email = doctor.getStaff().getEmail() != null ? doctor.getStaff().getEmail() : "";
+        this.phone = doctor.getStaff().getPhone() != null ? doctor.getStaff().getPhone() : "";
     }
 
     private String formatAvailableDays(String days) {

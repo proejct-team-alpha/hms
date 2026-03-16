@@ -162,7 +162,7 @@ model: 자동
 
 ### dev-a는 개발자 A(강태오)영역이다.
 
-확정되면 doc/dev-a/a-task폴더에서 a-task-skill.md 파일 순서대로 작업을 이어간다.
+확정되면 doc/dev-a-b/a-b-task폴더에서 a-c-skill.md 파일 순서대로 작업을 이어간다.
 
 ## 주의사항
 

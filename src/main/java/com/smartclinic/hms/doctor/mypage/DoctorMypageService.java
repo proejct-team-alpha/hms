@@ -24,8 +24,8 @@ public class DoctorMypageService {
     }
 
     @Transactional
-    public void updateMypage(String username, String name, String currentPassword,
-                             String newPassword, String confirmPassword) {
+    public void updateMypage(String username, String name, String email, String phone,
+                             String currentPassword, String newPassword, String confirmPassword) {
         Doctor doctor = doctorRepository.findByStaff_Username(username)
                 .orElseThrow(() -> CustomException.notFound("의사 정보를 찾을 수 없습니다."));
         Staff staff = doctor.getStaff();
@@ -33,6 +33,7 @@ public class DoctorMypageService {
         if (name != null && !name.isBlank()) {
             staff.update(name, staff.getDepartment(), staff.isActive());
         }
+        staff.updateContact(email, phone);
 
         if (newPassword != null && !newPassword.isBlank()) {
             if (currentPassword == null || currentPassword.isBlank()) {

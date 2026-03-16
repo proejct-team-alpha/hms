@@ -29,12 +29,14 @@ public class AdminMypageController {
     @PostMapping("/mypage")
     public String updateMypage(Authentication auth,
                                @RequestParam String name,
+                               @RequestParam(required = false) String email,
+                               @RequestParam(required = false) String phone,
                                @RequestParam(required = false) String currentPassword,
                                @RequestParam(required = false) String newPassword,
                                @RequestParam(required = false) String confirmPassword,
                                RedirectAttributes ra) {
         try {
-            adminMypageService.updateMypage(auth.getName(), name, currentPassword, newPassword, confirmPassword);
+            adminMypageService.updateMypage(auth.getName(), name, email, phone, currentPassword, newPassword, confirmPassword);
             ra.addFlashAttribute("success", "정보가 수정되었습니다.");
         } catch (CustomException e) {
             ra.addFlashAttribute("error", e.getMessage());

@@ -1,10 +1,12 @@
 package com.smartclinic.hms.doctor.treatment;
 
+import com.smartclinic.hms.common.util.Resp;
 import com.smartclinic.hms.doctor.treatment.dto.DoctorPageLinkDto;
 import com.smartclinic.hms.doctor.treatment.dto.DoctorReservationDto;
 import com.smartclinic.hms.doctor.treatment.dto.DoctorTreatmentDetailDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
@@ -23,6 +26,14 @@ import java.util.List;
 public class DoctorTreatmentController {
 
     private final DoctorTreatmentService treatmentService;
+
+    // [W3-1] GET /doctor/treatment-list/poll — 5초 폴링 AJAX 엔드포인트
+    @GetMapping("/treatment-list/poll")
+    @ResponseBody
+    public ResponseEntity<Resp<List<DoctorReservationDto>>> pollTreatmentList(Authentication auth) {
+        List<DoctorReservationDto> list = treatmentService.getTodayReceivedList(auth.getName());
+        return Resp.ok(list);
+    }
 
     @GetMapping("/treatment-list")
     public String treatmentList(Authentication auth,

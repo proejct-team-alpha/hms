@@ -77,6 +77,16 @@ public class DoctorTreatmentService {
                 .map(DoctorReservationDto::new);
     }
 
+    // [W3-1] 폴링용: 오늘 날짜 RECEIVED 상태만 조회
+    public List<DoctorReservationDto> getTodayReceivedList(String username) {
+        LocalDate today = LocalDate.now();
+        return reservationRepository
+                .findTodayByDoctorAndStatus(username, today, ReservationStatus.RECEIVED)
+                .stream()
+                .map(DoctorReservationDto::new)
+                .toList();
+    }
+
     public DoctorTreatmentDetailDto getTreatmentDetail(Long id, String username) {
         Reservation reservation = reservationRepository.findByIdAndDoctor(id, username)
                 .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));

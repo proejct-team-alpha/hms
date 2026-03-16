@@ -23,14 +23,15 @@ public class ItemManagerMypageService {
     }
 
     @Transactional
-    public void updateMypage(String username, String name, String currentPassword,
-                             String newPassword, String confirmPassword) {
+    public void updateMypage(String username, String name, String email, String phone,
+                             String currentPassword, String newPassword, String confirmPassword) {
         Staff staff = staffRepository.findByUsernameAndActiveTrue(username)
                 .orElseThrow(() -> CustomException.notFound("직원 정보를 찾을 수 없습니다."));
 
         if (name != null && !name.isBlank()) {
             staff.update(name, staff.getDepartment(), staff.isActive());
         }
+        staff.updateContact(email, phone);
 
         if (newPassword != null && !newPassword.isBlank()) {
             if (currentPassword == null || currentPassword.isBlank()) {

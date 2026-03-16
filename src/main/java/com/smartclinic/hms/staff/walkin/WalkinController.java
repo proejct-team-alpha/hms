@@ -12,7 +12,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.smartclinic.hms.staff.reception.ReceptionService;
 import com.smartclinic.hms.staff.walkin.dto.WalkinRequestDto;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Controller

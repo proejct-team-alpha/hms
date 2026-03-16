@@ -63,5 +63,6 @@ public class WalkinService {
                                 ReservationSource.WALKIN);
 
                 reservationRepository.save(reservation);
+                reservation.receive(); // [PRD F03-4] 워크인 즉시 접수: RESERVED → RECEIVED
         }
 }
