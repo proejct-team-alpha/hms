@@ -8,7 +8,7 @@
   <script src="/js/feather.min.js"></script>
 </head>
 <body class="min-h-screen flex">
-  {{> common/sidebar-doctor}}
+  {{> common/sidebar-admin}}
 
   <div class="main-content flex-1 flex flex-col ml-64">
     {{> common/header-staff}}
@@ -39,7 +39,7 @@
         {{/error}}
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-          <form method="post" action="/doctor/mypage" class="space-y-5">
+          <form method="post" action="/admin/mypage" class="space-y-5">
             <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
 
             <div class="grid grid-cols-2 gap-4">
@@ -77,35 +77,12 @@
                 </div>
               </div>
               <div>
-                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">진료과</label>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">직책</label>
                 <div class="relative">
                   <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                     <i data-feather="briefcase" class="w-4 h-4"></i>
                   </div>
-                  <input type="text" value="{{info.department}}" disabled
-                    class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 text-slate-400 cursor-not-allowed">
-                </div>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">전문 분야</label>
-                <div class="relative">
-                  <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                    <i data-feather="award" class="w-4 h-4"></i>
-                  </div>
-                  <input type="text" value="{{info.specialty}}" disabled
-                    class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 text-slate-400 cursor-not-allowed">
-                </div>
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">진료 가능 요일</label>
-                <div class="relative">
-                  <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                    <i data-feather="calendar" class="w-4 h-4"></i>
-                  </div>
-                  <input type="text" value="{{info.availableDays}}" disabled
+                  <input type="text" value="{{info.role}}" disabled
                     class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 text-slate-400 cursor-not-allowed">
                 </div>
               </div>

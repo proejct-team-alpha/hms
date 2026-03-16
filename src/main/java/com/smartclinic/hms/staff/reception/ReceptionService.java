@@ -86,13 +86,6 @@ public class ReceptionService {
         reservationRepository.save(reservation);
     }
 
-    // 접수 목록 조회
-    public List<Reservation> getReservations() {
-
-        // fetch join 쿼리 사용
-        return reservationRepository.findAllWithDetails();
-    }
-
     // 접수 처리
     @Transactional
     public void receive(ReceptionUpdateRequest request) {
