@@ -26,7 +26,7 @@ public class DoctorTreatmentController {
 
     @GetMapping("/treatment-list")
     public String treatmentList(Authentication auth,
-                                @RequestParam(defaultValue = "0") int page,
+                                @RequestParam(name = "page", defaultValue = "0") int page,
                                 Model model) {
         Page<DoctorReservationDto> resultPage = treatmentService.getTreatmentPage(auth.getName(), page);
         addPaginationAttributes(model, resultPage, page, "/doctor/treatment-list?page=");
@@ -35,7 +35,7 @@ public class DoctorTreatmentController {
     }
 
     @GetMapping("/treatment-detail")
-    public String treatmentDetail(@RequestParam Long id, Authentication auth, Model model) {
+    public String treatmentDetail(@RequestParam("id") Long id, Authentication auth, Model model) {
         DoctorTreatmentDetailDto detail = treatmentService.getTreatmentDetail(id, auth.getName());
         model.addAttribute("detail", detail);
         model.addAttribute("pageTitle", "진료실");
@@ -43,10 +43,10 @@ public class DoctorTreatmentController {
     }
 
     @PostMapping("/treatment/complete")
-    public String completeTreatment(@RequestParam Long id,
-                                    @RequestParam String diagnosis,
-                                    @RequestParam String prescription,
-                                    @RequestParam(required = false) String remark,
+    public String completeTreatment(@RequestParam("id") Long id,
+                                    @RequestParam("diagnosis") String diagnosis,
+                                    @RequestParam("prescription") String prescription,
+                                    @RequestParam(name = "remark", required = false) String remark,
                                     Authentication auth,
                                     RedirectAttributes redirectAttributes) {
         try {
@@ -61,7 +61,7 @@ public class DoctorTreatmentController {
 
     @GetMapping("/completed-list")
     public String completedList(Authentication auth,
-                                @RequestParam(defaultValue = "0") int page,
+                                @RequestParam(name = "page", defaultValue = "0") int page,
                                 Model model) {
         Page<DoctorReservationDto> resultPage = treatmentService.getCompletedPage(auth.getName(), page);
         addPaginationAttributes(model, resultPage, page, "/doctor/completed-list?page=");

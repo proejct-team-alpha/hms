@@ -34,9 +34,9 @@ public class AdminRuleController {
     }
 
     @PostMapping("/form")
-    public String create(@RequestParam String title,
-                         @RequestParam String content,
-                         @RequestParam String category) {
+    public String create(@RequestParam("title") String title,
+                         @RequestParam("content") String content,
+                         @RequestParam("category") String category) {
         adminRuleService.createRule(title, content, category);
         return "redirect:/admin/rule/list";
     }

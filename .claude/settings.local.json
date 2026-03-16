@@ -56,7 +56,20 @@
       "Bash(netstat -ano)",
       "Bash(taskkill /PID 30980 /F)",
       "Bash(cmd /c \"taskkill /PID 30980 /F\")",
-      "Bash(cmd /c \"netstat -ano | findstr :8080 | findstr LISTENING\")"
+      "Bash(cmd /c \"netstat -ano | findstr :8080 | findstr LISTENING\")",
+      "Bash(tail -c 5000 C:/Users/G/.claude/projects/c--workspace-gitstudy-lab-demo-team-demo-team-project-demo-hms/47050f78-2c61-44b1-b65e-11a41f71f69a.jsonl)",
+      "Bash(/dev/null ls:*)",
+      "Bash(find . -name skill-dev-a* -o -name SKILL*dev*)",
+      "Bash(head -10 find . -path */dev-a/*.md -name *skill*)",
+      "Bash(find . -path */.ai/* -name *skill*dev-a*)",
+      "Bash(find . -path *dev-a* -name *task*skill* -o -path *dev-a* -name *skill*)",
+      "Bash(find . -name *W4*)",
+      "Bash(head -10 find . -path *dev-a* -name *4*)",
+      "Bash(./mvnw compile:*)",
+      "Bash(ls *.cmd *.bat mvnw* gradlew*)",
+      "Bash(./gradlew.bat compileJava -q)",
+      "Bash(./gradlew.bat compileJava)",
+      "Bash(./gradlew.bat build:*)"
     ],
     "deny": [],
     "ask": []

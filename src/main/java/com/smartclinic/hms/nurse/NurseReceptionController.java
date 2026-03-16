@@ -20,8 +20,8 @@ public class NurseReceptionController {
     private final NurseService nurseService;
 
     @GetMapping("/reception-list")
-    public String receptionList(@RequestParam(required = false) String status,
-                                @RequestParam(defaultValue = "0") int page,
+    public String receptionList(@RequestParam(name = "status", required = false) String status,
+                                @RequestParam(name = "page", defaultValue = "0") int page,
                                 Model model) {
         Page<com.smartclinic.hms.nurse.dto.NurseReservationDto> resultPage =
                 nurseService.getReceptionPage(status, page);
@@ -48,7 +48,7 @@ public class NurseReceptionController {
     }
 
     @GetMapping("/patient-detail")
-    public String patientDetail(@RequestParam Long id, Model model) {
+    public String patientDetail(@RequestParam("id") Long id, Model model) {
         NursePatientDto detail = nurseService.getPatientDetail(id);
         model.addAttribute("detail", detail);
         model.addAttribute("pageTitle", "환자 상세 정보");
@@ -56,7 +56,7 @@ public class NurseReceptionController {
     }
 
     @PostMapping("/reservation/receive")
-    public String receiveReservation(@RequestParam Long id, RedirectAttributes ra) {
+    public String receiveReservation(@RequestParam("id") Long id, RedirectAttributes ra) {
         try {
             nurseService.receiveReservation(id);
             ra.addFlashAttribute("message", "환자가 접수되었습니다.");
@@ -67,11 +67,11 @@ public class NurseReceptionController {
     }
 
     @PostMapping("/patient/update")
-    public String updatePatient(@RequestParam Long patientId,
-                                @RequestParam Long reservationId,
-                                @RequestParam String phone,
-                                @RequestParam(required = false, defaultValue = "") String address,
-                                @RequestParam(required = false, defaultValue = "") String note,
+    public String updatePatient(@RequestParam("patientId") Long patientId,
+                                @RequestParam("reservationId") Long reservationId,
+                                @RequestParam("phone") String phone,
+                                @RequestParam(name = "address", required = false, defaultValue = "") String address,
+                                @RequestParam(name = "note", required = false, defaultValue = "") String note,
                                 RedirectAttributes ra) {
         try {
             nurseService.updatePatient(patientId, phone, address, note);

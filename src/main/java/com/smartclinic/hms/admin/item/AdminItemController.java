@@ -34,10 +34,10 @@ public class AdminItemController {
     }
 
     @PostMapping("/form")
-    public String create(@RequestParam String name,
-                         @RequestParam String category,
-                         @RequestParam int quantity,
-                         @RequestParam int minQuantity) {
+    public String create(@RequestParam("name") String name,
+                         @RequestParam("category") String category,
+                         @RequestParam("quantity") int quantity,
+                         @RequestParam("minQuantity") int minQuantity) {
         adminItemService.createItem(name, category, quantity, minQuantity);
         return "redirect:/admin/item/list";
     }

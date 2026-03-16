@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.smartclinic.hms.admin.department.AdminDepartmentService;
+
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -17,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 public class AdminStaffController {
 
     private final AdminStaffService adminStaffService;
+    private final AdminDepartmentService adminDepartmentService;
 
     @GetMapping("/list")
     public String list(Model model) {
@@ -29,17 +32,18 @@ public class AdminStaffController {
 
     @GetMapping("/form")
     public String form(Model model) {
+        model.addAttribute("departments", adminDepartmentService.getDepartmentList());
         model.addAttribute("pageTitle", "직원 등록");
         return "admin/staff-form";
     }
 
     @PostMapping("/form")
-    public String create(@RequestParam String username,
-                         @RequestParam String employeeNumber,
-                         @RequestParam String password,
-                         @RequestParam String name,
-                         @RequestParam String role,
-                         @RequestParam(required = false) Long departmentId) {
+    public String create(@RequestParam("username") String username,
+                         @RequestParam("employeeNumber") String employeeNumber,
+                         @RequestParam("password") String password,
+                         @RequestParam("name") String name,
+                         @RequestParam("role") String role,
+                         @RequestParam(name = "departmentId", required = false) Long departmentId) {
         adminStaffService.createStaff(username, employeeNumber, password, name, role, departmentId);
         return "redirect:/admin/staff/list";
     }

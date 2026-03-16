@@ -26,7 +26,7 @@ public class ItemManagerController {
     }
 
     @GetMapping("/item-list")
-    public String itemList(@RequestParam(required = false) String category, Model model) {
+    public String itemList(@RequestParam(name = "category", required = false) String category, Model model) {
         List<ItemListDto> items = itemService.getItemList(category);
         model.addAttribute("items", items);
         model.addAttribute("categoryFilters", itemService.getCategoryFilters(category));
@@ -35,18 +35,18 @@ public class ItemManagerController {
     }
 
     @GetMapping("/item-form")
-    public String itemForm(@RequestParam(required = false) Long id, Model model) {
+    public String itemForm(@RequestParam(name = "id", required = false) Long id, Model model) {
         model.addAttribute("form", itemService.getItemForm(id));
         model.addAttribute("pageTitle", id == null ? "물품 등록" : "물품 수정");
         return "item-manager/item-form";
     }
 
     @PostMapping("/item-form/save")
-    public String saveItem(@RequestParam(required = false) Long id,
-                           @RequestParam String name,
-                           @RequestParam String category,
-                           @RequestParam int quantity,
-                           @RequestParam int minQuantity,
+    public String saveItem(@RequestParam(name = "id", required = false) Long id,
+                           @RequestParam("name") String name,
+                           @RequestParam("category") String category,
+                           @RequestParam("quantity") int quantity,
+                           @RequestParam("minQuantity") int minQuantity,
                            RedirectAttributes ra) {
         try {
             itemService.saveItem(id, name, category, quantity, minQuantity);
@@ -59,7 +59,7 @@ public class ItemManagerController {
     }
 
     @PostMapping("/item/delete")
-    public String deleteItem(@RequestParam Long id, RedirectAttributes ra) {
+    public String deleteItem(@RequestParam("id") Long id, RedirectAttributes ra) {
         itemService.deleteItem(id);
         ra.addFlashAttribute("message", "물품이 삭제되었습니다.");
         return "redirect:/item-manager/item-list";

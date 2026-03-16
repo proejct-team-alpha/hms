@@ -28,9 +28,9 @@ public class ReceptionController {
 
     // 접수 목록
     @GetMapping("/list")
-    public String list(@RequestParam(defaultValue = "") String status,
-                       @RequestParam(required = false) String date,
-                       @RequestParam(defaultValue = "1") int page,
+    public String list(@RequestParam(name = "status", defaultValue = "") String status,
+                       @RequestParam(name = "date", required = false) String date,
+                       @RequestParam(name = "page", defaultValue = "1") int page,
                        Model model) {
         // date 없으면 null → 오늘 이후 전체 조회
         LocalDate selectedDate = (date == null || date.isBlank()) ? null : LocalDate.parse(date);
