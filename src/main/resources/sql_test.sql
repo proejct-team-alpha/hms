@@ -48,6 +48,8 @@ INSERT INTO reservation (reservation_number, patient_id, doctor_id, department_i
 ('RES-20260318-001', 2, 2, 2, '2026-03-18', '10:00', 'RESERVED',  'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('RES-20260319-001', 3, 4, 3, '2026-03-19', '14:00', 'RESERVED',  'PHONE',  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
+
+
 -- ==============================================================================
 -- 테스트 로그인 정보
 -- ==============================================================================

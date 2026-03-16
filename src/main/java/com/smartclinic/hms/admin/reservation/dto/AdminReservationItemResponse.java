@@ -11,6 +11,7 @@ public record AdminReservationItemResponse(
         String doctorName,
         String status,
         String statusLabel,
+        boolean cancellable,
         boolean reserved,
         boolean received,
         boolean completed,

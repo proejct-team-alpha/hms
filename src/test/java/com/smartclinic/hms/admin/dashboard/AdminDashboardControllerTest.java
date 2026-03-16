@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,17 +18,22 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 
-@WebMvcTest(AdminDashboardController.class)
+@WebMvcTest(
+        value = AdminDashboardController.class,
+        properties = {
+                "spring.mustache.servlet.expose-request-attributes=true",
+                "spring.mustache.servlet.allow-request-override=true"
+        }
+)
 @Import(AdminDashboardControllerTest.TestSecurityConfig.class)
 class AdminDashboardControllerTest {
 
@@ -51,20 +57,17 @@ class AdminDashboardControllerTest {
         given(adminDashboardStatsService.getDashboardStats()).willReturn(stats);
 
         mockMvc.perform(get("/admin/dashboard")
-                .with(user("admin").roles("ADMIN"))
-                .with(csrf()))
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/dashboard"))
-                .andExpect(model().attribute("stats", stats));
+                .andExpect(request().attribute("model", stats))
+                .andExpect(request().attribute("pageTitle", "관리자 대시보드"));
     }
 
     @Test
     @DisplayName("Unauthenticated user is redirected to login page")
     void dashboard_withoutAuthentication_redirectsToLogin() throws Exception {
-        // given
-
-        // when
-        // then
         mockMvc.perform(get("/admin/dashboard"))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/login"));
@@ -73,10 +76,6 @@ class AdminDashboardControllerTest {
     @Test
     @DisplayName("ROLE_STAFF is forbidden from admin dashboard")
     void dashboard_withNonAdminRole_isForbidden() throws Exception {
-        // given
-
-        // when
-        // then
         mockMvc.perform(get("/admin/dashboard").with(user("staff").roles("STAFF")))
                 .andExpect(status().isForbidden());
     }
