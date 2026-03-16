@@ -33,13 +33,8 @@ public class PhoneReservationController {
 
     // 전화 예약 생성
     @PostMapping("/create")
-<<<<<<< HEAD
     public String createPhoneReservation(PhoneReservationRequestDto request,
-                                         RedirectAttributes redirectAttributes) {
-=======
-    public String createPhoneReservation(@Valid PhoneReservationRequestDto request) {
-
->>>>>>> dev
+            RedirectAttributes redirectAttributes) {
         receptionService.createPhoneReservation(request);
         redirectAttributes.addFlashAttribute("message", "전화 예약이 완료되었습니다.");
         return "redirect:/staff/reception/list?date=" + request.getDate();
