@@ -1,4 +1,4 @@
-package com.smartclinic.hms.nurse.mypage;
+package com.smartclinic.hms.admin.mypage;
 
 import com.smartclinic.hms.auth.StaffRepository;
 import com.smartclinic.hms.common.exception.CustomException;
@@ -11,22 +11,22 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class NurseMypageService {
+public class AdminMypageService {
 
     private final StaffRepository staffRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public NurseMypageDto getMypage(String username) {
+    public AdminMypageDto getMypage(String username) {
         return staffRepository.findByUsernameAndActiveTrue(username)
-                .map(NurseMypageDto::new)
-                .orElseThrow(() -> CustomException.notFound("직원 정보를 찾을 수 없습니다."));
+                .map(AdminMypageDto::new)
+                .orElseThrow(() -> CustomException.notFound("관리자 정보를 찾을 수 없습니다."));
     }
 
     @Transactional
     public void updateMypage(String username, String name, String currentPassword,
                              String newPassword, String confirmPassword) {
         Staff staff = staffRepository.findByUsernameAndActiveTrue(username)
-                .orElseThrow(() -> CustomException.notFound("직원 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> CustomException.notFound("관리자 정보를 찾을 수 없습니다."));
 
         if (name != null && !name.isBlank()) {
             staff.update(name, staff.getDepartment(), staff.isActive());

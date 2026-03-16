@@ -1,4 +1,4 @@
-package com.smartclinic.hms.nurse.mypage;
+package com.smartclinic.hms.item.mypage;
 
 import com.smartclinic.hms.auth.StaffRepository;
 import com.smartclinic.hms.common.exception.CustomException;
@@ -11,14 +11,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class NurseMypageService {
+public class ItemManagerMypageService {
 
     private final StaffRepository staffRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public NurseMypageDto getMypage(String username) {
+    public ItemManagerMypageDto getMypage(String username) {
         return staffRepository.findByUsernameAndActiveTrue(username)
-                .map(NurseMypageDto::new)
+                .map(ItemManagerMypageDto::new)
                 .orElseThrow(() -> CustomException.notFound("직원 정보를 찾을 수 없습니다."));
     }
 

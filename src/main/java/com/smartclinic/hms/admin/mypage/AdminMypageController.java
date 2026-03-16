@@ -1,4 +1,4 @@
-package com.smartclinic.hms.doctor.mypage;
+package com.smartclinic.hms.admin.mypage;
 
 import com.smartclinic.hms.common.exception.CustomException;
 import lombok.RequiredArgsConstructor;
@@ -13,16 +13,17 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/doctor")
-public class DoctorMypageController {
+@RequestMapping("/admin")
+public class AdminMypageController {
 
-    private final DoctorMypageService doctorMypageService;
+    private final AdminMypageService adminMypageService;
 
     @GetMapping("/mypage")
     public String mypage(Authentication auth, Model model) {
-        model.addAttribute("info", doctorMypageService.getMypage(auth.getName()));
+        model.addAttribute("info", adminMypageService.getMypage(auth.getName()));
+        model.addAttribute("isAdminMypage", true);
         model.addAttribute("pageTitle", "내 정보 관리");
-        return "doctor/mypage";
+        return "admin/mypage";
     }
 
     @PostMapping("/mypage")
@@ -33,11 +34,11 @@ public class DoctorMypageController {
                                @RequestParam(required = false) String confirmPassword,
                                RedirectAttributes ra) {
         try {
-            doctorMypageService.updateMypage(auth.getName(), name, currentPassword, newPassword, confirmPassword);
+            adminMypageService.updateMypage(auth.getName(), name, currentPassword, newPassword, confirmPassword);
             ra.addFlashAttribute("success", "정보가 수정되었습니다.");
         } catch (CustomException e) {
             ra.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/doctor/mypage";
+        return "redirect:/admin/mypage";
     }
 }
