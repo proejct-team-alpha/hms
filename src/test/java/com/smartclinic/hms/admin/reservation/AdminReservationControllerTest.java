@@ -37,7 +37,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
-@WebMvcTest(AdminReservationController.class)
+@WebMvcTest(
+        value = AdminReservationController.class,
+        properties = {
+                "spring.mustache.servlet.expose-request-attributes=true",
+                "spring.mustache.servlet.allow-request-override=true"
+        }
+)
 @Import(AdminReservationControllerTest.TestSecurityConfig.class)
 class AdminReservationControllerTest {
 

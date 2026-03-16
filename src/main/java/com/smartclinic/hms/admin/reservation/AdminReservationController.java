@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.Locale;
 
@@ -25,16 +24,14 @@ public class AdminReservationController {
     private final AdminReservationService adminReservationService;
 
     @GetMapping("/list")
-    public ModelAndView list(
+    public String list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String status,
             HttpServletRequest req) {
         AdminReservationListResponse result = adminReservationService.getReservationList(page, size, status);
         req.setAttribute("model", result);
-        ModelAndView modelAndView = new ModelAndView("admin/reservation-list");
-        modelAndView.addObject("model", result);
-        return modelAndView;
+        return "admin/reservation-list";
     }
 
     @PostMapping("/cancel")

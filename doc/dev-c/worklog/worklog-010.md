@@ -36,8 +36,9 @@
 
 4. `AdminReservationController`
 - 예약 목록 SSR 테스트 검증 중 Mustache 렌더링에서 `model` 바인딩 누락 이슈 확인
-- `HttpServletRequest` 사용은 유지하면서 `ModelAndView`에 `model`도 함께 담도록 보완
-- 템플릿이 기대하는 `{{model...}}` 구조가 테스트와 실제 렌더링에서 모두 동작하도록 정리
+- 컨트롤러는 `HttpServletRequest`만 유지하고 `ModelAndView`는 사용하지 않도록 정리
+- 원인은 `@WebMvcTest` 환경에서 request attribute 노출 설정이 빠진 테스트 설정이었고, 테스트에 Mustache request attribute 노출 옵션을 명시해 해결
+- 템플릿이 기대하는 `{{model...}}` 구조를 유지하면서 테스트와 실제 렌더링이 모두 동작하도록 정리
 
 ## 검증 결과
 - 실행 명령어: `./gradlew test --tests 'com.smartclinic.hms.admin.reservation.*'`
