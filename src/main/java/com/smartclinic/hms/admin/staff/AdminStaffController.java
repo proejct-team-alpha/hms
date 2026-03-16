@@ -33,6 +33,7 @@ public class AdminStaffController {
             HttpServletRequest req) {
         AdminStaffListResponse result = adminStaffService.getStaffList(page, size, keyword, role, employmentStatus);
         req.setAttribute("model", result);
+        req.setAttribute("pageTitle", "직원 목록");
         return "admin/staff-list";
     }
 

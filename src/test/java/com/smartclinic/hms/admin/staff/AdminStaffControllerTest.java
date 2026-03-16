@@ -27,7 +27,6 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -100,7 +99,7 @@ class AdminStaffControllerTest {
     }
 
     @Test
-    @DisplayName("직원 목록 기본 페이지로 화면을 렌더링한다")
+    @DisplayName("직원 목록은 기본 페이징과 pageTitle을 포함해 렌더링한다")
     void list_usesDefaultPagingAndRendersView() throws Exception {
         // given
         AdminStaffListResponse response = createListResponse("ALL", "ALL", "");
@@ -113,13 +112,14 @@ class AdminStaffControllerTest {
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/staff-list"))
-                .andExpect(request().attribute("model", response));
+                .andExpect(request().attribute("model", response))
+                .andExpect(request().attribute("pageTitle", "직원 목록"));
 
         then(adminStaffService).should().getStaffList(1, 10, null, null, null);
     }
 
     @Test
-    @DisplayName("직원 목록 검색과 필터 파라미터를 서비스에 전달한다")
+    @DisplayName("직원 목록은 검색과 필터 파라미터를 서비스에 전달한다")
     void list_passesSearchAndFilterParamsToService() throws Exception {
         // given
         AdminStaffListResponse response = createListResponse("DOCTOR", "ACTIVE", "kim");
@@ -137,7 +137,8 @@ class AdminStaffControllerTest {
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/staff-list"))
-                .andExpect(request().attribute("model", response));
+                .andExpect(request().attribute("model", response))
+                .andExpect(request().attribute("pageTitle", "직원 목록"));
 
         then(adminStaffService).should().getStaffList(2, 5, "kim", "DOCTOR", "ACTIVE");
     }
@@ -166,7 +167,7 @@ class AdminStaffControllerTest {
     }
 
     @Test
-    @DisplayName("직원 등록 검증 실패 시 등록 화면으로 다시 렌더링한다")
+    @DisplayName("직원 등록 검증 실패 시 등록 화면을 다시 렌더링한다")
     void create_validationFailure_rendersStaffFormView() throws Exception {
         // given
         AdminStaffFormResponse response = createFormResponse();
