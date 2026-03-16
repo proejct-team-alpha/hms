@@ -33,44 +33,21 @@ public class ReceptionController {
 
     // 접수 목록
     @GetMapping("/list")
-    public String list(@RequestParam(name = "status", defaultValue = "") String status,
+    public String list(
+            @RequestParam(name = "status", defaultValue = "") String status,
             @RequestParam(name = "date", required = false) String date,
+            @ModelAttribute("date") String flashDate,
             @RequestParam(name = "page", defaultValue = "1") int page,
             Model model) {
+
+        if ((date == null || date.isBlank()) && flashDate != null && !flashDate.isBlank()) {
+            date = flashDate;
+        }
+        model.addAttribute("isStaffReception", true);
         // date 없으면 null → 오늘 이후 전체 조회
         LocalDate selectedDate = (date == null || date.isBlank()) ? null : LocalDate.parse(date);
         String dateStr = selectedDate != null ? selectedDate.toString() : "";
 
-        List<Reservation> reservations = receptionService.getReservations();
-
-        List<Map<String, Object>> viewReservations = reservations.stream().map(r -> {
-
-            Map<String, Object> map = new HashMap<>();
-
-            map.put("id", r.getId());
-            map.put("timeSlot", r.getTimeSlot());
-            map.put("patient", r.getPatient());
-            map.put("doctor", r.getDoctor());
-            map.put("department", r.getDepartment());
-            map.put("source", r.getSource());
-            map.put("status", r.getStatus());
-
-            String statusKor = switch (r.getStatus()) {
-                case RESERVED -> "예약";
-                case RECEIVED -> "접수완료";
-                case CANCELLED -> "취소";
-                case COMPLETED -> "진료완료";
-            };
-
-            map.put("statusKor", statusKor);
-
-            map.put("showReceiveBtn", r.getStatus() == ReservationStatus.RESERVED);
-
-            return map;
-
-        }).toList();
-
-        model.addAttribute("reservations", viewReservations);
         List<StaffReservationDto> all = receptionService.getReservations(selectedDate, status);
 
         // 페이징
@@ -108,6 +85,7 @@ public class ReceptionController {
     // 접수 상세
     @GetMapping("/detail")
     public String detail(@RequestParam Long id, Model model) {
+        model.addAttribute("isStaffReception", true);
         model.addAttribute("detail", receptionService.getDetail(id));
         return "staff/reception-detail";
     }

@@ -26,6 +26,8 @@
             </div>
           </div>
 
+
+
           <form method="post" action="/staff/reservation/create" class="space-y-6">
             <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
 
@@ -34,14 +36,14 @@
                 <label class="block text-sm font-medium text-slate-700 mb-2">환자 성함</label>
                 <div class="relative">
                   <i data-feather="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input type="text" name="name" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="홍길동" />
+                  <input type="text" name="name" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="홍길동" value="{{#form}}{{name}}{{/form}}" />
                 </div>
               </div>
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">연락처</label>
                 <div class="relative">
                   <i data-feather="phone" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input type="tel" name="phone" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="010-1234-5678" />
+                  <input type="tel" name="phone" pattern="\d{3}-\d{4}-\d{4}" maxlength="13" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="010-1234-5678" value="{{#form}}{{phone}}{{/form}}" />
                 </div>
               </div>
             </div>
@@ -50,7 +52,7 @@
               <label class="block text-sm font-medium text-slate-700 mb-2">이메일 (선택)</label>
               <div class="relative">
                 <i data-feather="mail" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                <input type="email" name="email" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="example@email.com" />
+                <input type="email" name="email" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="example@email.com" value="{{#form}}{{email}}{{/form}}" />
               </div>
             </div>
 
@@ -80,7 +82,7 @@
                 <label class="block text-sm font-medium text-slate-700 mb-2">예약 날짜</label>
                 <div class="relative">
                   <i data-feather="calendar" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input type="date" name="date" required value="{{today}}" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" />
+                  <input type="date" name="date" required value="{{#form}}{{date}}{{/form}}{{^form}}{{today}}{{/form}}" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" />
                 </div>
               </div>
               <div>
@@ -115,11 +117,11 @@
             <div class="space-y-4">
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">증상</label>
-                <textarea name="symptoms" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none min-h-24 resize-none" placeholder="환자가 호소하는 주요 증상을 입력하세요."></textarea>
+                <textarea name="symptoms" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none min-h-24 resize-none" placeholder="환자가 호소하는 주요 증상을 입력하세요.">{{#form}}{{symptoms}}{{/form}}</textarea>
               </div>
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">메모 (특이사항)</label>
-                <textarea name="notes" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none min-h-20 resize-none" placeholder="기타 참고할 메모 사항을 입력하세요."></textarea>
+                <textarea name="notes" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none min-h-20 resize-none" placeholder="기타 참고할 메모 사항을 입력하세요.">{{#form}}{{notes}}{{/form}}</textarea>
               </div>
             </div>
 
@@ -137,5 +139,24 @@
   </div>
 
   <script>feather.replace();</script>
+  {{#message}}
+  <script>
+    alert("{{message}}");
+  </script>
+  {{/message}}
+  {{#form}}
+  <script>
+    // 에러 발생으로 폼으로 돌아왔을 때, 기존에 선택했던 select 값들을 유지합니다.
+    document.addEventListener('DOMContentLoaded', () => {
+      const deptId = '{{departmentId}}';
+      const docId = '{{doctorId}}';
+      const time = '{{time}}';
+
+      if (deptId) document.querySelector('select[name="departmentId"]').value = deptId;
+      if (docId) document.querySelector('select[name="doctorId"]').value = docId;
+      if (time) document.querySelector('select[name="time"]').value = time;
+    });
+  </script>
+  {{/form}}
 </body>
 </html>

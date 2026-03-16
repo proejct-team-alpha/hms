@@ -11,8 +11,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.smartclinic.hms.staff.reception.ReceptionService;
 import com.smartclinic.hms.staff.reservation.dto.PhoneReservationRequestDto;
+import com.smartclinic.hms.common.exception.CustomException;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -34,9 +34,29 @@ public class PhoneReservationController {
     // 전화 예약 생성
     @PostMapping("/create")
     public String createPhoneReservation(PhoneReservationRequestDto request,
-            RedirectAttributes redirectAttributes) {
-        receptionService.createPhoneReservation(request);
-        redirectAttributes.addFlashAttribute("message", "전화 예약이 완료되었습니다.");
-        return "redirect:/staff/reception/list?date=" + request.getDate();
+            RedirectAttributes redirectAttributes, Model model) {
+
+        try {
+            boolean nameMismatch = receptionService.createPhoneReservation(request);
+
+            if (nameMismatch) {
+                redirectAttributes.addFlashAttribute("message",
+                        "입력하신 이름과 기존 환자의 이름이 다릅니다. 기존 환자명으로 예약이 완료되었습니다.");
+            } else {
+                redirectAttributes.addFlashAttribute("message",
+                        "전화 예약이 완료되었습니다.");
+            }
+
+            return "redirect:/staff/reception/list?date=" + request.getDate();
+
+        } catch (CustomException e) {
+            // 중복 예약 등 에러 발생 시 원래의 예약 폼으로 돌아가며 에러 메시지와 입력값을 유지
+            model.addAttribute("message", e.getMessage());
+            model.addAttribute("form", request); // 입력된 폼 데이터 유지
+            model.addAttribute("departments", receptionService.getAllDepartments());
+            model.addAttribute("doctors", receptionService.getAllDoctors());
+            model.addAttribute("today", LocalDate.now());
+            return "staff/phone-reservation"; // 리다이렉트 대신 폼 뷰를 직접 반환
+        }
     }
 }

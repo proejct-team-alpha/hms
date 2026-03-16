@@ -25,6 +25,7 @@ import com.smartclinic.hms.staff.dto.StaffReservationDto;
 import com.smartclinic.hms.staff.dto.StaffStatusFilter;
 import com.smartclinic.hms.staff.reception.dto.ReceptionUpdateRequest;
 import com.smartclinic.hms.staff.reservation.dto.PhoneReservationRequestDto;
+import com.smartclinic.hms.common.exception.CustomException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -41,12 +42,13 @@ public class ReceptionService {
 
     // 전화 예약 생성
     @Transactional
-    public void createPhoneReservation(PhoneReservationRequestDto request) {
+    public boolean createPhoneReservation(PhoneReservationRequestDto request) {
 
         String phone = request.getPhone().trim();
 
         // 1️ 환자 조회
         Patient patient = patientRepository.findByPhone(phone).orElse(null);
+        boolean nameMismatch = false;
 
         // 2️ 없으면 신규 환자 생성
         if (patient == null) {
@@ -55,6 +57,8 @@ public class ReceptionService {
                     phone,
                     request.getEmail());
             patientRepository.save(patient);
+        } else if (!patient.getName().equals(request.getName())) {
+            nameMismatch = true;
         }
 
         // 3️ 의사 조회
@@ -67,6 +71,16 @@ public class ReceptionService {
 
         // 5️ 예약 날짜
         LocalDate reservationDate = LocalDate.parse(request.getDate());
+
+        // 🚨 중복 예약 검증
+        List<Reservation> existingReservations = reservationRepository.findTodayExcludingStatus(reservationDate,
+                ReservationStatus.CANCELLED);
+        boolean isDuplicate = existingReservations.stream()
+                .anyMatch(r -> r.getDoctor().getId().equals(doctor.getId())
+                        && r.getTimeSlot().equals(request.getTime()));
+        if (isDuplicate) {
+            throw CustomException.conflict("DUPLICATE_RESERVATION", "해당 의사 선생님의 선택하신 시간대에는 이미 예약된 정보가 있습니다.");
+        }
 
         // 6️ 예약번호 생성
         String reservationNumber = reservationNumberGenerator.generate(
@@ -84,6 +98,7 @@ public class ReceptionService {
                 ReservationSource.PHONE);
 
         reservationRepository.save(reservation);
+        return nameMismatch;
     }
 
     // 접수 처리
@@ -169,8 +184,4 @@ public class ReceptionService {
                 .collect(Collectors.toList());
     }
 
-    public List<Reservation> getReservations() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getReservations'");
-    }
 }
