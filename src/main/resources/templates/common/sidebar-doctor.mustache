@@ -31,5 +31,13 @@
       <i data-feather="check-circle" class="w-5 h-5"></i>
       진료 완료 목록
     </a>
+    <a href="/doctor/chatbot" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isDoctorChatbot}}bg-indigo-50 text-indigo-700{{/isDoctorChatbot}}{{^isDoctorChatbot}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isDoctorChatbot}}">
+      <i data-feather="message-circle" class="w-5 h-5"></i>
+      AI 챗봇
+    </a>
+    <a href="/doctor/mypage" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isDoctorMypage}}bg-indigo-50 text-indigo-700{{/isDoctorMypage}}{{^isDoctorMypage}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isDoctorMypage}}">
+      <i data-feather="user" class="w-5 h-5"></i>
+      내 정보 관리
+    </a>
   </nav>
 </aside>

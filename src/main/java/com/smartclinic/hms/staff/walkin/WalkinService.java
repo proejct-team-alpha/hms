@@ -6,13 +6,22 @@ import java.time.LocalTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+<<<<<<< HEAD
+import com.smartclinic.hms.common.exception.CustomException;
+import com.smartclinic.hms.common.util.ReservationNumberGenerator;
+=======
 import com.smartclinic.hms.common.util.ReservationNumberGenerator;
 import com.smartclinic.hms.doctor.DoctorRepository;
+>>>>>>> dev
 import com.smartclinic.hms.domain.Department;
 import com.smartclinic.hms.domain.Doctor;
 import com.smartclinic.hms.domain.Patient;
 import com.smartclinic.hms.domain.Reservation;
 import com.smartclinic.hms.domain.ReservationSource;
+<<<<<<< HEAD
+import com.smartclinic.hms.doctor.DoctorRepository;
+=======
+>>>>>>> dev
 import com.smartclinic.hms.reservation.reservation.DepartmentRepository;
 import com.smartclinic.hms.reservation.reservation.PatientRepository;
 import com.smartclinic.hms.reservation.reservation.ReservationRepository;
@@ -25,11 +34,19 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class WalkinService {
 
+<<<<<<< HEAD
+    private final ReservationRepository reservationRepository;
+    private final PatientRepository patientRepository;
+    private final DoctorRepository doctorRepository;
+    private final DepartmentRepository departmentRepository;
+    private final ReservationNumberGenerator reservationNumberGenerator;
+=======
         private final ReservationRepository reservationRepository;
         private final PatientRepository patientRepository;
         private final DoctorRepository doctorRepository;
         private final DepartmentRepository departmentRepository;
         private final ReservationNumberGenerator reservationNumberGenerator;
+>>>>>>> dev
 
         // 방문 접수 생성
         @Transactional
@@ -43,6 +60,30 @@ public class WalkinService {
                                                                 request.getPhone(),
                                                                 null)));
 
+<<<<<<< HEAD
+        Doctor doctor = doctorRepository.findById(request.getDoctorId())
+                .orElseThrow(() -> CustomException.notFound("의사를 찾을 수 없습니다. ID: " + request.getDoctorId()));
+
+        Department department = departmentRepository.findById(request.getDepartmentId())
+                .orElseThrow(() -> CustomException.notFound("진료과를 찾을 수 없습니다. ID: " + request.getDepartmentId()));
+
+        String reservationNumber = reservationNumberGenerator.generate(
+                request.getDate(),
+                () -> reservationRepository.countByReservationDate(request.getDate()));
+
+        Reservation reservation = Reservation.create(
+                reservationNumber,
+                patient,
+                doctor,
+                department,
+                request.getDate(),
+                request.getTime(),
+                ReservationSource.WALKIN);
+
+        reservationRepository.save(reservation);
+    }
+}
+=======
                 // 2. 의사 조회
                 Doctor doctor = doctorRepository.findById(request.getDoctorId())
                                 .orElseThrow(() -> new RuntimeException("의사를 찾을 수 없습니다."));
@@ -80,3 +121,4 @@ public class WalkinService {
                 reservation.receive();
         }
 }
+>>>>>>> dev

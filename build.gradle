@@ -18,6 +18,10 @@ repositories {
 	mavenCentral()
 }
 
+configurations {
+	mockitoAgent
+}
+
 dependencies {
 	// Spring Boot Starters (alphabetical)
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -47,6 +51,7 @@ dependencies {
 	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	mockitoAgent('org.mockito:mockito-core:5.20.0') { transitive = false }
 }
 
 // JAR 설정
@@ -57,11 +62,13 @@ bootJar {
 // 테스트 설정
 test {
 	useJUnitPlatform()
+	jvmArgs "-javaagent:${configurations.mockitoAgent.asPath}"
 }
 
-// 컴파일 옵션 (UTF-8 인코딩)
+// 컴파일 옵션 (UTF-8 인코딩, Spring 6+ 파라미터명 reflection 지원)
 tasks.withType(JavaCompile).configureEach {
 	options.encoding = 'UTF-8'
+	options.compilerArgs << '-parameters'
 }
 
 bootRun {

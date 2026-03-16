@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>내 정보 관리 - MediCare+</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/feather.min.js"></script>
+</head>
+<body class="min-h-screen flex">
+  {{> common/sidebar-doctor}}
+
+  <div class="main-content flex-1 flex flex-col ml-64">
+    {{> common/header-staff}}
+
+    <main class="content-wrapper flex-1 p-6">
+      <div class="max-w-2xl mx-auto space-y-6">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+            <i data-feather="user" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-slate-800">내 정보 관리</h1>
+            <p class="text-slate-500 mt-1">의사 프로필 정보입니다.</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+          <!-- 프로필 헤더 -->
+          <div class="flex items-center gap-6 mb-8 pb-8 border-b border-slate-100">
+            <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
+              <i data-feather="user" class="w-10 h-10"></i>
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold text-slate-800">{{info.name}}</h2>
+              <p class="text-slate-500 mt-1">{{info.department}} · 의사</p>
+            </div>
+          </div>
+
+          <!-- 상세 정보 -->
+          <div class="space-y-5">
+            <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
+              <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center text-slate-500 border border-slate-200">
+                <i data-feather="user" class="w-4 h-4"></i>
+              </div>
+              <div class="flex-1">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">이름</div>
+                <div class="text-sm font-semibold text-slate-800">{{info.name}}</div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
+              <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center text-slate-500 border border-slate-200">
+                <i data-feather="at-sign" class="w-4 h-4"></i>
+              </div>
+              <div class="flex-1">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">아이디</div>
+                <div class="text-sm font-semibold text-slate-800">{{info.username}}</div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
+              <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center text-slate-500 border border-slate-200">
+                <i data-feather="hash" class="w-4 h-4"></i>
+              </div>
+              <div class="flex-1">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">사번</div>
+                <div class="text-sm font-semibold text-slate-800">{{info.employeeNumber}}</div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
+              <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center text-slate-500 border border-slate-200">
+                <i data-feather="briefcase" class="w-4 h-4"></i>
+              </div>
+              <div class="flex-1">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">진료과</div>
+                <div class="text-sm font-semibold text-slate-800">{{info.department}}</div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
+              <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center text-slate-500 border border-slate-200">
+                <i data-feather="award" class="w-4 h-4"></i>
+              </div>
+              <div class="flex-1">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">전문 분야</div>
+                <div class="text-sm font-semibold text-slate-800">{{info.specialty}}</div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
+              <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center text-slate-500 border border-slate-200">
+                <i data-feather="calendar" class="w-4 h-4"></i>
+              </div>
+              <div class="flex-1">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">진료 가능 요일</div>
+                <div class="text-sm font-semibold text-slate-800">{{info.availableDays}}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    {{> common/footer-staff}}
+  </div>
+
+  <script>feather.replace();</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+package com.smartclinic.hms.doctor.treatment.dto;
+
+import com.smartclinic.hms.domain.Reservation;
+import lombok.Getter;
+
+@Getter
+public class DoctorReservationDto {
+
+    private final Long id;
+    private final String patientName;
+    private final String timeSlot;
+    private final String note;
+    private final String statusText;
+    private final String statusBadgeClass;
+    private final String cardClass;
+    private final String sourceText;
+    private final String sourceBadgeClass;
+    private final boolean canComplete;
+
+    public DoctorReservationDto(Reservation r) {
+        this.id = r.getId();
+        this.patientName = r.getPatient().getName();
+        this.timeSlot = r.getTimeSlot();
+        this.note = r.getPatient().getNote() != null ? r.getPatient().getNote() : "증상 없음";
+
+        switch (r.getStatus()) {
+            case RECEIVED -> {
+                this.statusText = "진료 대기";
+                this.statusBadgeClass = "bg-orange-100 text-orange-600";
+                this.cardClass = "border-slate-200 hover:border-indigo-300";
+                this.canComplete = true;
+            }
+            case COMPLETED -> {
+                this.statusText = "진료 완료";
+                this.statusBadgeClass = "bg-green-600 text-white";
+                this.cardClass = "border-slate-200 opacity-60";
+                this.canComplete = false;
+            }
+            default -> {
+                this.statusText = "예약";
+                this.statusBadgeClass = "bg-slate-100 text-slate-600";
+                this.cardClass = "border-slate-200 hover:border-indigo-300";
+                this.canComplete = false;
+            }
+        }
+
+        switch (r.getSource()) {
+            case ONLINE -> {
+                this.sourceText = "온라인";
+                this.sourceBadgeClass = "bg-blue-50 text-blue-600";
+            }
+            case PHONE -> {
+                this.sourceText = "전화";
+                this.sourceBadgeClass = "bg-purple-50 text-purple-600";
+            }
+            default -> {
+                this.sourceText = "방문";
+                this.sourceBadgeClass = "bg-orange-50 text-orange-600";
+            }
+        }
+    }
+}
