@@ -71,7 +71,7 @@
                 <select name="doctorId" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none bg-white">
                   <option value="">선택해주세요</option>
                   {{#doctors}}
-                  <option value="{{id}}">{{displayName}}</option>
+                  <option value="{{id}}" data-dept-id="{{departmentId}}">{{displayName}}</option>
                   {{/doctors}}
                 </select>
               </div>
@@ -148,6 +148,27 @@
   <script>
     // 에러 발생으로 폼으로 돌아왔을 때, 기존에 선택했던 select 값들을 유지합니다.
     document.addEventListener('DOMContentLoaded', () => {
+      const deptSelect = document.querySelector('select[name="departmentId"]');
+      const docSelect = document.querySelector('select[name="doctorId"]');
+      const docOptions = Array.from(docSelect.querySelectorAll('option[data-dept-id]'));
+
+      function filterDoctors() {
+        const selectedDeptId = deptSelect.value;
+        docOptions.forEach(option => {
+          if (!selectedDeptId || option.dataset.deptId === selectedDeptId) {
+            option.style.display = '';
+          } else {
+            option.style.display = 'none';
+          }
+        });
+        const selectedOption = docSelect.options[docSelect.selectedIndex];
+        if (selectedOption && selectedOption.style.display === 'none') {
+          docSelect.value = '';
+        }
+      }
+
+      deptSelect.addEventListener('change', filterDoctors);
+
       const deptId = '{{departmentId}}';
       const docId = '{{doctorId}}';
       const time = '{{time}}';
@@ -155,6 +176,31 @@
       if (deptId) document.querySelector('select[name="departmentId"]').value = deptId;
       if (docId) document.querySelector('select[name="doctorId"]').value = docId;
       if (time) document.querySelector('select[name="time"]').value = time;
+
+      filterDoctors();
+    });
+  </script>
+  {{/form}}
+  {{^form}}
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const deptSelect = document.querySelector('select[name="departmentId"]');
+      const docSelect = document.querySelector('select[name="doctorId"]');
+      const docOptions = Array.from(docSelect.querySelectorAll('option[data-dept-id]'));
+
+      function filterDoctors() {
+        const selectedDeptId = deptSelect.value;
+        docOptions.forEach(option => {
+          if (!selectedDeptId || option.dataset.deptId === selectedDeptId) {
+            option.style.display = '';
+          } else {
+            option.style.display = 'none';
+          }
+        });
+        if (docSelect.options[docSelect.selectedIndex]?.style.display === 'none') docSelect.value = '';
+      }
+      deptSelect.addEventListener('change', filterDoctors);
+      filterDoctors();
     });
   </script>
   {{/form}}

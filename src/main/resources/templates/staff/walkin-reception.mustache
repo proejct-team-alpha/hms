@@ -61,7 +61,7 @@
                 <select name="doctorId" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none bg-white">
                   <option value="">선택해주세요</option>
                   {{#doctors}}
-                  <option value="{{id}}">{{displayName}}</option>
+                  <option value="{{id}}" data-dept-id="{{departmentId}}">{{displayName}}</option>
                   {{/doctors}}
                 </select>
               </div>
@@ -128,10 +128,67 @@ document.addEventListener("DOMContentLoaded", function () {
   {{#form}}
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      const deptSelect = document.querySelector('select[name="departmentId"]');
+      const docSelect = document.querySelector('select[name="doctorId"]');
+      const docOptions = Array.from(docSelect.querySelectorAll('option[data-dept-id]'));
+
+      // 진료과에 맞게 의사 목록을 필터링하는 함수
+      function filterDoctors() {
+        const selectedDeptId = deptSelect.value;
+        
+        docOptions.forEach(option => {
+          if (!selectedDeptId || option.dataset.deptId === selectedDeptId) {
+            option.style.display = ''; // 조건에 맞으면 보이기
+          } else {
+            option.style.display = 'none'; // 다르면 숨기기
+          }
+        });
+
+        // 현재 선택된 의사가 숨겨진 경우(다른 진료과를 선택한 경우) 선택 초기화
+        const selectedOption = docSelect.options[docSelect.selectedIndex];
+        if (selectedOption && selectedOption.style.display === 'none') {
+          docSelect.value = '';
+        }
+      }
+
+      // 진료과 선택이 바뀔 때마다 필터링 실행
+      deptSelect.addEventListener('change', filterDoctors);
+
       const deptId = '{{departmentId}}';
       const docId = '{{doctorId}}';
       if (deptId) document.querySelector('select[name="departmentId"]').value = deptId;
       if (docId) document.querySelector('select[name="doctorId"]').value = docId;
+      
+      // 폼 데이터 초기 세팅 후에도 올바른 의사만 보이도록 한 번 실행
+      filterDoctors();
+    });
+  </script>
+  {{/form}}
+  {{^form}}
+  <script>
+    // 처음 접속했을 때(에러로 돌아온게 아닐 때)도 진료과 필터링을 적용
+    document.addEventListener('DOMContentLoaded', () => {
+      const deptSelect = document.querySelector('select[name="departmentId"]');
+      const docSelect = document.querySelector('select[name="doctorId"]');
+      const docOptions = Array.from(docSelect.querySelectorAll('option[data-dept-id]'));
+
+      function filterDoctors() {
+        const selectedDeptId = deptSelect.value;
+        docOptions.forEach(option => {
+          if (!selectedDeptId || option.dataset.deptId === selectedDeptId) {
+            option.style.display = '';
+          } else {
+            option.style.display = 'none';
+          }
+        });
+        const selectedOption = docSelect.options[docSelect.selectedIndex];
+        if (selectedOption && selectedOption.style.display === 'none') {
+          docSelect.value = '';
+        }
+      }
+
+      deptSelect.addEventListener('change', filterDoctors);
+      filterDoctors(); // 초기 빈값 필터링 실행
     });
   </script>
   {{/form}}
