@@ -27,7 +27,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 
-@WebMvcTest(AdminDashboardController.class)
+@WebMvcTest(
+        value = AdminDashboardController.class,
+        properties = {
+                "spring.mustache.servlet.expose-request-attributes=true",
+                "spring.mustache.servlet.allow-request-override=true"
+        }
+)
 @Import(AdminDashboardControllerTest.TestSecurityConfig.class)
 class AdminDashboardControllerTest {
 
@@ -55,7 +61,12 @@ class AdminDashboardControllerTest {
                 .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/dashboard"))
-                .andExpect(request().attribute("model", stats));
+                .andExpect(request().attribute("model", stats))
+                .andExpect(request().attribute("pageTitle", "관리자 대시보드"))
+                .andExpect(request().attribute("dashboardUrl", "/admin/dashboard"))
+                .andExpect(request().attribute("loginName", "admin"))
+                .andExpect(request().attribute("roleLabel", "ADMIN"))
+                .andExpect(request().attribute("isAdminDashboard", true));
     }
 
     @Test
