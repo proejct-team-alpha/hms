@@ -11,6 +11,7 @@ public record AdminStaffItemResponse(
         String departmentName,
         boolean active,
         String employmentStatusLabel,
-        String employmentStatusBadgeClass
+        String employmentStatusBadgeClass,
+        String detailUrl
 ) {
 }

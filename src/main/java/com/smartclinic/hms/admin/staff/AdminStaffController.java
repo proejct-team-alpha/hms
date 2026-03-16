@@ -1,9 +1,11 @@
 package com.smartclinic.hms.admin.staff;
 
-import com.smartclinic.hms.admin.staff.dto.CreateAdminStaffRequest;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffListResponse;
-import jakarta.validation.Valid;
+import com.smartclinic.hms.admin.staff.dto.CreateAdminStaffRequest;
+import com.smartclinic.hms.admin.staff.dto.UpdateAdminStaffRequest;
+import com.smartclinic.hms.common.exception.CustomException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -13,7 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import com.smartclinic.hms.common.exception.CustomException;
 
 @Controller
 @RequiredArgsConstructor
@@ -47,6 +48,12 @@ public class AdminStaffController {
         return newForm(req);
     }
 
+    @GetMapping("/detail")
+    public String detail(@RequestParam("staffId") Long staffId, HttpServletRequest req) {
+        req.setAttribute("model", adminStaffService.getEditForm(staffId));
+        return "admin/staff-form";
+    }
+
     @PostMapping("/create")
     public String create(
             @Valid @ModelAttribute CreateAdminStaffRequest request,
@@ -55,7 +62,7 @@ public class AdminStaffController {
             HttpServletRequest req
     ) {
         if (bindingResult.hasErrors()) {
-            req.setAttribute("errorMessage", "입력값을 확인해주세요.");
+            req.setAttribute("errorMessage", adminStaffService.getInputCheckMessage());
             req.setAttribute("model", adminStaffService.getCreateForm(request));
             return "admin/staff-form";
         }
@@ -70,5 +77,28 @@ public class AdminStaffController {
             return "admin/staff-form";
         }
     }
-}
 
+    @PostMapping("/update")
+    public String update(
+            @Valid @ModelAttribute UpdateAdminStaffRequest request,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes,
+            HttpServletRequest req
+    ) {
+        if (bindingResult.hasErrors()) {
+            req.setAttribute("errorMessage", adminStaffService.getInputCheckMessage());
+            req.setAttribute("model", adminStaffService.getEditForm(request));
+            return "admin/staff-form";
+        }
+
+        try {
+            String successMessage = adminStaffService.updateStaff(request);
+            redirectAttributes.addFlashAttribute("successMessage", successMessage);
+            return "redirect:/admin/staff/list";
+        } catch (CustomException ex) {
+            req.setAttribute("errorMessage", ex.getMessage());
+            req.setAttribute("model", adminStaffService.getEditForm(request));
+            return "admin/staff-form";
+        }
+    }
+}

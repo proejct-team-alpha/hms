@@ -1,11 +1,12 @@
 package com.smartclinic.hms.admin.staff;
 
 import com.smartclinic.hms.admin.staff.dto.AdminStaffDepartmentOptionResponse;
+import com.smartclinic.hms.admin.staff.dto.AdminStaffFilterOptionResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffFormOptionResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffFormResponse;
-import com.smartclinic.hms.admin.staff.dto.AdminStaffFilterOptionResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffListResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffPageLinkResponse;
+import com.smartclinic.hms.admin.staff.dto.UpdateAdminStaffRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,9 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -35,7 +39,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
-import static org.hamcrest.Matchers.containsString;
 
 @WebMvcTest(
         value = AdminStaffController.class,
@@ -48,6 +51,8 @@ import static org.hamcrest.Matchers.containsString;
 class AdminStaffControllerTest {
 
     private static final String STAFF_CREATED_MESSAGE = "직원이 등록되었습니다.";
+    private static final String STAFF_UPDATED_MESSAGE = "직원 정보가 수정되었습니다.";
+    private static final String INPUT_CHECK_MESSAGE = "입력값을 확인해주세요.";
 
     @Autowired
     private MockMvc mockMvc;
@@ -75,7 +80,27 @@ class AdminStaffControllerTest {
     }
 
     @Test
-    @DisplayName("직원 목록 기본 페이징으로 화면을 렌더링한다")
+    @DisplayName("직원 수정 화면을 렌더링한다")
+    void detail_rendersEditFormView() throws Exception {
+        // given
+        AdminStaffFormResponse response = createEditFormResponse();
+        given(adminStaffService.getEditForm(1L)).willReturn(response);
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/staff/detail")
+                        .param("staffId", "1")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/staff-form"))
+                .andExpect(request().attribute("model", response));
+
+        then(adminStaffService).should().getEditForm(1L);
+    }
+
+    @Test
+    @DisplayName("직원 목록 기본 페이지로 화면을 렌더링한다")
     void list_usesDefaultPagingAndRendersView() throws Exception {
         // given
         AdminStaffListResponse response = createListResponse("ALL", "ALL", "");
@@ -121,11 +146,11 @@ class AdminStaffControllerTest {
     @DisplayName("직원 등록 성공 시 목록으로 리다이렉트한다")
     void create_success_redirectsToList() throws Exception {
         // given
-        given(adminStaffService.createStaff(org.mockito.ArgumentMatchers.any())).willReturn(STAFF_CREATED_MESSAGE);
+        given(adminStaffService.createStaff(any())).willReturn(STAFF_CREATED_MESSAGE);
 
         // when
         // then
-                mockMvc.perform(post("/admin/staff/create")
+        mockMvc.perform(post("/admin/staff/create")
                         .param("username", "staff-new")
                         .param("password", "password123")
                         .param("name", "신규직원")
@@ -145,7 +170,8 @@ class AdminStaffControllerTest {
     void create_validationFailure_rendersStaffFormView() throws Exception {
         // given
         AdminStaffFormResponse response = createFormResponse();
-        given(adminStaffService.getCreateForm(org.mockito.ArgumentMatchers.any())).willReturn(response);
+        given(adminStaffService.getInputCheckMessage()).willReturn(INPUT_CHECK_MESSAGE);
+        given(adminStaffService.getCreateForm(any())).willReturn(response);
 
         // when
         // then
@@ -160,8 +186,55 @@ class AdminStaffControllerTest {
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/staff-form"))
-                .andExpect(request().attribute("errorMessage", "입력값을 확인해주세요."))
+                .andExpect(request().attribute("errorMessage", INPUT_CHECK_MESSAGE))
                 .andExpect(request().attribute("model", response));
+    }
+
+    @Test
+    @DisplayName("직원 수정 성공 시 목록으로 리다이렉트한다")
+    void update_success_redirectsToList() throws Exception {
+        // given
+        given(adminStaffService.updateStaff(any(UpdateAdminStaffRequest.class))).willReturn(STAFF_UPDATED_MESSAGE);
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/staff/update")
+                        .param("staffId", "1")
+                        .param("name", "수정직원")
+                        .param("departmentId", "2")
+                        .param("password", "")
+                        .param("specialty", "가정의학")
+                        .param("availableDays", "MON")
+                        .param("availableDays", "WED")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", containsString("/admin/staff/list")))
+                .andExpect(flash().attribute("successMessage", STAFF_UPDATED_MESSAGE));
+    }
+
+    @Test
+    @DisplayName("직원 수정 검증 실패 시 수정 화면을 다시 렌더링한다")
+    void update_validationFailure_rendersEditFormView() throws Exception {
+        // given
+        AdminStaffFormResponse response = createEditFormResponse();
+        given(adminStaffService.getInputCheckMessage()).willReturn(INPUT_CHECK_MESSAGE);
+        given(adminStaffService.getEditForm(any(UpdateAdminStaffRequest.class))).willReturn(response);
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/staff/update")
+                        .param("staffId", "1")
+                        .param("name", "")
+                        .param("departmentId", "2")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/staff-form"))
+                .andExpect(request().attribute("errorMessage", INPUT_CHECK_MESSAGE))
+                .andExpect(request().attribute("model", response));
+
+        then(adminStaffService).should().getEditForm(any(UpdateAdminStaffRequest.class));
     }
 
     private AdminStaffListResponse createListResponse(String selectedRole, String selectedEmploymentStatus, String keyword) {
@@ -189,15 +262,44 @@ class AdminStaffControllerTest {
                 "직원 등록",
                 "/admin/staff/create",
                 "등록하기",
+                false,
+                null,
                 "",
                 "",
                 "",
                 "STAFF",
+                "접수 직원",
                 null,
                 true,
+                false,
+                "",
                 List.of(new AdminStaffFormOptionResponse("STAFF", "접수 직원", true)),
                 List.of(new AdminStaffDepartmentOptionResponse(1L, "내과", false)),
-                List.of(new AdminStaffFormOptionResponse("true", "재직", true))
+                List.of(new AdminStaffFormOptionResponse("true", "재직", true)),
+                List.of()
+        );
+    }
+
+    private AdminStaffFormResponse createEditFormResponse() {
+        return new AdminStaffFormResponse(
+                "직원 수정",
+                "/admin/staff/update",
+                "수정하기",
+                true,
+                1L,
+                "doctor01",
+                "김의사",
+                "D-001",
+                "DOCTOR",
+                "의사",
+                1L,
+                true,
+                true,
+                "내과",
+                List.of(new AdminStaffFormOptionResponse("DOCTOR", "의사", true)),
+                List.of(new AdminStaffDepartmentOptionResponse(1L, "내과", true)),
+                List.of(new AdminStaffFormOptionResponse("true", "재직", true)),
+                List.of(new AdminStaffFormOptionResponse("MON", "월요일", true))
         );
     }
 
