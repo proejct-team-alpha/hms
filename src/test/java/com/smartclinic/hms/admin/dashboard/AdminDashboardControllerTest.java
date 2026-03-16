@@ -17,7 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -55,7 +55,7 @@ class AdminDashboardControllerTest {
                 .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/dashboard"))
-                .andExpect(model().attribute("stats", stats));
+                .andExpect(request().attribute("model", stats));
     }
 
     @Test
