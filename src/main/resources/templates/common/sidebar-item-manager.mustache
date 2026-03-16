@@ -27,9 +27,17 @@
       <i data-feather="package" class="w-5 h-5"></i>
       물품 목록
     </a>
+    <a href="/item-manager/item-form" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isItemForm}}bg-indigo-50 text-indigo-700{{/isItemForm}}{{^isItemForm}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isItemForm}}">
+      <i data-feather="plus-circle" class="w-5 h-5"></i>
+      물품 등록
+    </a>
     <a href="/item-manager/item-history" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isItemHistory}}bg-indigo-50 text-indigo-700{{/isItemHistory}}{{^isItemHistory}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isItemHistory}}">
       <i data-feather="clock" class="w-5 h-5"></i>
-      입출고 내역
+      물품 입출고 내역
+    </a>
+    <a href="/item-manager/mypage" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isItemMypage}}bg-indigo-50 text-indigo-700{{/isItemMypage}}{{^isItemMypage}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isItemMypage}}">
+      <i data-feather="settings" class="w-5 h-5"></i>
+      내 정보 관리
     </a>
   </nav>
 </aside>

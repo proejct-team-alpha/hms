@@ -37,8 +37,7 @@ public interface AdminStaffRepository extends JpaRepository<Staff, Long> {
             @Param("keyword") String keyword,
             @Param("role") StaffRole role,
             @Param("active") Boolean active,
-            Pageable pageable
-    );
+            Pageable pageable);
 
     interface AdminStaffListProjection {
         Long getId();

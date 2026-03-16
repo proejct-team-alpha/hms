@@ -1,0 +1,32 @@
+package com.smartclinic.hms.admin.rule;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.smartclinic.hms.domain.HospitalRule;
+import com.smartclinic.hms.domain.HospitalRuleCategory;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class AdminRuleService {
+
+    private final HospitalRuleRepository hospitalRuleRepository;
+
+    public List<AdminRuleDto> getRuleList() {
+        return hospitalRuleRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(AdminRuleDto::new)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void createRule(String title, String content, String category) {
+        hospitalRuleRepository.save(HospitalRule.create(title, content, HospitalRuleCategory.valueOf(category)));
+    }
+}

@@ -63,8 +63,7 @@ public class AdminStaffService {
             StaffRole.DOCTOR, "의사",
             StaffRole.NURSE, "간호사",
             StaffRole.STAFF, "접수 직원",
-            StaffRole.ITEM_MANAGER, "물품 담당자"
-    );
+            StaffRole.ITEM_MANAGER, "물품 담당자");
 
     private static final Map<String, String> AVAILABLE_DAY_LABELS = new LinkedHashMap<>();
 
@@ -83,7 +82,8 @@ public class AdminStaffService {
     private final DoctorRepository doctorRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public AdminStaffListResponse getStaffList(int page, int size, String keyword, String roleParam, String employmentStatusParam) {
+    public AdminStaffListResponse getStaffList(int page, int size, String keyword, String roleParam,
+            String employmentStatusParam) {
         int safePage = page < 1 ? DEFAULT_PAGE : page;
         int safeSize = size < 1 ? DEFAULT_SIZE : size;
 
@@ -103,8 +103,7 @@ public class AdminStaffService {
                 normalizedKeyword,
                 role,
                 active,
-                pageable
-        );
+                pageable);
 
         int currentPage = pageResult.getNumber() + 1;
         int totalPages = pageResult.getTotalPages();
@@ -117,7 +116,8 @@ public class AdminStaffService {
                         .toList(),
                 buildRoleOptions(selectedRole),
                 buildEmploymentStatusOptions(selectedEmploymentStatus),
-                buildPageLinks(totalPages, currentPage, safeSize, normalizedKeyword, selectedRole, selectedEmploymentStatus),
+                buildPageLinks(totalPages, currentPage, safeSize, normalizedKeyword, selectedRole,
+                        selectedEmploymentStatus),
                 normalizedKeyword == null ? "" : normalizedKeyword,
                 selectedRole,
                 selectedEmploymentStatus,
@@ -127,9 +127,12 @@ public class AdminStaffService {
                 totalPages,
                 hasPrevious,
                 hasNext,
-                hasPrevious ? buildListUrl(currentPage - 1, safeSize, normalizedKeyword, selectedRole, selectedEmploymentStatus) : "",
-                hasNext ? buildListUrl(currentPage + 1, safeSize, normalizedKeyword, selectedRole, selectedEmploymentStatus) : ""
-        );
+                hasPrevious
+                        ? buildListUrl(currentPage - 1, safeSize, normalizedKeyword, selectedRole,
+                                selectedEmploymentStatus)
+                        : "",
+                hasNext ? buildListUrl(currentPage + 1, safeSize, normalizedKeyword, selectedRole,
+                        selectedEmploymentStatus) : "");
     }
 
     public AdminStaffFormResponse getCreateForm() {
@@ -139,8 +142,7 @@ public class AdminStaffService {
                 "",
                 DEFAULT_ROLE,
                 null,
-                true
-        );
+                true);
     }
 
     public AdminStaffFormResponse getCreateForm(CreateAdminStaffRequest request) {
@@ -150,8 +152,7 @@ public class AdminStaffService {
                 request.employeeNumber(),
                 request.role(),
                 request.departmentId(),
-                request.active()
-        );
+                request.active());
     }
 
     public AdminStaffFormResponse getEditForm(Long staffId) {
@@ -180,8 +181,7 @@ public class AdminStaffService {
                 passwordEncoder.encode(request.password()),
                 request.name().trim(),
                 role,
-                department
-        );
+                department);
 
         if (!request.active()) {
             staff.update(staff.getName(), department, false);
@@ -232,8 +232,7 @@ public class AdminStaffService {
                 projection.isActive(),
                 projection.isActive() ? "재직" : "비활성",
                 projection.isActive() ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-600",
-                buildDetailUrl(projection.getId())
-        );
+                buildDetailUrl(projection.getId()));
     }
 
     private AdminStaffFormResponse buildCreateFormResponse(
@@ -242,8 +241,7 @@ public class AdminStaffService {
             String employeeNumber,
             String selectedRole,
             Long selectedDepartmentId,
-            boolean active
-    ) {
+            boolean active) {
         String normalizedRole = normalizeSelectedRole(selectedRole);
 
         return new AdminStaffFormResponse(
@@ -264,15 +262,17 @@ public class AdminStaffService {
                 buildFormRoleOptions(normalizedRole),
                 buildDepartmentOptions(selectedDepartmentId),
                 buildEmploymentStatusFormOptions(active),
-                List.of()
-        );
+                List.of());
     }
 
     private AdminStaffFormResponse buildEditFormResponse(Staff staff, Doctor doctor, UpdateAdminStaffRequest request) {
-        Long selectedDepartmentId = request != null ? request.departmentId() : staff.getDepartment() == null ? null : staff.getDepartment().getId();
+        Long selectedDepartmentId = request != null ? request.departmentId()
+                : staff.getDepartment() == null ? null : staff.getDepartment().getId();
         String name = request != null ? request.name() : staff.getName();
-        String specialty = request != null ? nullToEmpty(request.specialty()) : doctor == null ? "" : nullToEmpty(doctor.getSpecialty());
-        Set<String> selectedDays = request != null ? normalizeAvailableDaySet(request.availableDays()) : doctor == null ? Set.of() : normalizeAvailableDaySet(splitAvailableDays(doctor.getAvailableDays()));
+        String specialty = request != null ? nullToEmpty(request.specialty())
+                : doctor == null ? "" : nullToEmpty(doctor.getSpecialty());
+        Set<String> selectedDays = request != null ? normalizeAvailableDaySet(request.availableDays())
+                : doctor == null ? Set.of() : normalizeAvailableDaySet(splitAvailableDays(doctor.getAvailableDays()));
 
         return new AdminStaffFormResponse(
                 "직원 수정",
@@ -292,8 +292,7 @@ public class AdminStaffService {
                 buildFormRoleOptions(staff.getRole().name()),
                 buildDepartmentOptions(selectedDepartmentId),
                 buildEmploymentStatusFormOptions(staff.isActive()),
-                buildAvailableDayOptions(selectedDays)
-        );
+                buildAvailableDayOptions(selectedDays));
     }
 
     private List<AdminStaffFilterOptionResponse> buildRoleOptions(String selectedRole) {
@@ -303,8 +302,7 @@ public class AdminStaffService {
                 StaffRole.DOCTOR.name(),
                 StaffRole.NURSE.name(),
                 StaffRole.STAFF.name(),
-                StaffRole.ITEM_MANAGER.name()
-        );
+                StaffRole.ITEM_MANAGER.name());
 
         return orderedRoles.stream()
                 .map(role -> new AdminStaffFilterOptionResponse(
@@ -316,12 +314,11 @@ public class AdminStaffService {
 
     private List<AdminStaffFormOptionResponse> buildFormRoleOptions(String selectedRole) {
         return List.of(
-                        StaffRole.ADMIN.name(),
-                        StaffRole.DOCTOR.name(),
-                        StaffRole.NURSE.name(),
-                        StaffRole.STAFF.name(),
-                        StaffRole.ITEM_MANAGER.name()
-                )
+                StaffRole.ADMIN.name(),
+                StaffRole.DOCTOR.name(),
+                StaffRole.NURSE.name(),
+                StaffRole.STAFF.name(),
+                StaffRole.ITEM_MANAGER.name())
                 .stream()
                 .map(role -> new AdminStaffFormOptionResponse(
                         role,
@@ -343,8 +340,7 @@ public class AdminStaffService {
     private List<AdminStaffFormOptionResponse> buildEmploymentStatusFormOptions(boolean active) {
         return List.of(
                 new AdminStaffFormOptionResponse("true", "재직", active),
-                new AdminStaffFormOptionResponse("false", "비활성", !active)
-        );
+                new AdminStaffFormOptionResponse("false", "비활성", !active));
     }
 
     private List<AdminStaffFormOptionResponse> buildAvailableDayOptions(Set<String> selectedDays) {
@@ -352,17 +348,15 @@ public class AdminStaffService {
                 .map(entry -> new AdminStaffFormOptionResponse(
                         entry.getKey(),
                         entry.getValue(),
-                        selectedDays.contains(entry.getKey())
-                ))
+                        selectedDays.contains(entry.getKey())))
                 .toList();
     }
 
     private List<AdminStaffFilterOptionResponse> buildEmploymentStatusOptions(String selectedEmploymentStatus) {
         return List.of(
-                        new AdminStaffFilterOptionResponse(ALL, "전체 상태", ALL.equals(selectedEmploymentStatus)),
-                        new AdminStaffFilterOptionResponse(ACTIVE, "재직", ACTIVE.equals(selectedEmploymentStatus)),
-                        new AdminStaffFilterOptionResponse(INACTIVE, "비활성", INACTIVE.equals(selectedEmploymentStatus))
-                )
+                new AdminStaffFilterOptionResponse(ALL, "전체 상태", ALL.equals(selectedEmploymentStatus)),
+                new AdminStaffFilterOptionResponse(ACTIVE, "재직", ACTIVE.equals(selectedEmploymentStatus)),
+                new AdminStaffFilterOptionResponse(INACTIVE, "비활성", INACTIVE.equals(selectedEmploymentStatus)))
                 .stream()
                 .toList();
     }
@@ -373,8 +367,7 @@ public class AdminStaffService {
             int size,
             String keyword,
             String selectedRole,
-            String selectedEmploymentStatus
-    ) {
+            String selectedEmploymentStatus) {
         if (totalPages == 0) {
             return List.of();
         }

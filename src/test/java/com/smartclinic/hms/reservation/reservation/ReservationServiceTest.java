@@ -1,5 +1,6 @@
 package com.smartclinic.hms.reservation.reservation;
 
+import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.doctor.DoctorRepository;
 import com.smartclinic.hms.domain.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,8 +9,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -29,6 +32,7 @@ class ReservationServiceTest {
     @Mock PatientRepository patientRepository;
     @Mock ReservationRepository reservationRepository;
     @Mock DepartmentRepository departmentRepository;
+    @Spy Clock clock = Clock.systemUTC();
 
     @InjectMocks ReservationService reservationService;
 
@@ -110,7 +114,7 @@ class ReservationServiceTest {
 
         // when & then
         assertThatThrownBy(() -> reservationService.createReservation(form))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(CustomException.class)
                 .hasMessageContaining("이미 예약된 시간대입니다.");
     }
 }

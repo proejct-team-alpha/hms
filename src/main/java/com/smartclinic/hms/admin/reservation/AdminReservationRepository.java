@@ -25,34 +25,30 @@ public interface AdminReservationRepository extends JpaRepository<Reservation, L
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
 
-    @Query(
-            value = """
-                    select r.id as id,
-                           r.reservationNumber as reservationNumber,
-                           r.reservationDate as reservationDate,
-                           r.timeSlot as timeSlot,
-                           patient.name as patientName,
-                           patient.phone as patientPhone,
-                           department.name as departmentName,
-                           staff.name as doctorName,
-                           r.status as status
-                    from Reservation r
-                    join r.patient patient
-                    join r.department department
-                    join r.doctor doctor
-                    join doctor.staff staff
-                    where (:status is null or r.status = :status)
-                    """,
-            countQuery = """
-                    select count(r.id)
-                    from Reservation r
-                    where (:status is null or r.status = :status)
-                    """
-    )
+    @Query(value = """
+            select r.id as id,
+                   r.reservationNumber as reservationNumber,
+                   r.reservationDate as reservationDate,
+                   r.timeSlot as timeSlot,
+                   patient.name as patientName,
+                   patient.phone as patientPhone,
+                   department.name as departmentName,
+                   staff.name as doctorName,
+                   r.status as status
+            from Reservation r
+            join r.patient patient
+            join r.department department
+            join r.doctor doctor
+            join doctor.staff staff
+            where (:status is null or r.status = :status)
+            """, countQuery = """
+            select count(r.id)
+            from Reservation r
+            where (:status is null or r.status = :status)
+            """)
     Page<AdminReservationListProjection> findReservationListPage(
             @Param("status") ReservationStatus status,
-            Pageable pageable
-    );
+            Pageable pageable);
 
     interface DailyPatientCountProjection {
         LocalDate getDate();

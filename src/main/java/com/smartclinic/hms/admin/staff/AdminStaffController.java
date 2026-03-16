@@ -30,8 +30,7 @@ public class AdminStaffController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String role,
             @RequestParam(required = false) String employmentStatus,
-            HttpServletRequest req
-    ) {
+            HttpServletRequest req) {
         AdminStaffListResponse result = adminStaffService.getStaffList(page, size, keyword, role, employmentStatus);
         req.setAttribute("model", result);
         return "admin/staff-list";
@@ -59,8 +58,7 @@ public class AdminStaffController {
             @Valid @ModelAttribute CreateAdminStaffRequest request,
             BindingResult bindingResult,
             RedirectAttributes redirectAttributes,
-            HttpServletRequest req
-    ) {
+            HttpServletRequest req) {
         if (bindingResult.hasErrors()) {
             req.setAttribute("errorMessage", adminStaffService.getInputCheckMessage());
             req.setAttribute("model", adminStaffService.getCreateForm(request));
@@ -83,8 +81,7 @@ public class AdminStaffController {
             @Valid @ModelAttribute UpdateAdminStaffRequest request,
             BindingResult bindingResult,
             RedirectAttributes redirectAttributes,
-            HttpServletRequest req
-    ) {
+            HttpServletRequest req) {
         if (bindingResult.hasErrors()) {
             req.setAttribute("errorMessage", adminStaffService.getInputCheckMessage());
             req.setAttribute("model", adminStaffService.getEditForm(request));

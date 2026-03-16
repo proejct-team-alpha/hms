@@ -3,41 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>예약 현황 - MediCare+</title>
+  <title>오늘 예약 현황 - MediCare+</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
 </head>
-<body>
-  
+<body class="min-h-screen flex">
   {{> common/sidebar-nurse}}
 
   <div class="main-content flex-1 flex flex-col ml-64">
     {{> common/header-staff}}
-    
-    <main class="content-wrapper">
+
+    <main class="content-wrapper flex-1 p-6">
       <div class="space-y-6 max-w-5xl mx-auto">
         <div class="flex justify-between items-center">
-          <h1 class="text-2xl font-bold text-slate-800">예약 환자 목록</h1>
+          <h1 class="text-2xl font-bold text-slate-800">오늘 예약 현황</h1>
         </div>
+
+        {{#message}}
+        <div class="p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl text-sm">{{message}}</div>
+        {{/message}}
+        {{#errorMessage}}
+        <div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm">{{errorMessage}}</div>
+        {{/errorMessage}}
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-            <div class="flex gap-2" id="filter-container">
-              <button onclick="setFilter('ALL')" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-slate-800 text-white" data-filter="ALL">전체</button>
-              <button onclick="setFilter('RECEIVED')" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100" data-filter="RECEIVED">진료 대기</button>
-              <button onclick="setFilter('COMPLETED')" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100" data-filter="COMPLETED">진료 완료</button>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="relative">
-                <i data-feather="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                <input 
-                  type="text" 
-                  id="search-input"
-                  placeholder="환자명 또는 연락처 검색..." 
-                  class="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-64"
-                  oninput="handleSearch()"
-                />
-              </div>
+            <div class="flex gap-2">
+              {{#statusFilters}}
+              <a href="{{url}}" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors {{#selected}}bg-slate-800 text-white{{/selected}}{{^selected}}bg-white border border-slate-300 text-slate-600 hover:bg-slate-100{{/selected}}">
+                {{label}}
+              </a>
+              {{/statusFilters}}
             </div>
           </div>
 
@@ -50,15 +46,65 @@
                 <th class="p-4 font-medium">예약 구분</th>
                 <th class="p-4 font-medium">진료과 / 전문의</th>
                 <th class="p-4 font-medium">상태</th>
+                <th class="p-4 font-medium">접수</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-200" id="table-body">
-              <!-- Table rows injected by JS -->
+            <tbody class="divide-y divide-slate-200">
+              {{#reservations}}
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="p-4 text-sm font-medium text-slate-900">{{timeSlot}}</td>
+                <td class="p-4 text-sm font-semibold text-slate-800">
+                  <a href="/nurse/patient-detail?id={{id}}" class="hover:text-indigo-600">{{patientName}}</a>
+                </td>
+                <td class="p-4 text-sm text-slate-600">{{patientPhone}}</td>
+                <td class="p-4">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+                    {{sourceText}}
+                  </span>
+                </td>
+                <td class="p-4 text-sm text-slate-600">{{departmentName}} / {{doctorName}}</td>
+                <td class="p-4">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{statusBadgeClass}}">
+                    {{statusText}}
+                  </span>
+                </td>
+                <td class="p-4">
+                  {{#canReceive}}
+                  <form method="post" action="/nurse/reservation/receive">
+                    <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                    <input type="hidden" name="id" value="{{id}}">
+                    <button type="submit" class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                      접수
+                    </button>
+                  </form>
+                  {{/canReceive}}
+                  {{^canReceive}}
+                  <span class="text-xs text-slate-400">-</span>
+                  {{/canReceive}}
+                </td>
+              </tr>
+              {{/reservations}}
+              {{^reservations}}
+              <tr>
+                <td colspan="7" class="p-8 text-center text-slate-500">
+                  오늘 예약된 환자가 없습니다.
+                </td>
+              </tr>
+              {{/reservations}}
             </tbody>
           </table>
-          
-          <div class="p-4 border-t border-slate-200 flex justify-center" id="pagination-container">
-            <!-- Pagination injected by JS -->
+
+          <!-- 페이징 -->
+          <div class="flex items-center justify-center gap-1 px-4 py-3 border-t border-slate-200">
+            {{#hasPrev}}
+            <a href="{{prevUrl}}" class="px-3 py-1.5 rounded-lg text-sm text-slate-600 border border-slate-300 hover:bg-slate-100 transition-colors">이전</a>
+            {{/hasPrev}}
+            {{#pageLinks}}
+            <a href="{{url}}" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors {{#current}}bg-indigo-600 text-white{{/current}}{{^current}}text-slate-600 border border-slate-300 hover:bg-slate-100{{/current}}">{{num}}</a>
+            {{/pageLinks}}
+            {{#hasNext}}
+            <a href="{{nextUrl}}" class="px-3 py-1.5 rounded-lg text-sm text-slate-600 border border-slate-300 hover:bg-slate-100 transition-colors">다음</a>
+            {{/hasNext}}
           </div>
         </div>
       </div>
@@ -67,113 +113,6 @@
     {{> common/footer-staff}}
   </div>
 
-  <script src="/js/data.js"></script>
-  <script>
-    let currentFilter = 'ALL';
-    let currentSearch = '';
-    let currentPage = 1;
-    const itemsPerPage = 5;
-
-    function setFilter(filter) {
-      currentFilter = filter;
-      currentPage = 1;
-      
-      // Update button styles
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.className = 'filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600 hover:bg-slate-100';
-      });
-      
-      const activeBtn = document.querySelector(`.filter-btn[data-filter="\${filter}"]`);
-      if (filter === 'ALL') activeBtn.className = 'filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-slate-800 text-white';
-      else if (filter === 'RECEIVED') activeBtn.className = 'filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-green-600 text-white';
-      else if (filter === 'COMPLETED') activeBtn.className = 'filter-btn px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-blue-600 text-white';
-
-      renderTable();
-    }
-
-    function handleSearch() {
-      currentSearch = document.getElementById('search-input').value.toLowerCase();
-      currentPage = 1;
-      renderTable();
-    }
-
-    function renderTable() {
-      const reservations = getReservations();
-      
-      const filtered = reservations.filter(r => {
-        const matchFilter = currentFilter === 'ALL' ? (r.status === 'RECEIVED' || r.status === 'COMPLETED') : r.status === currentFilter;
-        const matchSearch = r.name.toLowerCase().includes(currentSearch) || r.phone.includes(currentSearch);
-        return matchFilter && matchSearch;
-      });
-
-      const sorted = [...filtered].sort((a, b) => {
-        const order = { 'RECEIVED': 0, 'RESERVED': 1, 'COMPLETED': 2 };
-        return (order[a.status] ?? 3) - (order[b.status] ?? 3);
-      });
-
-      const totalPages = Math.ceil(sorted.length / itemsPerPage);
-      const currentItems = sorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-      const tbody = document.getElementById('table-body');
-      
-      if (currentItems.length === 0) {
-        tbody.innerHTML = \`
-          <tr>
-            <td colspan="6" class="p-8 text-center text-slate-500">
-              검색 결과가 없습니다.
-            </td>
-          </tr>
-        \`;
-      } else {
-        tbody.innerHTML = currentItems.map(res => {
-          let typeClass = 'bg-orange-100 text-orange-800';
-          if (res.type === 'ONLINE') typeClass = 'bg-blue-100 text-blue-800';
-          else if (res.type === 'PHONE') typeClass = 'bg-purple-100 text-purple-800';
-
-          let statusHtml = '';
-          if (res.status === 'RECEIVED') {
-            statusHtml = \`<span class="inline-flex items-center gap-1.5 text-sm font-medium text-green-600"><i data-feather="check-circle" class="w-4 h-4"></i>진료 대기</span>\`;
-          } else if (res.status === 'IN_PROGRESS') {
-            statusHtml = \`<span class="inline-flex items-center gap-1.5 text-sm font-medium text-purple-600"><i data-feather="activity" class="w-4 h-4"></i>진료 중</span>\`;
-          } else {
-            statusHtml = \`<span class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600"><i data-feather="check-circle" class="w-4 h-4"></i>진료 완료</span>\`;
-          }
-
-          return \`
-            <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="window.location.href='patient-detail.html?id=\${res.id}'">
-              <td class="p-4 text-sm font-medium text-slate-900">\${res.time}</td>
-              <td class="p-4 text-sm font-semibold text-slate-800">\${res.name}</td>
-              <td class="p-4 text-sm text-slate-600">\${res.phone}</td>
-              <td class="p-4">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium \${typeClass}">
-                  \${res.type}
-                </span>
-              </td>
-              <td class="p-4 text-sm text-slate-600">\${res.dept} / \${res.doctor}</td>
-              <td class="p-4">\${statusHtml}</td>
-            </tr>
-          \`;
-        }).join('');
-      }
-
-      // Simple pagination render
-      const paginationContainer = document.getElementById('pagination-container');
-      if (totalPages > 1) {
-        let pagesHtml = '';
-        for (let i = 1; i <= totalPages; i++) {
-          pagesHtml += \`<button onclick="currentPage=\${i}; renderTable()" class="px-3 py-1 mx-1 rounded \${currentPage === i ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}">\${i}</button>\`;
-        }
-        paginationContainer.innerHTML = pagesHtml;
-      } else {
-        paginationContainer.innerHTML = '';
-      }
-
-      feather.replace();
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      renderTable();
-    });
-  </script>
+  <script>feather.replace();</script>
 </body>
 </html>
