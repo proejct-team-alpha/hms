@@ -84,7 +84,7 @@ public class ReceptionController {
 
     // 접수 상세
     @GetMapping("/detail")
-    public String detail(@RequestParam Long id, Model model) {
+    public String detail(@RequestParam("id") Long id, Model model) {
         model.addAttribute("isStaffReception", true);
         model.addAttribute("detail", receptionService.getDetail(id));
         return "staff/reception-detail";
