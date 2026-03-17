@@ -16,6 +16,14 @@ import lombok.extern.slf4j.Slf4j;
 @ControllerAdvice(annotations = Controller.class)
 public class SsrExceptionHandler {
 
+    @ExceptionHandler(CustomException.class)
+    public String handleCustomException(CustomException ex, HttpServletRequest req, Model model) {
+        log.warn("[SsrExceptionHandler] 비즈니스 예외: path={}, message={}", req.getRequestURI(), ex.getMessage());
+        model.addAttribute("errorMessage", ex.getMessage());
+        model.addAttribute("path", req.getRequestURI());
+        return "error/500";
+    }
+
     @ExceptionHandler(Exception.class)
     public String handleSsrException(Exception ex, HttpServletRequest req, Model model) {
         log.error("[SsrExceptionHandler] SSR 예외: path={}", req.getRequestURI(), ex);
