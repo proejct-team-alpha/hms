@@ -72,8 +72,8 @@
                 <th class="p-4 font-medium">연락처</th>
                 <th class="p-4 font-medium">예약 구분</th>
                 <th class="p-4 font-medium">진료과 / 전문의</th>
-                <th class="p-4 font-medium">상태</th>
-                <th class="p-4 font-medium text-right">비고</th>
+                <th class="p-4 font-medium text-center">상태</th>
+                <th class="p-4 font-medium text-center">비고</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-200">
@@ -100,8 +100,8 @@
                     <form method="post" action="/staff/reception/receive">
                       <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
                       <input type="hidden" name="reservationId" value="{{id}}">
-                      <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 text-sm font-medium rounded-lg hover:bg-green-100 transition-colors">
-                        <i data-feather="check-circle" class="w-4 h-4"></i> 접수
+                      <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 hover:bg-green-100 text-sm font-medium rounded-lg hover:bg-green-600 transition"">
+                        <i data-feather="check-circle" class="w-3.5 h-3.5"></i> 접수
                       </button>
                     </form>
                     {{/canReceive}}
@@ -109,8 +109,8 @@
                     <form method="post" action="/staff/reception/cancel" onsubmit="return confirm('예약을 취소하시겠습니까?')">
                       <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
                       <input type="hidden" name="id" value="{{id}}">
-                      <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors">
-                        <i data-feather="x-circle" class="w-4 h-4"></i> 취소
+                      <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 text-sm font-medium rounded-lg hover:bg-red-600 transition"">
+                        <i data-feather="x-circle" class="w-3.5 h-3.5"></i> 취소
                       </button>
                     </form>
                     {{/canCancel}}

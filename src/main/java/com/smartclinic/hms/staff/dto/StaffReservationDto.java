@@ -47,7 +47,7 @@ public class StaffReservationDto {
         };
         this.statusBadgeClass = switch (r.getStatus()) {
             case RESERVED -> "bg-indigo-100 text-indigo-700";
-            case RECEIVED -> "bg-yellow-100 text-yellow-700";
+            case RECEIVED -> "bg-orange-100 text-orange-700";
             case COMPLETED -> "bg-green-100 text-green-700";
             case CANCELLED -> "bg-slate-100 text-slate-500";
         };
