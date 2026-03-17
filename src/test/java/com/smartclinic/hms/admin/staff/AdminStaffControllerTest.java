@@ -51,10 +51,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(AdminStaffControllerTest.TestSecurityConfig.class)
 class AdminStaffControllerTest {
 
-    private static final String STAFF_CREATED_MESSAGE = "Staff created successfully.";
-    private static final String STAFF_UPDATED_MESSAGE = "Staff updated successfully.";
-    private static final String STAFF_DEACTIVATED_MESSAGE = "Staff deactivated successfully.";
-    private static final String INPUT_CHECK_MESSAGE = "Please check the input values.";
+    private static final String STAFF_CREATED_MESSAGE = "직원을 등록했습니다.";
+    private static final String STAFF_UPDATED_MESSAGE = "직원 정보를 수정했습니다.";
+    private static final String STAFF_DEACTIVATED_MESSAGE = "직원을 비활성화했습니다.";
+    private static final String INPUT_CHECK_MESSAGE = "입력값을 확인해주세요.";
 
     @Autowired
     private MockMvc mockMvc;
@@ -63,7 +63,7 @@ class AdminStaffControllerTest {
     private AdminStaffService adminStaffService;
 
     @Test
-    @DisplayName("renders create form")
+    @DisplayName("직원 등록 화면을 렌더링한다")
     void newForm_rendersStaffFormView() throws Exception {
         // given
         AdminStaffFormResponse response = createFormResponse();
@@ -82,7 +82,7 @@ class AdminStaffControllerTest {
     }
 
     @Test
-    @DisplayName("renders edit form")
+    @DisplayName("직원 수정 화면을 렌더링한다")
     void detail_rendersEditFormView() throws Exception {
         // given
         AdminStaffFormResponse response = createEditFormResponse();
@@ -100,7 +100,7 @@ class AdminStaffControllerTest {
     }
 
     @Test
-    @DisplayName("renders list view with model and pageTitle")
+    @DisplayName("직원 목록 뷰는 model과 pageTitle을 함께 렌더링한다")
     void list_usesDefaultPagingAndRendersView() throws Exception {
         // given
         AdminStaffListResponse response = createListResponse("ALL", "ALL", "");
@@ -118,7 +118,7 @@ class AdminStaffControllerTest {
     }
 
     @Test
-    @DisplayName("redirects to list after successful create")
+    @DisplayName("직원 등록 성공 시 목록으로 리다이렉트한다")
     void create_success_redirectsToList() throws Exception {
         // given
         given(adminStaffService.createStaff(any())).willReturn(STAFF_CREATED_MESSAGE);
@@ -128,12 +128,12 @@ class AdminStaffControllerTest {
         mockMvc.perform(post("/admin/staff/create")
                         .param("username", "doctor-new")
                         .param("password", "password123")
-                        .param("name", "doctor new")
+                        .param("name", "신규의사")
                         .param("employeeNumber", "D-NEW-001")
                         .param("role", "DOCTOR")
                         .param("departmentId", "1")
                         .param("active", "true")
-                        .param("specialty", "family medicine")
+                        .param("specialty", "가정의학")
                         .param("availableDays", "MON")
                         .param("availableDays", "WED")
                         .with(user("admin").roles("ADMIN"))
@@ -144,7 +144,7 @@ class AdminStaffControllerTest {
     }
 
     @Test
-    @DisplayName("renders create form again on validation failure")
+    @DisplayName("직원 등록 검증 실패 시 등록 폼을 다시 렌더링한다")
     void create_validationFailure_rendersStaffFormView() throws Exception {
         // given
         AdminStaffFormResponse response = createDoctorCreateFormResponse();
@@ -160,7 +160,7 @@ class AdminStaffControllerTest {
                         .param("employeeNumber", "")
                         .param("role", "DOCTOR")
                         .param("active", "true")
-                        .param("specialty", "family medicine")
+                        .param("specialty", "가정의학")
                         .param("availableDays", "MON")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
@@ -171,7 +171,7 @@ class AdminStaffControllerTest {
     }
 
     @Test
-    @DisplayName("redirects to list after successful update")
+    @DisplayName("직원 수정 성공 시 목록으로 리다이렉트한다")
     void update_success_redirectsToList() throws Exception {
         // given
         given(adminStaffService.updateStaff(any(UpdateAdminStaffRequest.class))).willReturn(STAFF_UPDATED_MESSAGE);
@@ -180,10 +180,10 @@ class AdminStaffControllerTest {
         // then
         mockMvc.perform(post("/admin/staff/update")
                         .param("staffId", "1")
-                        .param("name", "updated staff")
+                        .param("name", "수정직원")
                         .param("departmentId", "2")
                         .param("password", "")
-                        .param("specialty", "family medicine")
+                        .param("specialty", "가정의학")
                         .param("availableDays", "MON")
                         .param("availableDays", "WED")
                         .with(user("admin").roles("ADMIN"))
@@ -194,7 +194,7 @@ class AdminStaffControllerTest {
     }
 
     @Test
-    @DisplayName("redirects to list after successful deactivate")
+    @DisplayName("직원 비활성화 성공 시 목록으로 리다이렉트한다")
     void deactivate_success_redirectsToList() throws Exception {
         // given
         given(adminStaffService.deactivateStaff(2L, "admin")).willReturn(STAFF_DEACTIVATED_MESSAGE);
@@ -214,22 +214,22 @@ class AdminStaffControllerTest {
         return new AdminStaffListResponse(
                 List.of(new AdminStaffItemResponse(
                         2L,
-                        "Kim Staff",
+                        "김직원",
                         "staff01",
                         "S-001",
                         "STAFF",
-                        "Staff",
+                        "직원",
                         "bg-purple-100 text-purple-800",
-                        "Internal Medicine",
+                        "내과",
                         true,
-                        "Active",
+                        "재직",
                         "bg-green-100 text-green-800",
                         "/admin/staff/detail?staffId=2",
                         true,
                         ""
                 )),
-                List.of(new AdminStaffFilterOptionResponse("ALL", "All Roles", "ALL".equals(selectedRole))),
-                List.of(new AdminStaffFilterOptionResponse("ALL", "All Status", "ALL".equals(selectedEmploymentStatus))),
+                List.of(new AdminStaffFilterOptionResponse("ALL", "전체 역할", "ALL".equals(selectedRole))),
+                List.of(new AdminStaffFilterOptionResponse("ALL", "전체 상태", "ALL".equals(selectedEmploymentStatus))),
                 List.of(new AdminStaffPageLinkResponse(1, "/admin/staff/list?page=1&size=10&role=ALL&employmentStatus=ALL", true)),
                 keyword,
                 selectedRole,
@@ -247,70 +247,70 @@ class AdminStaffControllerTest {
 
     private AdminStaffFormResponse createFormResponse() {
         return new AdminStaffFormResponse(
-                "Staff Create",
+                "직원 등록",
                 "/admin/staff/create",
-                "Create",
+                "등록하기",
                 false,
                 null,
                 "",
                 "",
                 "",
                 "STAFF",
-                "Staff",
+                "직원",
                 null,
                 true,
                 false,
                 "",
-                List.of(new AdminStaffFormOptionResponse("STAFF", "Staff", true)),
-                List.of(new AdminStaffDepartmentOptionResponse(1L, "Internal Medicine", false)),
-                List.of(new AdminStaffFormOptionResponse("true", "Active", true)),
+                List.of(new AdminStaffFormOptionResponse("STAFF", "직원", true)),
+                List.of(new AdminStaffDepartmentOptionResponse(1L, "내과", false)),
+                List.of(new AdminStaffFormOptionResponse("true", "재직", true)),
                 List.of()
         );
     }
 
     private AdminStaffFormResponse createDoctorCreateFormResponse() {
         return new AdminStaffFormResponse(
-                "Staff Create",
+                "직원 등록",
                 "/admin/staff/create",
-                "Create",
+                "등록하기",
                 false,
                 null,
                 "",
                 "",
                 "",
                 "DOCTOR",
-                "Doctor",
+                "의사",
                 null,
                 true,
                 true,
-                "family medicine",
-                List.of(new AdminStaffFormOptionResponse("DOCTOR", "Doctor", true)),
-                List.of(new AdminStaffDepartmentOptionResponse(1L, "Family Medicine", false)),
-                List.of(new AdminStaffFormOptionResponse("true", "Active", true)),
-                List.of(new AdminStaffFormOptionResponse("MON", "Monday", true))
+                "가정의학",
+                List.of(new AdminStaffFormOptionResponse("DOCTOR", "의사", true)),
+                List.of(new AdminStaffDepartmentOptionResponse(1L, "가정의학과", false)),
+                List.of(new AdminStaffFormOptionResponse("true", "재직", true)),
+                List.of(new AdminStaffFormOptionResponse("MON", "월요일", true))
         );
     }
 
     private AdminStaffFormResponse createEditFormResponse() {
         return new AdminStaffFormResponse(
-                "Staff Edit",
+                "직원 수정",
                 "/admin/staff/update",
-                "Save",
+                "수정하기",
                 true,
                 1L,
                 "doctor01",
-                "Kim Doctor",
+                "김의사",
                 "D-001",
                 "DOCTOR",
-                "Doctor",
+                "의사",
                 1L,
                 true,
                 true,
-                "internal medicine",
-                List.of(new AdminStaffFormOptionResponse("DOCTOR", "Doctor", true)),
-                List.of(new AdminStaffDepartmentOptionResponse(1L, "Internal Medicine", true)),
-                List.of(new AdminStaffFormOptionResponse("true", "Active", true)),
-                List.of(new AdminStaffFormOptionResponse("MON", "Monday", true))
+                "내과",
+                List.of(new AdminStaffFormOptionResponse("DOCTOR", "의사", true)),
+                List.of(new AdminStaffDepartmentOptionResponse(1L, "내과", true)),
+                List.of(new AdminStaffFormOptionResponse("true", "재직", true)),
+                List.of(new AdminStaffFormOptionResponse("MON", "월요일", true))
         );
     }
 

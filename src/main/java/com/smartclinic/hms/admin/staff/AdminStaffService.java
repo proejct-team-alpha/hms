@@ -46,37 +46,37 @@ public class AdminStaffService {
     private static final String INACTIVE = "INACTIVE";
     private static final String DEFAULT_ROLE = "STAFF";
     private static final String NO_DEPARTMENT_LABEL = "-";
-    private static final String STAFF_CREATED_MESSAGE = "Staff created successfully.";
-    private static final String STAFF_UPDATED_MESSAGE = "Staff updated successfully.";
-    private static final String STAFF_DEACTIVATED_MESSAGE = "Staff deactivated successfully.";
-    private static final String INPUT_CHECK_MESSAGE = "Please check the input values.";
-    private static final String INVALID_ROLE_MESSAGE = "Please select a valid role.";
-    private static final String INVALID_DEPARTMENT_MESSAGE = "Please select a valid department.";
-    private static final String DUPLICATE_USERNAME_MESSAGE = "Username is already in use.";
-    private static final String DUPLICATE_EMPLOYEE_NUMBER_MESSAGE = "Employee number is already in use.";
-    private static final String STAFF_NOT_FOUND_MESSAGE = "Staff not found.";
-    private static final String DOCTOR_NOT_FOUND_MESSAGE = "Doctor detail not found.";
-    private static final String PASSWORD_LENGTH_MESSAGE = "Password must be at least 8 characters.";
-    private static final String SELF_DEACTIVATE_MESSAGE = "You cannot deactivate your own account.";
-    private static final String ALREADY_DEACTIVATED_MESSAGE = "Staff is already deactivated.";
+    private static final String STAFF_CREATED_MESSAGE = "직원을 등록했습니다.";
+    private static final String STAFF_UPDATED_MESSAGE = "직원 정보를 수정했습니다.";
+    private static final String STAFF_DEACTIVATED_MESSAGE = "직원을 비활성화했습니다.";
+    private static final String INPUT_CHECK_MESSAGE = "입력값을 확인해주세요.";
+    private static final String INVALID_ROLE_MESSAGE = "유효한 역할을 선택해주세요.";
+    private static final String INVALID_DEPARTMENT_MESSAGE = "유효한 부서를 선택해주세요.";
+    private static final String DUPLICATE_USERNAME_MESSAGE = "이미 사용 중인 로그인 아이디입니다.";
+    private static final String DUPLICATE_EMPLOYEE_NUMBER_MESSAGE = "이미 사용 중인 사번입니다.";
+    private static final String STAFF_NOT_FOUND_MESSAGE = "직원을 찾을 수 없습니다.";
+    private static final String DOCTOR_NOT_FOUND_MESSAGE = "의사 상세 정보를 찾을 수 없습니다.";
+    private static final String PASSWORD_LENGTH_MESSAGE = "비밀번호는 8자 이상이어야 합니다.";
+    private static final String SELF_DEACTIVATE_MESSAGE = "본인 계정은 비활성화할 수 없습니다.";
+    private static final String ALREADY_DEACTIVATED_MESSAGE = "이미 비활성화된 직원입니다.";
 
     private static final Map<StaffRole, String> ROLE_LABELS = Map.of(
-            StaffRole.ADMIN, "Admin",
-            StaffRole.DOCTOR, "Doctor",
-            StaffRole.NURSE, "Nurse",
-            StaffRole.STAFF, "Staff",
-            StaffRole.ITEM_MANAGER, "Item Manager");
+            StaffRole.ADMIN, "관리자",
+            StaffRole.DOCTOR, "의사",
+            StaffRole.NURSE, "간호사",
+            StaffRole.STAFF, "직원",
+            StaffRole.ITEM_MANAGER, "물품 담당자");
 
     private static final Map<String, String> AVAILABLE_DAY_LABELS = new LinkedHashMap<>();
 
     static {
-        AVAILABLE_DAY_LABELS.put("MON", "Monday");
-        AVAILABLE_DAY_LABELS.put("TUE", "Tuesday");
-        AVAILABLE_DAY_LABELS.put("WED", "Wednesday");
-        AVAILABLE_DAY_LABELS.put("THU", "Thursday");
-        AVAILABLE_DAY_LABELS.put("FRI", "Friday");
-        AVAILABLE_DAY_LABELS.put("SAT", "Saturday");
-        AVAILABLE_DAY_LABELS.put("SUN", "Sunday");
+        AVAILABLE_DAY_LABELS.put("MON", "월요일");
+        AVAILABLE_DAY_LABELS.put("TUE", "화요일");
+        AVAILABLE_DAY_LABELS.put("WED", "수요일");
+        AVAILABLE_DAY_LABELS.put("THU", "목요일");
+        AVAILABLE_DAY_LABELS.put("FRI", "금요일");
+        AVAILABLE_DAY_LABELS.put("SAT", "토요일");
+        AVAILABLE_DAY_LABELS.put("SUN", "일요일");
     }
 
     private final AdminStaffRepository adminStaffRepository;
@@ -252,8 +252,8 @@ public class AdminStaffService {
         boolean selfRow = projection.getUsername().equals(currentUsername);
         boolean deactivatable = projection.isActive() && !selfRow;
         String deactivateStatusLabel = projection.isActive()
-                ? selfRow ? "Self" : ""
-                : "Inactive";
+                ? selfRow ? "본인" : ""
+                : "비활성";
 
         return new AdminStaffItemResponse(
                 projection.getId(),
@@ -265,7 +265,7 @@ public class AdminStaffService {
                 getRoleBadgeClass(projection.getRole()),
                 projection.getDepartmentName() == null ? NO_DEPARTMENT_LABEL : projection.getDepartmentName(),
                 projection.isActive(),
-                projection.isActive() ? "Active" : "Inactive",
+                projection.isActive() ? "재직" : "비활성",
                 projection.isActive() ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-600",
                 buildDetailUrl(projection.getId()),
                 deactivatable,
@@ -286,9 +286,9 @@ public class AdminStaffService {
         Set<String> selectedDays = normalizeAvailableDaySet(availableDays);
 
         return new AdminStaffFormResponse(
-                "Staff Create",
+                "직원 등록",
                 "/admin/staff/create",
-                "Create",
+                "등록하기",
                 false,
                 null,
                 nullToEmpty(username),
@@ -316,9 +316,9 @@ public class AdminStaffService {
                 : doctor == null ? Set.of() : normalizeAvailableDaySet(splitAvailableDays(doctor.getAvailableDays()));
 
         return new AdminStaffFormResponse(
-                "Staff Edit",
+                "직원 수정",
                 "/admin/staff/update",
-                "Save",
+                "수정하기",
                 true,
                 staff.getId(),
                 staff.getUsername(),
@@ -348,7 +348,7 @@ public class AdminStaffService {
         return orderedRoles.stream()
                 .map(role -> new AdminStaffFilterOptionResponse(
                         role,
-                        ALL.equals(role) ? "All Roles" : ROLE_LABELS.get(StaffRole.valueOf(role)),
+                        ALL.equals(role) ? "전체 역할" : ROLE_LABELS.get(StaffRole.valueOf(role)),
                         role.equals(selectedRole)))
                 .toList();
     }
@@ -380,8 +380,8 @@ public class AdminStaffService {
 
     private List<AdminStaffFormOptionResponse> buildEmploymentStatusFormOptions(boolean active) {
         return List.of(
-                new AdminStaffFormOptionResponse("true", "Active", active),
-                new AdminStaffFormOptionResponse("false", "Inactive", !active));
+                new AdminStaffFormOptionResponse("true", "재직", active),
+                new AdminStaffFormOptionResponse("false", "비활성", !active));
     }
 
     private List<AdminStaffFormOptionResponse> buildAvailableDayOptions(Set<String> selectedDays) {
@@ -395,9 +395,9 @@ public class AdminStaffService {
 
     private List<AdminStaffFilterOptionResponse> buildEmploymentStatusOptions(String selectedEmploymentStatus) {
         return List.of(
-                new AdminStaffFilterOptionResponse(ALL, "All Status", ALL.equals(selectedEmploymentStatus)),
-                new AdminStaffFilterOptionResponse(ACTIVE, "Active", ACTIVE.equals(selectedEmploymentStatus)),
-                new AdminStaffFilterOptionResponse(INACTIVE, "Inactive", INACTIVE.equals(selectedEmploymentStatus)));
+                new AdminStaffFilterOptionResponse(ALL, "전체 상태", ALL.equals(selectedEmploymentStatus)),
+                new AdminStaffFilterOptionResponse(ACTIVE, "재직", ACTIVE.equals(selectedEmploymentStatus)),
+                new AdminStaffFilterOptionResponse(INACTIVE, "비활성", INACTIVE.equals(selectedEmploymentStatus)));
     }
 
     private List<AdminStaffPageLinkResponse> buildPageLinks(

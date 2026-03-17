@@ -40,15 +40,15 @@ class AdminStaffServiceTest {
     private PasswordEncoder passwordEncoder;
 
     @Test
-    @DisplayName("applies list filters")
+    @DisplayName("이름, 역할, 재직 상태 필터를 조합 적용한다")
     void getStaffList_appliesKeywordRoleAndEmploymentFilters() {
         // given
-        Department internalMedicine = persistDepartment("Internal Medicine");
-        Department surgery = persistDepartment("Surgery");
+        Department internalMedicine = persistDepartment("내과");
+        Department surgery = persistDepartment("외과");
 
-        persistStaff("kim-doctor", "D-001", "Kim Doctor", StaffRole.DOCTOR, internalMedicine, true);
-        persistStaff("kim-nurse", "N-001", "Kim Nurse", StaffRole.NURSE, internalMedicine, true);
-        persistStaff("lee-doctor", "D-002", "Lee Doctor", StaffRole.DOCTOR, surgery, false);
+        persistStaff("kim-doctor", "D-001", "김의사", StaffRole.DOCTOR, internalMedicine, true);
+        persistStaff("kim-nurse", "N-001", "김간호", StaffRole.NURSE, internalMedicine, true);
+        persistStaff("lee-doctor", "D-002", "이의사", StaffRole.DOCTOR, surgery, false);
 
         entityManager.flush();
         entityManager.clear();
@@ -59,21 +59,21 @@ class AdminStaffServiceTest {
         // then
         assertThat(result.totalCount()).isEqualTo(1);
         assertThat(result.staffs()).hasSize(1);
-        assertThat(result.staffs().getFirst().name()).isEqualTo("Kim Doctor");
+        assertThat(result.staffs().getFirst().name()).isEqualTo("김의사");
         assertThat(result.staffs().getFirst().role()).isEqualTo("DOCTOR");
         assertThat(result.staffs().getFirst().active()).isTrue();
         assertThat(result.staffs().getFirst().deactivatable()).isTrue();
     }
 
     @Test
-    @DisplayName("encrypts password on create")
+    @DisplayName("직원 등록 시 비밀번호를 BCrypt로 암호화해 저장한다")
     void createStaff_encryptsPasswordAndSaves() {
         // given
-        Department department = persistDepartment("Internal Medicine");
+        Department department = persistDepartment("내과");
         CreateAdminStaffRequest request = new CreateAdminStaffRequest(
                 "staff-new",
                 "password123",
-                "New Staff",
+                "신규직원",
                 "S-NEW-001",
                 "STAFF",
                 department.getId(),
@@ -93,26 +93,26 @@ class AdminStaffServiceTest {
                 .getSingleResult();
 
         // then
-        assertThat(savedStaff.getName()).isEqualTo("New Staff");
+        assertThat(savedStaff.getName()).isEqualTo("신규직원");
         assertThat(savedStaff.isActive()).isTrue();
         assertThat(savedStaff.getPassword()).isNotEqualTo("password123");
         assertThat(passwordEncoder.matches("password123", savedStaff.getPassword())).isTrue();
     }
 
     @Test
-    @DisplayName("creates doctor entity when role is doctor")
+    @DisplayName("의사 역할로 직원 등록 시 Doctor 엔티티도 함께 생성한다")
     void createStaff_createsDoctorWhenRoleIsDoctor() {
         // given
-        Department department = persistDepartment("Family Medicine");
+        Department department = persistDepartment("가정의학과");
         CreateAdminStaffRequest request = new CreateAdminStaffRequest(
                 "doctor-new",
                 "password123",
-                "New Doctor",
+                "신규의사",
                 "D-NEW-001",
                 "DOCTOR",
                 department.getId(),
                 true,
-                "family medicine",
+                "가정의학",
                 List.of("MON", "WED", "FRI")
         );
 
@@ -134,23 +134,23 @@ class AdminStaffServiceTest {
         assertThat(savedStaff.getRole()).isEqualTo(StaffRole.DOCTOR);
         assertThat(savedDoctor.getStaff().getId()).isEqualTo(savedStaff.getId());
         assertThat(savedDoctor.getDepartment().getId()).isEqualTo(department.getId());
-        assertThat(savedDoctor.getSpecialty()).isEqualTo("family medicine");
+        assertThat(savedDoctor.getSpecialty()).isEqualTo("가정의학");
         assertThat(savedDoctor.getAvailableDays()).isEqualTo("MON,WED,FRI");
     }
 
     @Test
-    @DisplayName("throws when username is duplicated")
+    @DisplayName("중복 로그인 아이디로 직원 등록 시 예외가 발생한다")
     void createStaff_duplicateUsername_throwsException() {
         // given
-        Department department = persistDepartment("Surgery");
-        persistStaff("duplicate-user", "S-001", "Existing Staff", StaffRole.STAFF, department, true);
+        Department department = persistDepartment("외과");
+        persistStaff("duplicate-user", "S-001", "기존직원", StaffRole.STAFF, department, true);
         entityManager.flush();
         entityManager.clear();
 
         CreateAdminStaffRequest request = new CreateAdminStaffRequest(
                 "duplicate-user",
                 "password123",
-                "New Staff",
+                "신규직원",
                 "S-002",
                 "STAFF",
                 department.getId(),
@@ -163,22 +163,22 @@ class AdminStaffServiceTest {
         // then
         assertThatThrownBy(() -> adminStaffService.createStaff(request))
                 .isInstanceOf(CustomException.class)
-                .hasMessage("Username is already in use.");
+                .hasMessage("이미 사용 중인 로그인 아이디입니다.");
     }
 
     @Test
-    @DisplayName("updates name department and password")
+    @DisplayName("직원 수정 시 이름과 부서, 비밀번호를 변경한다")
     void updateStaff_updatesNameDepartmentAndPassword() {
         // given
-        Department originalDepartment = persistDepartment("General Affairs");
-        Department changedDepartment = persistDepartment("Administration");
-        Staff staff = persistStaff("staff-update", "S-010", "Existing Staff", StaffRole.STAFF, originalDepartment, true);
+        Department originalDepartment = persistDepartment("총무과");
+        Department changedDepartment = persistDepartment("행정과");
+        Staff staff = persistStaff("staff-update", "S-010", "기존직원", StaffRole.STAFF, originalDepartment, true);
         entityManager.flush();
         entityManager.clear();
 
         UpdateAdminStaffRequest request = new UpdateAdminStaffRequest(
                 staff.getId(),
-                "Updated Staff",
+                "수정직원",
                 changedDepartment.getId(),
                 "newpassword123",
                 null,
@@ -193,29 +193,29 @@ class AdminStaffServiceTest {
         Staff updatedStaff = entityManager.find(Staff.class, staff.getId());
 
         // then
-        assertThat(updatedStaff.getName()).isEqualTo("Updated Staff");
+        assertThat(updatedStaff.getName()).isEqualTo("수정직원");
         assertThat(updatedStaff.getDepartment().getId()).isEqualTo(changedDepartment.getId());
         assertThat(passwordEncoder.matches("newpassword123", updatedStaff.getPassword())).isTrue();
     }
 
     @Test
-    @DisplayName("updates doctor specialty and available days")
+    @DisplayName("의사 직원 수정 시 전문 분야와 진료 가능 요일을 변경한다")
     void updateStaff_updatesDoctorFields() {
         // given
-        Department internalMedicine = persistDepartment("Internal Medicine");
-        Department familyMedicine = persistDepartment("Family Medicine");
-        Staff doctorStaff = persistStaff("doctor-user", "D-100", "Kim Doctor", StaffRole.DOCTOR, internalMedicine, true);
-        Doctor doctor = Doctor.create(doctorStaff, internalMedicine, "MON,WED", "digestive");
+        Department internalMedicine = persistDepartment("내과");
+        Department familyMedicine = persistDepartment("가정의학과");
+        Staff doctorStaff = persistStaff("doctor-user", "D-100", "김의사", StaffRole.DOCTOR, internalMedicine, true);
+        Doctor doctor = Doctor.create(doctorStaff, internalMedicine, "MON,WED", "소화기내과");
         entityManager.persist(doctor);
         entityManager.flush();
         entityManager.clear();
 
         UpdateAdminStaffRequest request = new UpdateAdminStaffRequest(
                 doctorStaff.getId(),
-                "Kim Family Doctor",
+                "김가정의학의사",
                 familyMedicine.getId(),
                 "",
-                "family medicine",
+                "가정의학",
                 List.of("TUE", "THU", "SAT")
         );
 
@@ -231,19 +231,19 @@ class AdminStaffServiceTest {
                 .getSingleResult();
 
         // then
-        assertThat(updatedStaff.getName()).isEqualTo("Kim Family Doctor");
+        assertThat(updatedStaff.getName()).isEqualTo("김가정의학의사");
         assertThat(updatedStaff.getDepartment().getId()).isEqualTo(familyMedicine.getId());
         assertThat(updatedDoctor.getDepartment().getId()).isEqualTo(familyMedicine.getId());
-        assertThat(updatedDoctor.getSpecialty()).isEqualTo("family medicine");
+        assertThat(updatedDoctor.getSpecialty()).isEqualTo("가정의학");
         assertThat(updatedDoctor.getAvailableDays()).isEqualTo("TUE,THU,SAT");
     }
 
     @Test
-    @DisplayName("deactivates staff")
+    @DisplayName("직원 비활성화 시 active 값을 false로 변경한다")
     void deactivateStaff_updatesActiveToFalse() {
         // given
-        Department department = persistDepartment("Internal Medicine");
-        Staff target = persistStaff("staff-target", "S-300", "Target Staff", StaffRole.STAFF, department, true);
+        Department department = persistDepartment("내과");
+        Staff target = persistStaff("staff-target", "S-300", "대상직원", StaffRole.STAFF, department, true);
         entityManager.flush();
         entityManager.clear();
 
@@ -254,16 +254,16 @@ class AdminStaffServiceTest {
         Staff deactivatedStaff = entityManager.find(Staff.class, target.getId());
 
         // then
-        assertThat(result).isEqualTo("Staff deactivated successfully.");
+        assertThat(result).isEqualTo("직원을 비활성화했습니다.");
         assertThat(deactivatedStaff.isActive()).isFalse();
     }
 
     @Test
-    @DisplayName("prevents self deactivation")
+    @DisplayName("본인 계정은 비활성화할 수 없다")
     void deactivateStaff_selfDeactivate_throwsException() {
         // given
-        Department department = persistDepartment("Internal Medicine");
-        Staff self = persistStaff("admin01", "A-001", "Admin", StaffRole.ADMIN, department, true);
+        Department department = persistDepartment("내과");
+        Staff self = persistStaff("admin01", "A-001", "관리자", StaffRole.ADMIN, department, true);
         entityManager.flush();
         entityManager.clear();
 
@@ -271,15 +271,15 @@ class AdminStaffServiceTest {
         // then
         assertThatThrownBy(() -> adminStaffService.deactivateStaff(self.getId(), "admin01"))
                 .isInstanceOf(CustomException.class)
-                .hasMessage("You cannot deactivate your own account.");
+                .hasMessage("본인 계정은 비활성화할 수 없습니다.");
     }
 
     @Test
-    @DisplayName("prevents duplicate deactivate")
+    @DisplayName("이미 비활성화된 직원은 다시 비활성화할 수 없다")
     void deactivateStaff_alreadyInactive_throwsException() {
         // given
-        Department department = persistDepartment("Internal Medicine");
-        Staff inactive = persistStaff("inactive-user", "S-400", "Inactive Staff", StaffRole.STAFF, department, false);
+        Department department = persistDepartment("내과");
+        Staff inactive = persistStaff("inactive-user", "S-400", "비활성직원", StaffRole.STAFF, department, false);
         entityManager.flush();
         entityManager.clear();
 
@@ -287,18 +287,18 @@ class AdminStaffServiceTest {
         // then
         assertThatThrownBy(() -> adminStaffService.deactivateStaff(inactive.getId(), "admin01"))
                 .isInstanceOf(CustomException.class)
-                .hasMessage("Staff is already deactivated.");
+                .hasMessage("이미 비활성화된 직원입니다.");
     }
 
     @Test
-    @DisplayName("throws when staff is missing")
+    @DisplayName("존재하지 않는 직원은 비활성화할 수 없다")
     void deactivateStaff_notFound_throwsException() {
         // given
         // when
         // then
         assertThatThrownBy(() -> adminStaffService.deactivateStaff(999L, "admin01"))
                 .isInstanceOf(CustomException.class)
-                .hasMessage("Staff not found.");
+                .hasMessage("직원을 찾을 수 없습니다.");
     }
 
     private Department persistDepartment(String name) {
