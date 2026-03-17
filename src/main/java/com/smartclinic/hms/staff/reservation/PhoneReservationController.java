@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,6 +12,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.smartclinic.hms.staff.reception.ReceptionService;
 import com.smartclinic.hms.staff.reservation.dto.PhoneReservationRequestDto;
+
+import jakarta.validation.Valid;
+
 import com.smartclinic.hms.common.exception.CustomException;
 
 import lombok.RequiredArgsConstructor;
@@ -33,8 +37,20 @@ public class PhoneReservationController {
 
     // 전화 예약 생성
     @PostMapping("/create")
-    public String createPhoneReservation(PhoneReservationRequestDto request,
-            RedirectAttributes redirectAttributes, Model model) {
+    public String createPhoneReservation(
+            @Valid PhoneReservationRequestDto request,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes,
+            Model model) {
+
+        // 1. DTO 검증 실패 처리
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("form", request);
+            model.addAttribute("departments", receptionService.getAllDepartments());
+            model.addAttribute("doctors", receptionService.getAllDoctors());
+            model.addAttribute("today", LocalDate.now());
+            return "staff/phone-reservation";
+        }
 
         try {
             boolean nameMismatch = receptionService.createPhoneReservation(request);
