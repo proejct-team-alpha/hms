@@ -10,8 +10,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.smartclinic.hms.domain.Reservation;
@@ -96,7 +98,26 @@ public class ReceptionController {
             RedirectAttributes redirectAttributes) {
         receptionService.receive(request);
         redirectAttributes.addFlashAttribute("message", "접수가 완료되었습니다.");
+
+        redirectAttributes.addAttribute("status", request.getStatus());
+        redirectAttributes.addAttribute("date", request.getDate());
+        redirectAttributes.addAttribute("page", request.getPage());
+
         return "redirect:/staff/reception/list";
+    }
+
+    @PostMapping("/receive-ajax")
+    @ResponseBody
+    public Map<String, Object> receiveAjax(@RequestBody ReceptionUpdateRequest request) {
+
+        receptionService.receive(request);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("statusText", "진료 대기");
+        result.put("statusClass", "bg-yellow-100 text-yellow-700");
+
+        return result;
     }
 
     // 예약 취소
@@ -106,4 +127,5 @@ public class ReceptionController {
         redirectAttributes.addFlashAttribute("message", "예약이 취소되었습니다.");
         return "redirect:/staff/reception/list";
     }
+
 }
