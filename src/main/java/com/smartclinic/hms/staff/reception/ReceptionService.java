@@ -63,11 +63,11 @@ public class ReceptionService {
 
         // 3️ 의사 조회
         Doctor doctor = doctorRepository.findById(request.getDoctorId())
-                .orElseThrow(() -> new RuntimeException("의사를 찾을 수 없습니다."));
+                .orElseThrow(() -> CustomException.notFound("의사를 찾을 수 없습니다."));
 
         // 4️ 진료과 조회
         Department department = departmentRepository.findById(request.getDepartmentId())
-                .orElseThrow(() -> new RuntimeException("진료과를 찾을 수 없습니다."));
+                .orElseThrow(() -> CustomException.notFound("진료과를 찾을 수 없습니다."));
 
         // 5️ 예약 날짜
         LocalDate reservationDate = LocalDate.parse(request.getDate());
@@ -106,7 +106,7 @@ public class ReceptionService {
     public void receive(ReceptionUpdateRequest request) {
 
         Reservation reservation = reservationRepository.findById(request.getReservationId())
-                .orElseThrow(() -> new RuntimeException("예약을 찾을 수 없습니다."));
+                .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
         reservation.receive();
     }
 
@@ -143,7 +143,7 @@ public class ReceptionService {
     // 예약 상세 조회
     public StaffReservationDto getDetail(Long id) {
         Reservation r = reservationRepository.findByIdWithDetails(id)
-                .orElseThrow(() -> new RuntimeException("예약 없음"));
+                .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
         return new StaffReservationDto(r);
     }
 
@@ -151,7 +151,7 @@ public class ReceptionService {
     @Transactional
     public void cancel(Long id) {
         Reservation r = reservationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("예약 없음"));
+                .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
         r.cancel();
     }
 
