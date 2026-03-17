@@ -1,6 +1,7 @@
 package com.smartclinic.hms.admin.reservation;
 
 import com.smartclinic.hms.admin.reservation.dto.AdminReservationListResponse;
+import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.Department;
 import com.smartclinic.hms.domain.Doctor;
 import com.smartclinic.hms.domain.Patient;
@@ -19,6 +20,7 @@ import org.springframework.test.context.TestPropertySource;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @Import(AdminReservationService.class)
@@ -88,6 +90,49 @@ class AdminReservationServiceTest {
         assertThat(result.size()).isEqualTo(10);
         assertThat(result.reservations()).hasSize(10);
         assertThat(result.totalCount()).isEqualTo(12);
+    }
+
+    @Test
+    @DisplayName("예약/접수 상태는 취소 처리된다")
+    void cancelReservation_success() {
+        // given
+        persistReservation("RES-20260310-901", LocalDate.of(2026, 3, 10), "09:00", "RESERVED");
+        entityManager.flush();
+        entityManager.clear();
+
+        Long reservationId = entityManager.createQuery(
+                        "select r.id from Reservation r where r.reservationNumber = :number", Long.class)
+                .setParameter("number", "RES-20260310-901")
+                .getSingleResult();
+
+        // when
+        adminReservationService.cancelReservation(reservationId);
+        entityManager.flush();
+        entityManager.clear();
+
+        Reservation reservation = entityManager.find(Reservation.class, reservationId);
+
+        // then
+        assertThat(reservation.getStatus().name()).isEqualTo("CANCELLED");
+    }
+
+    @Test
+    @DisplayName("완료 상태 취소 시도는 예외가 발생한다")
+    void cancelReservation_completed_throwsException() {
+        // given
+        persistReservation("RES-20260310-902", LocalDate.of(2026, 3, 10), "09:30", "COMPLETED");
+        entityManager.flush();
+        entityManager.clear();
+
+        Long reservationId = entityManager.createQuery(
+                        "select r.id from Reservation r where r.reservationNumber = :number", Long.class)
+                .setParameter("number", "RES-20260310-902")
+                .getSingleResult();
+
+        // when
+        // then
+        assertThatThrownBy(() -> adminReservationService.cancelReservation(reservationId))
+                .isInstanceOf(CustomException.class);
     }
 
     private void persistReservation(String reservationNumber, LocalDate date, String timeSlot, String status) {

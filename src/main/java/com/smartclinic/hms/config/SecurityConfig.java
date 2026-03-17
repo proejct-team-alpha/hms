@@ -121,7 +121,9 @@ public class SecurityConfig {
                                 .maxAgeInSeconds(31536000)
                                 .includeSubDomains(true))
                         .referrerPolicy(referrer -> referrer
-                                .policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)))
+                                .policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .permissionsPolicy(pp -> pp.policy(
+                                "camera=(), microphone=(), geolocation=(), payment=()")))
 
                 // ── Rate Limiting Filter ────────────────────────────────────
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
@@ -138,6 +140,8 @@ public class SecurityConfig {
 
                         // ── 비회원 메인·외부 예약 (§3) ──────────────────────────
                         .requestMatchers("/", "/reservation/**", "/api/reservation/**").permitAll()
+
+                        // 관리자 예약 취소 API
 
                         // ── LLM 증상 분석 — 비회원 AJAX (§4) ───────────────────
                         .requestMatchers("/llm/symptom/**").permitAll()

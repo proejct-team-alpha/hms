@@ -19,11 +19,16 @@ public class Resp<T> {
 
     public static <B> ResponseEntity<Resp<B>> ok(B body) {
         Resp<B> resp = new Resp<>(200, "성공", body);
-        return new ResponseEntity<>(resp, HttpStatus.OK); // body, header를 응답할 수 있는 클래스
+        return new ResponseEntity<>(resp, HttpStatus.OK);
     }
 
-    public static ResponseEntity<?> fail(HttpStatus status, String msg) {
+    public static ResponseEntity<Resp<?>> fail(HttpStatus status, String msg) {
         Resp<?> resp = new Resp<>(status.value(), msg, null);
+        return new ResponseEntity<>(resp, status);
+    }
+
+    public static ResponseEntity<Resp<?>> fail(HttpStatus status, String errorCode, String msg) {
+        Resp<?> resp = new Resp<>(status.value(), "[" + errorCode + "] " + msg, null);
         return new ResponseEntity<>(resp, status);
     }
 }

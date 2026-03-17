@@ -1,17 +1,21 @@
 package com.smartclinic.hms.admin.staff;
 
-import java.util.List;
-
+import com.smartclinic.hms.admin.staff.dto.AdminStaffListResponse;
+import com.smartclinic.hms.admin.staff.dto.CreateAdminStaffRequest;
+import com.smartclinic.hms.admin.staff.dto.UpdateAdminStaffRequest;
+import com.smartclinic.hms.common.exception.CustomException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import com.smartclinic.hms.admin.department.AdminDepartmentService;
-
-import lombok.RequiredArgsConstructor;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequiredArgsConstructor
@@ -19,32 +23,102 @@ import lombok.RequiredArgsConstructor;
 public class AdminStaffController {
 
     private final AdminStaffService adminStaffService;
-    private final AdminDepartmentService adminDepartmentService;
 
     @GetMapping("/list")
-    public String list(Model model) {
-        List<AdminStaffDto> staffList = adminStaffService.getStaffList();
-        model.addAttribute("staffList", staffList);
-        model.addAttribute("hasStaff", !staffList.isEmpty());
-        model.addAttribute("pageTitle", "직원 관리");
+    public String list(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String employmentStatus,
+            Authentication authentication,
+            HttpServletRequest req) {
+        AdminStaffListResponse result = adminStaffService.getStaffList(
+                page,
+                size,
+                keyword,
+                role,
+                employmentStatus,
+                authentication.getName());
+        req.setAttribute("model", result);
+        req.setAttribute("pageTitle", "직원 목록");
         return "admin/staff-list";
     }
 
-    @GetMapping("/form")
-    public String form(Model model) {
-        model.addAttribute("departments", adminDepartmentService.getDepartmentList());
-        model.addAttribute("pageTitle", "직원 등록");
+    @GetMapping("/new")
+    public String newForm(HttpServletRequest req) {
+        req.setAttribute("model", adminStaffService.getCreateForm());
         return "admin/staff-form";
     }
 
-    @PostMapping("/form")
-    public String create(@RequestParam("username") String username,
-                         @RequestParam("employeeNumber") String employeeNumber,
-                         @RequestParam("password") String password,
-                         @RequestParam("name") String name,
-                         @RequestParam("role") String role,
-                         @RequestParam(name = "departmentId", required = false) Long departmentId) {
-        adminStaffService.createStaff(username, employeeNumber, password, name, role, departmentId);
+    @GetMapping("/form")
+    public String form(HttpServletRequest req) {
+        return newForm(req);
+    }
+
+    @GetMapping("/detail")
+    public String detail(@RequestParam("staffId") Long staffId, HttpServletRequest req) {
+        req.setAttribute("model", adminStaffService.getEditForm(staffId));
+        return "admin/staff-form";
+    }
+
+    @PostMapping("/create")
+    public String create(
+            @Valid @ModelAttribute CreateAdminStaffRequest request,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes,
+            HttpServletRequest req) {
+        if (bindingResult.hasErrors()) {
+            req.setAttribute("errorMessage", adminStaffService.getInputCheckMessage());
+            req.setAttribute("model", adminStaffService.getCreateForm(request));
+            return "admin/staff-form";
+        }
+
+        try {
+            String successMessage = adminStaffService.createStaff(request);
+            redirectAttributes.addFlashAttribute("successMessage", successMessage);
+            return "redirect:/admin/staff/list";
+        } catch (CustomException ex) {
+            req.setAttribute("errorMessage", ex.getMessage());
+            req.setAttribute("model", adminStaffService.getCreateForm(request));
+            return "admin/staff-form";
+        }
+    }
+
+    @PostMapping("/update")
+    public String update(
+            @Valid @ModelAttribute UpdateAdminStaffRequest request,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes,
+            HttpServletRequest req) {
+        if (bindingResult.hasErrors()) {
+            req.setAttribute("errorMessage", adminStaffService.getInputCheckMessage());
+            req.setAttribute("model", adminStaffService.getEditForm(request));
+            return "admin/staff-form";
+        }
+
+        try {
+            String successMessage = adminStaffService.updateStaff(request);
+            redirectAttributes.addFlashAttribute("successMessage", successMessage);
+            return "redirect:/admin/staff/list";
+        } catch (CustomException ex) {
+            req.setAttribute("errorMessage", ex.getMessage());
+            req.setAttribute("model", adminStaffService.getEditForm(request));
+            return "admin/staff-form";
+        }
+    }
+
+    @PostMapping("/deactivate")
+    public String deactivate(
+            @RequestParam("staffId") Long staffId,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        try {
+            String successMessage = adminStaffService.deactivateStaff(staffId, authentication.getName());
+            redirectAttributes.addFlashAttribute("successMessage", successMessage);
+        } catch (CustomException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
         return "redirect:/admin/staff/list";
     }
 }

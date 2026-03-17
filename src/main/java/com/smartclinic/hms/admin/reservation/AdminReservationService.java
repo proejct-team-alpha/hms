@@ -4,8 +4,8 @@ import com.smartclinic.hms.admin.reservation.dto.AdminReservationItemResponse;
 import com.smartclinic.hms.admin.reservation.dto.AdminReservationListResponse;
 import com.smartclinic.hms.admin.reservation.dto.AdminReservationPageLinkResponse;
 import com.smartclinic.hms.admin.reservation.dto.AdminReservationStatusOptionResponse;
+import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.ReservationStatus;
-import com.smartclinic.hms.reservation.reservation.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,48 +24,67 @@ import java.util.stream.IntStream;
 @Transactional(readOnly = true)
 public class AdminReservationService {
 
+        // 페이지네이션
         private static final int DEFAULT_PAGE = 1;
         private static final int DEFAULT_SIZE = 10;
 
+        // 상태값 화면에 보여줄 한글 라벨
         private static final Map<String, String> STATUS_LABELS = Map.of(
                         "ALL", "전체",
                         "RESERVED", "예약",
                         "RECEIVED", "접수",
                         "COMPLETED", "완료",
                         "CANCELLED", "취소");
+        // repo 선언
+        private final AdminReservationRepository adminReservationRepository;
 
-        private final ReservationRepository reservationRepository;
-
+        // 관리자 예약 화면 조회
         public AdminReservationListResponse getReservationList(int page, int size, String statusParam) {
+                // 잘못된 페이지 번호나 사이즈가 들어와도 기본값으로 보정해서 안전하게 페이지네이션 수행하는 코드
                 int safePage = page < 1 ? DEFAULT_PAGE : page;
                 int safeSize = size < 1 ? DEFAULT_SIZE : size;
 
+                // 상태값
                 ReservationStatus status = resolveStatus(statusParam);
+                // 선택된 상태값
                 String selectedStatus = status == null ? "ALL" : status.name();
 
+                // 페이지네이션
                 Pageable pageable = PageRequest.of(
                                 safePage - 1,
                                 safeSize,
                                 Sort.by(Sort.Order.desc("reservationDate"), Sort.Order.desc("timeSlot")));
+                // 조회 결과
+                Page<AdminReservationRepository.AdminReservationListProjection> pageResult = adminReservationRepository
+                                .findReservationListPage(status, pageable);
 
-                Page<ReservationRepository.AdminReservationListProjection> pageResult =
-                                reservationRepository.findReservationListPage(status, pageable);
-
+                // DTO 변환
                 List<AdminReservationItemResponse> reservations = pageResult.getContent().stream()
-                                .map(this::toItemResponse)
+                                .map(item -> toItemResponse(item))
                                 .toList();
 
+                // 페이지네이션 정보
                 int currentPage = pageResult.getNumber() + 1;
+                // 총 페이지 수
                 int totalPages = pageResult.getTotalPages();
 
+                // DTO 변환
                 List<AdminReservationStatusOptionResponse> statusOptions = buildStatusOptions(selectedStatus, safeSize);
-                List<AdminReservationPageLinkResponse> pageLinks = buildPageLinks(totalPages, currentPage, safeSize, selectedStatus);
+                // DTO 변환
+                List<AdminReservationPageLinkResponse> pageLinks = buildPageLinks(totalPages, currentPage, safeSize,
+                                selectedStatus);
 
+                // 이전 페이지, 다음 페이지 여부
                 boolean hasPrevious = pageResult.hasPrevious();
                 boolean hasNext = pageResult.hasNext();
 
-                String previousUrl = hasPrevious ? buildListUrl(currentPage - 1, safeSize, selectedStatus) : "";
-                String nextUrl = hasNext ? buildListUrl(currentPage + 1, safeSize, selectedStatus) : "";
+                // 이전 페이지, 다음 페이지 URL
+                String previousUrl = hasPrevious
+                                ? buildListUrl(currentPage - 1, safeSize, selectedStatus)
+                                : "";
+                String nextUrl = hasNext
+                                ? buildListUrl(currentPage + 1, safeSize, selectedStatus)
+                                : "";
 
                 return new AdminReservationListResponse(
                                 reservations,
@@ -83,9 +102,15 @@ public class AdminReservationService {
         }
 
         private ReservationStatus resolveStatus(String statusParam) {
-                if (statusParam == null || statusParam.isBlank()) return null;
+                if (statusParam == null || statusParam.isBlank()) {
+                        return null;
+                }
+
                 String normalized = statusParam.trim().toUpperCase(Locale.ROOT);
-                if ("ALL".equals(normalized)) return null;
+                if ("ALL".equals(normalized)) {
+                        return null;
+                }
+
                 try {
                         return ReservationStatus.valueOf(normalized);
                 } catch (IllegalArgumentException ex) {
@@ -93,9 +118,11 @@ public class AdminReservationService {
                 }
         }
 
+        // DTO 변환
         private AdminReservationItemResponse toItemResponse(
-                        ReservationRepository.AdminReservationListProjection row) {
+                        AdminReservationRepository.AdminReservationListProjection row) {
                 String status = row.getStatus().name();
+
                 return new AdminReservationItemResponse(
                                 row.getId(),
                                 row.getReservationNumber(),
@@ -107,6 +134,7 @@ public class AdminReservationService {
                                 row.getDoctorName(),
                                 status,
                                 STATUS_LABELS.getOrDefault(status, status),
+                                "RESERVED".equals(status) || "RECEIVED".equals(status),
                                 "RESERVED".equals(status),
                                 "RECEIVED".equals(status),
                                 "COMPLETED".equals(status),
@@ -135,5 +163,17 @@ public class AdminReservationService {
 
         private String buildListUrl(int page, int size, String status) {
                 return "/admin/reservation/list?page=" + page + "&size=" + size + "&status=" + status;
+        }
+
+        @Transactional
+        public void cancelReservation(Long reservationId) {
+                var reservation = adminReservationRepository.findById(reservationId)
+                                .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다. ID: " + reservationId));
+
+                try {
+                        reservation.cancel();
+                } catch (IllegalStateException ex) {
+                        throw CustomException.invalidStatusTransition(ex.getMessage());
+                }
         }
 }

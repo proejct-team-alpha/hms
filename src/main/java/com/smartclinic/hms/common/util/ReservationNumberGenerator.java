@@ -8,6 +8,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongSupplier;
 
+import org.springframework.scheduling.annotation.Scheduled;
+
 /**
  * ════════════════════════════════════════════════════════════════════════════
  * 예약번호 발급 유틸리티 — 동시성 안전(Thread-Safe) 채번
@@ -115,6 +117,13 @@ public class ReservationNumberGenerator {
         } catch (Exception e) {
             throw new IllegalArgumentException("예약번호 형식이 올바르지 않습니다: " + reservationNumber, e);
         }
+    }
+
+    /** 과거 날짜 카운터 정리 — 24시간마다 실행. 2일 이전 카운터를 제거하여 메모리 누수 방지. */
+    @Scheduled(fixedRate = 86_400_000)
+    public void cleanupExpiredCounters() {
+        LocalDate threshold = LocalDate.now().minusDays(2);
+        counters.keySet().removeIf(date -> date.isBefore(threshold));
     }
 
     /**
