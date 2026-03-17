@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.time.DayOfWeek;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -49,14 +48,17 @@ public class AdminStaffService {
     private static final String NO_DEPARTMENT_LABEL = "-";
     private static final String STAFF_CREATED_MESSAGE = "직원이 등록되었습니다.";
     private static final String STAFF_UPDATED_MESSAGE = "직원 정보가 수정되었습니다.";
+    private static final String STAFF_DEACTIVATED_MESSAGE = "직원이 비활성화되었습니다.";
     private static final String INPUT_CHECK_MESSAGE = "입력값을 확인해주세요.";
     private static final String INVALID_ROLE_MESSAGE = "유효한 역할을 선택해주세요.";
     private static final String INVALID_DEPARTMENT_MESSAGE = "유효한 부서를 선택해주세요.";
     private static final String DUPLICATE_USERNAME_MESSAGE = "이미 사용 중인 로그인 아이디입니다.";
     private static final String DUPLICATE_EMPLOYEE_NUMBER_MESSAGE = "이미 사용 중인 사번입니다.";
-    private static final String STAFF_NOT_FOUND_MESSAGE = "직원 정보를 찾을 수 없습니다.";
+    private static final String STAFF_NOT_FOUND_MESSAGE = "직원을 찾을 수 없습니다.";
     private static final String DOCTOR_NOT_FOUND_MESSAGE = "의사 상세 정보를 찾을 수 없습니다.";
     private static final String PASSWORD_LENGTH_MESSAGE = "비밀번호는 8자 이상이어야 합니다.";
+    private static final String SELF_DEACTIVATE_MESSAGE = "본인 계정은 비활성화할 수 없습니다.";
+    private static final String ALREADY_DEACTIVATED_MESSAGE = "이미 비활성화된 직원입니다.";
 
     private static final Map<StaffRole, String> ROLE_LABELS = Map.of(
             StaffRole.ADMIN, "관리자",
@@ -82,8 +84,13 @@ public class AdminStaffService {
     private final DoctorRepository doctorRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public AdminStaffListResponse getStaffList(int page, int size, String keyword, String roleParam,
-            String employmentStatusParam) {
+    public AdminStaffListResponse getStaffList(
+            int page,
+            int size,
+            String keyword,
+            String roleParam,
+            String employmentStatusParam,
+            String currentUsername) {
         int safePage = page < 1 ? DEFAULT_PAGE : page;
         int safeSize = size < 1 ? DEFAULT_SIZE : size;
 
@@ -112,7 +119,7 @@ public class AdminStaffService {
 
         return new AdminStaffListResponse(
                 pageResult.getContent().stream()
-                        .map(this::toItemResponse)
+                        .map(projection -> toItemResponse(projection, currentUsername))
                         .toList(),
                 buildRoleOptions(selectedRole),
                 buildEmploymentStatusOptions(selectedEmploymentStatus),
@@ -215,11 +222,35 @@ public class AdminStaffService {
         return STAFF_UPDATED_MESSAGE;
     }
 
+    @Transactional
+    public String deactivateStaff(Long staffId, String currentUsername) {
+        Staff staff = getStaff(staffId);
+
+        if (staff.getUsername().equals(currentUsername)) {
+            throw CustomException.badRequest("VALIDATION_ERROR", SELF_DEACTIVATE_MESSAGE);
+        }
+
+        if (!staff.isActive()) {
+            throw CustomException.badRequest("VALIDATION_ERROR", ALREADY_DEACTIVATED_MESSAGE);
+        }
+
+        staff.update(staff.getName(), staff.getDepartment(), false);
+        return STAFF_DEACTIVATED_MESSAGE;
+    }
+
     public String getInputCheckMessage() {
         return INPUT_CHECK_MESSAGE;
     }
 
-    private AdminStaffItemResponse toItemResponse(AdminStaffRepository.AdminStaffListProjection projection) {
+    private AdminStaffItemResponse toItemResponse(
+            AdminStaffRepository.AdminStaffListProjection projection,
+            String currentUsername) {
+        boolean selfRow = projection.getUsername().equals(currentUsername);
+        boolean deactivatable = projection.isActive() && !selfRow;
+        String deactivateStatusLabel = projection.isActive()
+                ? selfRow ? "본인" : ""
+                : "비활성";
+
         return new AdminStaffItemResponse(
                 projection.getId(),
                 projection.getName(),
@@ -232,7 +263,9 @@ public class AdminStaffService {
                 projection.isActive(),
                 projection.isActive() ? "재직" : "비활성",
                 projection.isActive() ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-600",
-                buildDetailUrl(projection.getId()));
+                buildDetailUrl(projection.getId()),
+                deactivatable,
+                deactivateStatusLabel);
     }
 
     private AdminStaffFormResponse buildCreateFormResponse(
@@ -356,9 +389,7 @@ public class AdminStaffService {
         return List.of(
                 new AdminStaffFilterOptionResponse(ALL, "전체 상태", ALL.equals(selectedEmploymentStatus)),
                 new AdminStaffFilterOptionResponse(ACTIVE, "재직", ACTIVE.equals(selectedEmploymentStatus)),
-                new AdminStaffFilterOptionResponse(INACTIVE, "비활성", INACTIVE.equals(selectedEmploymentStatus)))
-                .stream()
-                .toList();
+                new AdminStaffFilterOptionResponse(INACTIVE, "비활성", INACTIVE.equals(selectedEmploymentStatus)));
     }
 
     private List<AdminStaffPageLinkResponse> buildPageLinks(
@@ -400,8 +431,7 @@ public class AdminStaffService {
                 .fromPath("/admin/staff/detail")
                 .queryParam("staffId", staffId)
                 .build()
-                .encode()
-                .toUriString();
+                .encode().toUriString();
     }
 
     private String normalizeKeyword(String keyword) {

@@ -4,9 +4,11 @@ import com.smartclinic.hms.admin.staff.dto.AdminStaffDepartmentOptionResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffFilterOptionResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffFormOptionResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffFormResponse;
+import com.smartclinic.hms.admin.staff.dto.AdminStaffItemResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffListResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffPageLinkResponse;
 import com.smartclinic.hms.admin.staff.dto.UpdateAdminStaffRequest;
+import com.smartclinic.hms.common.exception.CustomException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +53,7 @@ class AdminStaffControllerTest {
 
     private static final String STAFF_CREATED_MESSAGE = "직원이 등록되었습니다.";
     private static final String STAFF_UPDATED_MESSAGE = "직원 정보가 수정되었습니다.";
+    private static final String STAFF_DEACTIVATED_MESSAGE = "직원이 비활성화되었습니다.";
     private static final String INPUT_CHECK_MESSAGE = "입력값을 확인해주세요.";
 
     @Autowired
@@ -60,7 +63,7 @@ class AdminStaffControllerTest {
     private AdminStaffService adminStaffService;
 
     @Test
-    @DisplayName("직원 등록 화면을 렌더링한다")
+    @DisplayName("직원 등록 화면이 렌더링된다")
     void newForm_rendersStaffFormView() throws Exception {
         // given
         AdminStaffFormResponse response = createFormResponse();
@@ -79,7 +82,7 @@ class AdminStaffControllerTest {
     }
 
     @Test
-    @DisplayName("직원 수정 화면을 렌더링한다")
+    @DisplayName("직원 수정 화면이 렌더링된다")
     void detail_rendersEditFormView() throws Exception {
         // given
         AdminStaffFormResponse response = createEditFormResponse();
@@ -99,11 +102,11 @@ class AdminStaffControllerTest {
     }
 
     @Test
-    @DisplayName("직원 목록은 기본 페이징과 pageTitle을 포함해 렌더링한다")
+    @DisplayName("직원 목록은 기본 페이지와 pageTitle을 포함해 렌더링된다")
     void list_usesDefaultPagingAndRendersView() throws Exception {
         // given
         AdminStaffListResponse response = createListResponse("ALL", "ALL", "");
-        given(adminStaffService.getStaffList(1, 10, null, null, null)).willReturn(response);
+        given(adminStaffService.getStaffList(1, 10, null, null, null, "admin")).willReturn(response);
 
         // when
         // then
@@ -115,7 +118,7 @@ class AdminStaffControllerTest {
                 .andExpect(request().attribute("model", response))
                 .andExpect(request().attribute("pageTitle", "직원 목록"));
 
-        then(adminStaffService).should().getStaffList(1, 10, null, null, null);
+        then(adminStaffService).should().getStaffList(1, 10, null, null, null, "admin");
     }
 
     @Test
@@ -123,7 +126,7 @@ class AdminStaffControllerTest {
     void list_passesSearchAndFilterParamsToService() throws Exception {
         // given
         AdminStaffListResponse response = createListResponse("DOCTOR", "ACTIVE", "kim");
-        given(adminStaffService.getStaffList(2, 5, "kim", "DOCTOR", "ACTIVE")).willReturn(response);
+        given(adminStaffService.getStaffList(2, 5, "kim", "DOCTOR", "ACTIVE", "admin")).willReturn(response);
 
         // when
         // then
@@ -140,7 +143,7 @@ class AdminStaffControllerTest {
                 .andExpect(request().attribute("model", response))
                 .andExpect(request().attribute("pageTitle", "직원 목록"));
 
-        then(adminStaffService).should().getStaffList(2, 5, "kim", "DOCTOR", "ACTIVE");
+        then(adminStaffService).should().getStaffList(2, 5, "kim", "DOCTOR", "ACTIVE", "admin");
     }
 
     @Test
@@ -238,16 +241,70 @@ class AdminStaffControllerTest {
         then(adminStaffService).should().getEditForm(any(UpdateAdminStaffRequest.class));
     }
 
+    @Test
+    @DisplayName("직원 비활성화 성공 시 목록으로 리다이렉트하고 성공 메시지를 보여준다")
+    void deactivate_success_redirectsToList() throws Exception {
+        // given
+        given(adminStaffService.deactivateStaff(2L, "admin")).willReturn(STAFF_DEACTIVATED_MESSAGE);
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/staff/deactivate")
+                        .param("staffId", "2")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", containsString("/admin/staff/list")))
+                .andExpect(flash().attribute("successMessage", STAFF_DEACTIVATED_MESSAGE));
+
+        then(adminStaffService).should().deactivateStaff(2L, "admin");
+    }
+
+    @Test
+    @DisplayName("직원 비활성화 실패 시 목록으로 리다이렉트하고 에러 메시지를 보여준다")
+    void deactivate_failure_redirectsToListWithErrorMessage() throws Exception {
+        // given
+        given(adminStaffService.deactivateStaff(1L, "admin"))
+                .willThrow(CustomException.badRequest("VALIDATION_ERROR", "본인 계정은 비활성화할 수 없습니다."));
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/staff/deactivate")
+                        .param("staffId", "1")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", containsString("/admin/staff/list")))
+                .andExpect(flash().attribute("errorMessage", "본인 계정은 비활성화할 수 없습니다."));
+
+        then(adminStaffService).should().deactivateStaff(1L, "admin");
+    }
+
     private AdminStaffListResponse createListResponse(String selectedRole, String selectedEmploymentStatus, String keyword) {
         return new AdminStaffListResponse(
-                List.of(),
+                List.of(new AdminStaffItemResponse(
+                        2L,
+                        "김직원",
+                        "staff01",
+                        "S-001",
+                        "STAFF",
+                        "접수 직원",
+                        "bg-purple-100 text-purple-800",
+                        "내과",
+                        true,
+                        "재직",
+                        "bg-green-100 text-green-800",
+                        "/admin/staff/detail?staffId=2",
+                        true,
+                        ""
+                )),
                 List.of(new AdminStaffFilterOptionResponse("ALL", "전체 역할", "ALL".equals(selectedRole))),
                 List.of(new AdminStaffFilterOptionResponse("ALL", "전체 상태", "ALL".equals(selectedEmploymentStatus))),
                 List.of(new AdminStaffPageLinkResponse(1, "/admin/staff/list?page=1&size=10&role=ALL&employmentStatus=ALL", true)),
                 keyword,
                 selectedRole,
                 selectedEmploymentStatus,
-                0,
+                1,
                 1,
                 10,
                 1,

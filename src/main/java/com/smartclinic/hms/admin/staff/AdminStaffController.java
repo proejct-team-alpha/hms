@@ -7,6 +7,7 @@ import com.smartclinic.hms.common.exception.CustomException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,8 +31,15 @@ public class AdminStaffController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String role,
             @RequestParam(required = false) String employmentStatus,
+            Authentication authentication,
             HttpServletRequest req) {
-        AdminStaffListResponse result = adminStaffService.getStaffList(page, size, keyword, role, employmentStatus);
+        AdminStaffListResponse result = adminStaffService.getStaffList(
+                page,
+                size,
+                keyword,
+                role,
+                employmentStatus,
+                authentication.getName());
         req.setAttribute("model", result);
         req.setAttribute("pageTitle", "직원 목록");
         return "admin/staff-list";
@@ -98,5 +106,19 @@ public class AdminStaffController {
             req.setAttribute("model", adminStaffService.getEditForm(request));
             return "admin/staff-form";
         }
+    }
+
+    @PostMapping("/deactivate")
+    public String deactivate(
+            @RequestParam("staffId") Long staffId,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        try {
+            String successMessage = adminStaffService.deactivateStaff(staffId, authentication.getName());
+            redirectAttributes.addFlashAttribute("successMessage", successMessage);
+        } catch (CustomException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/staff/list";
     }
 }
