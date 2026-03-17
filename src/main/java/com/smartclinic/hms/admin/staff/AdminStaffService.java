@@ -9,6 +9,7 @@ import com.smartclinic.hms.admin.staff.dto.AdminStaffItemResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffListResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffPageLinkResponse;
 import com.smartclinic.hms.admin.staff.dto.CreateAdminStaffRequest;
+import com.smartclinic.hms.admin.staff.dto.UpdateAdminStaffApiResponse;
 import com.smartclinic.hms.admin.staff.dto.UpdateAdminStaffRequest;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.doctor.DoctorRepository;
@@ -163,6 +164,25 @@ public class AdminStaffService {
         Staff staff = getStaff(request.staffId());
         Doctor doctor = getDoctorIfNeeded(staff);
         return buildEditFormResponse(staff, doctor, request);
+    }
+
+    public UpdateAdminStaffApiResponse getUpdateApiResponse(Long staffId, String message) {
+        Staff staff = getStaff(staffId);
+        Doctor doctor = getDoctorIfNeeded(staff);
+
+        return new UpdateAdminStaffApiResponse(
+                staff.getId(),
+                staff.getUsername(),
+                staff.getEmployeeNumber(),
+                staff.getName(),
+                staff.getRole().name(),
+                staff.getDepartment() == null ? null : staff.getDepartment().getId(),
+                staff.getDepartment() == null ? NO_DEPARTMENT_LABEL : staff.getDepartment().getName(),
+                staff.isActive(),
+                doctor == null ? null : doctor.getSpecialty(),
+                doctor == null ? List.of() : splitAvailableDays(doctor.getAvailableDays()),
+                message
+        );
     }
 
     @Transactional
