@@ -79,6 +79,8 @@
           <form method="post" action="/reservation/cancel/{{id}}" class="flex-1">
             {{! CSRF 토큰 }}
             <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+            {{! H-01: 소유권 검증용 전화번호 }}
+            <input type="hidden" name="phone" value="{{patientPhone}}">
             <button type="submit"
                     class="w-full py-3 bg-red-500 text-white font-medium rounded-xl hover:bg-red-600 transition-colors shadow-sm">
               예약 취소
