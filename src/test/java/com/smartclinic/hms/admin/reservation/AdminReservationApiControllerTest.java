@@ -82,8 +82,8 @@ class AdminReservationApiControllerTest {
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorCode").value("RESOURCE_NOT_FOUND"))
-                .andExpect(jsonPath("$.message").value("reservation not found"));
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.msg").value("[RESOURCE_NOT_FOUND] reservation not found"));
     }
 
     @TestConfiguration
