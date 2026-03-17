@@ -214,7 +214,6 @@ if (data.success) {
 
 async function cancelAjax(id, button, currentStatus) {
 
-  // confirm 추가
   if (!confirm('예약을 취소하시겠습니까?')) {
     return;
   }
@@ -235,23 +234,18 @@ async function cancelAjax(id, button, currentStatus) {
 
     if (data.success) {
       const row = button.closest('tr');
+      const statusCell = row.children[6];
 
-      // 진료대기 탭이면 사라짐
-      if (currentStatus === 'RESERVED') {
-        row.remove();
-      } else {
-        // 다른 탭이면 상태만 변경
-        const statusCell = row.children[6];
+      // 상태 변경
+      statusCell.innerHTML = `
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+          취소
+        </span>
+      `;
 
-        statusCell.innerHTML = `
-          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
-            취소
-          </span>
-        `;
-
-        button.remove();
-      }
-
+      // 버튼 영역 전체 제거
+      const actionCell = row.children[7];
+      actionCell.innerHTML = '';
     } else {
       alert('취소 실패');
     }
@@ -261,6 +255,7 @@ async function cancelAjax(id, button, currentStatus) {
     alert('에러 발생');
   }
 }
+
 
 </script>
 
