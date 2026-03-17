@@ -1,6 +1,5 @@
 package com.smartclinic.hms.admin.staff;
 
-import com.smartclinic.hms.admin.staff.dto.UpdateAdminStaffApiRequest;
 import com.smartclinic.hms.admin.staff.dto.UpdateAdminStaffApiResponse;
 import com.smartclinic.hms.common.exception.CustomException;
 import org.junit.jupiter.api.DisplayName;
@@ -44,16 +43,9 @@ class AdminStaffApiControllerTest {
     private AdminStaffService adminStaffService;
 
     @Test
-    @DisplayName("admin can update staff via api")
+    @DisplayName("admin can update staff via admin api")
     void updateStaff_success() throws Exception {
         // given
-        UpdateAdminStaffApiRequest request = new UpdateAdminStaffApiRequest(
-                "수정직원",
-                2L,
-                "",
-                "가정의학과",
-                List.of("MON", "WED")
-        );
         UpdateAdminStaffApiResponse response = new UpdateAdminStaffApiResponse(
                 10L,
                 "doctor01",
@@ -72,17 +64,17 @@ class AdminStaffApiControllerTest {
 
         // when
         // then
-        mockMvc.perform(post("/api/staff/10")
+        mockMvc.perform(post("/admin/api/staff/10")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf())
                         .contentType("application/json")
                         .content("""
                                 {
-                                  "name": "수정직원",
-                                  "departmentId": 2,
-                                  "password": "",
-                                  "specialty": "가정의학과",
-                                  "availableDays": ["MON", "WED"]
+                                  \"name\": \"수정직원\",
+                                  \"departmentId\": 2,
+                                  \"password\": \"\",
+                                  \"specialty\": \"가정의학과\",
+                                  \"availableDays\": [\"MON\", \"WED\"]
                                 }
                                 """))
                 .andExpect(status().isOk())
@@ -98,29 +90,22 @@ class AdminStaffApiControllerTest {
     }
 
     @Test
-    @DisplayName("non-admin cannot update staff via api")
+    @DisplayName("non-admin cannot update staff via admin api")
     void updateStaff_forbiddenWhenNotAdmin() throws Exception {
         // given
-        UpdateAdminStaffApiRequest request = new UpdateAdminStaffApiRequest(
-                "수정직원",
-                2L,
-                "",
-                null,
-                List.of()
-        );
 
         // when
         // then
-        mockMvc.perform(post("/api/staff/10")
+        mockMvc.perform(post("/admin/api/staff/10")
                         .with(user("staff").roles("STAFF"))
                         .with(csrf())
                         .contentType("application/json")
                         .content("""
                                 {
-                                  "name": "수정직원",
-                                  "departmentId": 2,
-                                  "password": "",
-                                  "availableDays": []
+                                  \"name\": \"수정직원\",
+                                  \"departmentId\": 2,
+                                  \"password\": \"\",
+                                  \"availableDays\": []
                                 }
                                 """))
                 .andExpect(status().isForbidden());
@@ -132,28 +117,21 @@ class AdminStaffApiControllerTest {
     @DisplayName("returns 404 when staff does not exist")
     void updateStaff_notFound() throws Exception {
         // given
-        UpdateAdminStaffApiRequest request = new UpdateAdminStaffApiRequest(
-                "수정직원",
-                2L,
-                "",
-                null,
-                List.of()
-        );
         given(adminStaffService.updateStaff(any()))
                 .willThrow(CustomException.notFound("직원을 찾을 수 없습니다."));
 
         // when
         // then
-        mockMvc.perform(post("/api/staff/999")
+        mockMvc.perform(post("/admin/api/staff/999")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf())
                         .contentType("application/json")
                         .content("""
                                 {
-                                  "name": "수정직원",
-                                  "departmentId": 2,
-                                  "password": "",
-                                  "availableDays": []
+                                  \"name\": \"수정직원\",
+                                  \"departmentId\": 2,
+                                  \"password\": \"\",
+                                  \"availableDays\": []
                                 }
                                 """))
                 .andExpect(status().isNotFound())
@@ -165,26 +143,19 @@ class AdminStaffApiControllerTest {
     @DisplayName("returns 400 when request body is invalid")
     void updateStaff_validationFailure() throws Exception {
         // given
-        UpdateAdminStaffApiRequest request = new UpdateAdminStaffApiRequest(
-                "",
-                2L,
-                "",
-                null,
-                List.of()
-        );
 
         // when
         // then
-        mockMvc.perform(post("/api/staff/10")
+        mockMvc.perform(post("/admin/api/staff/10")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf())
                         .contentType("application/json")
                         .content("""
                                 {
-                                  "name": "",
-                                  "departmentId": 2,
-                                  "password": "",
-                                  "availableDays": []
+                                  \"name\": \"\",
+                                  \"departmentId\": 2,
+                                  \"password\": \"\",
+                                  \"availableDays\": []
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
@@ -199,7 +170,7 @@ class AdminStaffApiControllerTest {
         SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
             return http
                     .authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/api/staff/**").hasRole("ADMIN")
+                            .requestMatchers("/admin/api/staff/**").hasRole("ADMIN")
                             .anyRequest().authenticated())
                     .formLogin(form -> form.disable())
                     .csrf(csrf -> csrf.disable())
