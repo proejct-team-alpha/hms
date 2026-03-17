@@ -3,10 +3,13 @@ package com.smartclinic.hms.item;
 import com.smartclinic.hms.item.dto.ItemDashboardDto;
 import com.smartclinic.hms.item.dto.ItemListDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.Map;
 
 import java.util.List;
 
@@ -86,6 +89,19 @@ public class ItemManagerController {
             ra.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:" + redirectTo;
+    }
+
+    @PostMapping("/item/restock/ajax")
+    @ResponseBody
+    public ResponseEntity<?> restockItemAjax(@RequestParam("id") Long id,
+                                             @RequestParam("amount") String amountStr) {
+        try {
+            int amount = parseQuantity(amountStr, "입고 수량");
+            int newQuantity = itemService.restockItemAndGetQuantity(id, amount);
+            return ResponseEntity.ok(Map.of("quantity", newQuantity));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/item/delete")

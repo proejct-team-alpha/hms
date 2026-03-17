@@ -83,6 +83,14 @@ public class ItemManagerService {
     }
 
     @Transactional
+    public int restockItemAndGetQuantity(Long id, int amount) {
+        Item item = itemRepository.findById(id)
+                .orElseThrow(() -> CustomException.notFound("물품을 찾을 수 없습니다. ID: " + id));
+        item.addStock(amount);
+        return item.getQuantity();
+    }
+
+    @Transactional
     public void deleteItem(Long id) {
         itemRepository.deleteById(id);
     }

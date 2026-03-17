@@ -56,6 +56,7 @@
                 <th class="p-4 font-medium">물품명</th>
                 <th class="p-4 font-medium">카테고리</th>
                 <th class="p-4 font-medium text-right">현재 재고</th>
+                <th class="p-4 font-medium text-center">입고</th>
                 <th class="p-4 font-medium text-right">최소 수량</th>
                 <th class="p-4 font-medium text-center">상태</th>
                 <th class="p-4 font-medium text-right">관리</th>
@@ -69,20 +70,20 @@
                   <span class="px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-medium">{{categoryText}}</span>
                 </td>
                 <td class="p-4 text-sm text-right">
-                  <div class="flex items-center justify-end gap-2">
-                    <span class="font-bold {{#lowStock}}text-red-600{{/lowStock}}{{^lowStock}}text-slate-800{{/lowStock}}">{{quantity}}개</span>
-                    <form method="post" action="/item-manager/item/restock" class="flex items-center gap-1">
-                      <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
-                      <input type="hidden" name="id" value="{{id}}">
-                      <input type="hidden" name="redirectTo" value="/item-manager/item-list">
-                      <input type="number" name="amount" min="1" placeholder="입고"
-                             class="w-16 px-2 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-400 text-center">
-                      <button type="submit"
-                              class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-md transition-colors whitespace-nowrap">
-                        입고
-                      </button>
-                    </form>
-                  </div>
+                  <span class="font-bold {{#lowStock}}text-red-600{{/lowStock}}{{^lowStock}}text-slate-800{{/lowStock}}">{{quantity}}개</span>
+                </td>
+                <td class="p-4 text-sm text-center">
+                  <form method="post" action="/item-manager/item/restock" class="flex items-center justify-center gap-1">
+                    <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                    <input type="hidden" name="id" value="{{id}}">
+                    <input type="hidden" name="redirectTo" value="/item-manager/item-list">
+                    <input type="number" name="amount" min="1" placeholder="수량"
+                           class="w-16 px-2 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-400 text-center">
+                    <button type="submit"
+                            class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-md transition-colors whitespace-nowrap">
+                      입고
+                    </button>
+                  </form>
                 </td>
                 <td class="p-4 text-sm text-slate-500 text-right">{{minQuantity}}개</td>
                 <td class="p-4 text-center">
@@ -116,7 +117,7 @@
               {{/items}}
               {{^items}}
               <tr>
-                <td colspan="6" class="p-8 text-center text-slate-500 text-sm">등록된 물품이 없습니다.</td>
+                <td colspan="7" class="p-8 text-center text-slate-500 text-sm">등록된 물품이 없습니다.</td>
               </tr>
               {{/items}}
             </tbody>
@@ -128,6 +129,45 @@
     {{> common/footer-staff}}
   </div>
 
+  <script>
+    document.querySelectorAll('form[action$="/item/restock"]').forEach(function(form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        var input = form.querySelector('input[name="amount"]');
+        var value = input.value.trim();
+        var amount = Number(value);
+
+        if (value === '' || isNaN(amount) || !Number.isInteger(amount) || amount < 0) {
+          alert('올바른 수량을 입력해주세요. (0 이상의 정수)');
+          return;
+        }
+
+        var id = form.querySelector('input[name="id"]').value;
+        var csrfInput = form.querySelector('input[type="hidden"]:not([name="id"]):not([name="redirectTo"])');
+
+        var params = new URLSearchParams();
+        params.append('id', id);
+        params.append('amount', value);
+        params.append(csrfInput.name, csrfInput.value);
+
+        fetch('/item-manager/item/restock/ajax', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString()
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.quantity !== undefined) {
+            var row = form.closest('tr');
+            var span = row.querySelector('td:nth-child(3) span');
+            span.textContent = data.quantity + '개';
+            input.value = '';
+          }
+        });
+      });
+    });
+  </script>
   <script>feather.replace();</script>
 </body>
 </html>
