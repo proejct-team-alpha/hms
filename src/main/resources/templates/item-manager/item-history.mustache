@@ -15,7 +15,8 @@
 
     <main class="content-wrapper flex-1 p-6">
       <div class="space-y-6 max-w-6xl mx-auto">
-        <div class="flex items-center gap-3 mb-8">
+
+        <div class="flex items-center gap-3">
           <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
             <i data-feather="clock" class="w-6 h-6"></i>
           </div>
@@ -25,21 +26,172 @@
           </div>
         </div>
 
+        <!-- 총량 요약 -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex items-center gap-4">
+            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+              <i data-feather="arrow-down-circle" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <div class="text-xs text-slate-500 font-medium">총 입고 수량</div>
+              <div class="text-xl font-bold text-blue-700">{{totalIn}}<span class="text-sm font-normal text-slate-500 ml-1">개</span></div>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex items-center gap-4">
+            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">
+              <i data-feather="arrow-up-circle" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <div class="text-xs text-slate-500 font-medium">총 출고 수량</div>
+              <div class="text-xl font-bold text-orange-700">{{totalOut}}<span class="text-sm font-normal text-slate-500 ml-1">개</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 검색 -->
+        <div class="flex gap-3">
+          <div class="relative flex-1">
+            <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="history-search" placeholder="물품명 검색"
+                   class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300">
+          </div>
+          <div class="flex gap-1.5" id="type-filter-btns">
+            <button type="button" data-type="" class="type-filter-btn px-3 py-2 text-xs font-medium rounded-xl bg-indigo-600 text-white transition-colors">전체</button>
+            <button type="button" data-type="입고" class="type-filter-btn px-3 py-2 text-xs font-medium rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">입고</button>
+            <button type="button" data-type="출고" class="type-filter-btn px-3 py-2 text-xs font-medium rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">출고</button>
+          </div>
+        </div>
+
+        <!-- 내역 테이블 -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          {{#hasHistories}}
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">구분</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">물품명</th>
+                <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">수량</th>
+                <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">일시</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody" class="divide-y divide-slate-100">
+              {{#histories}}
+              <tr class="history-row hover:bg-slate-50 transition-colors"
+                  data-name="{{itemName}}" data-type="{{typeText}}">
+                <td class="px-5 py-3">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                    {{#isIn}}bg-blue-100 text-blue-700{{/isIn}}{{^isIn}}bg-orange-100 text-orange-700{{/isIn}}">
+                    {{typeText}}
+                  </span>
+                </td>
+                <td class="px-5 py-3 font-medium text-slate-800">{{itemName}}</td>
+                <td class="px-5 py-3 text-right text-slate-600">{{amount}}개</td>
+                <td class="px-5 py-3 text-right text-slate-400">{{createdAt}}</td>
+              </tr>
+              {{/histories}}
+            </tbody>
+          </table>
+          {{/hasHistories}}
+          {{^hasHistories}}
           <div class="p-8 text-center">
             <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <i data-feather="clock" class="w-8 h-8 text-slate-400"></i>
             </div>
-            <h2 class="text-lg font-semibold text-slate-700 mb-2">입출고 내역 기능 준비 중</h2>
-            <p class="text-sm text-slate-500">입출고 이력 관리 기능은 추후 제공될 예정입니다.</p>
+            <p class="text-sm text-slate-500">입출고 내역이 없습니다.</p>
+          </div>
+          {{/hasHistories}}
+        </div>
+
+        <!-- 페이징 -->
+        {{#hasHistories}}
+        <div class="flex items-center justify-between" id="pagination-bar">
+          <span class="text-xs text-slate-500" id="page-info"></span>
+          <div class="flex gap-2">
+            <button id="btn-prev" type="button"
+                    class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              이전
+            </button>
+            <button id="btn-next" type="button"
+                    class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              다음
+            </button>
           </div>
         </div>
+        {{/hasHistories}}
+
       </div>
     </main>
 
     {{> common/footer-staff}}
   </div>
 
+  <script>
+    var PAGE_SIZE = 15;
+    var currentPage = 1;
+    var currentType = '';
+    var currentQuery = '';
+
+    function getFilteredRows() {
+      return Array.from(document.querySelectorAll('#history-tbody .history-row')).filter(function(row) {
+        var nameOk = !currentQuery || row.dataset.name.includes(currentQuery);
+        var typeOk = !currentType || row.dataset.type === currentType;
+        return nameOk && typeOk;
+      });
+    }
+
+    function render() {
+      var rows = getFilteredRows();
+      var total = rows.length;
+      var totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      var start = (currentPage - 1) * PAGE_SIZE;
+      var end = start + PAGE_SIZE;
+
+      Array.from(document.querySelectorAll('#history-tbody .history-row')).forEach(function(row) {
+        row.style.display = 'none';
+      });
+      rows.forEach(function(row, i) {
+        row.style.display = (i >= start && i < end) ? '' : 'none';
+      });
+
+      var info = document.getElementById('page-info');
+      if (info) info.textContent = total + '건 중 ' + (Math.min(start + 1, total)) + '-' + Math.min(end, total) + ' / ' + totalPages + '페이지';
+
+      var btnPrev = document.getElementById('btn-prev');
+      var btnNext = document.getElementById('btn-next');
+      if (btnPrev) btnPrev.disabled = currentPage <= 1;
+      if (btnNext) btnNext.disabled = currentPage >= totalPages;
+    }
+
+    var searchInput = document.getElementById('history-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        currentQuery = this.value.trim();
+        currentPage = 1;
+        render();
+      });
+    }
+
+    document.querySelectorAll('.type-filter-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        currentType = this.dataset.type;
+        currentPage = 1;
+        document.querySelectorAll('.type-filter-btn').forEach(function(b) {
+          b.className = 'type-filter-btn px-3 py-2 text-xs font-medium rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors';
+        });
+        this.className = 'type-filter-btn px-3 py-2 text-xs font-medium rounded-xl bg-indigo-600 text-white transition-colors';
+        render();
+      });
+    });
+
+    var btnPrev = document.getElementById('btn-prev');
+    var btnNext = document.getElementById('btn-next');
+    if (btnPrev) btnPrev.addEventListener('click', function() { currentPage--; render(); });
+    if (btnNext) btnNext.addEventListener('click', function() { currentPage++; render(); });
+
+    render();
+  </script>
   <script>feather.replace();</script>
 </body>
 </html>

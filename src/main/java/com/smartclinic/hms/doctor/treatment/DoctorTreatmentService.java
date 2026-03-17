@@ -57,7 +57,7 @@ public class DoctorTreatmentService {
     public Page<DoctorReservationDto> getTreatmentPage(String username, int page) {
         LocalDate today = LocalDate.now();
         return reservationRepository
-                .findTodayActiveByDoctorPage(username, today, ReservationStatus.CANCELLED, PageRequest.of(page, 9))
+                .findTodayByDoctorAndStatusPage(username, today, ReservationStatus.RECEIVED, PageRequest.of(page, 9))
                 .map(DoctorReservationDto::new);
     }
 

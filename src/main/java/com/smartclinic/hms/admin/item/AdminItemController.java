@@ -1,11 +1,15 @@
 package com.smartclinic.hms.admin.item;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.smartclinic.hms.item.ItemManagerService;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -13,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 public class AdminItemController {
 
     private final AdminItemService adminItemService;
+    private final ItemManagerService itemManagerService;
 
     @GetMapping("/list")
     public String list(@RequestParam(name = "category", required = false) String category, Model model) {
@@ -70,6 +75,33 @@ public class AdminItemController {
         adminItemService.deleteItem(id);
         ra.addFlashAttribute("message", "물품이 삭제되었습니다.");
         return "redirect:/admin/item/list";
+    }
+
+    @GetMapping("/use")
+    public String itemUsePage(Model model) {
+        model.addAttribute("items", itemManagerService.getItemList(null));
+        model.addAttribute("todayLogs", itemManagerService.getTodayStaffUsageLogs());
+        model.addAttribute("pageTitle", "물품 출고");
+        model.addAttribute("isAdminItemUse", true);
+        return "admin/item-use";
+    }
+
+    @PostMapping("/use")
+    @ResponseBody
+    public ResponseEntity<?> useItem(@RequestParam("id") Long id,
+                                     @RequestParam("amount") String amountStr) {
+        try {
+            long parsed = Long.parseLong(amountStr.trim());
+            if (parsed <= 0 || parsed > Integer.MAX_VALUE) {
+                return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
+            }
+            int newQuantity = itemManagerService.useItem(id, (int) parsed, null);
+            return ResponseEntity.ok(Map.of("quantity", newQuantity));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/history")

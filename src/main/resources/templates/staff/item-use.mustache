@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>물품 출고 - MediCare+</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/feather.min.js"></script>
+</head>
+<body class="min-h-screen flex">
+  {{> common/sidebar-staff}}
+
+  <div class="main-content flex-1 flex flex-col ml-64">
+    {{> common/header-staff}}
+
+    <main class="content-wrapper flex-1 p-6">
+      <div class="max-w-5xl mx-auto space-y-6">
+
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+            <i data-feather="package" class="w-5 h-5"></i>
+          </div>
+          <h1 class="text-2xl font-bold text-slate-800">물품 출고</h1>
+        </div>
+
+        <!-- 오늘 출고 내역 -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-3">
+          <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+            <i data-feather="list" class="w-5 h-5 text-indigo-600"></i>
+            오늘 출고 내역
+          </h3>
+          {{#todayLogs}}
+          <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+            <table class="w-full text-xs">
+              <thead class="bg-slate-100 text-slate-500">
+                <tr>
+                  <th class="px-3 py-2 text-left font-medium">물품명</th>
+                  <th class="px-3 py-2 text-right font-medium">수량</th>
+                  <th class="px-3 py-2 text-right font-medium">시간</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                {{#todayLogs}}
+                <tr>
+                  <td class="px-3 py-2 text-slate-700 font-medium">{{itemName}}</td>
+                  <td class="px-3 py-2 text-right text-slate-600">{{amount}}개</td>
+                  <td class="px-3 py-2 text-right text-slate-400">{{usedAt}}</td>
+                </tr>
+                {{/todayLogs}}
+              </tbody>
+            </table>
+          </div>
+          {{/todayLogs}}
+          {{^todayLogs}}
+          <div class="text-xs text-slate-400 py-1">오늘 출고된 물품이 없습니다.</div>
+          {{/todayLogs}}
+        </div>
+
+        <!-- 물품 출고 섹션 -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+              <i data-feather="package" class="w-5 h-5 text-indigo-600"></i>
+              물품 선택
+            </h3>
+            <div class="flex gap-1.5" id="item-category-btns">
+              <button type="button" data-cat="" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors">전체</button>
+              <button type="button" data-cat="MEDICAL_SUPPLIES" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">의료소모품</button>
+              <button type="button" data-cat="MEDICAL_EQUIPMENT" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">의료기기</button>
+              <button type="button" data-cat="GENERAL_SUPPLIES" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">사무/비품</button>
+            </div>
+          </div>
+          <div class="relative">
+            <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="item-search" placeholder="물품명 검색 (초성·영문 가능)"
+                   class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300">
+          </div>
+          <div class="grid grid-cols-4 gap-3" id="item-use-grid">
+            {{#items}}
+            <div class="item-card border border-slate-200 rounded-xl p-3 space-y-2" data-category="{{category}}">
+              <div class="item-name text-sm font-bold text-slate-800 truncate">{{name}}</div>
+              <div class="text-xs text-slate-500">{{categoryText}}</div>
+              <div class="text-xs font-bold {{#lowStock}}text-red-600{{/lowStock}}{{^lowStock}}text-slate-600{{/lowStock}}">
+                재고: <span class="quantity-span">{{quantity}}</span>개
+              </div>
+              <form action="/staff/item/use" method="post" class="flex items-center gap-1">
+                <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                <input type="hidden" name="id" value="{{id}}">
+                <input type="number" name="amount" min="1" placeholder="수량"
+                       class="flex-1 w-0 px-2 py-1 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                <button type="submit" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap">
+                  출고
+                </button>
+              </form>
+            </div>
+            {{/items}}
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    {{> common/footer-staff}}
+  </div>
+
+  <script>
+    var CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+    function getChosung(str) {
+      return str.split('').map(function(ch) {
+        var code = ch.charCodeAt(0);
+        if (code >= 0xAC00 && code <= 0xD7A3) return CHOSUNG[Math.floor((code - 0xAC00) / 588)];
+        return ch;
+      }).join('');
+    }
+    function isChosungOnly(str) { return /^[ㄱ-ㅎ]+$/.test(str); }
+    function itemMatches(name, query) {
+      if (!query) return true;
+      var q = query.toLowerCase();
+      if (isChosungOnly(q)) return getChosung(name).includes(q);
+      return name.toLowerCase().includes(q);
+    }
+
+    var currentCat = '';
+    function applyFilter() {
+      var query = document.getElementById('item-search').value.trim();
+      document.querySelectorAll('#item-use-grid .item-card').forEach(function(card) {
+        var catOk = !currentCat || card.dataset.category === currentCat;
+        var nameOk = itemMatches(card.querySelector('.item-name').textContent, query);
+        card.style.display = (catOk && nameOk) ? '' : 'none';
+      });
+    }
+
+    document.getElementById('item-search').addEventListener('input', applyFilter);
+
+    document.querySelectorAll('.item-cat-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        currentCat = this.dataset.cat;
+        document.querySelectorAll('.item-cat-btn').forEach(function(b) {
+          b.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors';
+        });
+        this.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors';
+        applyFilter();
+      });
+    });
+
+    document.querySelectorAll('form[action$="/staff/item/use"]').forEach(function(form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var input = form.querySelector('input[name="amount"]');
+        var value = input.value.trim();
+        var amount = Number(value);
+        if (value === '' || isNaN(amount) || !Number.isInteger(amount) || amount <= 0) {
+          alert('올바른 수량을 입력해주세요. (1 이상의 정수)');
+          return;
+        }
+        var id = form.querySelector('input[name="id"]').value;
+        var csrfInput = form.querySelector('input[type="hidden"]:not([name="id"])');
+        var params = new URLSearchParams();
+        params.append('id', id);
+        params.append('amount', value);
+        params.append(csrfInput.name, csrfInput.value);
+
+        fetch('/staff/item/use', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString()
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.quantity !== undefined) {
+            form.closest('.item-card').querySelector('.quantity-span').textContent = data.quantity;
+            input.value = '';
+          } else if (data.error) {
+            alert(data.error);
+          }
+        });
+      });
+    });
+  </script>
+  <script>feather.replace();</script>
+</body>
+</html>

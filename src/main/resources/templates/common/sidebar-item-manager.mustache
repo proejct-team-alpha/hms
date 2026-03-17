@@ -31,6 +31,10 @@
       <i data-feather="plus-circle" class="w-5 h-5"></i>
       물품 등록
     </a>
+    <a href="/item-manager/item-use" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isItemUse}}bg-indigo-50 text-indigo-700{{/isItemUse}}{{^isItemUse}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isItemUse}}">
+      <i data-feather="package" class="w-5 h-5"></i>
+      물품 출고
+    </a>
     <a href="/item-manager/item-history" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isItemHistory}}bg-indigo-50 text-indigo-700{{/isItemHistory}}{{^isItemHistory}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isItemHistory}}">
       <i data-feather="clock" class="w-5 h-5"></i>
       물품 입출고 내역

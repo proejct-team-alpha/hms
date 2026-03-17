@@ -20,6 +20,7 @@ public class NursePatientDto {
     private final String departmentName;
     private final String statusText;
     private final boolean canReceive;
+    private final boolean canUseItem;
 
     public NursePatientDto(Reservation r) {
         Patient p = r.getPatient();
@@ -35,6 +36,7 @@ public class NursePatientDto {
         this.departmentName = r.getDepartment().getName();
         this.statusText = toStatusText(r.getStatus());
         this.canReceive = r.getStatus() == ReservationStatus.RESERVED;
+        this.canUseItem = r.getStatus() == ReservationStatus.RECEIVED;
     }
 
     private static String toStatusText(ReservationStatus s) {

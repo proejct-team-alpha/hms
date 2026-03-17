@@ -11,4 +11,5 @@ public class ItemDashboardDto {
     private final long totalItems;
     private final long lowStockCount;
     private final List<ItemListDto> lowStockItems;
+    private final List<ItemChartDayDto> chartDays;
 }

@@ -111,8 +111,39 @@ public class ItemManagerController {
         return "redirect:/item-manager/item-list";
     }
 
+    @GetMapping("/item-use")
+    public String itemUsePage(Model model) {
+        model.addAttribute("items", itemService.getItemList(null));
+        model.addAttribute("todayLogs", itemService.getTodayStaffUsageLogs());
+        model.addAttribute("pageTitle", "물품 출고");
+        return "item-manager/item-use";
+    }
+
+    @PostMapping("/item-use")
+    @ResponseBody
+    public ResponseEntity<?> useItem(@RequestParam("id") Long id,
+                                     @RequestParam("amount") String amountStr) {
+        try {
+            long parsed = Long.parseLong(amountStr.trim());
+            if (parsed <= 0 || parsed > Integer.MAX_VALUE) {
+                return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
+            }
+            int newQuantity = itemService.useItem(id, (int) parsed, null);
+            return ResponseEntity.ok(Map.of("quantity", newQuantity));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @GetMapping("/item-history")
     public String itemHistory(Model model) {
+        var histories = itemService.getStockHistory();
+        model.addAttribute("histories", histories);
+        model.addAttribute("hasHistories", !histories.isEmpty());
+        model.addAttribute("totalIn", itemService.getTotalInAmount());
+        model.addAttribute("totalOut", itemService.getTotalOutAmount());
         model.addAttribute("pageTitle", "입출고 내역");
         return "item-manager/item-history";
     }

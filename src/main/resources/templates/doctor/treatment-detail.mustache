@@ -22,10 +22,18 @@
             </div>
             <h1 class="text-2xl font-bold text-slate-800">진료실</h1>
           </div>
+          {{#detail.canComplete}}
           <a href="/doctor/treatment-list" class="text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center gap-1">
             <i data-feather="arrow-left" class="w-4 h-4"></i>
             목록으로 돌아가기
           </a>
+          {{/detail.canComplete}}
+          {{^detail.canComplete}}
+          <a href="/doctor/completed-list" class="text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center gap-1">
+            <i data-feather="arrow-left" class="w-4 h-4"></i>
+            목록으로 돌아가기
+          </a>
+          {{/detail.canComplete}}
         </div>
 
         {{#errorMessage}}
@@ -147,6 +155,35 @@
                 {{/detail.diagnosis}}
               </div>
 
+              <div class="px-6 pb-4">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">사용 물품 내역</h3>
+                {{#usageLogs}}
+                <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+                  <table class="w-full text-xs">
+                    <thead class="bg-slate-100 text-slate-500">
+                      <tr>
+                        <th class="px-3 py-2 text-left font-medium">물품명</th>
+                        <th class="px-3 py-2 text-right font-medium">수량</th>
+                        <th class="px-3 py-2 text-right font-medium">시간</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                      {{#usageLogs}}
+                      <tr>
+                        <td class="px-3 py-2 text-slate-700 font-medium">{{itemName}}</td>
+                        <td class="px-3 py-2 text-right text-slate-600">{{amount}}개</td>
+                        <td class="px-3 py-2 text-right text-slate-400">{{usedAt}}</td>
+                      </tr>
+                      {{/usageLogs}}
+                    </tbody>
+                  </table>
+                </div>
+                {{/usageLogs}}
+                {{^usageLogs}}
+                <div class="text-xs text-slate-400 py-2">사용된 물품이 없습니다.</div>
+                {{/usageLogs}}
+              </div>
+
               <div class="p-6 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex items-center justify-between">
                 <span class="text-sm font-medium text-green-600 flex items-center gap-1">
                   <i data-feather="check-circle" class="w-4 h-4"></i>
@@ -159,12 +196,144 @@
             {{/detail.canComplete}}
           </div>
         </div>
+
+        {{#detail.canComplete}}
+        <!-- 물품 사용 섹션 — 진료 기록 아래 전체 너비 -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+              <i data-feather="package" class="w-5 h-5 text-indigo-600"></i>
+              물품 사용
+            </h3>
+            <!-- 카테고리 필터 -->
+            <div class="flex gap-1.5" id="item-category-btns">
+              <button type="button" data-cat="" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors">전체</button>
+              <button type="button" data-cat="MEDICAL_SUPPLIES" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">의료소모품</button>
+              <button type="button" data-cat="MEDICAL_EQUIPMENT" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">의료기기</button>
+              <button type="button" data-cat="GENERAL_SUPPLIES" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">사무/비품</button>
+            </div>
+          </div>
+          <!-- 검색 -->
+          <div class="relative">
+            <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="item-search" placeholder="물품명 검색 (초성·영문 가능)"
+                   class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300">
+          </div>
+          <!-- 물품 카드 목록 — 가로 배치 -->
+          <div class="grid grid-cols-4 gap-3" id="item-use-grid">
+            {{#items}}
+            <div class="item-card border border-slate-200 rounded-xl p-3 space-y-2" data-category="{{category}}">
+              <div class="item-name text-sm font-bold text-slate-800 truncate">{{name}}</div>
+              <div class="text-xs text-slate-500">{{categoryText}}</div>
+              <div class="text-xs font-bold {{#lowStock}}text-red-600{{/lowStock}}{{^lowStock}}text-slate-600{{/lowStock}}">
+                재고: <span class="quantity-span">{{quantity}}</span>개
+              </div>
+              <form action="/doctor/item/use" method="post" class="flex items-center gap-1">
+                <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                <input type="hidden" name="id" value="{{id}}">
+                <input type="hidden" name="reservationId" value="{{detail.reservationId}}">
+                <input type="number" name="amount" min="1" placeholder="수량"
+                       class="flex-1 w-0 px-2 py-1 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                <button type="submit" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap">
+                  사용
+                </button>
+              </form>
+            </div>
+            {{/items}}
+          </div>
+        </div>
+        {{/detail.canComplete}}
+
       </div>
     </main>
 
     {{> common/footer-staff}}
   </div>
 
+  <script>
+    // 초성 추출
+    var CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+    function getChosung(str) {
+      return str.split('').map(function(ch) {
+        var code = ch.charCodeAt(0);
+        if (code >= 0xAC00 && code <= 0xD7A3) return CHOSUNG[Math.floor((code - 0xAC00) / 588)];
+        return ch;
+      }).join('');
+    }
+    function isChosungOnly(str) {
+      return /^[ㄱ-ㅎ]+$/.test(str);
+    }
+    function itemMatches(name, query) {
+      if (!query) return true;
+      var q = query.toLowerCase();
+      if (isChosungOnly(q)) return getChosung(name).includes(q);
+      return name.toLowerCase().includes(q);
+    }
+
+    var currentCat = '';
+    function applyFilter() {
+      var query = document.getElementById('item-search').value.trim();
+      document.querySelectorAll('#item-use-grid .item-card').forEach(function(card) {
+        var catOk = !currentCat || card.dataset.category === currentCat;
+        var nameOk = itemMatches(card.querySelector('.item-name').textContent, query);
+        card.style.display = (catOk && nameOk) ? '' : 'none';
+      });
+    }
+
+    // 검색 이벤트 (canComplete=true 일 때만 존재)
+    var searchInput = document.getElementById('item-search');
+    if (searchInput) searchInput.addEventListener('input', applyFilter);
+
+    // 카테고리 필터
+    document.querySelectorAll('.item-cat-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        currentCat = this.dataset.cat;
+        document.querySelectorAll('.item-cat-btn').forEach(function(b) {
+          b.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors';
+        });
+        this.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors';
+        applyFilter();
+      });
+    });
+
+    // 물품 사용 AJAX
+    document.querySelectorAll('form[action$="/doctor/item/use"]').forEach(function(form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var input = form.querySelector('input[name="amount"]');
+        var value = input.value.trim();
+        var amount = Number(value);
+        if (value === '' || isNaN(amount) || !Number.isInteger(amount) || amount <= 0) {
+          alert('올바른 수량을 입력해주세요. (1 이상의 정수)');
+          return;
+        }
+        var id = form.querySelector('input[name="id"]').value;
+        var reservationId = form.querySelector('input[name="reservationId"]').value;
+        var csrfInput = form.querySelector('input[type="hidden"]:not([name="id"]):not([name="reservationId"])');
+        var params = new URLSearchParams();
+        params.append('id', id);
+        params.append('amount', value);
+        params.append('reservationId', reservationId);
+        params.append(csrfInput.name, csrfInput.value);
+
+        fetch('/doctor/item/use', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString()
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.quantity !== undefined) {
+            var card = form.closest('.item-card');
+            card.querySelector('.quantity-span').textContent = data.quantity;
+            input.value = '';
+          } else if (data.error) {
+            alert(data.error);
+          }
+        });
+      });
+    });
+  </script>
   <script>feather.replace();</script>
 </body>
 </html>

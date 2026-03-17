@@ -25,9 +25,9 @@ public class AdminReservationController {
 
     @GetMapping("/list")
     public String list(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String status,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "status", required = false) String status,
             HttpServletRequest req) {
         AdminReservationListResponse result = adminReservationService.getReservationList(page, size, status);
         req.setAttribute("model", result);
