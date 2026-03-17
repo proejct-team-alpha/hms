@@ -121,7 +121,9 @@ public class SecurityConfig {
                                 .maxAgeInSeconds(31536000)
                                 .includeSubDomains(true))
                         .referrerPolicy(referrer -> referrer
-                                .policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)))
+                                .policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .permissionsPolicy(pp -> pp.policy(
+                                "camera=(), microphone=(), geolocation=(), payment=()")))
 
                 // ── Rate Limiting Filter ────────────────────────────────────
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)

@@ -9,6 +9,7 @@ import com.smartclinic.hms.admin.staff.dto.AdminStaffItemResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffListResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffPageLinkResponse;
 import com.smartclinic.hms.admin.staff.dto.CreateAdminStaffRequest;
+import com.smartclinic.hms.admin.staff.dto.UpdateAdminStaffApiResponse;
 import com.smartclinic.hms.admin.staff.dto.UpdateAdminStaffRequest;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.doctor.DoctorRepository;
@@ -26,7 +27,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.time.DayOfWeek;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -47,22 +47,25 @@ public class AdminStaffService {
     private static final String INACTIVE = "INACTIVE";
     private static final String DEFAULT_ROLE = "STAFF";
     private static final String NO_DEPARTMENT_LABEL = "-";
-    private static final String STAFF_CREATED_MESSAGE = "직원이 등록되었습니다.";
-    private static final String STAFF_UPDATED_MESSAGE = "직원 정보가 수정되었습니다.";
+    private static final String STAFF_CREATED_MESSAGE = "직원을 등록했습니다.";
+    private static final String STAFF_UPDATED_MESSAGE = "직원 정보를 수정했습니다.";
+    private static final String STAFF_DEACTIVATED_MESSAGE = "직원을 비활성화했습니다.";
     private static final String INPUT_CHECK_MESSAGE = "입력값을 확인해주세요.";
     private static final String INVALID_ROLE_MESSAGE = "유효한 역할을 선택해주세요.";
     private static final String INVALID_DEPARTMENT_MESSAGE = "유효한 부서를 선택해주세요.";
     private static final String DUPLICATE_USERNAME_MESSAGE = "이미 사용 중인 로그인 아이디입니다.";
     private static final String DUPLICATE_EMPLOYEE_NUMBER_MESSAGE = "이미 사용 중인 사번입니다.";
-    private static final String STAFF_NOT_FOUND_MESSAGE = "직원 정보를 찾을 수 없습니다.";
+    private static final String STAFF_NOT_FOUND_MESSAGE = "직원을 찾을 수 없습니다.";
     private static final String DOCTOR_NOT_FOUND_MESSAGE = "의사 상세 정보를 찾을 수 없습니다.";
     private static final String PASSWORD_LENGTH_MESSAGE = "비밀번호는 8자 이상이어야 합니다.";
+    private static final String SELF_DEACTIVATE_MESSAGE = "본인 계정은 비활성화할 수 없습니다.";
+    private static final String ALREADY_DEACTIVATED_MESSAGE = "이미 비활성화된 직원입니다.";
 
     private static final Map<StaffRole, String> ROLE_LABELS = Map.of(
             StaffRole.ADMIN, "관리자",
             StaffRole.DOCTOR, "의사",
             StaffRole.NURSE, "간호사",
-            StaffRole.STAFF, "접수 직원",
+            StaffRole.STAFF, "직원",
             StaffRole.ITEM_MANAGER, "물품 담당자");
 
     private static final Map<String, String> AVAILABLE_DAY_LABELS = new LinkedHashMap<>();
@@ -82,8 +85,13 @@ public class AdminStaffService {
     private final DoctorRepository doctorRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public AdminStaffListResponse getStaffList(int page, int size, String keyword, String roleParam,
-            String employmentStatusParam) {
+    public AdminStaffListResponse getStaffList(
+            int page,
+            int size,
+            String keyword,
+            String roleParam,
+            String employmentStatusParam,
+            String currentUsername) {
         int safePage = page < 1 ? DEFAULT_PAGE : page;
         int safeSize = size < 1 ? DEFAULT_SIZE : size;
 
@@ -112,12 +120,11 @@ public class AdminStaffService {
 
         return new AdminStaffListResponse(
                 pageResult.getContent().stream()
-                        .map(this::toItemResponse)
+                        .map(projection -> toItemResponse(projection, currentUsername))
                         .toList(),
                 buildRoleOptions(selectedRole),
                 buildEmploymentStatusOptions(selectedEmploymentStatus),
-                buildPageLinks(totalPages, currentPage, safeSize, normalizedKeyword, selectedRole,
-                        selectedEmploymentStatus),
+                buildPageLinks(totalPages, currentPage, safeSize, normalizedKeyword, selectedRole, selectedEmploymentStatus),
                 normalizedKeyword == null ? "" : normalizedKeyword,
                 selectedRole,
                 selectedEmploymentStatus,
@@ -127,22 +134,12 @@ public class AdminStaffService {
                 totalPages,
                 hasPrevious,
                 hasNext,
-                hasPrevious
-                        ? buildListUrl(currentPage - 1, safeSize, normalizedKeyword, selectedRole,
-                                selectedEmploymentStatus)
-                        : "",
-                hasNext ? buildListUrl(currentPage + 1, safeSize, normalizedKeyword, selectedRole,
-                        selectedEmploymentStatus) : "");
+                hasPrevious ? buildListUrl(currentPage - 1, safeSize, normalizedKeyword, selectedRole, selectedEmploymentStatus) : "",
+                hasNext ? buildListUrl(currentPage + 1, safeSize, normalizedKeyword, selectedRole, selectedEmploymentStatus) : "");
     }
 
     public AdminStaffFormResponse getCreateForm() {
-        return buildCreateFormResponse(
-                "",
-                "",
-                "",
-                DEFAULT_ROLE,
-                null,
-                true);
+        return buildCreateFormResponse("", "", "", DEFAULT_ROLE, null, true, "", List.of());
     }
 
     public AdminStaffFormResponse getCreateForm(CreateAdminStaffRequest request) {
@@ -152,7 +149,9 @@ public class AdminStaffService {
                 request.employeeNumber(),
                 request.role(),
                 request.departmentId(),
-                request.active());
+                request.active(),
+                request.specialty(),
+                request.availableDays());
     }
 
     public AdminStaffFormResponse getEditForm(Long staffId) {
@@ -167,18 +166,39 @@ public class AdminStaffService {
         return buildEditFormResponse(staff, doctor, request);
     }
 
+    public UpdateAdminStaffApiResponse getUpdateApiResponse(Long staffId, String message) {
+        Staff staff = getStaff(staffId);
+        Doctor doctor = getDoctorIfNeeded(staff);
+
+        return new UpdateAdminStaffApiResponse(
+                staff.getId(),
+                staff.getUsername(),
+                staff.getEmployeeNumber(),
+                staff.getName(),
+                staff.getRole().name(),
+                staff.getDepartment() == null ? null : staff.getDepartment().getId(),
+                staff.getDepartment() == null ? NO_DEPARTMENT_LABEL : staff.getDepartment().getName(),
+                staff.isActive(),
+                doctor == null ? null : doctor.getSpecialty(),
+                doctor == null ? List.of() : splitAvailableDays(doctor.getAvailableDays()),
+                message
+        );
+    }
+
     @Transactional
     public String createStaff(CreateAdminStaffRequest request) {
         validateDuplicateUsername(request.username());
         validateDuplicateEmployeeNumber(request.employeeNumber());
+        validatePassword(request.password());
 
         StaffRole role = resolveRequiredRole(request.role());
         Department department = resolveDepartment(request.departmentId());
+        validateDoctorDepartment(role, department);
 
         Staff staff = Staff.create(
                 request.username().trim(),
                 request.employeeNumber().trim(),
-                passwordEncoder.encode(request.password()),
+                passwordEncoder.encode(request.password().trim()),
                 request.name().trim(),
                 role,
                 department);
@@ -188,6 +208,16 @@ public class AdminStaffService {
         }
 
         adminStaffRepository.save(staff);
+
+        if (role == StaffRole.DOCTOR) {
+            Doctor doctor = Doctor.create(
+                    staff,
+                    department,
+                    joinAvailableDays(request.availableDays()),
+                    normalizeNullableText(request.specialty()));
+            doctorRepository.save(doctor);
+        }
+
         return STAFF_CREATED_MESSAGE;
     }
 
@@ -195,6 +225,7 @@ public class AdminStaffService {
     public String updateStaff(UpdateAdminStaffRequest request) {
         Staff staff = getStaff(request.staffId());
         Department department = resolveDepartment(request.departmentId());
+        validateDoctorDepartment(staff.getRole(), department);
 
         staff.update(request.name().trim(), department, staff.isActive());
 
@@ -215,11 +246,35 @@ public class AdminStaffService {
         return STAFF_UPDATED_MESSAGE;
     }
 
+    @Transactional
+    public String deactivateStaff(Long staffId, String currentUsername) {
+        Staff staff = getStaff(staffId);
+
+        if (staff.getUsername().equals(currentUsername)) {
+            throw CustomException.badRequest("VALIDATION_ERROR", SELF_DEACTIVATE_MESSAGE);
+        }
+
+        if (!staff.isActive()) {
+            throw CustomException.badRequest("VALIDATION_ERROR", ALREADY_DEACTIVATED_MESSAGE);
+        }
+
+        staff.update(staff.getName(), staff.getDepartment(), false);
+        return STAFF_DEACTIVATED_MESSAGE;
+    }
+
     public String getInputCheckMessage() {
         return INPUT_CHECK_MESSAGE;
     }
 
-    private AdminStaffItemResponse toItemResponse(AdminStaffRepository.AdminStaffListProjection projection) {
+    private AdminStaffItemResponse toItemResponse(
+            AdminStaffRepository.AdminStaffListProjection projection,
+            String currentUsername) {
+        boolean selfRow = projection.getUsername().equals(currentUsername);
+        boolean deactivatable = projection.isActive() && !selfRow;
+        String deactivateStatusLabel = projection.isActive()
+                ? selfRow ? "본인" : ""
+                : "비활성";
+
         return new AdminStaffItemResponse(
                 projection.getId(),
                 projection.getName(),
@@ -232,7 +287,9 @@ public class AdminStaffService {
                 projection.isActive(),
                 projection.isActive() ? "재직" : "비활성",
                 projection.isActive() ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-600",
-                buildDetailUrl(projection.getId()));
+                buildDetailUrl(projection.getId()),
+                deactivatable,
+                deactivateStatusLabel);
     }
 
     private AdminStaffFormResponse buildCreateFormResponse(
@@ -241,8 +298,12 @@ public class AdminStaffService {
             String employeeNumber,
             String selectedRole,
             Long selectedDepartmentId,
-            boolean active) {
+            boolean active,
+            String specialty,
+            List<String> availableDays) {
         String normalizedRole = normalizeSelectedRole(selectedRole);
+        boolean doctorRole = StaffRole.DOCTOR.name().equals(normalizedRole);
+        Set<String> selectedDays = normalizeAvailableDaySet(availableDays);
 
         return new AdminStaffFormResponse(
                 "직원 등록",
@@ -257,12 +318,12 @@ public class AdminStaffService {
                 ROLE_LABELS.getOrDefault(StaffRole.valueOf(normalizedRole), normalizedRole),
                 selectedDepartmentId,
                 active,
-                false,
-                "",
+                doctorRole,
+                doctorRole ? nullToEmpty(specialty) : "",
                 buildFormRoleOptions(normalizedRole),
                 buildDepartmentOptions(selectedDepartmentId),
                 buildEmploymentStatusFormOptions(active),
-                List.of());
+                buildAvailableDayOptions(selectedDays));
     }
 
     private AdminStaffFormResponse buildEditFormResponse(Staff staff, Doctor doctor, UpdateAdminStaffRequest request) {
@@ -314,11 +375,11 @@ public class AdminStaffService {
 
     private List<AdminStaffFormOptionResponse> buildFormRoleOptions(String selectedRole) {
         return List.of(
-                StaffRole.ADMIN.name(),
-                StaffRole.DOCTOR.name(),
-                StaffRole.NURSE.name(),
-                StaffRole.STAFF.name(),
-                StaffRole.ITEM_MANAGER.name())
+                        StaffRole.ADMIN.name(),
+                        StaffRole.DOCTOR.name(),
+                        StaffRole.NURSE.name(),
+                        StaffRole.STAFF.name(),
+                        StaffRole.ITEM_MANAGER.name())
                 .stream()
                 .map(role -> new AdminStaffFormOptionResponse(
                         role,
@@ -356,9 +417,7 @@ public class AdminStaffService {
         return List.of(
                 new AdminStaffFilterOptionResponse(ALL, "전체 상태", ALL.equals(selectedEmploymentStatus)),
                 new AdminStaffFilterOptionResponse(ACTIVE, "재직", ACTIVE.equals(selectedEmploymentStatus)),
-                new AdminStaffFilterOptionResponse(INACTIVE, "비활성", INACTIVE.equals(selectedEmploymentStatus)))
-                .stream()
-                .toList();
+                new AdminStaffFilterOptionResponse(INACTIVE, "비활성", INACTIVE.equals(selectedEmploymentStatus)));
     }
 
     private List<AdminStaffPageLinkResponse> buildPageLinks(
@@ -400,8 +459,7 @@ public class AdminStaffService {
                 .fromPath("/admin/staff/detail")
                 .queryParam("staffId", staffId)
                 .build()
-                .encode()
-                .toUriString();
+                .encode().toUriString();
     }
 
     private String normalizeKeyword(String keyword) {
@@ -457,6 +515,12 @@ public class AdminStaffService {
 
         return adminDepartmentRepository.findByIdAndActiveTrue(departmentId)
                 .orElseThrow(() -> CustomException.badRequest("VALIDATION_ERROR", INVALID_DEPARTMENT_MESSAGE));
+    }
+
+    private void validateDoctorDepartment(StaffRole role, Department department) {
+        if (role == StaffRole.DOCTOR && department == null) {
+            throw CustomException.badRequest("VALIDATION_ERROR", INVALID_DEPARTMENT_MESSAGE);
+        }
     }
 
     private Staff getStaff(Long staffId) {

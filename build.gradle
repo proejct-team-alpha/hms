@@ -30,9 +30,6 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
-	// Third-party
-	implementation 'com.auth0:java-jwt:4.3.0'
-
 	// Compile-only (빌드 시에만 필요)
 	compileOnly 'org.projectlombok:lombok'
 

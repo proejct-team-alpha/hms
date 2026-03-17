@@ -12,6 +12,8 @@ public record AdminStaffItemResponse(
         boolean active,
         String employmentStatusLabel,
         String employmentStatusBadgeClass,
-        String detailUrl
+        String detailUrl,
+        boolean deactivatable,
+        String deactivateStatusLabel
 ) {
 }
