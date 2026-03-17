@@ -107,14 +107,16 @@
 
 
                     {{/canReceive}}
+
                     {{#canCancel}}
-                    <form method="post" action="/staff/reception/cancel" onsubmit="return confirm('예약을 취소하시겠습니까?')">
-                      <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
-                      <input type="hidden" name="id" value="{{id}}">
-                      <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 text-sm font-medium rounded-lg hover:bg-red-600 transition"">
-                        <i data-feather="x-circle" class="w-3.5 h-3.5"></i> 취소
-                      </button>
-                    </form>
+                    
+                    <button 
+  type="button"
+  onclick="cancelAjax({{id}}, this, '{{currentStatus}}')"
+  class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 text-sm font-medium rounded-lg transition">
+  <i data-feather="x-circle" class="w-3.5 h-3.5"></i> 취소
+</button>
+
                     {{/canCancel}}
                   </div>
                 </td>
@@ -209,6 +211,57 @@ if (data.success) {
     alert('에러 발생');
   }
 }
+
+async function cancelAjax(id, button, currentStatus) {
+
+  // confirm 추가
+  if (!confirm('예약을 취소하시겠습니까?')) {
+    return;
+  }
+
+  try {
+    const response = await fetch('/staff/reception/cancel-ajax', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': '{{_csrf.token}}'
+      },
+      body: JSON.stringify({
+        id: id
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      const row = button.closest('tr');
+
+      // 진료대기 탭이면 사라짐
+      if (currentStatus === 'RESERVED') {
+        row.remove();
+      } else {
+        // 다른 탭이면 상태만 변경
+        const statusCell = row.children[6];
+
+        statusCell.innerHTML = `
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+            취소
+          </span>
+        `;
+
+        button.remove();
+      }
+
+    } else {
+      alert('취소 실패');
+    }
+
+  } catch (e) {
+    console.error(e);
+    alert('에러 발생');
+  }
+}
+
 </script>
 
 </body>

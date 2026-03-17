@@ -122,10 +122,24 @@ public class ReceptionController {
 
     // 예약 취소
     @PostMapping("/cancel")
-    public String cancel(@RequestParam Long id, RedirectAttributes redirectAttributes) {
+    public String cancel(@RequestParam("id") Long id, RedirectAttributes redirectAttributes) {
         receptionService.cancel(id);
         redirectAttributes.addFlashAttribute("message", "예약이 취소되었습니다.");
         return "redirect:/staff/reception/list";
+    }
+
+    @PostMapping("/cancel-ajax")
+    @ResponseBody
+    public Map<String, Object> cancelAjax(@RequestBody Map<String, Long> request) {
+
+        Long id = request.get("id");
+
+        receptionService.cancel(id);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+
+        return result;
     }
 
 }
