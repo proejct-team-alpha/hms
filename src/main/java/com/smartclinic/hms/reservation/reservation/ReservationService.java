@@ -1,8 +1,6 @@
 package com.smartclinic.hms.reservation.reservation;
 
-import java.time.Clock;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.smartclinic.hms.common.exception.CustomException;
+import com.smartclinic.hms.common.util.ReservationNumberGenerator;
 import com.smartclinic.hms.doctor.DoctorDto;
 import com.smartclinic.hms.doctor.DoctorRepository;
 import com.smartclinic.hms.domain.Department;
@@ -30,7 +29,7 @@ public class ReservationService {
         private final PatientRepository patientRepository;
         private final ReservationRepository reservationRepository;
         private final DepartmentRepository departmentRepository;
-        private final Clock clock;
+        private final ReservationNumberGenerator reservationNumberGenerator;
 
         public List<DoctorDto> getDoctorsByDepartment(Long departmentId) {
                 return doctorRepository.findByDepartment_Id(departmentId)
@@ -56,6 +55,15 @@ public class ReservationService {
                                 .map(ReservationInfoDto::new);
         }
 
+        public List<String> getBookedTimeSlots(Long doctorId, LocalDate date) {
+                return reservationRepository.findBookedTimeSlots(doctorId, date, ReservationStatus.CANCELLED);
+        }
+
+        public List<String> getBookedTimeSlots(Long doctorId, LocalDate date, Long excludeId) {
+                return reservationRepository.findBookedTimeSlotsExcluding(
+                                doctorId, date, ReservationStatus.CANCELLED, excludeId);
+        }
+
         public List<ReservationInfoDto> findByPhoneAndName(String phone, String name) {
                 String trimmedName = name.trim();
                 String normalizedPhone = phone.replaceAll("[^0-9]", "");
@@ -65,21 +73,8 @@ public class ReservationService {
                                 .toList();
         }
 
-        // RES-YYYYMMDD-XXX-NNNN 형식 예약번호 생성
-        public String generateReservationNumber() {
-                LocalDateTime now = LocalDateTime.now(clock);
-                LocalDateTime startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
-                LocalDateTime endOfMonth = startOfMonth.plusMonths(1).minusNanos(1);
-
-                long count = reservationRepository.countByCreatedAtBetween(startOfMonth, endOfMonth) + 1;
-                String dateStr = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-                String nanoStr = String.format("%04d", System.nanoTime() % 10000);
-
-                return String.format("RES-%s-%03d-%s", dateStr, count, nanoStr);
-        }
-
         @Transactional
-        public ReservationCompleteInfo createReservation(ReservationCreateForm form) {
+        public ReservationCompleteInfo createReservation(CreateReservationRequest form) {
                 if (reservationRepository.existsByDoctor_IdAndReservationDateAndTimeSlotAndStatusNot(
                                 form.doctorId(), form.reservationDate(), form.timeSlot(),
                                 ReservationStatus.CANCELLED)) {
@@ -96,7 +91,9 @@ public class ReservationService {
                                 .orElseThrow(() -> CustomException.notFound("진료과를 찾을 수 없습니다."));
 
                 try {
-                        String reservationNumber = generateReservationNumber();
+                        String reservationNumber = reservationNumberGenerator.generate(
+                                        form.reservationDate(),
+                                        () -> reservationRepository.countByReservationDate(form.reservationDate()));
                         Reservation reservation = Reservation.create(
                                         reservationNumber, patient, doctor, department,
                                         form.reservationDate(), form.timeSlot(),
@@ -117,9 +114,16 @@ public class ReservationService {
         }
 
         @Transactional
-        public ReservationCompleteInfo cancelReservation(Long id) {
+        public ReservationCompleteInfo cancelReservation(Long id, String phone) {
                 Reservation reservation = reservationRepository.findById(id)
                                 .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
+
+                // H-01: 소유권 검증 (전화번호 일치 확인)
+                String normalizedInput = phone.replaceAll("[^0-9]", "");
+                String normalizedStored = reservation.getPatient().getPhone().replaceAll("[^0-9]", "");
+                if (!normalizedInput.equals(normalizedStored)) {
+                        throw CustomException.forbidden("예약 소유자가 아닙니다.");
+                }
 
                 ReservationCompleteInfo info = new ReservationCompleteInfo(
                                 reservation.getReservationNumber(),
@@ -134,28 +138,36 @@ public class ReservationService {
         }
 
         @Transactional
-        public ReservationCompleteInfo updateReservation(Long id, ReservationUpdateForm form) {
-                // 1. 새 슬롯 중복 체크 (cancel 이전에 먼저 수행 — TOCTOU 방지)
+        public ReservationCompleteInfo updateReservation(Long id, String phone, UpdateReservationRequest form) {
+                // H-01 + H-03: 비관적 락으로 기존 예약 조회 후 소유권 검증 (동시 수정 방지)
+                Reservation old = reservationRepository.findByIdForUpdate(id)
+                                .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
+
+                String normalizedInput = phone.replaceAll("[^0-9]", "");
+                String normalizedStored = old.getPatient().getPhone().replaceAll("[^0-9]", "");
+                if (!normalizedInput.equals(normalizedStored)) {
+                        throw CustomException.forbidden("예약 소유자가 아닙니다.");
+                }
+
+                // 새 슬롯 중복 체크
                 if (reservationRepository.existsByDoctor_IdAndReservationDateAndTimeSlotAndStatusNot(
                                 form.doctorId(), form.reservationDate(), form.timeSlot(),
                                 ReservationStatus.CANCELLED)) {
                         throw CustomException.conflict("DUPLICATE_RESERVATION", "이미 예약된 시간대입니다.");
                 }
 
-                // 2. 기존 예약 취소
-                Reservation old = reservationRepository.findById(id)
-                                .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
                 Patient patient = old.getPatient();
                 old.cancel();
 
-                // 3. 신규 예약 생성
                 Doctor doctor = doctorRepository.findById(form.doctorId())
                                 .orElseThrow(() -> CustomException.notFound("의사를 찾을 수 없습니다."));
                 Department department = departmentRepository.findById(form.departmentId())
                                 .orElseThrow(() -> CustomException.notFound("진료과를 찾을 수 없습니다."));
 
                 try {
-                        String reservationNumber = generateReservationNumber();
+                        String reservationNumber = reservationNumberGenerator.generate(
+                                        form.reservationDate(),
+                                        () -> reservationRepository.countByReservationDate(form.reservationDate()));
                         Reservation newReservation = Reservation.create(
                                         reservationNumber, patient, doctor, department,
                                         form.reservationDate(), form.timeSlot(), ReservationSource.ONLINE);
