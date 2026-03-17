@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>관리자 대시보드 - MediCare+</title>
+  <title>{{pageTitle}} - MediCare+</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body class="min-h-screen flex">
   {{> common/sidebar-admin}}
@@ -14,182 +13,96 @@
   <div class="main-content flex-1 flex flex-col ml-64">
     {{> common/header-staff}}
 
-    <main class="content-wrapper flex-1 p-4">
-      <div class="space-y-4">
+    <main class="content-wrapper flex-1 p-6">
+      <div class="space-y-6 max-w-6xl mx-auto">
+        <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
 
-        <!-- 통계 카드 4개 (한 줄 가로 배치) -->
-        <div class="grid md:grid-cols-4 gap-3">
-
-          <!-- 오늘 예약 -->
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-medium text-slate-500">오늘 예약</span>
-              <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 shrink-0">
-                <i data-feather="calendar" class="w-4 h-4"></i>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                <i data-feather="calendar" class="w-6 h-6"></i>
               </div>
-            </div>
-            <div class="flex items-baseline gap-1">
-              <span class="text-2xl font-extrabold text-slate-800">{{stats.todayReservations}}</span>
-              <span class="text-xs text-slate-400">건</span>
+              <div>
+                <div class="text-sm font-medium text-slate-500">오늘 예약</div>
+                <div class="text-2xl font-bold text-slate-800">{{model.todayReservations}}건</div>
+              </div>
             </div>
           </div>
 
-          <!-- 총 예약 -->
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-medium text-slate-500">총 예약</span>
-              <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 shrink-0">
-                <i data-feather="trending-up" class="w-4 h-4"></i>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
+                <i data-feather="clipboard" class="w-6 h-6"></i>
               </div>
-            </div>
-            <div class="flex items-baseline gap-1">
-              <span class="text-2xl font-extrabold text-slate-800">{{stats.totalReservations}}</span>
-              <span class="text-xs text-slate-400">건</span>
+              <div>
+                <div class="text-sm font-medium text-slate-500">총 예약</div>
+                <div class="text-2xl font-bold text-slate-800">{{model.totalReservations}}건</div>
+              </div>
             </div>
           </div>
 
-          <!-- 직원 수 -->
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-medium text-slate-500">직원 수</span>
-              <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center text-green-600 shrink-0">
-                <i data-feather="users" class="w-4 h-4"></i>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
+                <i data-feather="users" class="w-6 h-6"></i>
               </div>
-            </div>
-            <div class="flex items-baseline gap-1">
-              <span class="text-2xl font-extrabold text-slate-800">{{stats.totalStaff}}</span>
-              <span class="text-xs text-slate-400">명</span>
+              <div>
+                <div class="text-sm font-medium text-slate-500">총 직원 수</div>
+                <div class="text-2xl font-bold text-slate-800">{{model.totalStaff}}명</div>
+              </div>
             </div>
           </div>
 
-          <!-- 재고 부족 -->
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-medium text-slate-500">재고 부족</span>
-              <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-red-500 shrink-0">
-                <i data-feather="alert-triangle" class="w-4 h-4"></i>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600">
+                <i data-feather="alert-circle" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <div class="text-sm font-medium text-slate-500">재고 부족</div>
+                <div class="text-2xl font-bold text-slate-800">{{model.lowStockItems}}개</div>
               </div>
             </div>
-            <div class="flex items-baseline gap-1">
-              <span class="text-2xl font-extrabold text-slate-800">{{stats.lowStockItems}}</span>
-              <span class="text-xs text-slate-400">개</span>
-            </div>
           </div>
-
         </div>
 
-        <!-- 차트 영역 (2열) -->
-        <div class="grid grid-cols-2 gap-4">
-
-          <!-- 일별 환자 수 추이 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <div class="flex items-center gap-2 mb-4">
-              <span class="text-base font-bold text-slate-800">일별 환자 수 추이</span>
-              <i data-feather="trending-up" class="w-4 h-4 text-indigo-500"></i>
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-lg font-bold text-slate-800">일별 환자 수 추이</h2>
+              <i data-feather="trending-up" class="w-5 h-5 text-indigo-500"></i>
             </div>
-            <canvas id="lineChart" height="200"></canvas>
+            <div class="h-[300px] w-full relative">
+              <canvas id="daily-patient-canvas" class="w-full h-full"></canvas>
+              <p id="daily-patient-error" class="hidden absolute inset-0 flex items-center justify-center text-sm text-red-500">
+                데이터를 불러오지 못했습니다.
+              </p>
+            </div>
           </div>
 
-          <!-- 카테고리별 물품 재고 현황 -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <div class="flex items-center gap-2 mb-4">
-              <span class="text-base font-bold text-slate-800">카테고리별 물품 재고 현황</span>
-              <i data-feather="package" class="w-4 h-4 text-orange-500"></i>
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-lg font-bold text-slate-800">카테고리별 물품 재고 현황</h2>
+              <i data-feather="package" class="w-5 h-5 text-orange-500"></i>
             </div>
-            <canvas id="barChart" height="200"></canvas>
+            <div class="h-[300px] w-full relative">
+              <canvas id="category-stock-canvas" class="w-full h-full"></canvas>
+              <p id="category-stock-error" class="hidden absolute inset-0 flex items-center justify-center text-sm text-red-500">
+                데이터를 불러오지 못했습니다.
+              </p>
+            </div>
           </div>
-
         </div>
-
       </div>
     </main>
 
     {{> common/footer-staff}}
   </div>
 
-  <script>feather.replace();</script>
   <script>
-    (async () => {
-      try {
-        const r = await fetch('/admin/dashboard/chart');
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const resp = await r.json();
-        const data = resp.data || resp;
-
-        const dailyLabels = (data.dailyPatients || []).map(d => {
-          const dt = new Date(d.date);
-          return (dt.getMonth()+1).toString().padStart(2,'0') + '/' + dt.getDate().toString().padStart(2,'0');
-        });
-        const dailyCounts = (data.dailyPatients || []).map(d => d.patientCount);
-
-        new Chart(document.getElementById('lineChart'), {
-          type: 'line',
-          data: {
-            labels: dailyLabels,
-            datasets: [{
-              label: '환자 수',
-              data: dailyCounts,
-              borderColor: '#6366f1',
-              backgroundColor: 'rgba(99,102,241,0.1)',
-              borderWidth: 2,
-              pointBackgroundColor: '#6366f1',
-              pointRadius: 4,
-              tension: 0.3,
-              fill: true
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: {
-              y: {
-                beginAtZero: true,
-                grid: { color: 'rgba(0,0,0,0.05)' },
-                ticks: { color: '#94a3b8', font: { size: 11 } }
-              },
-              x: {
-                grid: { display: false },
-                ticks: { color: '#94a3b8', font: { size: 11 } }
-              }
-            }
-          }
-        });
-
-        const catLabels = (data.categoryCounts || []).map(c => c.categoryName);
-        const catCounts = (data.categoryCounts || []).map(c => c.totalCount);
-
-        new Chart(document.getElementById('barChart'), {
-          type: 'bar',
-          data: {
-            labels: catLabels,
-            datasets: [{
-              label: '물품 수',
-              data: catCounts,
-              backgroundColor: '#f59e0b',
-              borderRadius: 4
-            }]
-          },
-          options: {
-            indexAxis: 'y',
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: {
-                beginAtZero: true,
-                grid: { color: 'rgba(0,0,0,0.05)' },
-                ticks: { color: '#94a3b8', font: { size: 11 } }
-              },
-              y: {
-                grid: { display: false },
-                ticks: { color: '#64748b', font: { size: 12 } }
-              }
-            }
-          }
-        });
-      } catch (e) {
-        console.warn('차트 데이터 로드 실패:', e);
-      }
-    })();
+    feather.replace();
   </script>
+  <script src="/js/pages/admin-dashboard.js"></script>
 </body>
 </html>
