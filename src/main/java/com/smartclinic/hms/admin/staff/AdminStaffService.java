@@ -84,6 +84,7 @@ public class AdminStaffService {
     private final DoctorRepository doctorRepository;
     private final PasswordEncoder passwordEncoder;
 
+    // 직원 목록 조회 메서드 시그니처 변경
     public AdminStaffListResponse getStaffList(
             int page,
             int size,
@@ -222,6 +223,7 @@ public class AdminStaffService {
         return STAFF_UPDATED_MESSAGE;
     }
 
+    // 직원 비활성화 메서드
     @Transactional
     public String deactivateStaff(Long staffId, String currentUsername) {
         Staff staff = getStaff(staffId);
