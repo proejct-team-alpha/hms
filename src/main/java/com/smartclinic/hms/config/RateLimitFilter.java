@@ -58,8 +58,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 capturedCount.set(1);
                 return new Bucket(now, 1);
             }
-            existing.count++;
-            capturedCount.set(existing.count);
+            capturedCount.set(existing.count.incrementAndGet());
             return existing;
         });
 
@@ -106,6 +105,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
         return "default";
     }
 
+    /**
+     * WARNING: trust-proxy=true는 리버스 프록시 뒤에서만 활성화할 것.
+     * 프록시 없이 true로 설정 시 X-Forwarded-For 헤더 위조로 Rate Limit 우회 가능.
+     */
     private String resolveClientIp(HttpServletRequest request) {
         if (trustProxy) {
             String xForwardedFor = request.getHeader("X-Forwarded-For");
@@ -120,7 +123,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     @Scheduled(fixedRate = 120_000)
     public void cleanupExpiredBuckets() {
         long now = System.currentTimeMillis();
-        buckets.entrySet().removeIf(e -> now - e.getValue().windowStart > WINDOW_MS * 2);
+        buckets.entrySet().removeIf(e -> now - e.getValue().windowStart > WINDOW_MS * 2L);
     }
 
     /** 정적 리소스는 Rate Limit 제외 */
@@ -135,12 +138,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private static class Bucket {
-        long windowStart;
-        int count;
+        final long windowStart;
+        final AtomicInteger count;
 
         Bucket(long windowStart, int count) {
             this.windowStart = windowStart;
-            this.count = count;
+            this.count = new AtomicInteger(count);
         }
     }
 }
