@@ -100,7 +100,7 @@
                     
                     <button 
   type="button"
-  onclick="receiveAjax({{id}}, this)"
+  onclick="receiveAjax({{id}}, this, '{{currentStatus}}')"
   class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 hover:bg-green-100 text-sm font-medium rounded-lg transition">
   <i data-feather="check-circle" class="w-3.5 h-3.5"></i> 접수
 </button>
@@ -167,7 +167,7 @@
   <script>
 feather.replace();
 
-async function receiveAjax(reservationId, button) {
+async function receiveAjax(reservationId, button, currentStatus) {
   try {
     const response = await fetch('/staff/reception/receive-ajax', {
       method: 'POST',
@@ -181,20 +181,26 @@ async function receiveAjax(reservationId, button) {
     });
 
     const data = await response.json();
+if (data.success) {
+  const row = button.closest('tr');
 
-    if (data.success) {
-      const row = button.closest('tr');
-      const statusCell = row.children[6];
+  // 핵심: 접수대기 탭이면 삭제
+  if (currentStatus === 'RESERVED') {
+    row.remove();
+  } else {
+    // 다른 탭이면 상태만 변경
+    const statusCell = row.children[6];
 
-      statusCell.innerHTML = `
-  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-    진료 대기
-  </span>
-`;
+    statusCell.innerHTML = `
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+        진료 대기
+      </span>
+    `;
 
-      button.remove();
-
-    } else {
+    button.remove();
+  }
+}
+     else {
       alert('실패: ' + data.message);
     }
 
