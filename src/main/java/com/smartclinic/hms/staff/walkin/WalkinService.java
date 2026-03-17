@@ -62,7 +62,7 @@ public class WalkinService {
                                 .orElseThrow(() -> CustomException
                                                 .notFound("진료과를 찾을 수 없습니다. ID: " + request.getDepartmentId()));
 
-                // 🚨 중복 접수 검증 (request.getDate()가 이미 LocalDate 타입이므로 parse 불필요!)
+                // 중복 접수 검증 (request.getDate()가 이미 LocalDate 타입이므로 parse 불필요!)
                 LocalDate reservationDate = request.getDate();
                 List<Reservation> existingReservations = reservationRepository.findTodayExcludingStatus(reservationDate,
                                 ReservationStatus.CANCELLED);
