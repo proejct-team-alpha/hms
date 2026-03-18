@@ -7,7 +7,6 @@ import java.util.stream.IntStream;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,8 +28,8 @@ public class AdminDepartmentService {
         int safePage = page < 1 ? DEFAULT_PAGE : page;
         int safeSize = size < 1 ? DEFAULT_SIZE : size;
 
-        Pageable pageable = PageRequest.of(safePage - 1, safeSize, Sort.by(Sort.Order.asc("name")));
-        Page<Department> pageResult = adminDepartmentRepository.findAllByOrderByNameAsc(pageable);
+        Pageable pageable = PageRequest.of(safePage - 1, safeSize);
+        Page<Department> pageResult = adminDepartmentRepository.findAllByOrderByIdDesc(pageable);
 
         List<AdminDepartmentDto> departments = pageResult.getContent().stream()
                 .map(AdminDepartmentDto::new)

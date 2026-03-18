@@ -34,7 +34,7 @@ class AdminDepartmentServiceTest {
     @DisplayName("잘못된 페이지 파라미터가 들어오면 기본값으로 보정한다")
     void getDepartmentList_usesDefaultPageAndSizeWhenInvalid() {
         // given
-        given(adminDepartmentRepository.findAllByOrderByNameAsc(any(Pageable.class)))
+        given(adminDepartmentRepository.findAllByOrderByIdDesc(any(Pageable.class)))
                 .willReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
 
         // when
@@ -42,12 +42,12 @@ class AdminDepartmentServiceTest {
 
         // then
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        then(adminDepartmentRepository).should().findAllByOrderByNameAsc(pageableCaptor.capture());
+        then(adminDepartmentRepository).should().findAllByOrderByIdDesc(pageableCaptor.capture());
 
         Pageable pageable = pageableCaptor.getValue();
         assertThat(pageable.getPageNumber()).isEqualTo(0);
         assertThat(pageable.getPageSize()).isEqualTo(10);
-        assertThat(pageable.getSort()).isEqualTo(Sort.by(Sort.Order.asc("name")));
+        assertThat(pageable.getSort().isUnsorted()).isTrue();
         assertThat(result.currentPage()).isEqualTo(1);
         assertThat(result.size()).isEqualTo(10);
         assertThat(result.totalPages()).isEqualTo(0);
@@ -62,10 +62,10 @@ class AdminDepartmentServiceTest {
         Department surgery = Department.create("외과", false);
         PageImpl<Department> pageResult = new PageImpl<>(
                 List.of(internalMedicine, surgery),
-                PageRequest.of(1, 5, Sort.by(Sort.Order.asc("name"))),
+                PageRequest.of(1, 5),
                 12
         );
-        given(adminDepartmentRepository.findAllByOrderByNameAsc(any(Pageable.class)))
+        given(adminDepartmentRepository.findAllByOrderByIdDesc(any(Pageable.class)))
                 .willReturn(pageResult);
 
         // when

@@ -11,7 +11,7 @@ import com.smartclinic.hms.domain.Department;
 
 public interface AdminDepartmentRepository extends JpaRepository<Department, Long> {
 
-    Page<Department> findAllByOrderByNameAsc(Pageable pageable);
+    Page<Department> findAllByOrderByIdDesc(Pageable pageable);
 
     List<Department> findAllByOrderByNameAsc();
 
