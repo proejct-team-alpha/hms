@@ -111,6 +111,21 @@
             </div>
             {{/items}}
           </div>
+          <!-- 카드 그리드 페이징 바 -->
+          <div id="card-grid-pagination" class="flex items-center justify-between" style="display:none!important">
+            <span id="card-grid-page-info" class="text-xs text-slate-500"></span>
+            <div class="flex items-center gap-2">
+              <button id="card-grid-prev" type="button"
+                      class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                이전
+              </button>
+              <div id="card-grid-page-numbers" class="flex items-center gap-1"></div>
+              <button id="card-grid-next" type="button"
+                      class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                다음
+              </button>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -204,16 +219,73 @@
     }
 
     var currentCat = '';
-    function applyFilter() {
-      var query = document.getElementById('item-search').value.trim();
-      document.querySelectorAll('#item-use-grid .item-card').forEach(function(card) {
-        var catOk = !currentCat || card.dataset.category === currentCat;
-        var nameOk = itemMatches(card.querySelector('.item-name').textContent, query);
-        card.style.display = (catOk && nameOk) ? '' : 'none';
-      });
+    var CARD_PAGE_SIZE = 10;
+    var cardPage = 1;
+
+    function buildCardPageNumbers(totalPages) {
+      var half = 2;
+      var start = Math.max(1, cardPage - half);
+      var end = Math.min(totalPages, start + 4);
+      start = Math.max(1, end - 4);
+      var html = '';
+      if (start > 1) {
+        html += '<button type="button" data-page="1" class="cg-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors">1</button>';
+        if (start > 2) html += '<span class="px-1 text-xs text-slate-400">...</span>';
+      }
+      for (var p = start; p <= end; p++) {
+        var active = p === cardPage ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100';
+        html += '<button type="button" data-page="' + p + '" class="cg-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 ' + active + ' transition-colors">' + p + '</button>';
+      }
+      if (end < totalPages) {
+        if (end < totalPages - 1) html += '<span class="px-1 text-xs text-slate-400">...</span>';
+        html += '<button type="button" data-page="' + totalPages + '" class="cg-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors">' + totalPages + '</button>';
+      }
+      return html;
     }
 
-    document.getElementById('item-search').addEventListener('input', applyFilter);
+    function applyFilter() {
+      var query = document.getElementById('item-search').value.trim();
+      var allCards = Array.from(document.querySelectorAll('#item-use-grid .item-card'));
+      var filtered = allCards.filter(function(card) {
+        var catOk = !currentCat || card.dataset.category === currentCat;
+        var nameOk = itemMatches(card.querySelector('.item-name').textContent, query);
+        return catOk && nameOk;
+      });
+
+      var total = filtered.length;
+      var totalPages = Math.max(1, Math.ceil(total / CARD_PAGE_SIZE));
+      if (cardPage > totalPages) cardPage = totalPages;
+      var start = (cardPage - 1) * CARD_PAGE_SIZE;
+      var end = start + CARD_PAGE_SIZE;
+
+      allCards.forEach(function(card) { card.style.display = 'none'; });
+      filtered.forEach(function(card, i) { card.style.display = (i >= start && i < end) ? '' : 'none'; });
+
+      var bar = document.getElementById('card-grid-pagination');
+      if (!bar) return;
+      if (totalPages <= 1) { bar.style.removeProperty('display'); bar.style.display = 'none'; return; }
+      bar.style.removeProperty('display');
+
+      var numbersEl = document.getElementById('card-grid-page-numbers');
+      if (numbersEl) {
+        numbersEl.innerHTML = buildCardPageNumbers(totalPages);
+        numbersEl.querySelectorAll('.cg-page-btn').forEach(function(btn) {
+          btn.addEventListener('click', function() { cardPage = parseInt(this.dataset.page); applyFilter(); });
+        });
+      }
+
+      var info = document.getElementById('card-grid-page-info');
+      if (info) info.textContent = total + '건 / ' + totalPages + '페이지';
+
+      var prev = document.getElementById('card-grid-prev');
+      var next = document.getElementById('card-grid-next');
+      if (prev) prev.disabled = cardPage <= 1;
+      if (next) next.disabled = cardPage >= totalPages;
+    }
+
+    document.getElementById('item-search').addEventListener('input', function() {
+      cardPage = 1; applyFilter();
+    });
 
     document.querySelectorAll('.item-cat-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
@@ -222,6 +294,7 @@
           b.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors';
         });
         this.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors';
+        cardPage = 1;
         applyFilter();
       });
     });
@@ -259,6 +332,13 @@
         });
       });
     });
+
+    var cgPrev = document.getElementById('card-grid-prev');
+    var cgNext = document.getElementById('card-grid-next');
+    if (cgPrev) cgPrev.addEventListener('click', function() { cardPage--; applyFilter(); });
+    if (cgNext) cgNext.addEventListener('click', function() { cardPage++; applyFilter(); });
+
+    applyFilter();
   </script>
   <script>feather.replace();</script>
 </body>
