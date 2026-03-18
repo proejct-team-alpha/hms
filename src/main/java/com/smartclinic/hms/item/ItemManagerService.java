@@ -152,7 +152,7 @@ public class ItemManagerService {
             throw new IllegalArgumentException("재고가 " + (-newQuantity) + "개 부족합니다.");
         }
         item.updateQuantity(newQuantity);
-        usageLogRepository.save(ItemUsageLog.of(reservationId, id, item.getName(), amount));
+        usageLogRepository.save(ItemUsageLog.of(reservationId, id, item.getName(), amount, getCurrentActorName()));
         stockLogRepository.save(ItemStockLog.of(id, item.getName(), ItemStockType.OUT, amount, getCurrentActorName()));
         return newQuantity;
     }
@@ -166,6 +166,16 @@ public class ItemManagerService {
         LocalDateTime start = LocalDate.now().atStartOfDay();
         LocalDateTime end = start.plusDays(1);
         return usageLogRepository.findByReservationIdIsNullAndUsedAtBetweenOrderByUsedAtDesc(start, end)
+                .stream().map(ItemUsageLogDto::new).toList();
+    }
+
+    public List<ItemUsageLogDto> getTodayUsageLogsByUser(String username) {
+        LocalDateTime start = LocalDate.now().atStartOfDay();
+        LocalDateTime end = start.plusDays(1);
+        String actorName = staffRepository.findByUsernameAndActiveTrue(username)
+                .map(s -> s.getName())
+                .orElse(username);
+        return usageLogRepository.findByReservationIdIsNullAndUsedByAndUsedAtBetweenOrderByUsedAtDesc(actorName, start, end)
                 .stream().map(ItemUsageLogDto::new).toList();
     }
 

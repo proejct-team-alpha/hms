@@ -104,6 +104,15 @@
                   출고
                 </button>
               </form>
+              <form action="/staff/item/restock" method="post" class="flex items-center gap-1">
+                <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                <input type="hidden" name="id" value="{{id}}">
+                <input type="number" name="amount" min="1" placeholder="수량"
+                       class="flex-1 w-0 px-2 py-1 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-1 focus:ring-green-400">
+                <button type="submit" style="background-color:#16a34a;color:#fff;" class="px-2 py-1 text-xs font-bold rounded-lg transition-colors whitespace-nowrap hover:opacity-90">
+                  입고
+                </button>
+              </form>
             </div>
             {{/items}}
           </div>
@@ -351,6 +360,40 @@
             form.closest('.item-card').querySelector('.quantity-span').textContent = data.quantity;
             input.value = '';
             refreshTodayLog(data.logs || []);
+          } else if (data.error) {
+            alert(data.error);
+          }
+        });
+      });
+    });
+
+    document.querySelectorAll('form[action$="/staff/item/restock"]').forEach(function(form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var input = form.querySelector('input[name="amount"]');
+        var value = input.value.trim();
+        var amount = Number(value);
+        if (value === '' || isNaN(amount) || !Number.isInteger(amount) || amount <= 0) {
+          alert('올바른 수량을 입력해주세요. (1 이상의 정수)');
+          return;
+        }
+        var id = form.querySelector('input[name="id"]').value;
+        var csrfInput = form.querySelector('input[type="hidden"]:not([name="id"])');
+        var params = new URLSearchParams();
+        params.append('id', id);
+        params.append('amount', value);
+        params.append(csrfInput.name, csrfInput.value);
+
+        fetch('/staff/item/restock', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString()
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.quantity !== undefined) {
+            form.closest('.item-card').querySelector('.quantity-span').textContent = data.quantity;
+            input.value = '';
           } else if (data.error) {
             alert(data.error);
           }
