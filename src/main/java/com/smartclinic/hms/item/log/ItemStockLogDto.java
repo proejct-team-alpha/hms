@@ -11,6 +11,7 @@ public class ItemStockLogDto {
     private final boolean isIn;
     private final int amount;
     private final String createdAt;
+    private final String performedBy;
 
     public ItemStockLogDto(ItemStockLog log) {
         this.itemName = log.getItemName();
@@ -18,6 +19,7 @@ public class ItemStockLogDto {
         this.typeText = this.isIn ? "입고" : "출고";
         this.amount = log.getAmount();
         this.createdAt = log.getCreatedAt().format(FMT);
+        this.performedBy = log.getPerformedBy() != null ? log.getPerformedBy() : "-";
     }
 
     public String getItemName() { return itemName; }
@@ -25,4 +27,5 @@ public class ItemStockLogDto {
     public boolean isIn() { return isIn; }
     public int getAmount() { return amount; }
     public String getCreatedAt() { return createdAt; }
+    public String getPerformedBy() { return performedBy; }
 }

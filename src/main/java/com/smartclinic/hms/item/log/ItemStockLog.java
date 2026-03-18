@@ -33,13 +33,17 @@ public class ItemStockLog {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    public static ItemStockLog of(Long itemId, String itemName, ItemStockType type, int amount) {
+    @Column(name = "performed_by", length = 100)
+    private String performedBy;
+
+    public static ItemStockLog of(Long itemId, String itemName, ItemStockType type, int amount, String performedBy) {
         ItemStockLog log = new ItemStockLog();
         log.itemId = itemId;
         log.itemName = itemName;
         log.type = type;
         log.amount = amount;
         log.createdAt = LocalDateTime.now();
+        log.performedBy = performedBy;
         return log;
     }
 }

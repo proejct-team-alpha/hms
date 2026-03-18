@@ -1,5 +1,6 @@
 package com.smartclinic.hms.item;
 
+import com.smartclinic.hms.auth.StaffRepository;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.Item;
 import com.smartclinic.hms.domain.ItemCategory;
@@ -7,6 +8,8 @@ import com.smartclinic.hms.item.dto.*;
 import com.smartclinic.hms.item.log.*;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +29,7 @@ public class ItemManagerService {
     private final ItemManagerRepository itemRepository;
     private final ItemUsageLogRepository usageLogRepository;
     private final ItemStockLogRepository stockLogRepository;
+    private final StaffRepository staffRepository;
 
     public ItemDashboardDto getDashboard() {
         List<Item> all = itemRepository.findAllByOrderByNameAsc();
@@ -123,12 +127,20 @@ public class ItemManagerService {
         }
     }
 
+    private String getCurrentActorName() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) return "시스템";
+        return staffRepository.findByUsernameAndActiveTrue(auth.getName())
+                .map(s -> s.getName())
+                .orElse(auth.getName());
+    }
+
     @Transactional
     public void restockItem(Long id, int amount) {
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> CustomException.notFound("물품을 찾을 수 없습니다. ID: " + id));
         item.addStock(amount);
-        stockLogRepository.save(ItemStockLog.of(id, item.getName(), ItemStockType.IN, amount));
+        stockLogRepository.save(ItemStockLog.of(id, item.getName(), ItemStockType.IN, amount, getCurrentActorName()));
     }
 
     @Transactional
@@ -141,7 +153,7 @@ public class ItemManagerService {
         }
         item.updateQuantity(newQuantity);
         usageLogRepository.save(ItemUsageLog.of(reservationId, id, item.getName(), amount));
-        stockLogRepository.save(ItemStockLog.of(id, item.getName(), ItemStockType.OUT, amount));
+        stockLogRepository.save(ItemStockLog.of(id, item.getName(), ItemStockType.OUT, amount, getCurrentActorName()));
         return newQuantity;
     }
 
@@ -162,7 +174,7 @@ public class ItemManagerService {
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> CustomException.notFound("물품을 찾을 수 없습니다. ID: " + id));
         item.addStock(amount);
-        stockLogRepository.save(ItemStockLog.of(id, item.getName(), ItemStockType.IN, amount));
+        stockLogRepository.save(ItemStockLog.of(id, item.getName(), ItemStockType.IN, amount, getCurrentActorName()));
         return item.getQuantity();
     }
 
