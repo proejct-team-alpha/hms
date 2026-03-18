@@ -178,7 +178,7 @@
     }
 
     function getItemListRows() {
-      return Array.from(document.querySelectorAll('#item-list-tbody tr:not(#empty-row)')).filter(function(row) {
+      return Array.from(document.querySelectorAll('#item-list-tbody tr:not(#empty-row):not(#js-empty-row)')).filter(function(row) {
         var name = row.querySelector('td:first-child') ? row.querySelector('td:first-child').textContent.trim() : '';
         return itemListMatches(name, itemListQuery);
       });
@@ -210,7 +210,7 @@
       var start = (itemListPage - 1) * ITEM_LIST_PAGE_SIZE;
       var end = start + ITEM_LIST_PAGE_SIZE;
 
-      document.querySelectorAll('#item-list-tbody tr:not(#empty-row)').forEach(function(r) { r.style.display = 'none'; });
+      document.querySelectorAll('#item-list-tbody tr:not(#empty-row):not(#js-empty-row)').forEach(function(r) { r.style.display = 'none'; });
       rows.forEach(function(r, i) { r.style.display = (i >= start && i < end) ? '' : 'none'; });
       var jsEmptyRow = document.getElementById('js-empty-row');
       if (jsEmptyRow) jsEmptyRow.style.display = (total === 0) ? '' : 'none';
