@@ -6,8 +6,10 @@ import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -128,6 +130,41 @@ class AdminDepartmentControllerTest {
                 .andExpect(content().string(containsString("2 / 3페이지")))
                 .andExpect(content().string(containsString(">1</a>")))
                 .andExpect(content().string(containsString(">3</a>")));
+    }
+
+    @Test
+    @DisplayName("진료과 등록은 active 체크 여부를 서비스에 그대로 전달하고 목록으로 리다이렉트한다")
+    void create_passesCheckedActiveAndRedirectsToList() throws Exception {
+        // given
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/department/form")
+                        .param("name", "내과")
+                        .param("active", "true")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/department/list"));
+
+        then(adminDepartmentService).should().createDepartment("내과", true);
+    }
+
+    @Test
+    @DisplayName("진료과 등록은 active가 없으면 비운영으로 저장하고 목록으로 리다이렉트한다")
+    void create_defaultsActiveToFalseWhenUnchecked() throws Exception {
+        // given
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/department/form")
+                        .param("name", "외과")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/department/list"));
+
+        then(adminDepartmentService).should().createDepartment("외과", false);
     }
 
     private AdminDepartmentListResponse createListResponse() {

@@ -88,4 +88,21 @@ class AdminDepartmentServiceTest {
         assertThat(result.pageLinks()).hasSize(3);
         assertThat(result.pageLinks().get(1).active()).isTrue();
     }
+
+    @Test
+    @DisplayName("진료과 등록은 화면에서 전달한 active 값을 그대로 저장한다")
+    void createDepartment_savesActiveValueFromRequest() {
+        // given
+
+        // when
+        adminDepartmentService.createDepartment("내과", false);
+
+        // then
+        ArgumentCaptor<Department> departmentCaptor = ArgumentCaptor.forClass(Department.class);
+        then(adminDepartmentRepository).should().save(departmentCaptor.capture());
+
+        Department savedDepartment = departmentCaptor.getValue();
+        assertThat(savedDepartment.getName()).isEqualTo("내과");
+        assertThat(savedDepartment.isActive()).isFalse();
+    }
 }

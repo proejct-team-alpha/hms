@@ -20,32 +20,32 @@
 
 ## Task 17-2. 목록 조회 책임 정리
 
-- [ ] `AdminDepartmentService`에서 `reservation.reservation.DepartmentRepository` 의존 제거
-- [ ] `AdminDepartmentRepository` 기준으로 조회 책임 통일
-- [ ] 불필요한 타 모듈 의존 제거 확인
-- [ ] 진료과 활성 상태/정렬 기준 점검
+- [x] `AdminDepartmentService`에서 `reservation.reservation.DepartmentRepository` 의존 제거
+- [x] `AdminDepartmentRepository` 기준으로 조회 책임 통일
+- [x] 불필요한 타 모듈 의존 제거 확인
+- [x] 진료과 활성 상태/정렬 기준 점검
 
 ## Task 17-3. 진료과 목록 페이징 구현
 
-- [ ] `AdminDepartmentController`에 `page`, `size` 요청 파라미터 추가
-- [ ] 기본값 `page=1`, `size=10` 적용
-- [ ] `Pageable` 기반 목록 조회 구현
-- [ ] `totalCount` 계산 추가
-- [ ] `currentPage` 계산 추가
-- [ ] `totalPages` 계산 추가
-- [ ] `hasPrevious`, `hasNext` 계산 추가
-- [ ] page link DTO/응답 모델 추가
-- [ ] `model + pageTitle` 패턴 적용
+- [x] `AdminDepartmentController`에 `page`, `size` 요청 파라미터 추가
+- [x] 기본값 `page=1`, `size=10` 적용
+- [x] `Pageable` 기반 목록 조회 구현
+- [x] `totalCount` 계산 추가
+- [x] `currentPage` 계산 추가
+- [x] `totalPages` 계산 추가
+- [x] `hasPrevious`, `hasNext` 계산 추가
+- [x] page link DTO/응답 모델 추가
+- [x] `model + pageTitle` 패턴 적용
 
 ## Task 17-4. 템플릿 페이지네이션 렌더링 반영
 
-- [ ] 목록을 `{{model.xxx}}` 기준으로 렌더링하도록 정리
-- [ ] 총 건수 표시 추가
-- [ ] 현재 페이지 정보 표시 추가
-- [ ] 이전 링크 추가
-- [ ] 다음 링크 추가
-- [ ] 페이지 번호 링크 추가
-- [ ] 빈 목록 처리 유지 확인
+- [x] 목록을 `{{model.xxx}}` 기준으로 렌더링하도록 정리
+- [x] 총 건수 표시 추가
+- [x] 현재 페이지 정보 표시 추가
+- [x] 이전 링크 추가
+- [x] 다음 링크 추가
+- [x] 페이지 번호 링크 추가
+- [x] 빈 목록 처리 유지 확인
 
 ## Task 17-5. 등록 폼 계약 정리
 
@@ -76,10 +76,10 @@
 
 ## 추천 진행 순서
 
-- [ ] Task 17-1 화면/문구 복구
-- [ ] Task 17-2 조회 책임 정리
-- [ ] Task 17-3 페이징 서비스/컨트롤러 구현
-- [ ] Task 17-4 페이지네이션 UI 반영
+- [x] Task 17-1 화면/문구 복구
+- [x] Task 17-2 조회 책임 정리
+- [x] Task 17-3 페이징 서비스/컨트롤러 구현
+- [x] Task 17-4 페이지네이션 UI 반영
 - [ ] Task 17-5 등록 폼 계약 정리
 - [ ] Task 17-6 테스트 추가
 

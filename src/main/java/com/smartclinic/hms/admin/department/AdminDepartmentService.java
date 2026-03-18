@@ -55,8 +55,8 @@ public class AdminDepartmentService {
     }
 
     @Transactional
-    public void createDepartment(String name) {
-        adminDepartmentRepository.save(Department.create(name, true));
+    public void createDepartment(String name, boolean active) {
+        adminDepartmentRepository.save(Department.create(name, active));
     }
 
     private List<AdminDepartmentPageLinkResponse> buildPageLinks(int totalPages, int currentPage, int size) {

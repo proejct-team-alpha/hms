@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.view.RedirectView;
 import org.springframework.ui.Model;
 
 @Controller
@@ -33,8 +34,12 @@ public class AdminDepartmentController {
     }
 
     @PostMapping("/form")
-    public String create(@RequestParam String name) {
-        adminDepartmentService.createDepartment(name);
-        return "redirect:/admin/department/list";
+    public RedirectView create(
+            @RequestParam String name,
+            @RequestParam(defaultValue = "false") boolean active) {
+        adminDepartmentService.createDepartment(name, active);
+        RedirectView redirectView = new RedirectView("/admin/department/list");
+        redirectView.setExposeModelAttributes(false);
+        return redirectView;
     }
 }
