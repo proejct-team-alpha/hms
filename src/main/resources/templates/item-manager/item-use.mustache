@@ -254,6 +254,7 @@
 
       var total = filtered.length;
       var totalPages = Math.max(1, Math.ceil(total / CARD_PAGE_SIZE));
+      if (cardPage < 1) cardPage = 1;
       if (cardPage > totalPages) cardPage = totalPages;
       var start = (cardPage - 1) * CARD_PAGE_SIZE;
       var end = start + CARD_PAGE_SIZE;
