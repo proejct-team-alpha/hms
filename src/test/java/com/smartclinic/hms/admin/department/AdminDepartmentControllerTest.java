@@ -2,9 +2,11 @@ package com.smartclinic.hms.admin.department;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -25,7 +27,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+
+import com.smartclinic.hms.domain.Department;
 
 @WebMvcTest(
         value = AdminDepartmentController.class,
@@ -83,6 +88,46 @@ class AdminDepartmentControllerTest {
                 .andExpect(request().attribute("pageTitle", "진료과 관리"));
 
         then(adminDepartmentService).should().getDepartmentList(2, 5);
+    }
+
+    @Test
+    @DisplayName("진료과 목록은 페이지 정보와 번호 링크를 화면에 렌더링한다")
+    void list_rendersPaginationUi() throws Exception {
+        // given
+        Department department = Department.create("내과", true);
+        ReflectionTestUtils.setField(department, "id", 12L);
+        AdminDepartmentDto item = new AdminDepartmentDto(department);
+        AdminDepartmentListResponse response = new AdminDepartmentListResponse(
+                List.of(item),
+                List.of(
+                        new AdminDepartmentPageLinkResponse(1, "/admin/department/list?page=1&size=5", false),
+                        new AdminDepartmentPageLinkResponse(2, "/admin/department/list?page=2&size=5", true),
+                        new AdminDepartmentPageLinkResponse(3, "/admin/department/list?page=3&size=5", false)
+                ),
+                12,
+                2,
+                5,
+                3,
+                true,
+                true,
+                "/admin/department/list?page=1&size=5",
+                "/admin/department/list?page=3&size=5"
+        );
+        given(adminDepartmentService.getDepartmentList(2, 5)).willReturn(response);
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/department/list")
+                        .param("page", "2")
+                        .param("size", "5")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("내과")))
+                .andExpect(content().string(containsString("총")))
+                .andExpect(content().string(containsString("2 / 3페이지")))
+                .andExpect(content().string(containsString(">1</a>")))
+                .andExpect(content().string(containsString(">3</a>")));
     }
 
     private AdminDepartmentListResponse createListResponse() {

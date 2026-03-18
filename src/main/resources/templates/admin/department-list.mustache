@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -14,20 +14,31 @@
     {{> common/header-staff}}
 
     <main class="content-wrapper flex-1 p-6">
-      <div class="space-y-4">
+      <div class="space-y-6 max-w-6xl mx-auto">
         <div class="flex items-center justify-between">
           <div>
             <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
             <p class="text-slate-500 mt-1">진료과 정보를 조회하고 관리합니다.</p>
           </div>
-          <button
-            type="button"
-            onclick="document.getElementById('addModal').classList.remove('hidden')"
-            class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-          >
-            <i data-feather="plus" class="w-4 h-4"></i>
-            진료과 등록
-          </button>
+          <div class="flex items-center gap-4">
+            <div class="text-sm text-slate-500 text-right">
+              <div>총 <span class="font-semibold text-slate-700">{{model.totalCount}}</span>개</div>
+              {{#model.totalPages}}
+                <div>{{model.currentPage}} / {{model.totalPages}}페이지</div>
+              {{/model.totalPages}}
+              {{^model.totalPages}}
+                <div>0 / 0페이지</div>
+              {{/model.totalPages}}
+            </div>
+            <button
+              type="button"
+              onclick="document.getElementById('addModal').classList.remove('hidden')"
+              class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              <i data-feather="plus" class="w-4 h-4"></i>
+              진료과 등록
+            </button>
+          </div>
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -57,6 +68,37 @@
                 {{/model.departments}}
               </tbody>
             </table>
+          </div>
+
+          <div class="p-4 border-t border-slate-200 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-slate-50">
+            <div class="text-sm text-slate-500">
+              {{#model.totalPages}}
+                현재 <span class="font-semibold text-slate-700">{{model.currentPage}}</span> / <span class="font-semibold text-slate-700">{{model.totalPages}}</span>페이지
+              {{/model.totalPages}}
+              {{^model.totalPages}}
+                현재 0 / 0페이지
+              {{/model.totalPages}}
+            </div>
+
+            <div class="flex items-center justify-center gap-2">
+              {{#model.hasPrevious}}
+                <a href="{{model.previousUrl}}" class="px-3 py-1.5 text-sm rounded-md border border-slate-300 text-slate-600 hover:bg-white">이전</a>
+              {{/model.hasPrevious}}
+              {{^model.hasPrevious}}
+                <span class="px-3 py-1.5 text-sm rounded-md border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed">이전</span>
+              {{/model.hasPrevious}}
+
+              {{#model.pageLinks}}
+                <a href="{{url}}" class="px-3 py-1.5 text-sm rounded-md border transition-colors {{#active}}bg-slate-800 border-slate-800 text-white{{/active}}{{^active}}border-slate-300 text-slate-600 hover:bg-white{{/active}}">{{page}}</a>
+              {{/model.pageLinks}}
+
+              {{#model.hasNext}}
+                <a href="{{model.nextUrl}}" class="px-3 py-1.5 text-sm rounded-md border border-slate-300 text-slate-600 hover:bg-white">다음</a>
+              {{/model.hasNext}}
+              {{^model.hasNext}}
+                <span class="px-3 py-1.5 text-sm rounded-md border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed">다음</span>
+              {{/model.hasNext}}
+            </div>
           </div>
         </div>
       </div>
