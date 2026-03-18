@@ -9,6 +9,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.smartclinic.hms.item.ItemManagerService;
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -106,6 +107,11 @@ public class AdminItemController {
 
     @GetMapping("/history")
     public String history(Model model) {
+        List<?> histories = itemManagerService.getStockHistory();
+        model.addAttribute("histories", histories);
+        model.addAttribute("hasHistories", !histories.isEmpty());
+        model.addAttribute("totalIn", itemManagerService.getTotalInAmount());
+        model.addAttribute("totalOut", itemManagerService.getTotalOutAmount());
         model.addAttribute("pageTitle", "입출고 내역");
         model.addAttribute("isAdminItemHistory", true);
         return "admin/item-history";
