@@ -1,20 +1,21 @@
 package com.smartclinic.hms.admin.department;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
+import com.smartclinic.hms.common.exception.CustomException;
+import com.smartclinic.hms.domain.Department;
 import java.util.List;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,8 +32,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
-
-import com.smartclinic.hms.domain.Department;
 
 @WebMvcTest(
         value = AdminDepartmentController.class,
@@ -51,7 +50,7 @@ class AdminDepartmentControllerTest {
     private AdminDepartmentService adminDepartmentService;
 
     @Test
-    @DisplayName("진료과 목록은 기본 페이징 파라미터와 model, pageTitle을 함께 렌더링한다")
+    @DisplayName("진료과 목록은 기본 페이지 파라미터와 model, pageTitle로 렌더링한다")
     void list_usesDefaultPagingAndRendersView() throws Exception {
         // given
         AdminDepartmentListResponse response = createListResponse();
@@ -129,12 +128,13 @@ class AdminDepartmentControllerTest {
                 .andExpect(content().string(containsString("내과")))
                 .andExpect(content().string(containsString("총")))
                 .andExpect(content().string(containsString("2 / 3페이지")))
+                .andExpect(content().string(containsString("/admin/department/detail?departmentId=12")))
                 .andExpect(content().string(containsString(">1</a>")))
                 .andExpect(content().string(containsString(">3</a>")));
     }
 
     @Test
-    @DisplayName("진료과 목록은 데이터가 없으면 빈 목록 메시지와 0 페이지 정보를 렌더링한다")
+    @DisplayName("진료과 목록은 빈 데이터일 때 빈 목록 메시지와 0페이지 정보를 렌더링한다")
     void list_rendersEmptyStateWhenNoDepartments() throws Exception {
         // given
         AdminDepartmentListResponse response = createListResponse();
@@ -151,7 +151,58 @@ class AdminDepartmentControllerTest {
     }
 
     @Test
-    @DisplayName("진료과 등록은 active 체크 여부를 서비스에 그대로 전달하고 목록으로 리다이렉트한다")
+    @DisplayName("진료과 상세 화면은 기본 정보와 상태 액션을 렌더링한다")
+    void detail_rendersDepartmentDetailView() throws Exception {
+        // given
+        AdminDepartmentDetailResponse response = new AdminDepartmentDetailResponse(
+                3L,
+                "내과",
+                true,
+                "운영 중",
+                "px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700",
+                false,
+                true,
+                "/admin/department/update",
+                "/admin/department/activate",
+                "/admin/department/deactivate"
+        );
+        given(adminDepartmentService.getDepartmentDetail(3L)).willReturn(response);
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/department/detail")
+                        .param("departmentId", "3")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/department-detail"))
+                .andExpect(request().attribute("model", response))
+                .andExpect(request().attribute("pageTitle", "진료과 상세"))
+                .andExpect(content().string(containsString("내과")))
+                .andExpect(content().string(containsString("이름 수정")))
+                .andExpect(content().string(containsString("비활성화")));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 진료과 상세 요청은 404 화면을 반환한다")
+    void detail_returns404WhenDepartmentMissing() throws Exception {
+        // given
+        given(adminDepartmentService.getDepartmentDetail(99L))
+                .willThrow(CustomException.notFound("진료과를 찾을 수 없습니다."));
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/department/detail")
+                        .param("departmentId", "99")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isNotFound())
+                .andExpect(view().name("error/404"))
+                .andExpect(request().attribute("errorMessage", "진료과를 찾을 수 없습니다."));
+    }
+
+    @Test
+    @DisplayName("진료과 등록은 active 체크 여부를 서비스에 전달하고 목록으로 리다이렉트한다")
     void create_passesCheckedActiveAndRedirectsToList() throws Exception {
         // given
 
@@ -169,7 +220,7 @@ class AdminDepartmentControllerTest {
     }
 
     @Test
-    @DisplayName("진료과 등록은 active가 없으면 비운영으로 저장하고 목록으로 리다이렉트한다")
+    @DisplayName("진료과 등록은 active 값이 없으면 false로 저장하고 목록으로 리다이렉트한다")
     void create_defaultsActiveToFalseWhenUnchecked() throws Exception {
         // given
 

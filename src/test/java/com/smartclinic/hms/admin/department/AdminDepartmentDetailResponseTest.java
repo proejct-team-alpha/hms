@@ -2,16 +2,15 @@ package com.smartclinic.hms.admin.department;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.smartclinic.hms.domain.Department;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.smartclinic.hms.domain.Department;
-
 class AdminDepartmentDetailResponseTest {
 
     @Test
-    @DisplayName("운영 중 진료과는 비활성화 버튼만 노출하는 상세 응답을 생성한다")
+    @DisplayName("운영 중 진료과는 비활성화 버튼만 노출되는 상세 응답을 생성한다")
     void from_buildsResponseForActiveDepartment() {
         // given
         Department department = Department.create("내과", true);
@@ -34,7 +33,7 @@ class AdminDepartmentDetailResponseTest {
     }
 
     @Test
-    @DisplayName("비운영 진료과는 활성화 버튼만 노출하는 상세 응답을 생성한다")
+    @DisplayName("비운영 진료과는 활성화 버튼만 노출되는 상세 응답을 생성한다")
     void from_buildsResponseForInactiveDepartment() {
         // given
         Department department = Department.create("외과", false);

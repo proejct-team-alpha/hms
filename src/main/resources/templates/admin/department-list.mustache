@@ -49,6 +49,7 @@
                   <th class="text-left px-4 py-3 font-semibold text-slate-600">ID</th>
                   <th class="text-left px-4 py-3 font-semibold text-slate-600">진료과명</th>
                   <th class="text-left px-4 py-3 font-semibold text-slate-600">상태</th>
+                  <th class="text-left px-4 py-3 font-semibold text-slate-600">관리</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
@@ -59,11 +60,17 @@
                   <td class="px-4 py-3">
                     <span class="{{activeBadgeClass}}">{{activeText}}</span>
                   </td>
+                  <td class="px-4 py-3">
+                    <a href="/admin/department/detail?departmentId={{id}}" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-300 text-slate-600 hover:bg-white">
+                      <i data-feather="external-link" class="w-3.5 h-3.5"></i>
+                      상세
+                    </a>
+                  </td>
                 </tr>
                 {{/model.departments}}
                 {{^model.departments}}
                 <tr>
-                  <td colspan="3" class="px-4 py-12 text-center text-slate-400">등록된 진료과가 없습니다.</td>
+                  <td colspan="4" class="px-4 py-12 text-center text-slate-400">등록된 진료과가 없습니다.</td>
                 </tr>
                 {{/model.departments}}
               </tbody>

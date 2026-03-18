@@ -1,18 +1,16 @@
 package com.smartclinic.hms.admin.department;
 
+import com.smartclinic.hms.common.exception.CustomException;
+import com.smartclinic.hms.domain.Department;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.smartclinic.hms.domain.Department;
-
-import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -53,6 +51,13 @@ public class AdminDepartmentService {
                 hasPrevious ? buildListUrl(currentPage - 1, safeSize) : "",
                 hasNext ? buildListUrl(currentPage + 1, safeSize) : ""
         );
+    }
+
+    public AdminDepartmentDetailResponse getDepartmentDetail(Long departmentId) {
+        Department department = adminDepartmentRepository.findById(departmentId)
+                .orElseThrow(() -> CustomException.notFound("진료과를 찾을 수 없습니다."));
+
+        return AdminDepartmentDetailResponse.from(department);
     }
 
     @Transactional

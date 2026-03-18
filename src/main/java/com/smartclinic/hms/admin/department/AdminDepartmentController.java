@@ -1,14 +1,16 @@
 package com.smartclinic.hms.admin.department;
 
+import com.smartclinic.hms.common.exception.CustomException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.view.RedirectView;
-import org.springframework.ui.Model;
 
 @Controller
 @RequiredArgsConstructor
@@ -31,6 +33,24 @@ public class AdminDepartmentController {
     public String form(Model model) {
         model.addAttribute("pageTitle", "진료과 등록");
         return "admin/department-form";
+    }
+
+    @GetMapping("/detail")
+    public String detail(
+            @RequestParam("departmentId") Long departmentId,
+            HttpServletRequest req,
+            HttpServletResponse response) {
+        try {
+            req.setAttribute("model", adminDepartmentService.getDepartmentDetail(departmentId));
+            req.setAttribute("pageTitle", "진료과 상세");
+            return "admin/department-detail";
+        } catch (CustomException ex) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            req.setAttribute("pageTitle", "페이지를 찾을 수 없습니다");
+            req.setAttribute("errorMessage", ex.getMessage());
+            req.setAttribute("path", req.getRequestURI());
+            return "error/404";
+        }
     }
 
     @PostMapping("/form")

@@ -1,12 +1,15 @@
 package com.smartclinic.hms.admin.department;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
+import com.smartclinic.hms.common.exception.CustomException;
+import com.smartclinic.hms.domain.Department;
 import java.util.List;
-
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,8 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-
-import com.smartclinic.hms.domain.Department;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class AdminDepartmentServiceTest {
@@ -55,7 +57,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("진료과 목록 조회는 페이지 정보와 링크를 함께 계산한다")
+    @DisplayName("진료과 목록 조회는 페이지 정보와 상태 라벨을 함께 계산한다")
     void getDepartmentList_buildsPagedResponse() {
         // given
         Department internalMedicine = Department.create("내과", true);
@@ -114,7 +116,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("진료과 목록 조회는 각 페이지 번호와 링크를 일관되게 계산한다")
+    @DisplayName("진료과 목록 조회는 각 페이지 번호와 링크를 올바르게 계산한다")
     void getDepartmentList_buildsPageLinksWithExpectedUrls() {
         // given
         Department internalMedicine = Department.create("내과", true);
@@ -149,6 +151,40 @@ class AdminDepartmentServiceTest {
         assertThat(result.pageLinks())
                 .extracting(AdminDepartmentPageLinkResponse::active)
                 .containsExactly(false, false, true, false);
+    }
+
+    @Test
+    @DisplayName("진료과 상세 조회는 상세 화면 응답 모델로 매핑한다")
+    void getDepartmentDetail_mapsDetailResponse() {
+        // given
+        Department department = Department.create("내과", true);
+        ReflectionTestUtils.setField(department, "id", 9L);
+        given(adminDepartmentRepository.findById(9L)).willReturn(Optional.of(department));
+
+        // when
+        AdminDepartmentDetailResponse result = adminDepartmentService.getDepartmentDetail(9L);
+
+        // then
+        assertThat(result.departmentId()).isEqualTo(9L);
+        assertThat(result.name()).isEqualTo("내과");
+        assertThat(result.active()).isTrue();
+        assertThat(result.activeText()).isEqualTo("운영 중");
+        assertThat(result.deactivatable()).isTrue();
+        assertThat(result.activatable()).isFalse();
+        assertThat(result.updateAction()).isEqualTo("/admin/department/update");
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 진료과 상세 조회는 예외를 던진다")
+    void getDepartmentDetail_throwsWhenDepartmentMissing() {
+        // given
+        given(adminDepartmentRepository.findById(99L)).willReturn(Optional.empty());
+
+        // when
+        // then
+        assertThatThrownBy(() -> adminDepartmentService.getDepartmentDetail(99L))
+                .isInstanceOf(CustomException.class)
+                .hasMessage("진료과를 찾을 수 없습니다.");
     }
 
     @Test

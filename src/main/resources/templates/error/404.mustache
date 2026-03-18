@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>페이지를 찾을 수 없습니다 - MediCare+</title>
+    <link rel="stylesheet" href="/css/common.css">
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+{{>common/header-public}}
+
+<main class="flex-1 flex items-center justify-center px-4 py-16">
+    <div class="text-center max-w-md">
+        <h1 class="text-4xl font-bold text-slate-800 mb-4">404</h1>
+        <p class="text-lg text-slate-600 mb-3">{{errorMessage}}</p>
+        <p class="text-sm text-slate-400 mb-6">{{path}}</p>
+        <a href="/" class="inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+            메인으로 돌아가기
+        </a>
+    </div>
+</main>
+
+{{>common/footer-public}}
+
+<script src="/js/feather.min.js"></script>
+<script>feather.replace();</script>
+</body>
+</html>
