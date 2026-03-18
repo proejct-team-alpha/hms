@@ -4,12 +4,14 @@ import com.smartclinic.hms.common.exception.CustomException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
 
 @Controller
@@ -58,7 +60,33 @@ public class AdminDepartmentController {
             @RequestParam String name,
             @RequestParam(defaultValue = "false") boolean active) {
         adminDepartmentService.createDepartment(name, active);
-        RedirectView redirectView = new RedirectView("/admin/department/list");
+        return redirectTo("/admin/department/list");
+    }
+
+    @PostMapping("/update")
+    public RedirectView update(
+            @RequestParam Long departmentId,
+            @RequestParam(defaultValue = "") String name,
+            RedirectAttributes redirectAttributes) {
+        try {
+            String successMessage = adminDepartmentService.updateDepartmentName(departmentId, name);
+            redirectAttributes.addFlashAttribute("successMessage", successMessage);
+            return redirectToDetail(departmentId);
+        } catch (CustomException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            if (ex.getHttpStatus() == HttpStatus.NOT_FOUND) {
+                return redirectTo("/admin/department/list");
+            }
+            return redirectToDetail(departmentId);
+        }
+    }
+
+    private RedirectView redirectToDetail(Long departmentId) {
+        return redirectTo("/admin/department/detail?departmentId=" + departmentId);
+    }
+
+    private RedirectView redirectTo(String url) {
+        RedirectView redirectView = new RedirectView(url);
         redirectView.setExposeModelAttributes(false);
         return redirectView;
     }

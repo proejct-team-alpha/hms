@@ -188,6 +188,66 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
+    @DisplayName("진료과 이름 수정은 이름만 변경하고 성공 메시지를 반환한다")
+    void updateDepartmentName_renamesDepartment() {
+        // given
+        Department department = Department.create("기존 이름", true);
+        ReflectionTestUtils.setField(department, "id", 4L);
+        given(adminDepartmentRepository.findById(4L)).willReturn(Optional.of(department));
+        given(adminDepartmentRepository.existsByNameIgnoreCaseAndIdNot("새 이름", 4L)).willReturn(false);
+
+        // when
+        String result = adminDepartmentService.updateDepartmentName(4L, "  새 이름  ");
+
+        // then
+        assertThat(result).isEqualTo("진료과명이 수정되었습니다.");
+        assertThat(department.getName()).isEqualTo("새 이름");
+        assertThat(department.isActive()).isTrue();
+        then(adminDepartmentRepository).should().save(department);
+    }
+
+    @Test
+    @DisplayName("진료과 이름 수정은 빈 이름 요청을 거부한다")
+    void updateDepartmentName_throwsWhenNameBlank() {
+        // given
+
+        // when
+        // then
+        assertThatThrownBy(() -> adminDepartmentService.updateDepartmentName(4L, "   "))
+                .isInstanceOf(CustomException.class)
+                .hasMessage("진료과명은 필수입니다.");
+    }
+
+    @Test
+    @DisplayName("진료과 이름 수정은 중복 이름 요청을 거부한다")
+    void updateDepartmentName_throwsWhenNameDuplicated() {
+        // given
+        Department department = Department.create("기존 이름", true);
+        ReflectionTestUtils.setField(department, "id", 4L);
+        given(adminDepartmentRepository.findById(4L)).willReturn(Optional.of(department));
+        given(adminDepartmentRepository.existsByNameIgnoreCaseAndIdNot("내과", 4L)).willReturn(true);
+
+        // when
+        // then
+        assertThatThrownBy(() -> adminDepartmentService.updateDepartmentName(4L, "내과"))
+                .isInstanceOf(CustomException.class)
+                .hasMessage("이미 존재하는 진료과명입니다.");
+    }
+
+    @Test
+    @DisplayName("진료과 이름 수정은 없는 진료과 요청을 거부한다")
+    void updateDepartmentName_throwsWhenDepartmentMissing() {
+        // given
+        given(adminDepartmentRepository.findById(44L)).willReturn(Optional.empty());
+
+        // when
+        // then
+        assertThatThrownBy(() -> adminDepartmentService.updateDepartmentName(44L, "새 이름"))
+                .isInstanceOf(CustomException.class)
+                .hasMessage("진료과를 찾을 수 없습니다.");
+    }
+
+    @Test
     @DisplayName("진료과 등록은 화면에서 전달한 active 값을 그대로 저장한다")
     void createDepartment_savesActiveValueFromRequest() {
         // given

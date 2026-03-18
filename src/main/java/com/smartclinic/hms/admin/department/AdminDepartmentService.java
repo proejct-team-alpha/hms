@@ -20,6 +20,11 @@ public class AdminDepartmentService {
     private static final int DEFAULT_PAGE = 1;
     private static final int DEFAULT_SIZE = 10;
 
+    private static final String DEPARTMENT_NOT_FOUND_MESSAGE = "진료과를 찾을 수 없습니다.";
+    private static final String DEPARTMENT_NAME_REQUIRED_MESSAGE = "진료과명은 필수입니다.";
+    private static final String DUPLICATE_DEPARTMENT_NAME_MESSAGE = "이미 존재하는 진료과명입니다.";
+    private static final String DEPARTMENT_UPDATED_MESSAGE = "진료과명이 수정되었습니다.";
+
     private final AdminDepartmentRepository adminDepartmentRepository;
 
     public AdminDepartmentListResponse getDepartmentList(int page, int size) {
@@ -54,15 +59,42 @@ public class AdminDepartmentService {
     }
 
     public AdminDepartmentDetailResponse getDepartmentDetail(Long departmentId) {
-        Department department = adminDepartmentRepository.findById(departmentId)
-                .orElseThrow(() -> CustomException.notFound("진료과를 찾을 수 없습니다."));
-
-        return AdminDepartmentDetailResponse.from(department);
+        return AdminDepartmentDetailResponse.from(findDepartment(departmentId));
     }
 
     @Transactional
     public void createDepartment(String name, boolean active) {
         adminDepartmentRepository.save(Department.create(name, active));
+    }
+
+    @Transactional
+    public String updateDepartmentName(Long departmentId, String name) {
+        String normalizedName = normalizeName(name);
+        validateDepartmentName(normalizedName);
+
+        Department department = findDepartment(departmentId);
+        if (adminDepartmentRepository.existsByNameIgnoreCaseAndIdNot(normalizedName, departmentId)) {
+            throw CustomException.conflict("DUPLICATE_DEPARTMENT_NAME", DUPLICATE_DEPARTMENT_NAME_MESSAGE);
+        }
+
+        department.rename(normalizedName);
+        adminDepartmentRepository.save(department);
+        return DEPARTMENT_UPDATED_MESSAGE;
+    }
+
+    private Department findDepartment(Long departmentId) {
+        return adminDepartmentRepository.findById(departmentId)
+                .orElseThrow(() -> CustomException.notFound(DEPARTMENT_NOT_FOUND_MESSAGE));
+    }
+
+    private void validateDepartmentName(String normalizedName) {
+        if (normalizedName.isBlank()) {
+            throw CustomException.badRequest("VALIDATION_ERROR", DEPARTMENT_NAME_REQUIRED_MESSAGE);
+        }
+    }
+
+    private String normalizeName(String name) {
+        return name == null ? "" : name.trim();
     }
 
     private List<AdminDepartmentPageLinkResponse> buildPageLinks(int totalPages, int currentPage, int size) {

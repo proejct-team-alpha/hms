@@ -8,6 +8,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -23,6 +24,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -199,6 +201,64 @@ class AdminDepartmentControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(view().name("error/404"))
                 .andExpect(request().attribute("errorMessage", "진료과를 찾을 수 없습니다."));
+    }
+
+    @Test
+    @DisplayName("진료과 이름 수정은 성공 후 상세 페이지로 리다이렉트하고 성공 메시지를 남긴다")
+    void update_redirectsToDetailWithSuccessMessage() throws Exception {
+        // given
+        given(adminDepartmentService.updateDepartmentName(5L, "내과")).willReturn("진료과명이 수정되었습니다.");
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/department/update")
+                        .param("departmentId", "5")
+                        .param("name", "내과")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/department/detail?departmentId=5"))
+                .andExpect(flash().attribute("successMessage", "진료과명이 수정되었습니다."));
+
+        then(adminDepartmentService).should().updateDepartmentName(5L, "내과");
+    }
+
+    @Test
+    @DisplayName("진료과 이름 수정은 검증 실패 시 상세 페이지로 돌아가 에러 메시지를 남긴다")
+    void update_redirectsBackToDetailWhenValidationFails() throws Exception {
+        // given
+        given(adminDepartmentService.updateDepartmentName(5L, "   "))
+                .willThrow(CustomException.badRequest("VALIDATION_ERROR", "진료과명은 필수입니다."));
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/department/update")
+                        .param("departmentId", "5")
+                        .param("name", "   ")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/department/detail?departmentId=5"))
+                .andExpect(flash().attribute("errorMessage", "진료과명은 필수입니다."));
+    }
+
+    @Test
+    @DisplayName("진료과 이름 수정은 대상이 없으면 목록으로 돌아가 에러 메시지를 남긴다")
+    void update_redirectsToListWhenDepartmentMissing() throws Exception {
+        // given
+        given(adminDepartmentService.updateDepartmentName(99L, "내과"))
+                .willThrow(CustomException.notFound("진료과를 찾을 수 없습니다."));
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/department/update")
+                        .param("departmentId", "99")
+                        .param("name", "내과")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/department/list"))
+                .andExpect(flash().attribute("errorMessage", "진료과를 찾을 수 없습니다."));
     }
 
     @Test
