@@ -117,7 +117,20 @@
                   </div>
                 </div>
 
-                <div class="p-6 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex justify-end">
+                <div class="p-6 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex justify-between items-center">
+                  <div>
+                    {{#detail.canStartTreatment}}
+                    <form method="post" action="/doctor/treatment/start">
+                      <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                      <input type="hidden" name="id" value="{{detail.reservationId}}">
+                      <button type="submit"
+                              class="px-6 py-3 bg-orange-500 text-white font-medium rounded-xl hover:bg-orange-600 transition-colors shadow-sm flex items-center gap-2">
+                        <i data-feather="play" class="w-5 h-5"></i>
+                        진료 시작
+                      </button>
+                    </form>
+                    {{/detail.canStartTreatment}}
+                  </div>
                   <button
                     type="submit"
                     class="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2"

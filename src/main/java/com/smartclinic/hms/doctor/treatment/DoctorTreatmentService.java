@@ -56,8 +56,9 @@ public class DoctorTreatmentService {
 
     public Page<DoctorReservationDto> getTreatmentPage(String username, int page) {
         LocalDate today = LocalDate.now();
+        List<ReservationStatus> activeStatuses = List.of(ReservationStatus.RECEIVED, ReservationStatus.IN_TREATMENT);
         return reservationRepository
-                .findTodayByDoctorAndStatusPage(username, today, ReservationStatus.RECEIVED, PageRequest.of(page, 9))
+                .findTodayByDoctorAndStatusesPage(username, today, activeStatuses, PageRequest.of(page, 9))
                 .map(DoctorReservationDto::new);
     }
 
@@ -77,14 +78,22 @@ public class DoctorTreatmentService {
                 .map(DoctorReservationDto::new);
     }
 
-    // [W3-1] 폴링용: 오늘 날짜 RECEIVED 상태만 조회
+    // [W3-1] 폴링용: 오늘 날짜 RECEIVED + IN_TREATMENT 상태 조회
     public List<DoctorReservationDto> getTodayReceivedList(String username) {
         LocalDate today = LocalDate.now();
+        List<ReservationStatus> activeStatuses = List.of(ReservationStatus.RECEIVED, ReservationStatus.IN_TREATMENT);
         return reservationRepository
-                .findTodayByDoctorAndStatus(username, today, ReservationStatus.RECEIVED)
+                .findTodayByDoctorAndStatuses(username, today, activeStatuses)
                 .stream()
                 .map(DoctorReservationDto::new)
                 .toList();
+    }
+
+    @Transactional
+    public void startTreatment(Long id, String username) {
+        Reservation reservation = reservationRepository.findByIdAndDoctor(id, username)
+                .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
+        reservation.startTreatment();
     }
 
     public DoctorTreatmentDetailDto getTreatmentDetail(Long id, String username) {

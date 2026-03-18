@@ -87,6 +87,18 @@ public class DoctorTreatmentController {
         }
     }
 
+    @PostMapping("/treatment/start")
+    public String startTreatment(@RequestParam("id") Long id,
+                                 Authentication auth,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            treatmentService.startTreatment(id, auth.getName());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/doctor/treatment-detail?id=" + id;
+    }
+
     @PostMapping("/treatment/complete")
     public String completeTreatment(@RequestParam("id") Long id,
                                     @RequestParam("diagnosis") String diagnosis,

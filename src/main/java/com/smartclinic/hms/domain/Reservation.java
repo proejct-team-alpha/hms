@@ -94,9 +94,16 @@ public class Reservation {
         this.status = ReservationStatus.RECEIVED;
     }
 
-    public void complete() {
+    public void startTreatment() {
         if (this.status != ReservationStatus.RECEIVED) {
-            throw new IllegalStateException("RECEIVED 상태에서만 진료완료 가능. 현재: " + this.status);
+            throw new IllegalStateException("RECEIVED 상태에서만 진료 시작 가능. 현재: " + this.status);
+        }
+        this.status = ReservationStatus.IN_TREATMENT;
+    }
+
+    public void complete() {
+        if (this.status != ReservationStatus.RECEIVED && this.status != ReservationStatus.IN_TREATMENT) {
+            throw new IllegalStateException("RECEIVED 또는 IN_TREATMENT 상태에서만 진료완료 가능. 현재: " + this.status);
         }
         this.status = ReservationStatus.COMPLETED;
     }

@@ -15,6 +15,7 @@ public class DoctorTreatmentDetailDto {
     private final String timeSlot;
     private final String statusText;
     private final boolean canComplete;
+    private final boolean canStartTreatment;
     private final String diagnosis;
     private final String prescription;
     private final String remark;
@@ -25,9 +26,12 @@ public class DoctorTreatmentDetailDto {
         this.patientPhone = r.getPatient().getPhone();
         this.note = r.getPatient().getNote() != null ? r.getPatient().getNote() : "증상 없음";
         this.timeSlot = r.getTimeSlot();
-        this.canComplete = r.getStatus() == ReservationStatus.RECEIVED;
+        this.canStartTreatment = r.getStatus() == ReservationStatus.RECEIVED;
+        this.canComplete = r.getStatus() == ReservationStatus.RECEIVED
+                        || r.getStatus() == ReservationStatus.IN_TREATMENT;
         this.statusText = switch (r.getStatus()) {
             case RECEIVED -> "진료 대기";
+            case IN_TREATMENT -> "진료중";
             case COMPLETED -> "진료 완료";
             default -> "예약";
         };

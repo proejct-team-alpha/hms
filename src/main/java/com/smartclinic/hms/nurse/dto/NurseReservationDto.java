@@ -40,6 +40,7 @@ public class NurseReservationDto {
         return switch (s) {
             case RESERVED -> "예약됨";
             case RECEIVED -> "진료 대기";
+            case IN_TREATMENT -> "진료중";
             case COMPLETED -> "진료 완료";
             case CANCELLED -> "취소됨";
         };
@@ -49,6 +50,7 @@ public class NurseReservationDto {
         return switch (s) {
             case RESERVED -> "bg-blue-100 text-blue-800";
             case RECEIVED -> "bg-yellow-100 text-yellow-800";
+            case IN_TREATMENT -> "bg-indigo-100 text-indigo-800";
             case COMPLETED -> "bg-green-100 text-green-800";
             case CANCELLED -> "bg-slate-100 text-slate-600";
         };

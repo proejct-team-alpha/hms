@@ -36,13 +36,15 @@ public class NursePatientDto {
         this.departmentName = r.getDepartment().getName();
         this.statusText = toStatusText(r.getStatus());
         this.canReceive = r.getStatus() == ReservationStatus.RESERVED;
-        this.canUseItem = r.getStatus() == ReservationStatus.RECEIVED;
+        this.canUseItem = r.getStatus() == ReservationStatus.RECEIVED
+                       || r.getStatus() == ReservationStatus.IN_TREATMENT;
     }
 
     private static String toStatusText(ReservationStatus s) {
         return switch (s) {
             case RESERVED -> "예약됨";
             case RECEIVED -> "진료 대기";
+            case IN_TREATMENT -> "진료중";
             case COMPLETED -> "진료 완료";
             case CANCELLED -> "취소됨";
         };
