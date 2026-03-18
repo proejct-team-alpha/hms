@@ -302,6 +302,27 @@
     if (cgPrev) cgPrev.addEventListener('click', function() { cardPage--; if (cardPage < 1) cardPage = 1; applyFilter(); });
     if (cgNext) cgNext.addEventListener('click', function() { cardPage++; applyFilter(); });
 
+    function refreshTodayLog(logs) {
+      var tbody = document.getElementById('today-log-tbody');
+      if (!tbody) return;
+      Array.from(tbody.querySelectorAll('tr:not(#today-log-empty)')).forEach(function(r) { r.remove(); });
+      var emptyRow = document.getElementById('today-log-empty');
+      if (logs && logs.length > 0) {
+        if (emptyRow) emptyRow.style.display = 'none';
+        logs.forEach(function(log) {
+          var tr = document.createElement('tr');
+          tr.innerHTML = '<td class="px-3 py-2 text-slate-700 font-medium">' + log.itemName + '</td>' +
+                         '<td class="px-3 py-2 text-right text-slate-600">' + log.amount + '개</td>' +
+                         '<td class="px-3 py-2 text-right text-slate-400">' + log.usedAt + '</td>';
+          tbody.appendChild(tr);
+        });
+      } else {
+        if (emptyRow) emptyRow.style.display = '';
+      }
+      todayLogPage = 1;
+      renderTodayLog();
+    }
+
     document.querySelectorAll('form[action$="/staff/item/use"]').forEach(function(form) {
       form.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -329,6 +350,7 @@
           if (data.quantity !== undefined) {
             form.closest('.item-card').querySelector('.quantity-span').textContent = data.quantity;
             input.value = '';
+            refreshTodayLog(data.logs || []);
           } else if (data.error) {
             alert(data.error);
           }

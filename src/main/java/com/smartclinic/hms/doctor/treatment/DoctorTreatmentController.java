@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.smartclinic.hms.item.log.ItemUsageLogDto;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -79,7 +81,10 @@ public class DoctorTreatmentController {
                 return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
             }
             int newQuantity = itemManagerService.useItem(id, (int) parsed, reservationId);
-            return ResponseEntity.ok(Map.of("quantity", newQuantity));
+            List<ItemUsageLogDto> logs = reservationId != null
+                    ? itemManagerService.getUsageLogs(reservationId)
+                    : List.of();
+            return ResponseEntity.ok(Map.of("quantity", newQuantity, "logs", logs));
         } catch (NumberFormatException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
         } catch (Exception e) {

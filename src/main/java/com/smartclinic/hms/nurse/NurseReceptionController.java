@@ -2,6 +2,7 @@ package com.smartclinic.hms.nurse;
 
 import com.smartclinic.hms.common.util.Resp;
 import com.smartclinic.hms.item.ItemManagerService;
+import com.smartclinic.hms.item.log.ItemUsageLogDto;
 import com.smartclinic.hms.nurse.dto.NursePageLinkDto;
 import com.smartclinic.hms.nurse.dto.NursePatientDto;
 import lombok.RequiredArgsConstructor;
@@ -73,7 +74,10 @@ public class NurseReceptionController {
                 return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
             }
             int newQuantity = itemManagerService.useItem(id, (int) parsed, reservationId);
-            return ResponseEntity.ok(Map.of("quantity", newQuantity));
+            List<ItemUsageLogDto> logs = reservationId != null
+                    ? itemManagerService.getUsageLogs(reservationId)
+                    : List.of();
+            return ResponseEntity.ok(Map.of("quantity", newQuantity, "logs", logs));
         } catch (NumberFormatException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
         } catch (Exception e) {

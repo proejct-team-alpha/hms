@@ -2,6 +2,7 @@ package com.smartclinic.hms.item;
 
 import com.smartclinic.hms.item.dto.ItemDashboardDto;
 import com.smartclinic.hms.item.dto.ItemListDto;
+import com.smartclinic.hms.item.log.ItemUsageLogDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -129,7 +130,8 @@ public class ItemManagerController {
                 return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
             }
             int newQuantity = itemService.useItem(id, (int) parsed, null);
-            return ResponseEntity.ok(Map.of("quantity", newQuantity));
+            List<ItemUsageLogDto> logs = itemService.getTodayStaffUsageLogs();
+            return ResponseEntity.ok(Map.of("quantity", newQuantity, "logs", logs));
         } catch (NumberFormatException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
         } catch (Exception e) {

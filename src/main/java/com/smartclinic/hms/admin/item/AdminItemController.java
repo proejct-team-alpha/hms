@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.smartclinic.hms.item.ItemManagerService;
+import com.smartclinic.hms.item.log.ItemUsageLogDto;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -97,7 +98,8 @@ public class AdminItemController {
                 return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
             }
             int newQuantity = itemManagerService.useItem(id, (int) parsed, null);
-            return ResponseEntity.ok(Map.of("quantity", newQuantity));
+            List<ItemUsageLogDto> logs = itemManagerService.getTodayStaffUsageLogs();
+            return ResponseEntity.ok(Map.of("quantity", newQuantity, "logs", logs));
         } catch (NumberFormatException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
         } catch (Exception e) {
