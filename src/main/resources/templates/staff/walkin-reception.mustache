@@ -72,17 +72,37 @@
                 <label class="block text-sm font-medium text-slate-700 mb-2">접수 날짜</label>
                 <div class="relative">
                   <i data-feather="calendar" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input type="date" name="date" required value="{{#form}}{{date}}{{/form}}{{^form}}{{today}}{{/form}}" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" />
+                  <input type="date" name="date" id="dateInput" required value="{{#form}}{{date}}{{/form}}{{^form}}{{today}}{{/form}}" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" />
                 </div>
               </div>
               <div>
-  <label class="block text-sm font-medium text-slate-700 mb-2">접수 시간</label>
-  <div class="relative">
-    <i data-feather="clock" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-    <input type="time" name="time" required value="{{#form}}{{time}}{{/form}}"
-      class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" />
-  </div>
-</div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">접수 시간</label>
+                <div class="relative">
+                  <i data-feather="clock" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                  <select name="time" id="timeSelect" required
+                          class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none bg-white">
+                    <option value="">선택해주세요</option>
+                    <optgroup label="오전">
+                      <option value="09:00">09:00</option>
+                      <option value="09:30">09:30</option>
+                      <option value="10:00">10:00</option>
+                      <option value="10:30">10:30</option>
+                      <option value="11:00">11:00</option>
+                      <option value="11:30">11:30</option>
+                    </optgroup>
+                    <optgroup label="오후">
+                      <option value="14:00">14:00</option>
+                      <option value="14:30">14:30</option>
+                      <option value="15:00">15:00</option>
+                      <option value="15:30">15:30</option>
+                      <option value="16:00">16:00</option>
+                      <option value="16:30">16:30</option>
+                      <option value="17:00">17:00</option>
+                      <option value="17:30">17:30</option>
+                    </optgroup>
+                  </select>
+                </div>
+              </div>
             </div>
 
             <div>
@@ -107,90 +127,73 @@
   </div>
 
   <script>feather.replace();</script>
-  <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const timeInput = document.querySelector("input[name='time']");
-
-  if (!timeInput.value) {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-
-    timeInput.value = hours + ":" + minutes;
-  }
-});
-</script>
   {{#message}}
-  <script>
-    alert("{{message}}");
-  </script>
+  <script>alert("{{message}}");</script>
   {{/message}}
-  {{#form}}
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const deptSelect = document.querySelector('select[name="departmentId"]');
-      const docSelect = document.querySelector('select[name="doctorId"]');
-      const docOptions = Array.from(docSelect.querySelectorAll('option[data-dept-id]'));
+    (async function () {
+      const deptSelect  = document.querySelector('select[name="departmentId"]');
+      const docSelect   = document.querySelector('select[name="doctorId"]');
+      const dateInput   = document.getElementById('dateInput');
+      const timeSelect  = document.getElementById('timeSelect');
+      const docOptions  = Array.from(docSelect.querySelectorAll('option[data-dept-id]'));
 
-      // 진료과에 맞게 의사 목록을 필터링하는 함수
-      function filterDoctors() {
-        const selectedDeptId = deptSelect.value;
-        
-        docOptions.forEach(option => {
-          if (!selectedDeptId || option.dataset.deptId === selectedDeptId) {
-            option.style.display = ''; // 조건에 맞으면 보이기
-          } else {
-            option.style.display = 'none'; // 다르면 숨기기
-          }
+      // 과거 날짜 선택 불가
+      dateInput.min = new Date().toISOString().split('T')[0];
+
+      // 진료과 → 의사 필터 (select 값 변경 없이 DOM만 조작)
+      function filterDoctorsOnly() {
+        const deptId = deptSelect.value;
+        docOptions.forEach(function(opt) {
+          opt.style.display = (!deptId || opt.dataset.deptId === deptId) ? '' : 'none';
         });
-
-        // 현재 선택된 의사가 숨겨진 경우(다른 진료과를 선택한 경우) 선택 초기화
-        const selectedOption = docSelect.options[docSelect.selectedIndex];
-        if (selectedOption && selectedOption.style.display === 'none') {
+        if (docSelect.options[docSelect.selectedIndex] &&
+            docSelect.options[docSelect.selectedIndex].style.display === 'none') {
           docSelect.value = '';
         }
       }
 
-      // 진료과 선택이 바뀔 때마다 필터링 실행
-      deptSelect.addEventListener('change', filterDoctors);
+      // booked-slots API 호출 → 예약 불가 시간 비활성화
+      async function refreshTimeSlots() {
+        const doctorId = docSelect.value;
+        const date     = dateInput.value;
+        const opts     = Array.from(timeSelect.querySelectorAll('option[value]'));
 
-      const deptId = '{{departmentId}}';
-      const docId = '{{doctorId}}';
-      if (deptId) document.querySelector('select[name="departmentId"]').value = deptId;
-      if (docId) document.querySelector('select[name="doctorId"]').value = docId;
-      
-      // 폼 데이터 초기 세팅 후에도 올바른 의사만 보이도록 한 번 실행
-      filterDoctors();
-    });
-  </script>
-  {{/form}}
-  {{^form}}
-  <script>
-    // 처음 접속했을 때(에러로 돌아온게 아닐 때)도 진료과 필터링을 적용
-    document.addEventListener('DOMContentLoaded', () => {
-      const deptSelect = document.querySelector('select[name="departmentId"]');
-      const docSelect = document.querySelector('select[name="doctorId"]');
-      const docOptions = Array.from(docSelect.querySelectorAll('option[data-dept-id]'));
-
-      function filterDoctors() {
-        const selectedDeptId = deptSelect.value;
-        docOptions.forEach(option => {
-          if (!selectedDeptId || option.dataset.deptId === selectedDeptId) {
-            option.style.display = '';
-          } else {
-            option.style.display = 'none';
-          }
+        // 전체 초기화
+        opts.forEach(function(opt) {
+          opt.disabled = false;
+          opt.textContent = opt.value;
         });
-        const selectedOption = docSelect.options[docSelect.selectedIndex];
-        if (selectedOption && selectedOption.style.display === 'none') {
-          docSelect.value = '';
-        }
+        if (!doctorId || !date) return;
+
+        try {
+          const res    = await fetch('/api/reservation/booked-slots?doctorId=' + doctorId + '&date=' + date);
+          const booked = await res.json();
+          opts.forEach(function(opt) {
+            if (booked.includes(opt.value)) {
+              opt.disabled = true;
+              opt.textContent = opt.value + ' (예약불가)';
+              if (timeSelect.value === opt.value) timeSelect.value = '';
+            }
+          });
+        } catch (e) {}
       }
 
-      deptSelect.addEventListener('change', filterDoctors);
-      filterDoctors(); // 초기 빈값 필터링 실행
-    });
+      deptSelect.addEventListener('change', function() { filterDoctorsOnly(); refreshTimeSlots(); });
+      docSelect.addEventListener('change', refreshTimeSlots);
+      dateInput.addEventListener('change', refreshTimeSlots);
+
+      // 폼 오류 복원
+      const restoreDeptId = '{{#form}}{{departmentId}}{{/form}}';
+      const restoreDocId  = '{{#form}}{{doctorId}}{{/form}}';
+      const restoreTime   = '{{#form}}{{time}}{{/form}}';
+
+      if (restoreDeptId) deptSelect.value = restoreDeptId;
+      filterDoctorsOnly();
+      if (restoreDocId) docSelect.value = restoreDocId;
+      await refreshTimeSlots();
+      if (restoreTime) timeSelect.value = restoreTime;
+    })();
   </script>
-  {{/form}}
 </body>
 </html>
