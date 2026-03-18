@@ -17,7 +17,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
 import com.smartclinic.hms.domain.Department;
 
@@ -51,6 +50,7 @@ class AdminDepartmentServiceTest {
         assertThat(result.currentPage()).isEqualTo(1);
         assertThat(result.size()).isEqualTo(10);
         assertThat(result.totalPages()).isEqualTo(0);
+        assertThat(result.hasPages()).isFalse();
         assertThat(result.pageLinks()).isEmpty();
     }
 
@@ -81,12 +81,74 @@ class AdminDepartmentServiceTest {
         assertThat(result.currentPage()).isEqualTo(2);
         assertThat(result.size()).isEqualTo(5);
         assertThat(result.totalPages()).isEqualTo(3);
+        assertThat(result.hasPages()).isTrue();
         assertThat(result.hasPrevious()).isTrue();
         assertThat(result.hasNext()).isTrue();
         assertThat(result.previousUrl()).isEqualTo("/admin/department/list?page=1&size=5");
         assertThat(result.nextUrl()).isEqualTo("/admin/department/list?page=3&size=5");
         assertThat(result.pageLinks()).hasSize(3);
         assertThat(result.pageLinks().get(1).active()).isTrue();
+    }
+
+    @Test
+    @DisplayName("진료과 목록 조회는 데이터가 없으면 빈 목록 상태를 반환한다")
+    void getDepartmentList_returnsEmptyStateWhenNoDepartments() {
+        // given
+        given(adminDepartmentRepository.findAllByOrderByIdDesc(any(Pageable.class)))
+                .willReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
+
+        // when
+        AdminDepartmentListResponse result = adminDepartmentService.getDepartmentList(1, 10);
+
+        // then
+        assertThat(result.departments()).isEmpty();
+        assertThat(result.totalCount()).isZero();
+        assertThat(result.currentPage()).isEqualTo(1);
+        assertThat(result.totalPages()).isEqualTo(0);
+        assertThat(result.hasPages()).isFalse();
+        assertThat(result.hasPrevious()).isFalse();
+        assertThat(result.hasNext()).isFalse();
+        assertThat(result.previousUrl()).isEmpty();
+        assertThat(result.nextUrl()).isEmpty();
+        assertThat(result.pageLinks()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("진료과 목록 조회는 각 페이지 번호와 링크를 일관되게 계산한다")
+    void getDepartmentList_buildsPageLinksWithExpectedUrls() {
+        // given
+        Department internalMedicine = Department.create("내과", true);
+        PageImpl<Department> pageResult = new PageImpl<>(
+                List.of(internalMedicine),
+                PageRequest.of(2, 5),
+                16
+        );
+        given(adminDepartmentRepository.findAllByOrderByIdDesc(any(Pageable.class)))
+                .willReturn(pageResult);
+
+        // when
+        AdminDepartmentListResponse result = adminDepartmentService.getDepartmentList(3, 5);
+
+        // then
+        assertThat(result.currentPage()).isEqualTo(3);
+        assertThat(result.totalPages()).isEqualTo(4);
+        assertThat(result.hasPages()).isTrue();
+        assertThat(result.previousUrl()).isEqualTo("/admin/department/list?page=2&size=5");
+        assertThat(result.nextUrl()).isEqualTo("/admin/department/list?page=4&size=5");
+        assertThat(result.pageLinks())
+                .extracting(AdminDepartmentPageLinkResponse::page)
+                .containsExactly(1, 2, 3, 4);
+        assertThat(result.pageLinks())
+                .extracting(AdminDepartmentPageLinkResponse::url)
+                .containsExactly(
+                        "/admin/department/list?page=1&size=5",
+                        "/admin/department/list?page=2&size=5",
+                        "/admin/department/list?page=3&size=5",
+                        "/admin/department/list?page=4&size=5"
+                );
+        assertThat(result.pageLinks())
+                .extracting(AdminDepartmentPageLinkResponse::active)
+                .containsExactly(false, false, true, false);
     }
 
     @Test

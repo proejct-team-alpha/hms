@@ -9,6 +9,7 @@ public record AdminDepartmentListResponse(
         int currentPage,
         int size,
         int totalPages,
+        boolean hasPages,
         boolean hasPrevious,
         boolean hasNext,
         String previousUrl,

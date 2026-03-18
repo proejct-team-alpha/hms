@@ -47,6 +47,7 @@ public class AdminDepartmentService {
                 currentPage,
                 safeSize,
                 totalPages,
+                totalPages > 0,
                 hasPrevious,
                 hasNext,
                 hasPrevious ? buildListUrl(currentPage - 1, safeSize) : "",

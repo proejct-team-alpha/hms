@@ -112,6 +112,7 @@ class AdminDepartmentControllerTest {
                 3,
                 true,
                 true,
+                true,
                 "/admin/department/list?page=1&size=5",
                 "/admin/department/list?page=3&size=5"
         );
@@ -130,6 +131,23 @@ class AdminDepartmentControllerTest {
                 .andExpect(content().string(containsString("2 / 3페이지")))
                 .andExpect(content().string(containsString(">1</a>")))
                 .andExpect(content().string(containsString(">3</a>")));
+    }
+
+    @Test
+    @DisplayName("진료과 목록은 데이터가 없으면 빈 목록 메시지와 0 페이지 정보를 렌더링한다")
+    void list_rendersEmptyStateWhenNoDepartments() throws Exception {
+        // given
+        AdminDepartmentListResponse response = createListResponse();
+        given(adminDepartmentService.getDepartmentList(1, 10)).willReturn(response);
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/department/list")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("등록된 진료과가 없습니다.")))
+                .andExpect(content().string(containsString("0 / 0페이지")));
     }
 
     @Test
@@ -175,6 +193,7 @@ class AdminDepartmentControllerTest {
                 1,
                 10,
                 0,
+                false,
                 false,
                 false,
                 "",
