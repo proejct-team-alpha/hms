@@ -18,11 +18,11 @@
 
 ## Task 18-2. 상세/수정 통합 화면 응답 구조 정의
 
-- [ ] `GET /admin/department/detail` 렌더링에 필요한 응답 모델을 정의한다.
-- [ ] 진료과 기본 정보, 상태 라벨, 상태 배지용 데이터 구성을 정리한다.
-- [ ] 수정 폼에서 사용할 `departmentId`, `name` 바인딩 구조를 정리한다.
-- [ ] 활성/비활성 버튼 노출 조건을 응답 모델에 반영할지 결정한다.
-- [ ] `pageTitle + model` 패턴에 맞는 템플릿 계약을 확정한다.
+- [x] `GET /admin/department/detail` 렌더링에 필요한 응답 모델을 정의한다.
+- [x] 진료과 기본 정보, 상태 라벨, 상태 배지용 데이터 구성을 정리한다.
+- [x] 수정 폼에서 사용할 `departmentId`, `name` 바인딩 구조를 정리한다.
+- [x] 활성/비활성 버튼 노출 조건을 응답 모델에 반영할지 결정한다.
+- [x] `pageTitle + model` 패턴에 맞는 템플릿 계약을 확정한다.
 
 ## Task 18-3. 상세/수정 통합 화면 구현
 
@@ -69,7 +69,7 @@
 ## 추천 진행 순서
 
 - [x] Task 18-1 현재 구조 점검
-- [ ] Task 18-2 상세/수정 응답 구조 정의
+- [x] Task 18-2 상세/수정 응답 구조 정의
 - [ ] Task 18-3 상세/수정 통합 화면 구현
 - [ ] Task 18-4 이름 수정 구현
 - [ ] Task 18-5 상태 전이 구현
@@ -84,3 +84,4 @@
 - [x] 현재 목록 인라인 등록은 컨트롤러와 템플릿 모두 `/admin/department/form`을 사용 중이라 `workflow-018`의 `/admin/department/create`로 맞추는 후속 정리가 필요하다.
 - [x] `Department` 엔티티는 현재 `id`, `name`, `active`만 보유하고 `update(name, active)`만 제공하므로 이름 수정과 상태 전이를 분리하는 메서드 정리가 필요하다.
 - [x] 재사용 가능한 현재 응답 구조는 `AdminDepartmentDto`와 `AdminDepartmentListResponse`까지이며, 상세/수정 화면에는 기본 정보와 상태 액션 노출 조건을 담는 별도 응답 모델이 필요하다.
+- [x] 상세/수정 응답 모델은 `AdminDepartmentDetailResponse`로 정리하고, `departmentId`, `name`, 상태 라벨/배지, 활성/비활성 버튼 노출 조건, 액션 URL을 한 번에 제공하는 계약으로 확정했다.
