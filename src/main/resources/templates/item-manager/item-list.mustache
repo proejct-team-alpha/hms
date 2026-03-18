@@ -190,12 +190,16 @@
       var end = Math.min(totalPages, start + 4);
       start = Math.max(1, end - 4);
       var html = '';
+      if (start > 1) {
+        html += '<button type="button" data-page="1" class="il-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors">1</button>';
+        if (start > 2) html += '<span class="px-1 text-xs text-slate-400">...</span>';
+      }
       for (var p = start; p <= end; p++) {
         var active = p === itemListPage ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100';
         html += '<button type="button" data-page="' + p + '" class="il-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 ' + active + ' transition-colors">' + p + '</button>';
       }
       if (end < totalPages) {
-        html += '<span class="px-1 text-xs text-slate-400">...</span>';
+        if (end < totalPages - 1) html += '<span class="px-1 text-xs text-slate-400">...</span>';
         html += '<button type="button" data-page="' + totalPages + '" class="il-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors">' + totalPages + '</button>';
       }
       return html;
