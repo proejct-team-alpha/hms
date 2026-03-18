@@ -18,6 +18,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -44,8 +45,8 @@ class DoctorTreatmentServiceTest {
         // given
         String username = "doctor01";
         Reservation reservation = mockReservation("김명준", "09:00", ReservationStatus.RECEIVED, ReservationSource.ONLINE);
-        given(reservationRepository.findTodayByDoctorAndStatus(
-                eq(username), any(LocalDate.class), eq(ReservationStatus.RECEIVED)))
+        given(reservationRepository.findTodayByDoctorAndStatuses(
+                eq(username), any(LocalDate.class), anyList()))
                 .willReturn(List.of(reservation));
 
         // when
@@ -57,7 +58,7 @@ class DoctorTreatmentServiceTest {
         assertThat(result.get(0).getTimeSlot()).isEqualTo("09:00");
         assertThat(result.get(0).getStatusText()).isEqualTo("진료 대기");
         then(reservationRepository).should()
-                .findTodayByDoctorAndStatus(eq(username), any(LocalDate.class), eq(ReservationStatus.RECEIVED));
+                .findTodayByDoctorAndStatuses(eq(username), any(LocalDate.class), anyList());
     }
 
     @Test
@@ -65,8 +66,8 @@ class DoctorTreatmentServiceTest {
     void getTodayReceivedList_returnsEmptyListWhenNone() {
         // given
         String username = "doctor01";
-        given(reservationRepository.findTodayByDoctorAndStatus(
-                eq(username), any(LocalDate.class), eq(ReservationStatus.RECEIVED)))
+        given(reservationRepository.findTodayByDoctorAndStatuses(
+                eq(username), any(LocalDate.class), anyList()))
                 .willReturn(List.of());
 
         // when
