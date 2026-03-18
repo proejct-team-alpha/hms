@@ -48,6 +48,13 @@
           {{/categoryFilters}}
         </div>
 
+        <!-- 검색창 -->
+        <div class="relative">
+          <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="item-list-search" placeholder="물품명 검색 (초성·영문 가능)"
+                 class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300">
+        </div>
+
         <!-- Item Table -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <table class="w-full text-left border-collapse">
@@ -62,7 +69,7 @@
                 <th class="p-4 font-medium text-right">관리</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-200">
+            <tbody id="item-list-tbody" class="divide-y divide-slate-200">
               {{#items}}
               <tr class="hover:bg-slate-50 transition-colors">
                 <td class="p-4 text-sm font-bold text-slate-800">{{name}}</td>
@@ -116,12 +123,28 @@
               </tr>
               {{/items}}
               {{^items}}
-              <tr>
+              <tr id="empty-row">
                 <td colspan="7" class="p-8 text-center text-slate-500 text-sm">등록된 물품이 없습니다.</td>
               </tr>
               {{/items}}
             </tbody>
           </table>
+        </div>
+
+        <!-- 페이징 바 -->
+        <div id="item-list-pagination" class="flex items-center justify-between" style="display:none!important">
+          <span id="item-list-page-info" class="text-xs text-slate-500"></span>
+          <div class="flex items-center gap-2">
+            <button id="item-list-prev" type="button"
+                    class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              이전
+            </button>
+            <div id="item-list-page-numbers" class="flex items-center gap-1"></div>
+            <button id="item-list-next" type="button"
+                    class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              다음
+            </button>
+          </div>
         </div>
       </div>
     </main>
@@ -130,6 +153,102 @@
   </div>
 
   <script>
+    // ===== 물품 목록 검색 + 페이징 =====
+    var ITEM_LIST_PAGE_SIZE = 10;
+    var itemListPage = 1;
+    var itemListQuery = '';
+
+    var CHOSUNG_LIST = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+    function getChosung(str) {
+      return str.split('').map(function(ch) {
+        var code = ch.charCodeAt(0);
+        if (code >= 0xAC00 && code <= 0xD7A3) return CHOSUNG_LIST[Math.floor((code - 0xAC00) / 588)];
+        return ch;
+      }).join('');
+    }
+    function isChosungOnly(str) { return /^[ㄱ-ㅎ]+$/.test(str); }
+    function itemListMatches(name, query) {
+      if (!query) return true;
+      var q = query.toLowerCase();
+      if (isChosungOnly(q)) return getChosung(name).includes(q);
+      return name.toLowerCase().includes(q);
+    }
+
+    function getItemListRows() {
+      return Array.from(document.querySelectorAll('#item-list-tbody tr:not(#empty-row)')).filter(function(row) {
+        var name = row.querySelector('td:first-child') ? row.querySelector('td:first-child').textContent.trim() : '';
+        return itemListMatches(name, itemListQuery);
+      });
+    }
+
+    function buildItemListPageNumbers(totalPages) {
+      var half = 2;
+      var start = Math.max(1, itemListPage - half);
+      var end = Math.min(totalPages, start + 4);
+      start = Math.max(1, end - 4);
+      var html = '';
+      for (var p = start; p <= end; p++) {
+        var active = p === itemListPage ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100';
+        html += '<button type="button" data-page="' + p + '" class="il-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 ' + active + ' transition-colors">' + p + '</button>';
+      }
+      if (end < totalPages) {
+        html += '<span class="px-1 text-xs text-slate-400">...</span>';
+        html += '<button type="button" data-page="' + totalPages + '" class="il-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors">' + totalPages + '</button>';
+      }
+      return html;
+    }
+
+    function renderItemList() {
+      var rows = getItemListRows();
+      var total = rows.length;
+      var totalPages = Math.max(1, Math.ceil(total / ITEM_LIST_PAGE_SIZE));
+      if (itemListPage > totalPages) itemListPage = totalPages;
+
+      var start = (itemListPage - 1) * ITEM_LIST_PAGE_SIZE;
+      var end = start + ITEM_LIST_PAGE_SIZE;
+
+      document.querySelectorAll('#item-list-tbody tr:not(#empty-row)').forEach(function(r) { r.style.display = 'none'; });
+      rows.forEach(function(r, i) { r.style.display = (i >= start && i < end) ? '' : 'none'; });
+
+      var bar = document.getElementById('item-list-pagination');
+      if (!bar) return;
+      if (totalPages <= 1) { bar.style.removeProperty('display'); bar.style.display = 'none'; return; }
+      bar.style.removeProperty('display');
+
+      var numbersEl = document.getElementById('item-list-page-numbers');
+      if (numbersEl) {
+        numbersEl.innerHTML = buildItemListPageNumbers(totalPages);
+        numbersEl.querySelectorAll('.il-page-btn').forEach(function(btn) {
+          btn.addEventListener('click', function() { itemListPage = parseInt(this.dataset.page); renderItemList(); });
+        });
+      }
+
+      var info = document.getElementById('item-list-page-info');
+      if (info) info.textContent = total + '건 / ' + totalPages + '페이지';
+
+      var prev = document.getElementById('item-list-prev');
+      var next = document.getElementById('item-list-next');
+      if (prev) prev.disabled = itemListPage <= 1;
+      if (next) next.disabled = itemListPage >= totalPages;
+    }
+
+    var ilSearch = document.getElementById('item-list-search');
+    if (ilSearch) {
+      ilSearch.addEventListener('input', function() {
+        itemListQuery = this.value.trim();
+        itemListPage = 1;
+        renderItemList();
+      });
+    }
+
+    var ilPrev = document.getElementById('item-list-prev');
+    var ilNext = document.getElementById('item-list-next');
+    if (ilPrev) ilPrev.addEventListener('click', function() { itemListPage--; renderItemList(); });
+    if (ilNext) ilNext.addEventListener('click', function() { itemListPage++; renderItemList(); });
+
+    renderItemList();
+    // ===== END 물품 목록 검색 + 페이징 =====
+
     document.querySelectorAll('form[action$="/item/restock"]').forEach(function(form) {
       form.addEventListener('submit', function(e) {
         e.preventDefault();
