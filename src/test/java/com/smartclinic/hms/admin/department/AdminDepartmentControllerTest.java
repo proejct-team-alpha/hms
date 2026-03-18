@@ -34,404 +34,401 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(
-        value = AdminDepartmentController.class,
-        properties = {
+@WebMvcTest(value = AdminDepartmentController.class, properties = {
                 "spring.mustache.servlet.expose-request-attributes=true",
                 "spring.mustache.servlet.allow-request-override=true"
-        }
-)
+})
 @Import(AdminDepartmentControllerTest.TestSecurityConfig.class)
 class AdminDepartmentControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @MockitoBean
-    private AdminDepartmentService adminDepartmentService;
+        @MockitoBean
+        private AdminDepartmentService adminDepartmentService;
 
-    @Test
-    @DisplayName("list renders with default paging")
-    void list_usesDefaultPagingAndRendersView() throws Exception {
-        // given
-        AdminDepartmentListResponse response = createListResponse();
-        given(adminDepartmentService.getDepartmentList(1, 10)).willReturn(response);
+        @Test
+        @DisplayName("list renders with default paging")
+        void list_usesDefaultPagingAndRendersView() throws Exception {
+                // given
+                AdminDepartmentListResponse response = createListResponse();
+                given(adminDepartmentService.getDepartmentList(1, 10)).willReturn(response);
 
-        // when
-        // then
-        mockMvc.perform(get("/admin/department/list")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(view().name("admin/department-list"))
-                .andExpect(request().attribute("model", response));
+                // when
+                // then
+                mockMvc.perform(get("/admin/department/list")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("admin/department-list"))
+                                .andExpect(request().attribute("model", response));
 
-        then(adminDepartmentService).should().getDepartmentList(1, 10);
-    }
-
-    @Test
-    @DisplayName("list passes request params to service")
-    void list_passesRequestParamsToService() throws Exception {
-        // given
-        AdminDepartmentListResponse response = createListResponse();
-        given(adminDepartmentService.getDepartmentList(2, 5)).willReturn(response);
-
-        // when
-        // then
-        mockMvc.perform(get("/admin/department/list")
-                        .param("page", "2")
-                        .param("size", "5")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(view().name("admin/department-list"))
-                .andExpect(request().attribute("model", response));
-
-        then(adminDepartmentService).should().getDepartmentList(2, 5);
-    }
-
-    @Test
-    @DisplayName("list renders pagination ui")
-    void list_rendersPaginationUi() throws Exception {
-        // given
-        Department department = Department.create("Dept", true);
-        ReflectionTestUtils.setField(department, "id", 12L);
-        AdminDepartmentDto item = new AdminDepartmentDto(department);
-        AdminDepartmentListResponse response = new AdminDepartmentListResponse(
-                List.of(item),
-                List.of(
-                        new AdminDepartmentPageLinkResponse(1, "/admin/department/list?page=1&size=5", false),
-                        new AdminDepartmentPageLinkResponse(2, "/admin/department/list?page=2&size=5", true),
-                        new AdminDepartmentPageLinkResponse(3, "/admin/department/list?page=3&size=5", false)
-                ),
-                12,
-                2,
-                5,
-                3,
-                true,
-                true,
-                true,
-                "/admin/department/list?page=1&size=5",
-                "/admin/department/list?page=3&size=5"
-        );
-        given(adminDepartmentService.getDepartmentList(2, 5)).willReturn(response);
-
-        // when
-        // then
-        mockMvc.perform(get("/admin/department/list")
-                        .param("page", "2")
-                        .param("size", "5")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Dept")))
-                .andExpect(content().string(containsString("/admin/department/detail?departmentId=12")))
-                .andExpect(content().string(containsString(">1</a>")))
-                .andExpect(content().string(containsString(">3</a>")));
-    }
-
-    @Test
-    @DisplayName("list renders empty state")
-    void list_rendersEmptyStateWhenNoDepartments() throws Exception {
-        // given
-        AdminDepartmentListResponse response = createListResponse();
-        given(adminDepartmentService.getDepartmentList(1, 10)).willReturn(response);
-
-        // when
-        // then
-        mockMvc.perform(get("/admin/department/list")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("0 / 0")));
-    }
-
-    @Test
-    @DisplayName("detail renders update and status actions")
-    void detail_rendersDepartmentDetailView() throws Exception {
-        // given
-        AdminDepartmentDetailResponse response = new AdminDepartmentDetailResponse(
-                3L,
-                "Dept",
-                true,
-                "ACTIVE",
-                "px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700",
-                false,
-                true,
-                "/admin/department/update",
-                "/admin/department/activate",
-                "/admin/department/deactivate"
-        );
-        given(adminDepartmentService.getDepartmentDetail(3L)).willReturn(response);
-
-        // when
-        // then
-        mockMvc.perform(get("/admin/department/detail")
-                        .param("departmentId", "3")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(view().name("admin/department-detail"))
-                .andExpect(request().attribute("model", response))
-                .andExpect(content().string(containsString("Dept")))
-                .andExpect(content().string(containsString("/admin/department/update")))
-                .andExpect(content().string(containsString("/admin/department/deactivate")));
-    }
-
-    @Test
-    @DisplayName("detail returns 404 when target is missing")
-    void detail_returns404WhenDepartmentMissing() throws Exception {
-        // given
-        given(adminDepartmentService.getDepartmentDetail(99L))
-                .willThrow(CustomException.notFound("not found"));
-
-        // when
-        // then
-        mockMvc.perform(get("/admin/department/detail")
-                        .param("departmentId", "99")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().isNotFound())
-                .andExpect(view().name("error/404"))
-                .andExpect(request().attribute("errorMessage", "not found"));
-    }
-
-    @Test
-    @DisplayName("update redirects to detail on success")
-    void update_redirectsToDetailWithSuccessMessage() throws Exception {
-        // given
-        given(adminDepartmentService.updateDepartmentName(5L, "Dept")).willReturn("updated");
-
-        // when
-        // then
-        mockMvc.perform(post("/admin/department/update")
-                        .param("departmentId", "5")
-                        .param("name", "Dept")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/department/detail?departmentId=5"))
-                .andExpect(flash().attribute("successMessage", "updated"));
-
-        then(adminDepartmentService).should().updateDepartmentName(5L, "Dept");
-    }
-
-    @Test
-    @DisplayName("update redirects back to detail on validation failure")
-    void update_redirectsBackToDetailWhenValidationFails() throws Exception {
-        // given
-        given(adminDepartmentService.updateDepartmentName(5L, "   "))
-                .willThrow(CustomException.badRequest("VALIDATION_ERROR", "invalid name"));
-
-        // when
-        // then
-        mockMvc.perform(post("/admin/department/update")
-                        .param("departmentId", "5")
-                        .param("name", "   ")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/department/detail?departmentId=5"))
-                .andExpect(flash().attribute("errorMessage", "invalid name"));
-    }
-
-    @Test
-    @DisplayName("update redirects to list when target is missing")
-    void update_redirectsToListWhenDepartmentMissing() throws Exception {
-        // given
-        given(adminDepartmentService.updateDepartmentName(99L, "Dept"))
-                .willThrow(CustomException.notFound("not found"));
-
-        // when
-        // then
-        mockMvc.perform(post("/admin/department/update")
-                        .param("departmentId", "99")
-                        .param("name", "Dept")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/department/list"))
-                .andExpect(flash().attribute("errorMessage", "not found"));
-    }
-
-    @Test
-    @DisplayName("deactivate redirects to detail on success")
-    void deactivate_redirectsToDetailWithSuccessMessage() throws Exception {
-        // given
-        given(adminDepartmentService.deactivateDepartment(5L)).willReturn("deactivated");
-
-        // when
-        // then
-        mockMvc.perform(post("/admin/department/deactivate")
-                        .param("departmentId", "5")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/department/detail?departmentId=5"))
-                .andExpect(flash().attribute("successMessage", "deactivated"));
-
-        then(adminDepartmentService).should().deactivateDepartment(5L);
-    }
-
-    @Test
-    @DisplayName("deactivate redirects back to detail on duplicate request")
-    void deactivate_redirectsBackToDetailWhenAlreadyInactive() throws Exception {
-        // given
-        given(adminDepartmentService.deactivateDepartment(5L))
-                .willThrow(CustomException.invalidStatusTransition("already inactive"));
-
-        // when
-        // then
-        mockMvc.perform(post("/admin/department/deactivate")
-                        .param("departmentId", "5")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/department/detail?departmentId=5"))
-                .andExpect(flash().attribute("errorMessage", "already inactive"));
-    }
-
-    @Test
-    @DisplayName("deactivate redirects to list when target is missing")
-    void deactivate_redirectsToListWhenDepartmentMissing() throws Exception {
-        // given
-        given(adminDepartmentService.deactivateDepartment(99L))
-                .willThrow(CustomException.notFound("not found"));
-
-        // when
-        // then
-        mockMvc.perform(post("/admin/department/deactivate")
-                        .param("departmentId", "99")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/department/list"))
-                .andExpect(flash().attribute("errorMessage", "not found"));
-    }
-
-    @Test
-    @DisplayName("activate redirects to detail on success")
-    void activate_redirectsToDetailWithSuccessMessage() throws Exception {
-        // given
-        given(adminDepartmentService.activateDepartment(7L)).willReturn("activated");
-
-        // when
-        // then
-        mockMvc.perform(post("/admin/department/activate")
-                        .param("departmentId", "7")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/department/detail?departmentId=7"))
-                .andExpect(flash().attribute("successMessage", "activated"));
-
-        then(adminDepartmentService).should().activateDepartment(7L);
-    }
-
-    @Test
-    @DisplayName("activate redirects back to detail on duplicate request")
-    void activate_redirectsBackToDetailWhenAlreadyActive() throws Exception {
-        // given
-        given(adminDepartmentService.activateDepartment(7L))
-                .willThrow(CustomException.invalidStatusTransition("already active"));
-
-        // when
-        // then
-        mockMvc.perform(post("/admin/department/activate")
-                        .param("departmentId", "7")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/department/detail?departmentId=7"))
-                .andExpect(flash().attribute("errorMessage", "already active"));
-    }
-
-    @Test
-    @DisplayName("create passes checked active flag and redirects")
-    void create_passesCheckedActiveAndRedirectsToList() throws Exception {
-        // given
-
-        // when
-        // then
-        mockMvc.perform(post("/admin/department/create")
-                        .param("name", "Dept")
-                        .param("active", "true")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/department/list"));
-
-        then(adminDepartmentService).should().createDepartment("Dept", true);
-    }
-
-    @Test
-    @DisplayName("create defaults active to false when unchecked")
-    void create_defaultsActiveToFalseWhenUnchecked() throws Exception {
-        // given
-
-        // when
-        // then
-        mockMvc.perform(post("/admin/department/create")
-                        .param("name", "Surgery")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/department/list"));
-
-        then(adminDepartmentService).should().createDepartment("Surgery", false);
-    }
-
-    @Test
-    @DisplayName("form page is not exposed")
-    void formPage_isNotExposed() throws Exception {
-        // given
-
-        // when
-        // then
-        mockMvc.perform(get("/admin/department/form")
-                        .with(user("admin").roles("ADMIN")))
-                .andExpect(status().isNotFound());
-    }
-
-    private AdminDepartmentListResponse createListResponse() {
-        return new AdminDepartmentListResponse(
-                List.of(),
-                List.of(new AdminDepartmentPageLinkResponse(1, "/admin/department/list?page=1&size=10", true)),
-                0,
-                1,
-                10,
-                0,
-                false,
-                false,
-                false,
-                "",
-                ""
-        );
-    }
-
-    @TestConfiguration
-    @EnableWebSecurity
-    static class TestSecurityConfig {
-
-        @Bean
-        SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            return http
-                    .authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/login").permitAll()
-                            .requestMatchers("/admin/**").hasRole("ADMIN")
-                            .anyRequest().authenticated())
-                    .formLogin(form -> form
-                            .loginPage("/login")
-                            .permitAll())
-                    .csrf(csrf -> csrf.disable())
-                    .build();
+                then(adminDepartmentService).should().getDepartmentList(1, 10);
         }
 
-        @Bean
-        UserDetailsService userDetailsService() {
-            return new InMemoryUserDetailsManager(
-                    User.withUsername("admin").password("{noop}password").roles("ADMIN").build(),
-                    User.withUsername("staff").password("{noop}password").roles("STAFF").build());
+        @Test
+        @DisplayName("list passes request params to service")
+        void list_passesRequestParamsToService() throws Exception {
+                // given
+                AdminDepartmentListResponse response = createListResponse();
+                given(adminDepartmentService.getDepartmentList(2, 5)).willReturn(response);
+
+                // when
+                // then
+                mockMvc.perform(get("/admin/department/list")
+                                .param("page", "2")
+                                .param("size", "5")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("admin/department-list"))
+                                .andExpect(request().attribute("model", response));
+
+                then(adminDepartmentService).should().getDepartmentList(2, 5);
         }
-    }
+
+        @Test
+        @DisplayName("list renders pagination ui")
+        void list_rendersPaginationUi() throws Exception {
+                // given
+                Department department = Department.create("Dept", true);
+                ReflectionTestUtils.setField(department, "id", 12L);
+                AdminDepartmentDto item = new AdminDepartmentDto(department);
+                AdminDepartmentListResponse response = new AdminDepartmentListResponse(
+                                List.of(item),
+                                List.of(
+                                                new AdminDepartmentPageLinkResponse(1,
+                                                                "/admin/department/list?page=1&size=5", false),
+                                                new AdminDepartmentPageLinkResponse(2,
+                                                                "/admin/department/list?page=2&size=5", true),
+                                                new AdminDepartmentPageLinkResponse(3,
+                                                                "/admin/department/list?page=3&size=5", false)),
+                                12,
+                                2,
+                                5,
+                                3,
+                                true,
+                                true,
+                                true,
+                                "/admin/department/list?page=1&size=5",
+                                "/admin/department/list?page=3&size=5");
+                given(adminDepartmentService.getDepartmentList(2, 5)).willReturn(response);
+
+                // when
+                // then
+                mockMvc.perform(get("/admin/department/list")
+                                .param("page", "2")
+                                .param("size", "5")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                                .andExpect(status().isOk())
+                                .andExpect(content().string(containsString("Dept")))
+                                .andExpect(content().string(containsString("/admin/department/detail?departmentId=12")))
+                                .andExpect(content().string(containsString(">1</a>")))
+                                .andExpect(content().string(containsString(">3</a>")));
+        }
+
+        @Test
+        @DisplayName("list renders empty state")
+        void list_rendersEmptyStateWhenNoDepartments() throws Exception {
+                // given
+                AdminDepartmentListResponse response = createListResponse();
+                given(adminDepartmentService.getDepartmentList(1, 10)).willReturn(response);
+
+                // when
+                // then
+                mockMvc.perform(get("/admin/department/list")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                                .andExpect(status().isOk())
+                                .andExpect(content().string(containsString("0 / 0")));
+        }
+
+        @Test
+        @DisplayName("detail renders update and status actions")
+        void detail_rendersDepartmentDetailView() throws Exception {
+                // given
+                AdminDepartmentDetailResponse response = new AdminDepartmentDetailResponse(
+                                3L,
+                                "Dept",
+                                true,
+                                "ACTIVE",
+                                "px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700",
+                                false,
+                                true,
+                                "/admin/department/update",
+                                "/admin/department/activate",
+                                "/admin/department/deactivate");
+                given(adminDepartmentService.getDepartmentDetail(3L)).willReturn(response);
+
+                // when
+                // then
+                mockMvc.perform(get("/admin/department/detail")
+                                .param("departmentId", "3")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("admin/department-detail"))
+                                .andExpect(request().attribute("model", response))
+                                .andExpect(content().string(containsString("Dept")))
+                                .andExpect(content().string(containsString("/admin/department/update")))
+                                .andExpect(content().string(containsString("/admin/department/deactivate")));
+        }
+
+        @Test
+        @DisplayName("detail returns 404 when target is missing")
+        void detail_returns404WhenDepartmentMissing() throws Exception {
+                // given
+                given(adminDepartmentService.getDepartmentDetail(99L))
+                                .willThrow(CustomException.notFound("not found"));
+
+                // when
+                // then
+                mockMvc.perform(get("/admin/department/detail")
+                                .param("departmentId", "99")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                                .andExpect(status().isNotFound())
+                                .andExpect(view().name("error/404"))
+                                .andExpect(request().attribute("errorMessage", "not found"));
+        }
+
+        @Test
+        @DisplayName("update redirects to detail on success")
+        void update_redirectsToDetailWithSuccessMessage() throws Exception {
+                // given
+                given(adminDepartmentService.updateDepartmentName(5L, "Dept")).willReturn("updated");
+
+                // when
+                // then
+                mockMvc.perform(post("/admin/department/update")
+                                .param("departmentId", "5")
+                                .param("name", "Dept")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/department/detail?departmentId=5"))
+                                .andExpect(flash().attribute("successMessage", "updated"));
+
+                then(adminDepartmentService).should().updateDepartmentName(5L, "Dept");
+        }
+
+        @Test
+        @DisplayName("update redirects back to detail on validation failure")
+        void update_redirectsBackToDetailWhenValidationFails() throws Exception {
+                // given
+                given(adminDepartmentService.updateDepartmentName(5L, "   "))
+                                .willThrow(CustomException.badRequest("VALIDATION_ERROR", "invalid name"));
+
+                // when
+                // then
+                mockMvc.perform(post("/admin/department/update")
+                                .param("departmentId", "5")
+                                .param("name", "   ")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/department/detail?departmentId=5"))
+                                .andExpect(flash().attribute("errorMessage", "invalid name"));
+        }
+
+        @Test
+        @DisplayName("update redirects to list when target is missing")
+        void update_redirectsToListWhenDepartmentMissing() throws Exception {
+                // given
+                given(adminDepartmentService.updateDepartmentName(99L, "Dept"))
+                                .willThrow(CustomException.notFound("not found"));
+
+                // when
+                // then
+                mockMvc.perform(post("/admin/department/update")
+                                .param("departmentId", "99")
+                                .param("name", "Dept")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/department/list"))
+                                .andExpect(flash().attribute("errorMessage", "not found"));
+        }
+
+        @Test
+        @DisplayName("deactivate redirects to detail on success")
+        void deactivate_redirectsToDetailWithSuccessMessage() throws Exception {
+                // given
+                given(adminDepartmentService.deactivateDepartment(5L)).willReturn("deactivated");
+
+                // when
+                // then
+                mockMvc.perform(post("/admin/department/deactivate")
+                                .param("departmentId", "5")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/department/detail?departmentId=5"))
+                                .andExpect(flash().attribute("successMessage", "deactivated"));
+
+                then(adminDepartmentService).should().deactivateDepartment(5L);
+        }
+
+        @Test
+        @DisplayName("deactivate redirects back to detail on duplicate request")
+        void deactivate_redirectsBackToDetailWhenAlreadyInactive() throws Exception {
+                // given
+                given(adminDepartmentService.deactivateDepartment(5L))
+                                .willThrow(CustomException.invalidStatusTransition("already inactive"));
+
+                // when
+                // then
+                mockMvc.perform(post("/admin/department/deactivate")
+                                .param("departmentId", "5")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/department/detail?departmentId=5"))
+                                .andExpect(flash().attribute("errorMessage", "already inactive"));
+        }
+
+        @Test
+        @DisplayName("deactivate redirects to list when target is missing")
+        void deactivate_redirectsToListWhenDepartmentMissing() throws Exception {
+                // given
+                given(adminDepartmentService.deactivateDepartment(99L))
+                                .willThrow(CustomException.notFound("not found"));
+
+                // when
+                // then
+                mockMvc.perform(post("/admin/department/deactivate")
+                                .param("departmentId", "99")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/department/list"))
+                                .andExpect(flash().attribute("errorMessage", "not found"));
+        }
+
+        @Test
+        @DisplayName("activate redirects to detail on success")
+        void activate_redirectsToDetailWithSuccessMessage() throws Exception {
+                // given
+                given(adminDepartmentService.activateDepartment(7L)).willReturn("activated");
+
+                // when
+                // then
+                mockMvc.perform(post("/admin/department/activate")
+                                .param("departmentId", "7")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/department/detail?departmentId=7"))
+                                .andExpect(flash().attribute("successMessage", "activated"));
+
+                then(adminDepartmentService).should().activateDepartment(7L);
+        }
+
+        @Test
+        @DisplayName("activate redirects back to detail on duplicate request")
+        void activate_redirectsBackToDetailWhenAlreadyActive() throws Exception {
+                // given
+                given(adminDepartmentService.activateDepartment(7L))
+                                .willThrow(CustomException.invalidStatusTransition("already active"));
+
+                // when
+                // then
+                mockMvc.perform(post("/admin/department/activate")
+                                .param("departmentId", "7")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/department/detail?departmentId=7"))
+                                .andExpect(flash().attribute("errorMessage", "already active"));
+        }
+
+        @Test
+        @DisplayName("create passes checked active flag and redirects")
+        void create_passesCheckedActiveAndRedirectsToList() throws Exception {
+                // given
+
+                // when
+                // then
+                mockMvc.perform(post("/admin/department/create")
+                                .param("name", "Dept")
+                                .param("active", "true")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/department/list"));
+
+                then(adminDepartmentService).should().createDepartment("Dept", true);
+        }
+
+        @Test
+        @DisplayName("create defaults active to false when unchecked")
+        void create_defaultsActiveToFalseWhenUnchecked() throws Exception {
+                // given
+
+                // when
+                // then
+                mockMvc.perform(post("/admin/department/create")
+                                .param("name", "Surgery")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/department/list"));
+
+                then(adminDepartmentService).should().createDepartment("Surgery", false);
+        }
+
+        @Test
+        @DisplayName("form page is not exposed")
+        void formPage_isNotExposed() throws Exception {
+                // given
+
+                // when
+                // then
+                mockMvc.perform(get("/admin/department/form")
+                                .with(user("admin").roles("ADMIN")))
+                                .andExpect(status().isNotFound());
+        }
+
+        private AdminDepartmentListResponse createListResponse() {
+                return new AdminDepartmentListResponse(
+                                List.of(),
+                                List.of(new AdminDepartmentPageLinkResponse(1, "/admin/department/list?page=1&size=10",
+                                                true)),
+                                0,
+                                1,
+                                10,
+                                0,
+                                false,
+                                false,
+                                false,
+                                "",
+                                "");
+        }
+
+        @TestConfiguration
+        @EnableWebSecurity
+        static class TestSecurityConfig {
+
+                @Bean
+                SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                        return http
+                                        .authorizeHttpRequests(auth -> auth
+                                                        .requestMatchers("/login").permitAll()
+                                                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                                                        .anyRequest().authenticated())
+                                        .formLogin(form -> form
+                                                        .loginPage("/login")
+                                                        .permitAll())
+                                        .csrf(csrf -> csrf.disable())
+                                        .build();
+                }
+
+                @Bean
+                UserDetailsService userDetailsService() {
+                        return new InMemoryUserDetailsManager(
+                                        User.withUsername("admin").password("{noop}password").roles("ADMIN").build(),
+                                        User.withUsername("staff").password("{noop}password").roles("STAFF").build());
+                }
+        }
 }

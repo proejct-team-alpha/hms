@@ -65,8 +65,7 @@ class AdminDepartmentServiceTest {
         PageImpl<Department> pageResult = new PageImpl<>(
                 List.of(internalMedicine, surgery),
                 PageRequest.of(1, 5),
-                12
-        );
+                12);
         given(adminDepartmentRepository.findAllByOrderByIdDesc(any(Pageable.class)))
                 .willReturn(pageResult);
 
@@ -123,8 +122,7 @@ class AdminDepartmentServiceTest {
         PageImpl<Department> pageResult = new PageImpl<>(
                 List.of(internalMedicine),
                 PageRequest.of(2, 5),
-                16
-        );
+                16);
         given(adminDepartmentRepository.findAllByOrderByIdDesc(any(Pageable.class)))
                 .willReturn(pageResult);
 
@@ -146,8 +144,7 @@ class AdminDepartmentServiceTest {
                         "/admin/department/list?page=1&size=5",
                         "/admin/department/list?page=2&size=5",
                         "/admin/department/list?page=3&size=5",
-                        "/admin/department/list?page=4&size=5"
-                );
+                        "/admin/department/list?page=4&size=5");
         assertThat(result.pageLinks())
                 .extracting(AdminDepartmentPageLinkResponse::active)
                 .containsExactly(false, false, true, false);

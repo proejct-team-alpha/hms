@@ -1,4 +1,4 @@
-# 예약 불가 시간 슬롯 비활성화 설계
+# W3-7 설계 - 예약 불가 시간 슬롯 비활성화
 
 **날짜:** 2026-03-17
 **담당:** 강태오 (개발자 A)
@@ -48,17 +48,13 @@ List<String> findBookedTimeSlotsExcluding(
     @Param("excludeId") Long excludeId);
 ```
 
-- CANCELLED 제외: `existsByDoctor_IdAndReservationDateAndTimeSlotAndStatusNot` 기존 규칙과 동일
-
 #### 2. ReservationService — `getBookedTimeSlots` 오버로드 2개 추가
 
 ```java
-// 직접 예약
 public List<String> getBookedTimeSlots(Long doctorId, LocalDate date) {
     return reservationRepository.findBookedTimeSlots(doctorId, date, ReservationStatus.CANCELLED);
 }
 
-// 예약 변경 (현재 예약 제외)
 public List<String> getBookedTimeSlots(Long doctorId, LocalDate date, Long excludeId) {
     return reservationRepository.findBookedTimeSlotsExcluding(
         doctorId, date, ReservationStatus.CANCELLED, excludeId);
@@ -76,20 +72,11 @@ GET /api/reservation/booked-slots
 → 200 OK: ["09:00", "10:30", ...]
 ```
 
-컨트롤러에서 `excludeId` null 여부에 따라 적절한 서비스 메서드 호출.
-
-- 잘못된 `date` 형식: Spring이 400 반환 (별도 처리 불필요)
-- 존재하지 않는 `doctorId`: 빈 리스트 반환 (정상 동작)
-
 ---
 
 ### 프론트엔드
 
 #### 페이지 로드 시 초기화 — `data-original-text` 저장
-
-페이지 로드 시 `<select id="time">` 의 모든 `<option>` 에 현재 텍스트를
-`data-original-text` 속성으로 저장해 둔다. 이후 슬롯 업데이트 시 이 값을
-기준으로 텍스트를 복원한다.
 
 ```javascript
 document.querySelectorAll('#time option').forEach(opt => {
@@ -99,63 +86,40 @@ document.querySelectorAll('#time option').forEach(opt => {
 
 #### `resetSlots()` 헬퍼 함수
 
-다음 두 경우에 호출:
-1. **가드 조건 미충족 시** (dateStr 비어 있거나 doctorId 비어 있음)
-2. **fetch 실패 시**
+가드 조건 미충족 시 또는 fetch 실패 시 호출:
 
-수행 동작:
 ```javascript
 function resetSlots() {
   document.querySelectorAll('#time option').forEach(opt => {
     opt.disabled = false;
     opt.classList.remove('text-slate-400');
-    opt.textContent = opt.dataset.originalText; // 원래 텍스트 복원
+    opt.textContent = opt.dataset.originalText;
   });
 }
 ```
 
-#### Flatpickr `onChange(selectedDates, dateStr)` 공통 로직
+#### Flatpickr `onChange` 공통 로직
 
 ```
-1. doctorId = document.getElementById('doctor').value
-2. 가드: dateStr 비어 있음 OR doctorId 비어 있음 → resetSlots() 후 return
-3. fetch URL 구성 (direct: excludeId 없음 / modify: excludeId 포함)
-4. await fetch → response.ok 확인
-5. booked = await res.json()  // string[]
-6. #time 옵션 전체 순회:
-   - booked 포함: disabled=true, classList.add('text-slate-400'),
-                  textContent = originalText + " (예약불가)"
-   - booked 미포함: disabled=false, classList.remove('text-slate-400'),
-                    textContent = originalText  (data-original-text 복원)
-7. catch → console.error + resetSlots()
+1. doctorId, dateStr 유효성 확인 → 미충족 시 resetSlots() 후 return
+2. fetch /api/reservation/booked-slots?doctorId=&date=[&excludeId=]
+3. booked 슬롯 목록 수신
+4. #time 옵션 순회: 포함 시 disabled + "(예약불가)", 미포함 시 originalText 복원
+5. catch → console.error + resetSlots()
 ```
 
-#### direct-reservation.mustache
+#### reservation-modify.mustache 추가사항
 
-- `excludeId` 파라미터 없음 (신규 예약)
-- 추가 변경: Flatpickr `onChange` 콜백에 위 공통 로직 삽입
-
-#### reservation-modify.mustache
-
-- 페이지 로드 시 의사/날짜 모두 미선택 상태(pre-fill 없음) → 초기 로드 시 API 호출 불필요
-- Mustache 템플릿에서 예약 ID를 JS 변수로 주입: `const excludeId = {{id}};`
-- `excludeId`를 fetch URL에 포함: `&excludeId=${excludeId}`
-- Flatpickr에 `minDate: 'today'` 추가 (기존 미설정 상태, 과거 날짜 선택 방지)
+- `const excludeId = {{id}};` — Mustache로 예약 ID 주입
+- Flatpickr에 `minDate: 'today'` 추가 (과거 날짜 선택 방지)
 
 ---
 
 ## 데이터 흐름
 
 ```
-[의사 변경]
-  → datePicker.clear() 발생
-  → onChange([], "") → 가드(dateStr 비어 있음) → resetSlots()
-
-[날짜 선택 (Flatpickr onChange)]
-  → doctorId, dateStr 유효성 확인
-  → fetch /api/reservation/booked-slots?doctorId=&date=[&excludeId=]
-  → booked 슬롯 목록 수신
-  → #time 옵션 비활성화/복원 처리
+[의사 변경] → datePicker.clear() → onChange([], "") → 가드 → resetSlots()
+[날짜 선택] → fetch booked-slots → 슬롯 비활성화/복원 처리
 ```
 
 ---

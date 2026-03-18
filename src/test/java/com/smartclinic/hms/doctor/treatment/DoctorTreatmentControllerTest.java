@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import com.smartclinic.hms.item.ItemManagerService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -35,6 +36,9 @@ class DoctorTreatmentControllerTest {
 
     @MockitoBean
     private DoctorTreatmentService treatmentService;
+
+    @MockitoBean
+    private ItemManagerService itemManagerService;
 
     @Test
     @DisplayName("ROLE_DOCTOR — 폴링 엔드포인트 호출 시 200과 JSON 목록을 반환한다")

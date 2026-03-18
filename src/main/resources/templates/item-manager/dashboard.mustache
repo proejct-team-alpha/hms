@@ -61,7 +61,8 @@
               </div>
               <div>
                 <div class="text-sm font-medium text-slate-500">전체 물품 현황</div>
-                <div class="text-2xl font-bold text-emerald-600">정상</div>
+                {{#dashboard.allNormal}}<div class="text-2xl font-bold text-emerald-600">정상</div>{{/dashboard.allNormal}}
+                {{^dashboard.allNormal}}<div class="text-2xl font-bold text-red-600">주의</div>{{/dashboard.allNormal}}
               </div>
             </div>
           </div>
@@ -161,21 +162,21 @@
       form.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        var input = form.querySelector('input[name="amount"]');
-        var value = input.value.trim();
-        var amount = Number(value);
+        const input = form.querySelector('input[name="amount"]');
+        const value = input.value.trim();
+        const amount = Number(value);
 
         if (value === '' || isNaN(amount) || !Number.isInteger(amount) || amount < 0) {
           alert('올바른 수량을 입력해주세요. (0 이상의 정수)');
           return;
         }
 
-        var id = form.querySelector('input[name="id"]').value;
-        var csrfInput = form.querySelector('input[type="hidden"]:not([name="id"]):not([name="redirectTo"])');
-        var card = form.closest('[data-min-quantity]');
-        var minQuantity = parseInt(card.dataset.minQuantity, 10);
+        const id = form.querySelector('input[name="id"]').value;
+        const csrfInput = form.querySelector('input[type="hidden"]:not([name="id"]):not([name="redirectTo"])');
+        const card = form.closest('[data-min-quantity]');
+        const minQuantity = parseInt(card.dataset.minQuantity, 10);
 
-        var params = new URLSearchParams();
+        const params = new URLSearchParams();
         params.append('id', id);
         params.append('amount', value);
         params.append(csrfInput.name, csrfInput.value);
@@ -185,7 +186,10 @@
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: params.toString()
         })
-        .then(function(res) { return res.json(); })
+        .then(function(res) {
+          if (!res.ok) { return res.json().then(function(d) { alert(d.error || '서버 오류가 발생했습니다.'); throw new Error('server error'); }); }
+          return res.json();
+        })
         .then(function(data) {
           if (data.quantity !== undefined) {
             if (data.quantity >= minQuantity) {
@@ -195,7 +199,8 @@
               input.value = '';
             }
           }
-        });
+        })
+        .catch(function(err) { if (err.message !== 'server error') alert('오류가 발생했습니다. 다시 시도해주세요.'); });
       });
     });
   </script>

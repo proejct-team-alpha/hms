@@ -32,6 +32,9 @@ public class ItemUsageLog {
     @Column(name = "used_at", nullable = false)
     private LocalDateTime usedAt;
 
+    @Column(name = "used_by", length = 100)
+    private String usedBy;
+
     public static ItemUsageLog of(Long reservationId, Long itemId, String itemName, int amount) {
         ItemUsageLog log = new ItemUsageLog();
         log.reservationId = reservationId;
@@ -39,6 +42,12 @@ public class ItemUsageLog {
         log.itemName = itemName;
         log.amount = amount;
         log.usedAt = LocalDateTime.now();
+        return log;
+    }
+
+    public static ItemUsageLog of(Long reservationId, Long itemId, String itemName, int amount, String usedBy) {
+        ItemUsageLog log = of(reservationId, itemId, itemName, amount);
+        log.usedBy = usedBy;
         return log;
     }
 }
