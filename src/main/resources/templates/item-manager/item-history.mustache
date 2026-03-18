@@ -106,11 +106,12 @@
         {{#hasHistories}}
         <div class="flex items-center justify-between" id="pagination-bar">
           <span class="text-xs text-slate-500" id="page-info"></span>
-          <div class="flex gap-2">
+          <div class="flex items-center gap-2">
             <button id="btn-prev" type="button"
                     class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
               이전
             </button>
+            <div id="page-numbers" class="flex items-center gap-1"></div>
             <button id="btn-next" type="button"
                     class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
               다음
@@ -126,7 +127,7 @@
   </div>
 
   <script>
-    var PAGE_SIZE = 15;
+    var PAGE_SIZE = 10;
     var currentPage = 1;
     var currentType = '';
     var currentQuery = '';
@@ -139,10 +140,32 @@
       });
     }
 
+    function buildPageNumbers(totalPages) {
+      var half = 2;
+      var start = Math.max(1, currentPage - half);
+      var end = Math.min(totalPages, start + 4);
+      start = Math.max(1, end - 4);
+      var html = '';
+      if (start > 1) {
+        html += '<button type="button" data-page="1" class="hist-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors">1</button>';
+        if (start > 2) html += '<span class="px-1 text-xs text-slate-400">...</span>';
+      }
+      for (var p = start; p <= end; p++) {
+        var active = p === currentPage ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100';
+        html += '<button type="button" data-page="' + p + '" class="hist-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 ' + active + ' transition-colors">' + p + '</button>';
+      }
+      if (end < totalPages) {
+        if (end < totalPages - 1) html += '<span class="px-1 text-xs text-slate-400">...</span>';
+        html += '<button type="button" data-page="' + totalPages + '" class="hist-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors">' + totalPages + '</button>';
+      }
+      return html;
+    }
+
     function render() {
       var rows = getFilteredRows();
       var total = rows.length;
       var totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      if (currentPage < 1) currentPage = 1;
       if (currentPage > totalPages) currentPage = totalPages;
 
       var start = (currentPage - 1) * PAGE_SIZE;
@@ -155,8 +178,21 @@
         row.style.display = (i >= start && i < end) ? '' : 'none';
       });
 
+      var bar = document.getElementById('pagination-bar');
       var info = document.getElementById('page-info');
-      if (info) info.textContent = total + '건 중 ' + (Math.min(start + 1, total)) + '-' + Math.min(end, total) + ' / ' + totalPages + '페이지';
+      var numbersEl = document.getElementById('page-numbers');
+
+      if (totalPages <= 1) { if (bar) bar.style.display = 'none'; return; }
+      if (bar) bar.style.display = '';
+
+      if (info) info.textContent = total + '건 / ' + totalPages + '페이지';
+
+      if (numbersEl) {
+        numbersEl.innerHTML = buildPageNumbers(totalPages);
+        numbersEl.querySelectorAll('.hist-page-btn').forEach(function(btn) {
+          btn.addEventListener('click', function() { currentPage = parseInt(this.dataset.page); render(); });
+        });
+      }
 
       var btnPrev = document.getElementById('btn-prev');
       var btnNext = document.getElementById('btn-next');
@@ -187,7 +223,7 @@
 
     var btnPrev = document.getElementById('btn-prev');
     var btnNext = document.getElementById('btn-next');
-    if (btnPrev) btnPrev.addEventListener('click', function() { currentPage--; render(); });
+    if (btnPrev) btnPrev.addEventListener('click', function() { currentPage--; if (currentPage < 1) currentPage = 1; render(); });
     if (btnNext) btnNext.addEventListener('click', function() { currentPage++; render(); });
 
     render();
