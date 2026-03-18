@@ -1,0 +1,4 @@
+interface:
+  display_name: "Workflow Task 분해"
+  short_description: "큰 workflow를 작업용 task 체크리스트로 분해"
+  default_prompt: "$workflow-to-task를 사용해서 workflow 문서를 task 체크리스트 파일로 분해해줘."
