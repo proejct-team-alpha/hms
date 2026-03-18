@@ -70,35 +70,18 @@
             </table>
           </div>
 
-          <div class="p-4 border-t border-slate-200 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-slate-50">
-            <div class="text-sm text-slate-500">
-              {{#model.hasPages}}
-                현재 <span class="font-semibold text-slate-700">{{model.currentPage}}</span> / <span class="font-semibold text-slate-700">{{model.totalPages}}</span>페이지
-              {{/model.hasPages}}
-              {{^model.hasPages}}
-                현재 0 / 0페이지
-              {{/model.hasPages}}
-            </div>
+          <div class="p-4 border-t border-slate-200 flex items-center justify-center gap-2 bg-slate-50">
+            {{#model.hasPrevious}}
+              <a href="{{model.previousUrl}}" class="px-3 py-1.5 text-sm rounded-md border border-slate-300 text-slate-600 hover:bg-white">이전</a>
+            {{/model.hasPrevious}}
 
-            <div class="flex items-center justify-center gap-2">
-              {{#model.hasPrevious}}
-                <a href="{{model.previousUrl}}" class="px-3 py-1.5 text-sm rounded-md border border-slate-300 text-slate-600 hover:bg-white">이전</a>
-              {{/model.hasPrevious}}
-              {{^model.hasPrevious}}
-                <span class="px-3 py-1.5 text-sm rounded-md border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed">이전</span>
-              {{/model.hasPrevious}}
+            {{#model.pageLinks}}
+              <a href="{{url}}" class="px-3 py-1.5 text-sm rounded-md border transition-colors {{#active}}bg-slate-800 border-slate-800 text-white{{/active}}{{^active}}border-slate-300 text-slate-600 hover:bg-white{{/active}}">{{page}}</a>
+            {{/model.pageLinks}}
 
-              {{#model.pageLinks}}
-                <a href="{{url}}" class="px-3 py-1.5 text-sm rounded-md border transition-colors {{#active}}bg-slate-800 border-slate-800 text-white{{/active}}{{^active}}border-slate-300 text-slate-600 hover:bg-white{{/active}}">{{page}}</a>
-              {{/model.pageLinks}}
-
-              {{#model.hasNext}}
-                <a href="{{model.nextUrl}}" class="px-3 py-1.5 text-sm rounded-md border border-slate-300 text-slate-600 hover:bg-white">다음</a>
-              {{/model.hasNext}}
-              {{^model.hasNext}}
-                <span class="px-3 py-1.5 text-sm rounded-md border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed">다음</span>
-              {{/model.hasNext}}
-            </div>
+            {{#model.hasNext}}
+              <a href="{{model.nextUrl}}" class="px-3 py-1.5 text-sm rounded-md border border-slate-300 text-slate-600 hover:bg-white">다음</a>
+            {{/model.hasNext}}
           </div>
         </div>
       </div>
