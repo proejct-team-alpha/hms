@@ -8,6 +8,8 @@ import java.util.Optional;
 
 public interface AdminDepartmentRepository extends JpaRepository<Department, Long> {
 
+    List<Department> findAllByOrderByNameAsc();
+
     List<Department> findByActiveTrueOrderByNameAsc();
 
     Optional<Department> findByIdAndActiveTrue(Long id);
