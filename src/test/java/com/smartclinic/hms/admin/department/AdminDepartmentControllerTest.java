@@ -359,7 +359,7 @@ class AdminDepartmentControllerTest {
 
         // when
         // then
-        mockMvc.perform(post("/admin/department/form")
+        mockMvc.perform(post("/admin/department/create")
                         .param("name", "내과")
                         .param("active", "true")
                         .with(user("admin").roles("ADMIN"))
@@ -377,7 +377,7 @@ class AdminDepartmentControllerTest {
 
         // when
         // then
-        mockMvc.perform(post("/admin/department/form")
+        mockMvc.perform(post("/admin/department/create")
                         .param("name", "외과")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
@@ -385,6 +385,18 @@ class AdminDepartmentControllerTest {
                 .andExpect(redirectedUrl("/admin/department/list"));
 
         then(adminDepartmentService).should().createDepartment("외과", false);
+    }
+
+    @Test
+    @DisplayName("진료과 등록 전용 GET 페이지는 노출하지 않는다")
+    void formPage_isNotExposed() throws Exception {
+        // given
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/department/form")
+                        .with(user("admin").roles("ADMIN")))
+                .andExpect(status().isNotFound());
     }
 
     private AdminDepartmentListResponse createListResponse() {

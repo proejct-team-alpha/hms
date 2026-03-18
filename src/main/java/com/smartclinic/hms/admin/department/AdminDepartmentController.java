@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,12 +30,6 @@ public class AdminDepartmentController {
         return "admin/department-list";
     }
 
-    @GetMapping("/form")
-    public String form(Model model) {
-        model.addAttribute("pageTitle", "진료과 등록");
-        return "admin/department-form";
-    }
-
     @GetMapping("/detail")
     public String detail(
             @RequestParam("departmentId") Long departmentId,
@@ -55,7 +48,7 @@ public class AdminDepartmentController {
         }
     }
 
-    @PostMapping("/form")
+    @PostMapping("/create")
     public RedirectView create(
             @RequestParam String name,
             @RequestParam(defaultValue = "false") boolean active) {
