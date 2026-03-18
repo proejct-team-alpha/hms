@@ -29,7 +29,6 @@
             <i data-feather="list" class="w-5 h-5 text-indigo-600"></i>
             오늘 출고 내역
           </h3>
-          {{#todayLogs}}
           <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
             <table class="w-full text-xs">
               <thead class="bg-slate-100 text-slate-500">
@@ -47,11 +46,12 @@
                   <td class="px-3 py-2 text-right text-slate-400">{{usedAt}}</td>
                 </tr>
                 {{/todayLogs}}
+                {{^todayLogs}}
+                <tr id="today-log-empty"><td colspan="3" class="px-3 py-2 text-xs text-slate-400">오늘 출고된 물품이 없습니다.</td></tr>
+                {{/todayLogs}}
               </tbody>
             </table>
           </div>
-          {{/todayLogs}}
-          {{#todayLogs}}
           <div id="today-log-pagination" class="flex items-center justify-between pt-2" style="display:none!important">
             <span id="today-log-page-info" class="text-xs text-slate-500"></span>
             <div class="flex items-center gap-2">
@@ -66,10 +66,6 @@
               </button>
             </div>
           </div>
-          {{/todayLogs}}
-          {{^todayLogs}}
-          <div class="text-xs text-slate-400 py-1">오늘 출고된 물품이 없습니다.</div>
-          {{/todayLogs}}
         </div>
 
         <!-- 물품 출고 섹션 -->
@@ -163,8 +159,10 @@
     function renderTodayLog() {
       var tbody = document.getElementById('today-log-tbody');
       if (!tbody) return;
-      var rows = Array.from(tbody.querySelectorAll('tr'));
+      var rows = Array.from(tbody.querySelectorAll('tr:not(#today-log-empty)'));
       var total = rows.length;
+      var emptyRow = document.getElementById('today-log-empty');
+      if (emptyRow) emptyRow.style.display = 'none';
       var totalPages = Math.max(1, Math.ceil(total / TODAY_LOG_PAGE_SIZE));
       if (todayLogPage > totalPages) todayLogPage = totalPages;
 
