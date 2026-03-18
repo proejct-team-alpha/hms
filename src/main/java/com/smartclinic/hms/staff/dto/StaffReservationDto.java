@@ -42,12 +42,14 @@ public class StaffReservationDto {
         this.statusText = switch (r.getStatus()) {
             case RESERVED -> "접수 대기";
             case RECEIVED -> "진료 대기";
+            case IN_TREATMENT -> "진료중";
             case COMPLETED -> "진료 완료";
             case CANCELLED -> "취소됨";
         };
         this.statusBadgeClass = switch (r.getStatus()) {
             case RESERVED -> "bg-indigo-100 text-indigo-700";
             case RECEIVED -> "bg-orange-100 text-orange-700";
+            case IN_TREATMENT -> "bg-indigo-100 text-indigo-800";
             case COMPLETED -> "bg-green-100 text-green-700";
             case CANCELLED -> "bg-slate-100 text-slate-500";
         };

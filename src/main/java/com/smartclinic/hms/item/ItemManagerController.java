@@ -2,11 +2,15 @@ package com.smartclinic.hms.item;
 
 import com.smartclinic.hms.item.dto.ItemDashboardDto;
 import com.smartclinic.hms.item.dto.ItemListDto;
+import com.smartclinic.hms.item.log.ItemUsageLogDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.Map;
 
 import java.util.List;
 
@@ -45,17 +49,60 @@ public class ItemManagerController {
     public String saveItem(@RequestParam(name = "id", required = false) Long id,
                            @RequestParam("name") String name,
                            @RequestParam("category") String category,
-                           @RequestParam("quantity") int quantity,
-                           @RequestParam("minQuantity") int minQuantity,
+                           @RequestParam("quantity") String quantityStr,
+                           @RequestParam("minQuantity") String minQuantityStr,
                            RedirectAttributes ra) {
+        String redirectForm = "redirect:/item-manager/item-form" + (id != null ? "?id=" + id : "");
         try {
+            int quantity = parseQuantity(quantityStr, "재고 수량");
+            int minQuantity = parseQuantity(minQuantityStr, "최소 수량");
             itemService.saveItem(id, name, category, quantity, minQuantity);
             ra.addFlashAttribute("message", "물품이 저장되었습니다.");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/item-manager/item-form" + (id != null ? "?id=" + id : "");
+            return redirectForm;
         }
         return "redirect:/item-manager/item-list";
+    }
+
+    private int parseQuantity(String value, String fieldName) {
+        try {
+            long parsed = Long.parseLong(value.trim());
+            if (parsed < 0 || parsed > Integer.MAX_VALUE) {
+                throw new IllegalArgumentException(fieldName + "은(는) 0 이상 2,147,483,647 이하여야 합니다.");
+            }
+            return (int) parsed;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(fieldName + "에 올바른 숫자를 입력해주세요.");
+        }
+    }
+
+    @PostMapping("/item/restock")
+    public String restockItem(@RequestParam("id") Long id,
+                              @RequestParam("amount") String amountStr,
+                              @RequestParam(name = "redirectTo", defaultValue = "/item-manager/dashboard") String redirectTo,
+                              RedirectAttributes ra) {
+        try {
+            int amount = parseQuantity(amountStr, "입고 수량");
+            itemService.restockItem(id, amount);
+            ra.addFlashAttribute("message", "물품이 입고되었습니다.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:" + redirectTo;
+    }
+
+    @PostMapping("/item/restock/ajax")
+    @ResponseBody
+    public ResponseEntity<?> restockItemAjax(@RequestParam("id") Long id,
+                                             @RequestParam("amount") String amountStr) {
+        try {
+            int amount = parseQuantity(amountStr, "입고 수량");
+            int newQuantity = itemService.restockItemAndGetQuantity(id, amount);
+            return ResponseEntity.ok(Map.of("quantity", newQuantity));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/item/delete")
@@ -65,8 +112,40 @@ public class ItemManagerController {
         return "redirect:/item-manager/item-list";
     }
 
+    @GetMapping("/item-use")
+    public String itemUsePage(Model model) {
+        model.addAttribute("items", itemService.getItemList(null));
+        model.addAttribute("todayLogs", itemService.getTodayStaffUsageLogs());
+        model.addAttribute("pageTitle", "물품 출고");
+        return "item-manager/item-use";
+    }
+
+    @PostMapping("/item-use")
+    @ResponseBody
+    public ResponseEntity<?> useItem(@RequestParam("id") Long id,
+                                     @RequestParam("amount") String amountStr) {
+        try {
+            long parsed = Long.parseLong(amountStr.trim());
+            if (parsed <= 0 || parsed > Integer.MAX_VALUE) {
+                return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
+            }
+            int newQuantity = itemService.useItem(id, (int) parsed, null);
+            List<ItemUsageLogDto> logs = itemService.getTodayStaffUsageLogs();
+            return ResponseEntity.ok(Map.of("quantity", newQuantity, "logs", logs));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @GetMapping("/item-history")
     public String itemHistory(Model model) {
+        var histories = itemService.getStockHistory();
+        model.addAttribute("histories", histories);
+        model.addAttribute("hasHistories", !histories.isEmpty());
+        model.addAttribute("totalIn", itemService.getTotalInAmount());
+        model.addAttribute("totalOut", itemService.getTotalOutAmount());
         model.addAttribute("pageTitle", "입출고 내역");
         return "item-manager/item-history";
     }

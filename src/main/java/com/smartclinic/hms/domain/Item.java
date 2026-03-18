@@ -63,6 +63,11 @@ public class Item {
         this.quantity = quantity;
     }
 
+    public void addStock(int amount) {
+        if (amount <= 0) throw new IllegalArgumentException("입고 수량은 1 이상이어야 합니다.");
+        this.quantity += amount;
+    }
+
     public void update(String name, ItemCategory category, int quantity, int minQuantity) {
         this.name = name;
         this.category = category;

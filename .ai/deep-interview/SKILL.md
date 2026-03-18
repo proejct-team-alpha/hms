@@ -162,7 +162,7 @@ model: 자동
 
 ### dev-c는 개발자 C(강상민)영역이다.
 
-확정되면 doc/dev-c/workflow폴더에서 폴더안 파일 네임명에 맞처 .md 파일을 생성한다.
+확정되면 doc/dev-a-b/a-b-task폴더에서 a-c-skill.md 파일 순서대로 작업을 이어간다.
 
 ## 주의사항
 

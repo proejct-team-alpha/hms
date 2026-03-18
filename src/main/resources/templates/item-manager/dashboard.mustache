@@ -23,6 +23,13 @@
           </a>
         </div>
 
+        {{#message}}
+          <div class="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">{{message}}</div>
+        {{/message}}
+        {{#errorMessage}}
+          <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">{{errorMessage}}</div>
+        {{/errorMessage}}
+
         <!-- Stats -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
@@ -83,55 +90,17 @@
                 <div class="w-full border-t border-dashed border-slate-200 h-0"></div>
                 <div class="w-full border-t border-dashed border-slate-200 h-0"></div>
               </div>
+              {{#dashboard.chartDays}}
               <div class="flex-1 flex flex-col items-center gap-2 z-10">
                 <div class="flex items-end gap-1 w-full justify-center" style="height:170px">
-                  <div class="w-4 bg-indigo-500 rounded-t-sm" style="height:45%"></div>
-                  <div class="w-4 bg-slate-300 rounded-t-sm" style="height:30%"></div>
+                  <div class="w-4 bg-indigo-500 rounded-t-sm" style="height:{{inHeight}}%"
+                       title="입고 {{inAmount}}개"></div>
+                  <div class="w-4 bg-slate-300 rounded-t-sm" style="height:{{outHeight}}%"
+                       title="출고 {{outAmount}}개"></div>
                 </div>
-                <div class="text-xs text-slate-500">03/06</div>
+                <div class="text-xs text-slate-500">{{label}}</div>
               </div>
-              <div class="flex-1 flex flex-col items-center gap-2 z-10">
-                <div class="flex items-end gap-1 w-full justify-center" style="height:170px">
-                  <div class="w-4 bg-indigo-500 rounded-t-sm" style="height:52%"></div>
-                  <div class="w-4 bg-slate-300 rounded-t-sm" style="height:45%"></div>
-                </div>
-                <div class="text-xs text-slate-500">03/07</div>
-              </div>
-              <div class="flex-1 flex flex-col items-center gap-2 z-10">
-                <div class="flex items-end gap-1 w-full justify-center" style="height:170px">
-                  <div class="w-4 bg-indigo-500 rounded-t-sm" style="height:38%"></div>
-                  <div class="w-4 bg-slate-300 rounded-t-sm" style="height:42%"></div>
-                </div>
-                <div class="text-xs text-slate-500">03/08</div>
-              </div>
-              <div class="flex-1 flex flex-col items-center gap-2 z-10">
-                <div class="flex items-end gap-1 w-full justify-center" style="height:170px">
-                  <div class="w-4 bg-indigo-500 rounded-t-sm" style="height:65%"></div>
-                  <div class="w-4 bg-slate-300 rounded-t-sm" style="height:50%"></div>
-                </div>
-                <div class="text-xs text-slate-500">03/09</div>
-              </div>
-              <div class="flex-1 flex flex-col items-center gap-2 z-10">
-                <div class="flex items-end gap-1 w-full justify-center" style="height:170px">
-                  <div class="w-4 bg-indigo-500 rounded-t-sm" style="height:48%"></div>
-                  <div class="w-4 bg-slate-300 rounded-t-sm" style="height:35%"></div>
-                </div>
-                <div class="text-xs text-slate-500">03/10</div>
-              </div>
-              <div class="flex-1 flex flex-col items-center gap-2 z-10">
-                <div class="flex items-end gap-1 w-full justify-center" style="height:170px">
-                  <div class="w-4 bg-indigo-500 rounded-t-sm" style="height:55%"></div>
-                  <div class="w-4 bg-slate-300 rounded-t-sm" style="height:48%"></div>
-                </div>
-                <div class="text-xs text-slate-500">03/11</div>
-              </div>
-              <div class="flex-1 flex flex-col items-center gap-2 z-10">
-                <div class="flex items-end gap-1 w-full justify-center" style="height:170px">
-                  <div class="w-4 bg-indigo-500 rounded-t-sm" style="height:42%"></div>
-                  <div class="w-4 bg-slate-300 rounded-t-sm" style="height:38%"></div>
-                </div>
-                <div class="text-xs text-slate-500">03/12</div>
-              </div>
+              {{/dashboard.chartDays}}
             </div>
           </div>
 
@@ -148,7 +117,7 @@
             </div>
             <div class="space-y-4 flex-1 overflow-y-auto">
               {{#dashboard.lowStockItems}}
-              <div class="p-4 bg-red-50 rounded-xl border border-red-100 space-y-3">
+              <div class="p-4 bg-red-50 rounded-xl border border-red-100 space-y-3" data-min-quantity="{{minQuantity}}">
                 <div class="flex items-center justify-between">
                   <div>
                     <div class="font-bold text-slate-800 text-sm">{{name}}</div>
@@ -159,10 +128,18 @@
                     <div class="text-xs text-slate-400">최소 {{minQuantity}}개</div>
                   </div>
                 </div>
-                <a href="/item-manager/item-form?id={{id}}" class="w-full py-2 bg-white border border-red-200 text-red-600 text-xs font-bold rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-1.5">
-                  <i data-feather="plus" class="w-3.5 h-3.5"></i>
-                  재고 수정
-                </a>
+                <form action="/item-manager/item/restock" method="post" class="flex items-center gap-2">
+                  <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                  <input type="hidden" name="id" value="{{id}}">
+                  <input type="hidden" name="redirectTo" value="/item-manager/dashboard">
+                  <input type="number" name="amount" min="1" placeholder="입고 수량"
+                         class="flex-1 px-3 py-1.5 text-xs border border-red-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-red-400">
+                  <button type="submit"
+                          class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1 whitespace-nowrap">
+                    <i data-feather="plus" class="w-3 h-3"></i>
+                    물품 입고
+                  </button>
+                </form>
               </div>
               {{/dashboard.lowStockItems}}
               {{^dashboard.lowStockItems}}
@@ -179,6 +156,49 @@
     {{> common/footer-staff}}
   </div>
 
+  <script>
+    document.querySelectorAll('form[action$="/item/restock"]').forEach(function(form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        var input = form.querySelector('input[name="amount"]');
+        var value = input.value.trim();
+        var amount = Number(value);
+
+        if (value === '' || isNaN(amount) || !Number.isInteger(amount) || amount < 0) {
+          alert('올바른 수량을 입력해주세요. (0 이상의 정수)');
+          return;
+        }
+
+        var id = form.querySelector('input[name="id"]').value;
+        var csrfInput = form.querySelector('input[type="hidden"]:not([name="id"]):not([name="redirectTo"])');
+        var card = form.closest('[data-min-quantity]');
+        var minQuantity = parseInt(card.dataset.minQuantity, 10);
+
+        var params = new URLSearchParams();
+        params.append('id', id);
+        params.append('amount', value);
+        params.append(csrfInput.name, csrfInput.value);
+
+        fetch('/item-manager/item/restock/ajax', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString()
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.quantity !== undefined) {
+            if (data.quantity >= minQuantity) {
+              card.remove();
+            } else {
+              card.querySelector('.text-red-600').textContent = '현재 ' + data.quantity + '개';
+              input.value = '';
+            }
+          }
+        });
+      });
+    });
+  </script>
   <script>feather.replace();</script>
 </body>
 </html>

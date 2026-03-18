@@ -1,9 +1,13 @@
 package com.smartclinic.hms.nurse;
 
+import com.smartclinic.hms.common.util.Resp;
+import com.smartclinic.hms.item.ItemManagerService;
+import com.smartclinic.hms.item.log.ItemUsageLogDto;
 import com.smartclinic.hms.nurse.dto.NursePageLinkDto;
 import com.smartclinic.hms.nurse.dto.NursePatientDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +15,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -18,6 +23,7 @@ import java.util.List;
 public class NurseReceptionController {
 
     private final NurseService nurseService;
+    private final ItemManagerService itemManagerService;
 
     @GetMapping("/reception-list")
     public String receptionList(@RequestParam(name = "status", required = false) String status,
@@ -51,8 +57,32 @@ public class NurseReceptionController {
     public String patientDetail(@RequestParam("id") Long id, Model model) {
         NursePatientDto detail = nurseService.getPatientDetail(id);
         model.addAttribute("detail", detail);
+        model.addAttribute("items", itemManagerService.getItemList(null));
+        model.addAttribute("usageLogs", itemManagerService.getUsageLogs(id));
         model.addAttribute("pageTitle", "환자 상세 정보");
         return "nurse/patient-detail";
+    }
+
+    @PostMapping("/item/use")
+    @ResponseBody
+    public ResponseEntity<?> useItem(@RequestParam("id") Long id,
+                                     @RequestParam("amount") String amountStr,
+                                     @RequestParam(name = "reservationId", required = false) Long reservationId) {
+        try {
+            long parsed = Long.parseLong(amountStr.trim());
+            if (parsed <= 0 || parsed > Integer.MAX_VALUE) {
+                return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
+            }
+            int newQuantity = itemManagerService.useItem(id, (int) parsed, reservationId);
+            List<ItemUsageLogDto> logs = reservationId != null
+                    ? itemManagerService.getUsageLogs(reservationId)
+                    : List.of();
+            return ResponseEntity.ok(Map.of("quantity", newQuantity, "logs", logs));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/reservation/receive")

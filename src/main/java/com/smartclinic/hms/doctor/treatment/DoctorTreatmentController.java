@@ -1,10 +1,13 @@
 package com.smartclinic.hms.doctor.treatment;
 
+import com.smartclinic.hms.common.util.Resp;
 import com.smartclinic.hms.doctor.treatment.dto.DoctorPageLinkDto;
 import com.smartclinic.hms.doctor.treatment.dto.DoctorReservationDto;
 import com.smartclinic.hms.doctor.treatment.dto.DoctorTreatmentDetailDto;
+import com.smartclinic.hms.item.ItemManagerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -12,10 +15,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.smartclinic.hms.item.log.ItemUsageLogDto;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -23,6 +30,15 @@ import java.util.List;
 public class DoctorTreatmentController {
 
     private final DoctorTreatmentService treatmentService;
+    private final ItemManagerService itemManagerService;
+
+    // [W3-1] GET /doctor/treatment-list/poll — 5초 폴링 AJAX 엔드포인트
+    @GetMapping("/treatment-list/poll")
+    @ResponseBody
+    public ResponseEntity<Resp<List<DoctorReservationDto>>> pollTreatmentList(Authentication auth) {
+        List<DoctorReservationDto> list = treatmentService.getTodayReceivedList(auth.getName());
+        return Resp.ok(list);
+    }
 
     @GetMapping("/treatment-list")
     public String treatmentList(Authentication auth,
@@ -38,8 +54,54 @@ public class DoctorTreatmentController {
     public String treatmentDetail(@RequestParam("id") Long id, Authentication auth, Model model) {
         DoctorTreatmentDetailDto detail = treatmentService.getTreatmentDetail(id, auth.getName());
         model.addAttribute("detail", detail);
+        model.addAttribute("items", itemManagerService.getItemList(null));
+        model.addAttribute("usageLogs", itemManagerService.getUsageLogs(id));
         model.addAttribute("pageTitle", "진료실");
         return "doctor/treatment-detail";
+    }
+
+    // 진료 완료 목록에서 진료 차트 조회 — /doctor/completed-list 사이드바 활성화
+    @GetMapping("/completed-detail")
+    public String completedDetail(@RequestParam("id") Long id, Authentication auth, Model model) {
+        DoctorTreatmentDetailDto detail = treatmentService.getTreatmentDetail(id, auth.getName());
+        model.addAttribute("detail", detail);
+        model.addAttribute("usageLogs", itemManagerService.getUsageLogs(id));
+        model.addAttribute("pageTitle", "진료 완료 기록");
+        return "doctor/treatment-detail";
+    }
+
+    @PostMapping("/item/use")
+    @ResponseBody
+    public ResponseEntity<?> useItem(@RequestParam("id") Long id,
+                                     @RequestParam("amount") String amountStr,
+                                     @RequestParam(name = "reservationId", required = false) Long reservationId) {
+        try {
+            long parsed = Long.parseLong(amountStr.trim());
+            if (parsed <= 0 || parsed > Integer.MAX_VALUE) {
+                return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
+            }
+            int newQuantity = itemManagerService.useItem(id, (int) parsed, reservationId);
+            List<ItemUsageLogDto> logs = reservationId != null
+                    ? itemManagerService.getUsageLogs(reservationId)
+                    : List.of();
+            return ResponseEntity.ok(Map.of("quantity", newQuantity, "logs", logs));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/treatment/start")
+    public String startTreatment(@RequestParam("id") Long id,
+                                 Authentication auth,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            treatmentService.startTreatment(id, auth.getName());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/doctor/treatment-detail?id=" + id;
     }
 
     @PostMapping("/treatment/complete")

@@ -73,6 +73,8 @@
             {{! CSRF 토큰 }}
             <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
             <input type="hidden" name="patientId" value="{{patientId}}">
+            {{! H-01: 소유권 검증용 전화번호 }}
+            <input type="hidden" name="phone" value="{{patientPhone}}">
 
             <div class="grid grid-cols-2 gap-6">
               <div>
@@ -199,6 +201,25 @@
   <script>
     feather.replace();
 
+    {{#reservation}}{{#canModify}}
+    // 현재 수정 중인 예약 ID (서버에서 주입) — booked-slots 조회 시 제외
+    const excludeId = {{id}};
+
+    // 슬롯 텍스트 원본 저장
+    document.querySelectorAll('#time option').forEach(opt => {
+      opt.dataset.originalText = opt.textContent;
+    });
+
+    // 슬롯 전체 초기화
+    function resetSlots() {
+      document.querySelectorAll('#time option').forEach(opt => {
+        opt.disabled = false;
+        opt.classList.remove('text-slate-400');
+        opt.textContent = opt.dataset.originalText;
+      });
+    }
+    {{/canModify}}{{/reservation}}
+
     // 예약 조회 후에는 검색 섹션 숨기기
     if (new URLSearchParams(window.location.search).has('reservationNumber')) {
       document.getElementById('search-section').classList.add('hidden');
@@ -210,9 +231,40 @@
     // Flatpickr 한 번만 초기화 (의사 선택 전: 전체 비활성)
     const datePicker = flatpickr(document.getElementById('date'), {
       dateFormat: 'Y-m-d',
+      minDate: 'today',
       animate: false,
       position: 'below',
-      disable: [() => true]
+      disable: [() => true],
+      onChange: async (selectedDates, dateStr) => {
+        const doctorId = document.getElementById('doctor').value;
+        if (!dateStr || !doctorId) {
+          resetSlots();
+          return;
+        }
+        try {
+          const res = await fetch(
+            `/api/reservation/booked-slots?doctorId=${doctorId}&date=${dateStr}&excludeId=${excludeId}`
+          );
+          if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
+          const booked = await res.json();
+          document.querySelectorAll('#time option').forEach(opt => {
+            const original = opt.dataset.originalText;
+            if (!original) return;
+            if (booked.includes(original)) {
+              opt.disabled = true;
+              opt.classList.add('text-slate-400');
+              opt.textContent = original + ' (예약불가)';
+            } else {
+              opt.disabled = false;
+              opt.classList.remove('text-slate-400');
+              opt.textContent = original;
+            }
+          });
+        } catch (err) {
+          console.error('예약 가능 슬롯 조회 실패:', err);
+          resetSlots();
+        }
+      }
     });
 
     // 진료과 변경 시 전문의 동적 조회

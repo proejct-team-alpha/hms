@@ -35,6 +35,11 @@
               </a>
               {{/statusFilters}}
             </div>
+            <div class="relative">
+              <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="text" id="reception-search" placeholder="환자명·연락처 검색"
+                     class="pl-9 pr-4 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 w-56">
+            </div>
           </div>
 
           <table class="w-full text-left border-collapse">
@@ -49,7 +54,7 @@
                 <th class="p-4 font-medium">접수</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-200">
+            <tbody id="reception-tbody" class="divide-y divide-slate-200">
               {{#reservations}}
               <tr class="hover:bg-slate-50 transition-colors">
                 <td class="p-4 text-sm font-medium text-slate-900">{{timeSlot}}</td>
@@ -85,7 +90,7 @@
               </tr>
               {{/reservations}}
               {{^reservations}}
-              <tr>
+              <tr id="reception-empty">
                 <td colspan="7" class="p-8 text-center text-slate-500">
                   오늘 예약된 환자가 없습니다.
                 </td>
@@ -113,6 +118,20 @@
     {{> common/footer-staff}}
   </div>
 
+  <script>
+    var receptionSearch = document.getElementById('reception-search');
+    if (receptionSearch) {
+      receptionSearch.addEventListener('input', function() {
+        var query = this.value.trim().toLowerCase();
+        document.querySelectorAll('#reception-tbody tr:not(#reception-empty)').forEach(function(row) {
+          var cells = row.querySelectorAll('td');
+          var name  = cells[1] ? cells[1].textContent.trim().toLowerCase() : '';
+          var phone = cells[2] ? cells[2].textContent.trim().toLowerCase() : '';
+          row.style.display = (!query || name.includes(query) || phone.includes(query)) ? '' : 'none';
+        });
+      });
+    }
+  </script>
   <script>feather.replace();</script>
 </body>
 </html>

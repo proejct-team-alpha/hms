@@ -5,11 +5,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import jakarta.persistence.LockModeType;
 
 // [W2-#4 작업 목록]
 // DONE 1. JpaRepository<Reservation, Long> 구현
@@ -59,66 +60,30 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.id = :id")
         Optional<Reservation> findByIdWithDetails(@Param("id") Long id);
 
-        // ── Admin 전용 쿼리 ──────────────────────────────────────────────────────
+        // H-03: 비관적 락 — 예약 변경 시 동시 수정 직렬화
+        @Lock(LockModeType.PESSIMISTIC_WRITE)
+        @Query("SELECT r FROM Reservation r WHERE r.id = :id")
+        Optional<Reservation> findByIdForUpdate(@Param("id") Long id);
 
-        @Query("""
-                        select r.reservationDate as date, count(r.id) as patientCount
-                        from Reservation r
-                        where r.reservationDate between :startDate and :endDate
-                        group by r.reservationDate
-                        """)
-        List<DailyPatientCountProjection> findDailyPatientCounts(
-                        @Param("startDate") LocalDate startDate,
-                        @Param("endDate") LocalDate endDate);
+        // 직접 예약 페이지용 — CANCELLED 제외한 예약된 슬롯 조회
+        @Query("SELECT r.timeSlot FROM Reservation r " +
+               "WHERE r.doctor.id = :doctorId " +
+               "AND r.reservationDate = :date " +
+               "AND r.status <> :excluded")
+        List<String> findBookedTimeSlots(
+                @Param("doctorId") Long doctorId,
+                @Param("date") LocalDate date,
+                @Param("excluded") ReservationStatus excluded);
 
-        @Query(value = """
-                        select r.id as id,
-                               r.reservationNumber as reservationNumber,
-                               r.reservationDate as reservationDate,
-                               r.timeSlot as timeSlot,
-                               patient.name as patientName,
-                               patient.phone as patientPhone,
-                               department.name as departmentName,
-                               staff.name as doctorName,
-                               r.status as status
-                        from Reservation r
-                        join r.patient patient
-                        join r.department department
-                        join r.doctor doctor
-                        join doctor.staff staff
-                        where (:status is null or r.status = :status)
-                        """, countQuery = """
-                        select count(r.id)
-                        from Reservation r
-                        where (:status is null or r.status = :status)
-                        """)
-        Page<AdminReservationListProjection> findReservationListPage(
-                        @Param("status") ReservationStatus status,
-                        Pageable pageable);
-
-        interface DailyPatientCountProjection {
-                LocalDate getDate();
-
-                Long getPatientCount();
-        }
-
-        interface AdminReservationListProjection {
-                Long getId();
-
-                String getReservationNumber();
-
-                LocalDate getReservationDate();
-
-                String getTimeSlot();
-
-                String getPatientName();
-
-                String getPatientPhone();
-
-                String getDepartmentName();
-
-                String getDoctorName();
-
-                ReservationStatus getStatus();
-        }
+        // 예약 변경 페이지용 — 현재 수정 중인 예약 제외
+        @Query("SELECT r.timeSlot FROM Reservation r " +
+               "WHERE r.doctor.id = :doctorId " +
+               "AND r.reservationDate = :date " +
+               "AND r.status <> :excluded " +
+               "AND r.id <> :excludeId")
+        List<String> findBookedTimeSlotsExcluding(
+                @Param("doctorId") Long doctorId,
+                @Param("date") LocalDate date,
+                @Param("excluded") ReservationStatus excluded,
+                @Param("excludeId") Long excludeId);
 }
