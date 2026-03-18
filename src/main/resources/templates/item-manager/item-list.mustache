@@ -122,6 +122,9 @@
                 </td>
               </tr>
               {{/items}}
+              <tr id="js-empty-row" style="display:none">
+                <td colspan="7" class="p-8 text-center text-slate-500 text-sm">검색 결과가 없습니다.</td>
+              </tr>
               {{^items}}
               <tr id="empty-row">
                 <td colspan="7" class="p-8 text-center text-slate-500 text-sm">등록된 물품이 없습니다.</td>
@@ -209,6 +212,8 @@
 
       document.querySelectorAll('#item-list-tbody tr:not(#empty-row)').forEach(function(r) { r.style.display = 'none'; });
       rows.forEach(function(r, i) { r.style.display = (i >= start && i < end) ? '' : 'none'; });
+      var jsEmptyRow = document.getElementById('js-empty-row');
+      if (jsEmptyRow) jsEmptyRow.style.display = (total === 0) ? '' : 'none';
 
       var bar = document.getElementById('item-list-pagination');
       if (!bar) return;
