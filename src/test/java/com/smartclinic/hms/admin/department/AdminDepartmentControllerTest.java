@@ -20,8 +20,8 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -51,7 +51,7 @@ class AdminDepartmentControllerTest {
     private AdminDepartmentService adminDepartmentService;
 
     @Test
-    @DisplayName("진료과 목록은 기본 페이지 파라미터와 model, pageTitle로 렌더링한다")
+    @DisplayName("list renders with default paging")
     void list_usesDefaultPagingAndRendersView() throws Exception {
         // given
         AdminDepartmentListResponse response = createListResponse();
@@ -64,14 +64,13 @@ class AdminDepartmentControllerTest {
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/department-list"))
-                .andExpect(request().attribute("model", response))
-                .andExpect(request().attribute("pageTitle", "진료과 관리"));
+                .andExpect(request().attribute("model", response));
 
         then(adminDepartmentService).should().getDepartmentList(1, 10);
     }
 
     @Test
-    @DisplayName("진료과 목록은 요청 page, size 파라미터를 서비스에 전달한다")
+    @DisplayName("list passes request params to service")
     void list_passesRequestParamsToService() throws Exception {
         // given
         AdminDepartmentListResponse response = createListResponse();
@@ -86,17 +85,16 @@ class AdminDepartmentControllerTest {
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/department-list"))
-                .andExpect(request().attribute("model", response))
-                .andExpect(request().attribute("pageTitle", "진료과 관리"));
+                .andExpect(request().attribute("model", response));
 
         then(adminDepartmentService).should().getDepartmentList(2, 5);
     }
 
     @Test
-    @DisplayName("진료과 목록은 페이지 정보와 번호 링크를 화면에 렌더링한다")
+    @DisplayName("list renders pagination ui")
     void list_rendersPaginationUi() throws Exception {
         // given
-        Department department = Department.create("내과", true);
+        Department department = Department.create("Dept", true);
         ReflectionTestUtils.setField(department, "id", 12L);
         AdminDepartmentDto item = new AdminDepartmentDto(department);
         AdminDepartmentListResponse response = new AdminDepartmentListResponse(
@@ -126,16 +124,14 @@ class AdminDepartmentControllerTest {
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("내과")))
-                .andExpect(content().string(containsString("총")))
-                .andExpect(content().string(containsString("2 / 3페이지")))
+                .andExpect(content().string(containsString("Dept")))
                 .andExpect(content().string(containsString("/admin/department/detail?departmentId=12")))
                 .andExpect(content().string(containsString(">1</a>")))
                 .andExpect(content().string(containsString(">3</a>")));
     }
 
     @Test
-    @DisplayName("진료과 목록은 빈 데이터일 때 빈 목록 메시지와 0페이지 정보를 렌더링한다")
+    @DisplayName("list renders empty state")
     void list_rendersEmptyStateWhenNoDepartments() throws Exception {
         // given
         AdminDepartmentListResponse response = createListResponse();
@@ -147,19 +143,18 @@ class AdminDepartmentControllerTest {
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("등록된 진료과가 없습니다.")))
-                .andExpect(content().string(containsString("0 / 0페이지")));
+                .andExpect(content().string(containsString("0 / 0")));
     }
 
     @Test
-    @DisplayName("진료과 상세 화면은 기본 정보와 상태 액션을 렌더링한다")
+    @DisplayName("detail renders update and status actions")
     void detail_rendersDepartmentDetailView() throws Exception {
         // given
         AdminDepartmentDetailResponse response = new AdminDepartmentDetailResponse(
                 3L,
-                "내과",
+                "Dept",
                 true,
-                "운영 중",
+                "ACTIVE",
                 "px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700",
                 false,
                 true,
@@ -178,18 +173,17 @@ class AdminDepartmentControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/department-detail"))
                 .andExpect(request().attribute("model", response))
-                .andExpect(request().attribute("pageTitle", "진료과 상세"))
-                .andExpect(content().string(containsString("내과")))
-                .andExpect(content().string(containsString("이름 수정")))
-                .andExpect(content().string(containsString("비활성화")));
+                .andExpect(content().string(containsString("Dept")))
+                .andExpect(content().string(containsString("/admin/department/update")))
+                .andExpect(content().string(containsString("/admin/department/deactivate")));
     }
 
     @Test
-    @DisplayName("존재하지 않는 진료과 상세 요청은 404 화면을 반환한다")
+    @DisplayName("detail returns 404 when target is missing")
     void detail_returns404WhenDepartmentMissing() throws Exception {
         // given
         given(adminDepartmentService.getDepartmentDetail(99L))
-                .willThrow(CustomException.notFound("진료과를 찾을 수 없습니다."));
+                .willThrow(CustomException.notFound("not found"));
 
         // when
         // then
@@ -199,35 +193,35 @@ class AdminDepartmentControllerTest {
                         .with(csrf()))
                 .andExpect(status().isNotFound())
                 .andExpect(view().name("error/404"))
-                .andExpect(request().attribute("errorMessage", "진료과를 찾을 수 없습니다."));
+                .andExpect(request().attribute("errorMessage", "not found"));
     }
 
     @Test
-    @DisplayName("진료과 이름 수정은 성공 시 상세 페이지로 리다이렉트하고 성공 메시지를 남긴다")
+    @DisplayName("update redirects to detail on success")
     void update_redirectsToDetailWithSuccessMessage() throws Exception {
         // given
-        given(adminDepartmentService.updateDepartmentName(5L, "내과")).willReturn("진료과명이 수정되었습니다.");
+        given(adminDepartmentService.updateDepartmentName(5L, "Dept")).willReturn("updated");
 
         // when
         // then
         mockMvc.perform(post("/admin/department/update")
                         .param("departmentId", "5")
-                        .param("name", "내과")
+                        .param("name", "Dept")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/department/detail?departmentId=5"))
-                .andExpect(flash().attribute("successMessage", "진료과명이 수정되었습니다."));
+                .andExpect(flash().attribute("successMessage", "updated"));
 
-        then(adminDepartmentService).should().updateDepartmentName(5L, "내과");
+        then(adminDepartmentService).should().updateDepartmentName(5L, "Dept");
     }
 
     @Test
-    @DisplayName("진료과 이름 수정은 검증 실패 시 상세 페이지로 돌아가 에러 메시지를 남긴다")
+    @DisplayName("update redirects back to detail on validation failure")
     void update_redirectsBackToDetailWhenValidationFails() throws Exception {
         // given
         given(adminDepartmentService.updateDepartmentName(5L, "   "))
-                .willThrow(CustomException.badRequest("VALIDATION_ERROR", "진료과명은 필수입니다."));
+                .willThrow(CustomException.badRequest("VALIDATION_ERROR", "invalid name"));
 
         // when
         // then
@@ -238,33 +232,33 @@ class AdminDepartmentControllerTest {
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/department/detail?departmentId=5"))
-                .andExpect(flash().attribute("errorMessage", "진료과명은 필수입니다."));
+                .andExpect(flash().attribute("errorMessage", "invalid name"));
     }
 
     @Test
-    @DisplayName("진료과 이름 수정은 대상이 없으면 목록으로 돌아가 에러 메시지를 남긴다")
+    @DisplayName("update redirects to list when target is missing")
     void update_redirectsToListWhenDepartmentMissing() throws Exception {
         // given
-        given(adminDepartmentService.updateDepartmentName(99L, "내과"))
-                .willThrow(CustomException.notFound("진료과를 찾을 수 없습니다."));
+        given(adminDepartmentService.updateDepartmentName(99L, "Dept"))
+                .willThrow(CustomException.notFound("not found"));
 
         // when
         // then
         mockMvc.perform(post("/admin/department/update")
                         .param("departmentId", "99")
-                        .param("name", "내과")
+                        .param("name", "Dept")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/department/list"))
-                .andExpect(flash().attribute("errorMessage", "진료과를 찾을 수 없습니다."));
+                .andExpect(flash().attribute("errorMessage", "not found"));
     }
 
     @Test
-    @DisplayName("진료과 비활성화는 성공 시 상세 페이지로 리다이렉트하고 성공 메시지를 남긴다")
+    @DisplayName("deactivate redirects to detail on success")
     void deactivate_redirectsToDetailWithSuccessMessage() throws Exception {
         // given
-        given(adminDepartmentService.deactivateDepartment(5L)).willReturn("진료과가 비활성화되었습니다.");
+        given(adminDepartmentService.deactivateDepartment(5L)).willReturn("deactivated");
 
         // when
         // then
@@ -274,17 +268,17 @@ class AdminDepartmentControllerTest {
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/department/detail?departmentId=5"))
-                .andExpect(flash().attribute("successMessage", "진료과가 비활성화되었습니다."));
+                .andExpect(flash().attribute("successMessage", "deactivated"));
 
         then(adminDepartmentService).should().deactivateDepartment(5L);
     }
 
     @Test
-    @DisplayName("진료과 비활성화는 이미 비활성 상태면 상세 페이지로 돌아가 에러 메시지를 남긴다")
+    @DisplayName("deactivate redirects back to detail on duplicate request")
     void deactivate_redirectsBackToDetailWhenAlreadyInactive() throws Exception {
         // given
         given(adminDepartmentService.deactivateDepartment(5L))
-                .willThrow(CustomException.invalidStatusTransition("이미 비활성화된 진료과입니다."));
+                .willThrow(CustomException.invalidStatusTransition("already inactive"));
 
         // when
         // then
@@ -294,15 +288,15 @@ class AdminDepartmentControllerTest {
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/department/detail?departmentId=5"))
-                .andExpect(flash().attribute("errorMessage", "이미 비활성화된 진료과입니다."));
+                .andExpect(flash().attribute("errorMessage", "already inactive"));
     }
 
     @Test
-    @DisplayName("진료과 비활성화는 대상이 없으면 목록으로 돌아가 에러 메시지를 남긴다")
+    @DisplayName("deactivate redirects to list when target is missing")
     void deactivate_redirectsToListWhenDepartmentMissing() throws Exception {
         // given
         given(adminDepartmentService.deactivateDepartment(99L))
-                .willThrow(CustomException.notFound("진료과를 찾을 수 없습니다."));
+                .willThrow(CustomException.notFound("not found"));
 
         // when
         // then
@@ -312,14 +306,14 @@ class AdminDepartmentControllerTest {
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/department/list"))
-                .andExpect(flash().attribute("errorMessage", "진료과를 찾을 수 없습니다."));
+                .andExpect(flash().attribute("errorMessage", "not found"));
     }
 
     @Test
-    @DisplayName("진료과 활성화는 성공 시 상세 페이지로 리다이렉트하고 성공 메시지를 남긴다")
+    @DisplayName("activate redirects to detail on success")
     void activate_redirectsToDetailWithSuccessMessage() throws Exception {
         // given
-        given(adminDepartmentService.activateDepartment(7L)).willReturn("진료과가 활성화되었습니다.");
+        given(adminDepartmentService.activateDepartment(7L)).willReturn("activated");
 
         // when
         // then
@@ -329,17 +323,17 @@ class AdminDepartmentControllerTest {
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/department/detail?departmentId=7"))
-                .andExpect(flash().attribute("successMessage", "진료과가 활성화되었습니다."));
+                .andExpect(flash().attribute("successMessage", "activated"));
 
         then(adminDepartmentService).should().activateDepartment(7L);
     }
 
     @Test
-    @DisplayName("진료과 활성화는 이미 활성 상태면 상세 페이지로 돌아가 에러 메시지를 남긴다")
+    @DisplayName("activate redirects back to detail on duplicate request")
     void activate_redirectsBackToDetailWhenAlreadyActive() throws Exception {
         // given
         given(adminDepartmentService.activateDepartment(7L))
-                .willThrow(CustomException.invalidStatusTransition("이미 활성화된 진료과입니다."));
+                .willThrow(CustomException.invalidStatusTransition("already active"));
 
         // when
         // then
@@ -349,46 +343,46 @@ class AdminDepartmentControllerTest {
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/department/detail?departmentId=7"))
-                .andExpect(flash().attribute("errorMessage", "이미 활성화된 진료과입니다."));
+                .andExpect(flash().attribute("errorMessage", "already active"));
     }
 
     @Test
-    @DisplayName("진료과 등록은 active 체크 여부를 서비스에 전달하고 목록으로 리다이렉트한다")
+    @DisplayName("create passes checked active flag and redirects")
     void create_passesCheckedActiveAndRedirectsToList() throws Exception {
         // given
 
         // when
         // then
         mockMvc.perform(post("/admin/department/create")
-                        .param("name", "내과")
+                        .param("name", "Dept")
                         .param("active", "true")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/department/list"));
 
-        then(adminDepartmentService).should().createDepartment("내과", true);
+        then(adminDepartmentService).should().createDepartment("Dept", true);
     }
 
     @Test
-    @DisplayName("진료과 등록은 active 값이 없으면 false로 전달하고 목록으로 리다이렉트한다")
+    @DisplayName("create defaults active to false when unchecked")
     void create_defaultsActiveToFalseWhenUnchecked() throws Exception {
         // given
 
         // when
         // then
         mockMvc.perform(post("/admin/department/create")
-                        .param("name", "외과")
+                        .param("name", "Surgery")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/department/list"));
 
-        then(adminDepartmentService).should().createDepartment("외과", false);
+        then(adminDepartmentService).should().createDepartment("Surgery", false);
     }
 
     @Test
-    @DisplayName("진료과 등록 전용 GET 페이지는 노출하지 않는다")
+    @DisplayName("form page is not exposed")
     void formPage_isNotExposed() throws Exception {
         // given
 

@@ -32,7 +32,7 @@ class AdminDepartmentServiceTest {
     private AdminDepartmentService adminDepartmentService;
 
     @Test
-    @DisplayName("잘못된 페이지 파라미터가 들어오면 기본값으로 보정한다")
+    @DisplayName("getDepartmentList uses defaults when params are invalid")
     void getDepartmentList_usesDefaultPageAndSizeWhenInvalid() {
         // given
         given(adminDepartmentRepository.findAllByOrderByIdDesc(any(Pageable.class)))
@@ -57,7 +57,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("진료과 목록 조회는 페이지 정보와 상태 라벨을 함께 계산한다")
+    @DisplayName("getDepartmentList builds paged response")
     void getDepartmentList_buildsPagedResponse() {
         // given
         Department internalMedicine = Department.create("내과", true);
@@ -93,7 +93,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("진료과 목록 조회 결과가 없으면 빈 목록 상태를 반환한다")
+    @DisplayName("getDepartmentList returns empty state when no data exists")
     void getDepartmentList_returnsEmptyStateWhenNoDepartments() {
         // given
         given(adminDepartmentRepository.findAllByOrderByIdDesc(any(Pageable.class)))
@@ -116,7 +116,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("진료과 목록 조회는 각 페이지 링크와 URL을 올바르게 계산한다")
+    @DisplayName("getDepartmentList builds page links with expected urls")
     void getDepartmentList_buildsPageLinksWithExpectedUrls() {
         // given
         Department internalMedicine = Department.create("내과", true);
@@ -154,7 +154,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("진료과 상세 조회는 상세 화면 응답 모델로 매핑한다")
+    @DisplayName("getDepartmentDetail maps detail response")
     void getDepartmentDetail_mapsDetailResponse() {
         // given
         Department department = Department.create("내과", true);
@@ -175,7 +175,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 진료과 상세 조회는 예외를 던진다")
+    @DisplayName("getDepartmentDetail throws when department is missing")
     void getDepartmentDetail_throwsWhenDepartmentMissing() {
         // given
         given(adminDepartmentRepository.findById(99L)).willReturn(Optional.empty());
@@ -188,7 +188,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("진료과 이름 수정은 이름만 변경하고 성공 메시지를 반환한다")
+    @DisplayName("updateDepartmentName renames target department")
     void updateDepartmentName_renamesDepartment() {
         // given
         Department department = Department.create("기존 이름", true);
@@ -207,7 +207,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("진료과 이름 수정은 빈 이름 요청을 거부한다")
+    @DisplayName("updateDepartmentName rejects blank name")
     void updateDepartmentName_throwsWhenNameBlank() {
         // given
 
@@ -219,7 +219,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("진료과 이름 수정은 중복 이름 요청을 거부한다")
+    @DisplayName("updateDepartmentName rejects duplicate name")
     void updateDepartmentName_throwsWhenNameDuplicated() {
         // given
         Department department = Department.create("기존 이름", true);
@@ -235,7 +235,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("진료과 이름 수정은 없는 진료과 요청을 거부한다")
+    @DisplayName("updateDepartmentName rejects missing department")
     void updateDepartmentName_throwsWhenDepartmentMissing() {
         // given
         given(adminDepartmentRepository.findById(44L)).willReturn(Optional.empty());
@@ -248,7 +248,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("진료과 비활성화는 active 값을 false로 바꾸고 성공 메시지를 반환한다")
+    @DisplayName("deactivateDepartment turns active flag off")
     void deactivateDepartment_deactivatesDepartment() {
         // given
         Department department = Department.create("내과", true);
@@ -265,7 +265,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("진료과 비활성화는 이미 비활성 상태인 요청을 거부한다")
+    @DisplayName("deactivateDepartment rejects already inactive department")
     void deactivateDepartment_throwsWhenAlreadyInactive() {
         // given
         Department department = Department.create("외과", false);
@@ -280,7 +280,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("진료과 비활성화는 없는 진료과 요청을 거부한다")
+    @DisplayName("deactivateDepartment rejects missing department")
     void deactivateDepartment_throwsWhenDepartmentMissing() {
         // given
         given(adminDepartmentRepository.findById(81L)).willReturn(Optional.empty());
@@ -293,7 +293,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("진료과 활성화는 active 값을 true로 바꾸고 성공 메시지를 반환한다")
+    @DisplayName("activateDepartment turns active flag on")
     void activateDepartment_activatesDepartment() {
         // given
         Department department = Department.create("외과", false);
@@ -310,7 +310,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("진료과 활성화는 이미 활성 상태인 요청을 거부한다")
+    @DisplayName("activateDepartment rejects already active department")
     void activateDepartment_throwsWhenAlreadyActive() {
         // given
         Department department = Department.create("내과", true);
@@ -325,7 +325,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("진료과 등록은 화면에서 전달한 active 값을 그대로 저장한다")
+    @DisplayName("createDepartment stores active flag from request")
     void createDepartment_savesActiveValueFromRequest() {
         // given
 
