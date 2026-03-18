@@ -39,7 +39,7 @@
                   <th class="px-3 py-2 text-right font-medium">시간</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-slate-100">
+              <tbody id="today-log-tbody" class="divide-y divide-slate-100">
                 {{#todayLogs}}
                 <tr>
                   <td class="px-3 py-2 text-slate-700 font-medium">{{itemName}}</td>
@@ -49,6 +49,22 @@
                 {{/todayLogs}}
               </tbody>
             </table>
+          </div>
+          {{/todayLogs}}
+          {{#todayLogs}}
+          <div id="today-log-pagination" class="flex items-center justify-between pt-2" style="display:none!important">
+            <span id="today-log-page-info" class="text-xs text-slate-500"></span>
+            <div class="flex items-center gap-2">
+              <button id="today-log-prev" type="button"
+                      class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                이전
+              </button>
+              <div id="today-log-page-numbers" class="flex items-center gap-1"></div>
+              <button id="today-log-next" type="button"
+                      class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                다음
+              </button>
+            </div>
           </div>
           {{/todayLogs}}
           {{^todayLogs}}
@@ -104,6 +120,73 @@
   </div>
 
   <script>
+    // ===== 오늘 출고 내역 페이징 =====
+    var TODAY_LOG_PAGE_SIZE = 10;
+    var todayLogPage = 1;
+
+    function buildTodayLogPageNumbers(totalPages) {
+      var half = 2;
+      var start = Math.max(1, todayLogPage - half);
+      var end = Math.min(totalPages, start + 4);
+      start = Math.max(1, end - 4);
+      var html = '';
+      if (start > 1) {
+        html += '<button type="button" data-page="1" class="tl-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors">1</button>';
+        if (start > 2) html += '<span class="px-1 text-xs text-slate-400">...</span>';
+      }
+      for (var p = start; p <= end; p++) {
+        var active = p === todayLogPage ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100';
+        html += '<button type="button" data-page="' + p + '" class="tl-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 ' + active + ' transition-colors">' + p + '</button>';
+      }
+      if (end < totalPages) {
+        if (end < totalPages - 1) html += '<span class="px-1 text-xs text-slate-400">...</span>';
+        html += '<button type="button" data-page="' + totalPages + '" class="tl-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors">' + totalPages + '</button>';
+      }
+      return html;
+    }
+
+    function renderTodayLog() {
+      var tbody = document.getElementById('today-log-tbody');
+      if (!tbody) return;
+      var rows = Array.from(tbody.querySelectorAll('tr'));
+      var total = rows.length;
+      var totalPages = Math.max(1, Math.ceil(total / TODAY_LOG_PAGE_SIZE));
+      if (todayLogPage > totalPages) todayLogPage = totalPages;
+
+      var start = (todayLogPage - 1) * TODAY_LOG_PAGE_SIZE;
+      var end = start + TODAY_LOG_PAGE_SIZE;
+      rows.forEach(function(r, i) { r.style.display = (i >= start && i < end) ? '' : 'none'; });
+
+      var bar = document.getElementById('today-log-pagination');
+      if (!bar) return;
+      if (totalPages <= 1) { bar.style.removeProperty('display'); bar.style.display = 'none'; return; }
+      bar.style.removeProperty('display');
+
+      var numbersEl = document.getElementById('today-log-page-numbers');
+      if (numbersEl) {
+        numbersEl.innerHTML = buildTodayLogPageNumbers(totalPages);
+        numbersEl.querySelectorAll('.tl-page-btn').forEach(function(btn) {
+          btn.addEventListener('click', function() { todayLogPage = parseInt(this.dataset.page); renderTodayLog(); });
+        });
+      }
+
+      var info = document.getElementById('today-log-page-info');
+      if (info) info.textContent = total + '건 / ' + totalPages + '페이지';
+
+      var prev = document.getElementById('today-log-prev');
+      var next = document.getElementById('today-log-next');
+      if (prev) prev.disabled = todayLogPage <= 1;
+      if (next) next.disabled = todayLogPage >= totalPages;
+    }
+
+    var tlPrev = document.getElementById('today-log-prev');
+    var tlNext = document.getElementById('today-log-next');
+    if (tlPrev) tlPrev.addEventListener('click', function() { todayLogPage--; renderTodayLog(); });
+    if (tlNext) tlNext.addEventListener('click', function() { todayLogPage++; renderTodayLog(); });
+
+    renderTodayLog();
+    // ===== END 오늘 출고 내역 페이징 =====
+
     var CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
     function getChosung(str) {
       return str.split('').map(function(ch) {
