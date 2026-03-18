@@ -24,6 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -68,7 +69,7 @@ class AdminStaffApiControllerTest {
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf())
                         .contentType("application/json")
-                        .content("""
+                .content("""
                                 {
                                   \"name\": \"수정직원\",
                                   \"departmentId\": 2,
@@ -135,8 +136,9 @@ class AdminStaffApiControllerTest {
                                 }
                                 """))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorCode").value("RESOURCE_NOT_FOUND"))
-                .andExpect(jsonPath("$.message").value("직원을 찾을 수 없습니다."));
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.msg", containsString("RESOURCE_NOT_FOUND")))
+                .andExpect(jsonPath("$.msg", containsString("직원을 찾을 수 없습니다.")));
     }
 
     @Test
@@ -159,7 +161,8 @@ class AdminStaffApiControllerTest {
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.msg", containsString("VALIDATION_ERROR")));
     }
 
     @TestConfiguration

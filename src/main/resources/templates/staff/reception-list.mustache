@@ -72,8 +72,8 @@
                 <th class="p-4 font-medium">연락처</th>
                 <th class="p-4 font-medium">예약 구분</th>
                 <th class="p-4 font-medium">진료과 / 전문의</th>
-                <th class="p-4 font-medium">상태</th>
-                <th class="p-4 font-medium text-right">비고</th>
+                <th class="p-4 font-medium text-center">상태</th>
+                <th class="p-4 font-medium text-center">비고</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-200">
@@ -97,22 +97,26 @@
                 <td class="p-4 text-right">
                   <div class="flex justify-end gap-2" onclick="event.stopPropagation()">
                     {{#canReceive}}
-                    <form method="post" action="/staff/reception/receive">
-                      <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
-                      <input type="hidden" name="reservationId" value="{{id}}">
-                      <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 text-sm font-medium rounded-lg hover:bg-green-100 transition-colors">
-                        <i data-feather="check-circle" class="w-4 h-4"></i> 접수
-                      </button>
-                    </form>
+                    
+                    <button 
+  type="button"
+  onclick="receiveAjax({{id}}, this, '{{currentStatus}}')"
+  class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 hover:bg-green-100 text-sm font-medium rounded-lg transition">
+  <i data-feather="check-circle" class="w-3.5 h-3.5"></i> 접수
+</button>
+
+
                     {{/canReceive}}
+
                     {{#canCancel}}
-                    <form method="post" action="/staff/reception/cancel" onsubmit="return confirm('예약을 취소하시겠습니까?')">
-                      <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
-                      <input type="hidden" name="id" value="{{id}}">
-                      <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors">
-                        <i data-feather="x-circle" class="w-4 h-4"></i> 취소
-                      </button>
-                    </form>
+                    
+                    <button 
+  type="button"
+  onclick="cancelAjax({{id}}, this, '{{currentStatus}}')"
+  class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 text-sm font-medium rounded-lg transition">
+  <i data-feather="x-circle" class="w-3.5 h-3.5"></i> 취소
+</button>
+
                     {{/canCancel}}
                   </div>
                 </td>
@@ -162,6 +166,98 @@
     {{> common/footer-staff}}
   </div>
 
-  <script>feather.replace();</script>
+  <script>
+feather.replace();
+
+async function receiveAjax(reservationId, button, currentStatus) {
+  try {
+    const response = await fetch('/staff/reception/receive-ajax', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': '{{_csrf.token}}'
+      },
+      body: JSON.stringify({
+        reservationId: reservationId
+      })
+    });
+
+    const data = await response.json();
+if (data.success) {
+  const row = button.closest('tr');
+
+  // 핵심: 접수대기 탭이면 삭제
+  if (currentStatus === 'RESERVED') {
+    row.remove();
+  } else {
+    // 다른 탭이면 상태만 변경
+    const statusCell = row.children[6];
+
+    statusCell.innerHTML = `
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+        진료 대기
+      </span>
+    `;
+
+    button.remove();
+  }
+}
+     else {
+      alert('실패: ' + data.message);
+    }
+
+  } catch (e) {
+    console.error(e);
+    alert('에러 발생');
+  }
+}
+
+async function cancelAjax(id, button, currentStatus) {
+
+  if (!confirm('예약을 취소하시겠습니까?')) {
+    return;
+  }
+
+  try {
+    const response = await fetch('/staff/reception/cancel-ajax', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': '{{_csrf.token}}'
+      },
+      body: JSON.stringify({
+        id: id
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      const row = button.closest('tr');
+      const statusCell = row.children[6];
+
+      // 상태 변경
+      statusCell.innerHTML = `
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+          취소
+        </span>
+      `;
+
+      // 버튼 영역 전체 제거
+      const actionCell = row.children[7];
+      actionCell.innerHTML = '';
+    } else {
+      alert('취소 실패');
+    }
+
+  } catch (e) {
+    console.error(e);
+    alert('에러 발생');
+  }
+}
+
+
+</script>
+
 </body>
 </html>
