@@ -1,15 +1,13 @@
 package com.smartclinic.hms.admin.department;
 
-import java.util.List;
-
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import lombok.RequiredArgsConstructor;
+import org.springframework.ui.Model;
 
 @Controller
 @RequiredArgsConstructor
@@ -19,11 +17,12 @@ public class AdminDepartmentController {
     private final AdminDepartmentService adminDepartmentService;
 
     @GetMapping("/list")
-    public String list(Model model) {
-        List<AdminDepartmentDto> departments = adminDepartmentService.getDepartmentList();
-        model.addAttribute("departments", departments);
-        model.addAttribute("hasDepartments", !departments.isEmpty());
-        model.addAttribute("pageTitle", "진료과 관리");
+    public String list(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest req) {
+        req.setAttribute("model", adminDepartmentService.getDepartmentList(page, size));
+        req.setAttribute("pageTitle", "진료과 관리");
         return "admin/department-list";
     }
 

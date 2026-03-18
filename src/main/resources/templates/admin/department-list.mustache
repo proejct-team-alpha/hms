@@ -41,7 +41,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
-                {{#departments}}
+                {{#model.departments}}
                 <tr class="hover:bg-slate-50">
                   <td class="px-4 py-3 text-slate-400 text-xs">{{id}}</td>
                   <td class="px-4 py-3 font-medium text-slate-800">{{name}}</td>
@@ -49,12 +49,12 @@
                     <span class="{{activeBadgeClass}}">{{activeText}}</span>
                   </td>
                 </tr>
-                {{/departments}}
-                {{^hasDepartments}}
+                {{/model.departments}}
+                {{^model.departments}}
                 <tr>
                   <td colspan="3" class="px-4 py-12 text-center text-slate-400">등록된 진료과가 없습니다.</td>
                 </tr>
-                {{/hasDepartments}}
+                {{/model.departments}}
               </tbody>
             </table>
           </div>
