@@ -1,6 +1,7 @@
 package com.smartclinic.hms.admin.department;
 
 import com.smartclinic.hms.domain.Department;
+
 import lombok.Getter;
 
 @Getter

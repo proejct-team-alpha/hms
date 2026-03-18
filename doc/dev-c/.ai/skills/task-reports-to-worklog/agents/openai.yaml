@@ -1,0 +1,4 @@
+﻿interface:
+  display_name: "Task Worklog 작성"
+  short_description: "task report들을 읽어 누적 worklog로 정리"
+  default_prompt: "$task-reports-to-worklog를 사용해서 task report 폴더 기준으로 worklog-{번호}.md를 작성해줘."
