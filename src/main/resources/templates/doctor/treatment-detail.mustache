@@ -155,9 +155,8 @@
                 {{/detail.diagnosis}}
               </div>
 
-              <div class="px-6 pb-4">
+              <div class="px-6 pb-4 space-y-2">
                 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">사용 물품 내역</h3>
-                {{#usageLogs}}
                 <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
                   <table class="w-full text-xs">
                     <thead class="bg-slate-100 text-slate-500">
@@ -167,7 +166,7 @@
                         <th class="px-3 py-2 text-right font-medium">시간</th>
                       </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    <tbody id="usage-log-tbody" class="divide-y divide-slate-100">
                       {{#usageLogs}}
                       <tr>
                         <td class="px-3 py-2 text-slate-700 font-medium">{{itemName}}</td>
@@ -175,13 +174,26 @@
                         <td class="px-3 py-2 text-right text-slate-400">{{usedAt}}</td>
                       </tr>
                       {{/usageLogs}}
+                      {{^usageLogs}}
+                      <tr id="usage-log-empty"><td colspan="3" class="px-3 py-2 text-xs text-slate-400">사용된 물품이 없습니다.</td></tr>
+                      {{/usageLogs}}
                     </tbody>
                   </table>
                 </div>
-                {{/usageLogs}}
-                {{^usageLogs}}
-                <div class="text-xs text-slate-400 py-2">사용된 물품이 없습니다.</div>
-                {{/usageLogs}}
+                <div id="usage-log-pagination" class="flex items-center justify-between pt-1" style="display:none!important">
+                  <span id="usage-log-page-info" class="text-xs text-slate-500"></span>
+                  <div class="flex items-center gap-2">
+                    <button id="usage-log-prev" type="button"
+                            class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                      이전
+                    </button>
+                    <div id="usage-log-page-numbers" class="flex items-center gap-1"></div>
+                    <button id="usage-log-next" type="button"
+                            class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                      다음
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div class="p-6 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex items-center justify-between">
@@ -241,6 +253,15 @@
             </div>
             {{/items}}
           </div>
+          <div id="card-grid-pagination" class="flex items-center justify-center pt-2" style="display:none!important">
+            <div class="flex items-center gap-2">
+              <button id="card-grid-prev" type="button"
+                      class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">이전</button>
+              <div id="card-grid-page-numbers" class="flex items-center gap-1"></div>
+              <button id="card-grid-next" type="button"
+                      class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">다음</button>
+            </div>
+          </div>
         </div>
         {{/detail.canComplete}}
 
@@ -260,9 +281,7 @@
         return ch;
       }).join('');
     }
-    function isChosungOnly(str) {
-      return /^[ㄱ-ㅎ]+$/.test(str);
-    }
+    function isChosungOnly(str) { return /^[ㄱ-ㅎ]+$/.test(str); }
     function itemMatches(name, query) {
       if (!query) return true;
       var q = query.toLowerCase();
@@ -270,19 +289,124 @@
       return name.toLowerCase().includes(q);
     }
 
-    var currentCat = '';
-    function applyFilter() {
-      var query = document.getElementById('item-search').value.trim();
-      document.querySelectorAll('#item-use-grid .item-card').forEach(function(card) {
-        var catOk = !currentCat || card.dataset.category === currentCat;
-        var nameOk = itemMatches(card.querySelector('.item-name').textContent, query);
-        card.style.display = (catOk && nameOk) ? '' : 'none';
+    // ── usage-log 페이징 ──
+    var USAGE_LOG_PAGE_SIZE = 10;
+    var usageLogPage = 1;
+
+    function buildUsageLogPageNumbers(current, total) {
+      var container = document.getElementById('usage-log-page-numbers');
+      container.innerHTML = '';
+      if (total <= 1) return;
+      var start = Math.max(1, current - 2);
+      var end   = Math.min(total, start + 4);
+      if (end - start < 4) start = Math.max(1, end - 4);
+      function makeBtn(n) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.textContent = n;
+        b.className = 'px-2 py-1 text-xs rounded-lg border transition-colors ' +
+          (n === current ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 text-slate-600 hover:bg-slate-100');
+        b.addEventListener('click', function() { usageLogPage = n; renderUsageLog(); });
+        return b;
+      }
+      function makeDots() {
+        var s = document.createElement('span'); s.textContent = '...';
+        s.className = 'px-1 text-xs text-slate-400'; return s;
+      }
+      if (start > 1) { container.appendChild(makeBtn(1)); if (start > 2) container.appendChild(makeDots()); }
+      for (var i = start; i <= end; i++) container.appendChild(makeBtn(i));
+      if (end < total) { if (end < total - 1) container.appendChild(makeDots()); container.appendChild(makeBtn(total)); }
+    }
+
+    function renderUsageLog() {
+      var rows = Array.from(document.querySelectorAll('#usage-log-tbody tr:not(#usage-log-empty)'));
+      var total = rows.length;
+      var totalPages = Math.max(1, Math.ceil(total / USAGE_LOG_PAGE_SIZE));
+      if (usageLogPage > totalPages) usageLogPage = totalPages;
+      if (usageLogPage < 1) usageLogPage = 1;
+      var start = (usageLogPage - 1) * USAGE_LOG_PAGE_SIZE;
+      rows.forEach(function(r, i) { r.style.display = (i >= start && i < start + USAGE_LOG_PAGE_SIZE) ? '' : 'none'; });
+      var bar = document.getElementById('usage-log-pagination');
+      if (total === 0 || totalPages <= 1) { bar.style.removeProperty('display'); bar.style.display = 'none'; }
+      else { bar.style.removeProperty('display'); }
+      buildUsageLogPageNumbers(usageLogPage, totalPages);
+      document.getElementById('usage-log-prev').disabled = usageLogPage <= 1;
+      document.getElementById('usage-log-next').disabled = usageLogPage >= totalPages;
+    }
+
+    var usageLogPrevBtn = document.getElementById('usage-log-prev');
+    var usageLogNextBtn = document.getElementById('usage-log-next');
+    if (usageLogPrevBtn) {
+      usageLogPrevBtn.addEventListener('click', function() {
+        if (usageLogPage > 1) { usageLogPage--; renderUsageLog(); }
       });
+      usageLogNextBtn.addEventListener('click', function() {
+        var rows = document.querySelectorAll('#usage-log-tbody tr:not(#usage-log-empty)');
+        var totalPages = Math.max(1, Math.ceil(rows.length / USAGE_LOG_PAGE_SIZE));
+        if (usageLogPage < totalPages) { usageLogPage++; renderUsageLog(); }
+      });
+      renderUsageLog();
+    }
+
+    // ── 카드 그리드 페이징 ──
+    var CARD_PAGE_SIZE = 10;
+    var cardPage = 1;
+    var currentCat = '';
+
+    function buildCardPageNumbers(current, total) {
+      var container = document.getElementById('card-grid-page-numbers');
+      if (!container) return;
+      container.innerHTML = '';
+      if (total <= 1) return;
+      var start = Math.max(1, current - 2);
+      var end   = Math.min(total, start + 4);
+      if (end - start < 4) start = Math.max(1, end - 4);
+      function makeBtn(n) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.textContent = n;
+        b.className = 'px-2 py-1 text-xs rounded-lg border transition-colors ' +
+          (n === current ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 text-slate-600 hover:bg-slate-100');
+        b.addEventListener('click', function() { cardPage = n; applyFilter(); });
+        return b;
+      }
+      function makeDots() {
+        var s = document.createElement('span'); s.textContent = '...';
+        s.className = 'px-1 text-xs text-slate-400'; return s;
+      }
+      if (start > 1) { container.appendChild(makeBtn(1)); if (start > 2) container.appendChild(makeDots()); }
+      for (var i = start; i <= end; i++) container.appendChild(makeBtn(i));
+      if (end < total) { if (end < total - 1) container.appendChild(makeDots()); container.appendChild(makeBtn(total)); }
+    }
+
+    function applyFilter() {
+      var searchEl = document.getElementById('item-search');
+      var query = searchEl ? searchEl.value.trim() : '';
+      var allCards = Array.from(document.querySelectorAll('#item-use-grid .item-card'));
+      var filtered = allCards.filter(function(card) {
+        var catOk  = !currentCat || card.dataset.category === currentCat;
+        var nameOk = itemMatches(card.querySelector('.item-name').textContent, query);
+        return catOk && nameOk;
+      });
+      var totalPages = Math.max(1, Math.ceil(filtered.length / CARD_PAGE_SIZE));
+      if (cardPage > totalPages) cardPage = totalPages;
+      if (cardPage < 1) cardPage = 1;
+      var startIdx = (cardPage - 1) * CARD_PAGE_SIZE;
+      allCards.forEach(function(c) { c.style.display = 'none'; });
+      filtered.forEach(function(c, i) { c.style.display = (i >= startIdx && i < startIdx + CARD_PAGE_SIZE) ? '' : 'none'; });
+      var bar = document.getElementById('card-grid-pagination');
+      if (bar) {
+        if (filtered.length === 0 || totalPages <= 1) { bar.style.removeProperty('display'); bar.style.display = 'none'; }
+        else { bar.style.removeProperty('display'); }
+        buildCardPageNumbers(cardPage, totalPages);
+        var prevBtn = document.getElementById('card-grid-prev');
+        var nextBtn = document.getElementById('card-grid-next');
+        if (prevBtn) prevBtn.disabled = cardPage <= 1;
+        if (nextBtn) nextBtn.disabled = cardPage >= totalPages;
+      }
     }
 
     // 검색 이벤트 (canComplete=true 일 때만 존재)
     var searchInput = document.getElementById('item-search');
-    if (searchInput) searchInput.addEventListener('input', applyFilter);
+    if (searchInput) searchInput.addEventListener('input', function() { cardPage = 1; applyFilter(); });
 
     // 카테고리 필터
     document.querySelectorAll('.item-cat-btn').forEach(function(btn) {
@@ -292,9 +416,28 @@
           b.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors';
         });
         this.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors';
+        cardPage = 1;
         applyFilter();
       });
     });
+
+    // 카드 그리드 이전/다음 버튼
+    var cardPrevBtn = document.getElementById('card-grid-prev');
+    var cardNextBtn = document.getElementById('card-grid-next');
+    if (cardPrevBtn) {
+      cardPrevBtn.addEventListener('click', function() {
+        if (cardPage > 1) { cardPage--; applyFilter(); }
+      });
+      cardNextBtn.addEventListener('click', function() {
+        var searchEl = document.getElementById('item-search');
+        var query = searchEl ? searchEl.value.trim() : '';
+        var filtered = Array.from(document.querySelectorAll('#item-use-grid .item-card')).filter(function(c) {
+          return (!currentCat || c.dataset.category === currentCat) && itemMatches(c.querySelector('.item-name').textContent, query);
+        });
+        var totalPages = Math.max(1, Math.ceil(filtered.length / CARD_PAGE_SIZE));
+        if (cardPage < totalPages) { cardPage++; applyFilter(); }
+      });
+    }
 
     // 물품 사용 AJAX
     document.querySelectorAll('form[action$="/doctor/item/use"]').forEach(function(form) {
@@ -333,6 +476,9 @@
         });
       });
     });
+
+    // 초기 렌더
+    if (document.getElementById('item-use-grid')) applyFilter();
   </script>
   <script>feather.replace();</script>
 </body>
