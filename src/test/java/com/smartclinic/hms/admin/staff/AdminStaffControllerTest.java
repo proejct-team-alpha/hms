@@ -12,16 +12,9 @@ import com.smartclinic.hms.common.exception.CustomException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
+import com.smartclinic.hms.common.AdminControllerTestSecurityConfig;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -48,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 "spring.mustache.servlet.allow-request-override=true"
         }
 )
-@Import(AdminStaffControllerTest.TestSecurityConfig.class)
+@Import(AdminControllerTestSecurityConfig.class)
 class AdminStaffControllerTest {
 
     private static final String STAFF_CREATED_MESSAGE = "직원을 등록했습니다.";
@@ -312,31 +305,5 @@ class AdminStaffControllerTest {
                 List.of(new AdminStaffFormOptionResponse("true", "재직", true)),
                 List.of(new AdminStaffFormOptionResponse("MON", "월요일", true))
         );
-    }
-
-    @TestConfiguration
-    @EnableWebSecurity
-    static class TestSecurityConfig {
-
-        @Bean
-        SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            return http
-                    .authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/login").permitAll()
-                            .requestMatchers("/admin/**").hasRole("ADMIN")
-                            .anyRequest().authenticated())
-                    .formLogin(form -> form
-                            .loginPage("/login")
-                            .permitAll())
-                    .csrf(csrf -> csrf.disable())
-                    .build();
-        }
-
-        @Bean
-        UserDetailsService userDetailsService() {
-            return new InMemoryUserDetailsManager(
-                    User.withUsername("admin").password("{noop}password").roles("ADMIN").build(),
-                    User.withUsername("staff").password("{noop}password").roles("STAFF").build());
-        }
     }
 }

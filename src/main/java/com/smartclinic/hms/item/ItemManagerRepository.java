@@ -16,5 +16,4 @@ public interface ItemManagerRepository extends JpaRepository<Item, Long> {
     @Query("SELECT i FROM Item i WHERE i.quantity < i.minQuantity ORDER BY (i.minQuantity - i.quantity) DESC")
     List<Item> findLowStockItems();
 
-    long countByQuantityLessThan(int minQuantity);
 }

@@ -117,7 +117,12 @@ public class ItemManagerService {
 
     @Transactional
     public void saveItem(Long id, String name, String category, int quantity, int minQuantity) {
-        ItemCategory cat = ItemCategory.valueOf(category);
+        ItemCategory cat;
+        try {
+            cat = ItemCategory.valueOf(category);
+        } catch (IllegalArgumentException e) {
+            throw CustomException.badRequest("VALIDATION_ERROR", "유효하지 않은 카테고리입니다: " + category);
+        }
         if (id == null) {
             itemRepository.save(Item.create(name, cat, quantity, minQuantity));
         } else {
@@ -149,7 +154,7 @@ public class ItemManagerService {
                 .orElseThrow(() -> CustomException.notFound("물품을 찾을 수 없습니다. ID: " + id));
         int newQuantity = item.getQuantity() - amount;
         if (newQuantity < 0) {
-            throw new IllegalArgumentException("재고가 " + (-newQuantity) + "개 부족합니다.");
+            throw CustomException.badRequest("VALIDATION_ERROR", "재고가 " + (-newQuantity) + "개 부족합니다.");
         }
         item.updateQuantity(newQuantity);
         usageLogRepository.save(ItemUsageLog.of(reservationId, id, item.getName(), amount, getCurrentActorName()));

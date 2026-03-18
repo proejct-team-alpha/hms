@@ -3,16 +3,9 @@ package com.smartclinic.hms.admin.rule;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
+import com.smartclinic.hms.common.AdminControllerTestSecurityConfig;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -27,7 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AdminRuleController.class)
-@Import(AdminRuleControllerTest.TestSecurityConfig.class)
+@Import(AdminControllerTestSecurityConfig.class)
 class AdminRuleControllerTest {
 
     @Autowired
@@ -83,29 +76,4 @@ class AdminRuleControllerTest {
         then(adminRuleService).should().createRule("응급 절차", "응급 시 이렇게 하세요", "EMERGENCY");
     }
 
-    // ── TestSecurityConfig ───────────────────────────────────────────────────
-
-    @TestConfiguration
-    @EnableWebSecurity
-    static class TestSecurityConfig {
-
-        @Bean
-        SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            return http
-                    .authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/login").permitAll()
-                            .requestMatchers("/admin/**").hasRole("ADMIN")
-                            .anyRequest().authenticated())
-                    .formLogin(form -> form.loginPage("/login").permitAll())
-                    .csrf(csrf -> csrf.disable())
-                    .build();
-        }
-
-        @Bean
-        UserDetailsService userDetailsService() {
-            return new InMemoryUserDetailsManager(
-                    User.withUsername("admin01").password("{noop}password").roles("ADMIN").build(),
-                    User.withUsername("doctor01").password("{noop}password").roles("DOCTOR").build());
-        }
-    }
 }
