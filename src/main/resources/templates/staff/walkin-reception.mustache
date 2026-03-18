@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>방문 접수 - MediCare+</title>
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/flatpickr.min.css">
   <script src="/js/feather.min.js"></script>
+  <script src="/js/flatpickr.min.js"></script>
 </head>
 <body class="min-h-screen flex">
   {{> common/sidebar-staff}}
@@ -61,7 +63,7 @@
                 <select name="doctorId" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none bg-white">
                   <option value="">선택해주세요</option>
                   {{#doctors}}
-                  <option value="{{id}}" data-dept-id="{{departmentId}}">{{displayName}}</option>
+                  <option value="{{id}}" data-dept-id="{{departmentId}}" data-available-days="{{availableDays}}">{{displayName}}</option>
                   {{/doctors}}
                 </select>
               </div>
@@ -72,7 +74,7 @@
                 <label class="block text-sm font-medium text-slate-700 mb-2">접수 날짜</label>
                 <div class="relative">
                   <i data-feather="calendar" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input type="date" name="date" id="dateInput" required value="{{#form}}{{date}}{{/form}}{{^form}}{{today}}{{/form}}" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" />
+                  <input type="text" name="date" id="dateInput" required readonly placeholder="날짜 선택" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" />
                 </div>
               </div>
               <div>
@@ -132,16 +134,15 @@
   {{/message}}
   <script>
     (async function () {
-      const deptSelect  = document.querySelector('select[name="departmentId"]');
-      const docSelect   = document.querySelector('select[name="doctorId"]');
-      const dateInput   = document.getElementById('dateInput');
-      const timeSelect  = document.getElementById('timeSelect');
-      const docOptions  = Array.from(docSelect.querySelectorAll('option[data-dept-id]'));
+      const deptSelect = document.querySelector('select[name="departmentId"]');
+      const docSelect  = document.querySelector('select[name="doctorId"]');
+      const dateInput  = document.getElementById('dateInput');
+      const timeSelect = document.getElementById('timeSelect');
+      const docOptions = Array.from(docSelect.querySelectorAll('option[data-dept-id]'));
 
-      // 과거 날짜 선택 불가
-      dateInput.min = new Date().toISOString().split('T')[0];
+      const DAY_MAP = { SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6 };
 
-      // 진료과 → 의사 필터 (select 값 변경 없이 DOM만 조작)
+      // 진료과 → 의사 필터
       function filterDoctorsOnly() {
         const deptId = deptSelect.value;
         docOptions.forEach(function(opt) {
@@ -158,14 +159,11 @@
         const doctorId = docSelect.value;
         const date     = dateInput.value;
         const opts     = Array.from(timeSelect.querySelectorAll('option[value]'));
-
-        // 전체 초기화
         opts.forEach(function(opt) {
           opt.disabled = false;
           opt.textContent = opt.value;
         });
         if (!doctorId || !date) return;
-
         try {
           const res    = await fetch('/api/reservation/booked-slots?doctorId=' + doctorId + '&date=' + date);
           const booked = await res.json();
@@ -179,18 +177,54 @@
         } catch (e) {}
       }
 
-      deptSelect.addEventListener('change', function() { filterDoctorsOnly(); refreshTimeSlots(); });
-      docSelect.addEventListener('change', refreshTimeSlots);
-      dateInput.addEventListener('change', refreshTimeSlots);
+      // Flatpickr 초기화 (의사 선택 전: 전체 날짜 비활성)
+      const datePicker = flatpickr(dateInput, {
+        dateFormat: 'Y-m-d',
+        minDate: 'today',
+        animate: false,
+        disable: [function() { return true; }],
+        onChange: function() { refreshTimeSlots(); }
+      });
+
+      // 의사 availableDays → Flatpickr 갱신
+      function applyDoctorAvailableDays() {
+        const selectedOption   = docSelect.options[docSelect.selectedIndex];
+        const availableDaysStr = (selectedOption && selectedOption.dataset.availableDays) || '';
+        const availableDayNums = availableDaysStr
+          .split(',')
+          .map(function(d) { return DAY_MAP[d.trim()]; })
+          .filter(function(n) { return n !== undefined; });
+
+        datePicker.clear();
+        if (availableDayNums.length > 0) {
+          datePicker.set('disable', [
+            function(date) { return !availableDayNums.includes(date.getDay()); }
+          ]);
+        } else {
+          datePicker.set('disable', [function() { return true; }]);
+        }
+        // 시간 슬롯 초기화
+        Array.from(timeSelect.querySelectorAll('option[value]')).forEach(function(opt) {
+          opt.disabled = false;
+          opt.textContent = opt.value;
+        });
+        timeSelect.value = '';
+      }
+
+      deptSelect.addEventListener('change', function() { filterDoctorsOnly(); applyDoctorAvailableDays(); });
+      docSelect.addEventListener('change', function() { applyDoctorAvailableDays(); refreshTimeSlots(); });
 
       // 폼 오류 복원
       const restoreDeptId = '{{#form}}{{departmentId}}{{/form}}';
       const restoreDocId  = '{{#form}}{{doctorId}}{{/form}}';
+      const restoreDate   = '{{#form}}{{date}}{{/form}}';
       const restoreTime   = '{{#form}}{{time}}{{/form}}';
 
       if (restoreDeptId) deptSelect.value = restoreDeptId;
       filterDoctorsOnly();
       if (restoreDocId) docSelect.value = restoreDocId;
+      applyDoctorAvailableDays();
+      if (restoreDate) datePicker.setDate(restoreDate);
       await refreshTimeSlots();
       if (restoreTime) timeSelect.value = restoreTime;
     })();
