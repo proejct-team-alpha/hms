@@ -17,6 +17,7 @@ package com.smartclinic.hms.reservation.reservation;
 // [W2-#8 작업 목록]
 // DONE 1. POST /reservation/create — @Valid + BindingResult 적용, 에러 시 폼 재표시
 
+import com.smartclinic.hms.common.exception.CustomException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -55,6 +57,7 @@ public class ReservationController {
     @GetMapping("/direct-reservation")
     public String directReservation(HttpServletRequest request) {
         request.setAttribute("pageTitle", "직접 선택 예약");
+        request.setAttribute("departments", reservationService.getDepartments());
         return "reservation/direct-reservation";
     }
 
@@ -65,7 +68,7 @@ public class ReservationController {
     }
 
     @PostMapping("/create")
-    public String createReservation(@Valid @ModelAttribute ReservationCreateForm form,
+    public String createReservation(@Valid @ModelAttribute CreateReservationRequest form,
                                     BindingResult bindingResult,
                                     HttpServletRequest request,
                                     RedirectAttributes redirectAttributes) {
@@ -75,19 +78,25 @@ public class ReservationController {
                     .collect(Collectors.joining(" "));
             request.setAttribute("pageTitle", "직접 선택 예약");
             request.setAttribute("errorMessage", errorMessage);
+            request.setAttribute("departments", reservationService.getDepartments());
             return "reservation/direct-reservation";
         }
 
-        ReservationCompleteInfo info = reservationService.createReservation(form);
-
-        redirectAttributes.addAttribute("reservationNumber", info.getReservationNumber());
-        redirectAttributes.addAttribute("name",       info.getPatientName());
-        redirectAttributes.addAttribute("department", info.getDepartmentName());
-        redirectAttributes.addAttribute("doctor",     info.getDoctorName());
-        redirectAttributes.addAttribute("date",       info.getReservationDate());
-        redirectAttributes.addAttribute("time",       info.getTimeSlot());
-
-        return "redirect:/reservation/complete";
+        try {
+            ReservationCompleteInfo info = reservationService.createReservation(form);
+            redirectAttributes.addAttribute("reservationNumber", info.getReservationNumber());
+            redirectAttributes.addAttribute("name",       info.getPatientName());
+            redirectAttributes.addAttribute("department", info.getDepartmentName());
+            redirectAttributes.addAttribute("doctor",     info.getDoctorName());
+            redirectAttributes.addAttribute("date",       info.getReservationDate());
+            redirectAttributes.addAttribute("time",       info.getTimeSlot());
+            return "redirect:/reservation/complete";
+        } catch (CustomException e) {
+            request.setAttribute("pageTitle", "직접 선택 예약");
+            request.setAttribute("errorMessage", e.getMessage());
+            request.setAttribute("departments", reservationService.getDepartments());
+            return "reservation/direct-reservation";
+        }
     }
 
     @GetMapping("/lookup")
@@ -130,15 +139,23 @@ public class ReservationController {
 
     @PostMapping("/cancel/{id}")
     public String cancelReservation(@PathVariable("id") Long id,
+                                    @RequestParam("phone") String phone,
+                                    HttpServletRequest request,
                                     RedirectAttributes redirectAttributes) {
-        ReservationCompleteInfo info = reservationService.cancelReservation(id);
-        redirectAttributes.addAttribute("reservationNumber", info.getReservationNumber());
-        redirectAttributes.addAttribute("name",       info.getPatientName());
-        redirectAttributes.addAttribute("department", info.getDepartmentName());
-        redirectAttributes.addAttribute("doctor",     info.getDoctorName());
-        redirectAttributes.addAttribute("date",       info.getReservationDate());
-        redirectAttributes.addAttribute("time",       info.getTimeSlot());
-        return "redirect:/reservation/cancel-complete";
+        try {
+            ReservationCompleteInfo info = reservationService.cancelReservation(id, phone);
+            redirectAttributes.addAttribute("reservationNumber", info.getReservationNumber());
+            redirectAttributes.addAttribute("name",       info.getPatientName());
+            redirectAttributes.addAttribute("department", info.getDepartmentName());
+            redirectAttributes.addAttribute("doctor",     info.getDoctorName());
+            redirectAttributes.addAttribute("date",       info.getReservationDate());
+            redirectAttributes.addAttribute("time",       info.getTimeSlot());
+            return "redirect:/reservation/cancel-complete";
+        } catch (CustomException e) {
+            request.setAttribute("pageTitle", "예약 취소");
+            request.setAttribute("errorMessage", e.getMessage());
+            return "reservation/reservation-cancel";
+        }
     }
 
     @GetMapping("/cancel-complete")
@@ -163,7 +180,8 @@ public class ReservationController {
 
     @PostMapping("/modify/{id}")
     public String modifyReservation(@PathVariable("id") Long id,
-                                    @Valid @ModelAttribute ReservationUpdateForm form,
+                                    @RequestParam("phone") String phone,
+                                    @Valid @ModelAttribute UpdateReservationRequest form,
                                     BindingResult bindingResult,
                                     HttpServletRequest request,
                                     RedirectAttributes redirectAttributes) {
@@ -177,14 +195,22 @@ public class ReservationController {
                     .ifPresent(r -> request.setAttribute("reservation", r));
             return "reservation/reservation-modify";
         }
-        ReservationCompleteInfo info = reservationService.updateReservation(id, form);
-        redirectAttributes.addAttribute("reservationNumber", info.getReservationNumber());
-        redirectAttributes.addAttribute("name",       info.getPatientName());
-        redirectAttributes.addAttribute("department", info.getDepartmentName());
-        redirectAttributes.addAttribute("doctor",     info.getDoctorName());
-        redirectAttributes.addAttribute("date",       info.getReservationDate());
-        redirectAttributes.addAttribute("time",       info.getTimeSlot());
-        return "redirect:/reservation/modify-complete";
+        try {
+            ReservationCompleteInfo info = reservationService.updateReservation(id, phone, form);
+            redirectAttributes.addAttribute("reservationNumber", info.getReservationNumber());
+            redirectAttributes.addAttribute("name",       info.getPatientName());
+            redirectAttributes.addAttribute("department", info.getDepartmentName());
+            redirectAttributes.addAttribute("doctor",     info.getDoctorName());
+            redirectAttributes.addAttribute("date",       info.getReservationDate());
+            redirectAttributes.addAttribute("time",       info.getTimeSlot());
+            return "redirect:/reservation/modify-complete";
+        } catch (CustomException e) {
+            request.setAttribute("pageTitle", "예약 변경");
+            request.setAttribute("errorMessage", e.getMessage());
+            reservationService.findById(id)
+                    .ifPresent(r -> request.setAttribute("reservation", r));
+            return "reservation/reservation-modify";
+        }
     }
 
     @GetMapping("/modify-complete")

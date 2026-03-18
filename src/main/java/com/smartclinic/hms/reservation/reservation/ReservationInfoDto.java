@@ -37,10 +37,11 @@ public class ReservationInfoDto {
 
     private static String toKorean(ReservationStatus s) {
         return switch (s) {
-            case RESERVED  -> "예약완료";
-            case RECEIVED  -> "접수완료";
-            case COMPLETED -> "진료완료";
-            case CANCELLED -> "취소됨";
+            case RESERVED     -> "예약완료";
+            case RECEIVED     -> "접수완료";
+            case IN_TREATMENT -> "진료중";
+            case COMPLETED    -> "진료완료";
+            case CANCELLED    -> "취소됨";
         };
     }
 }

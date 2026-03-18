@@ -11,6 +11,8 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     List<Item> findAllByOrderByNameAsc();
 
+    List<Item> findByCategoryOrderByNameAsc(ItemCategory category);
+
     @Query("""
             select count(i.id)
             from Item i

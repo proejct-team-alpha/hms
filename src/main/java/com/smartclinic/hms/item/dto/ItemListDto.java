@@ -9,6 +9,7 @@ public class ItemListDto {
 
     private final Long id;
     private final String name;
+    private final String category;
     private final String categoryText;
     private final int quantity;
     private final int minQuantity;
@@ -17,6 +18,7 @@ public class ItemListDto {
     public ItemListDto(Item item) {
         this.id = item.getId();
         this.name = item.getName();
+        this.category = item.getCategory().name();
         this.categoryText = toKorean(item.getCategory());
         this.quantity = item.getQuantity();
         this.minQuantity = item.getMinQuantity();

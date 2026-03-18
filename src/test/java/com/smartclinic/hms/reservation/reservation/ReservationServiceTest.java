@@ -1,6 +1,7 @@
 package com.smartclinic.hms.reservation.reservation;
 
 import com.smartclinic.hms.common.exception.CustomException;
+import com.smartclinic.hms.common.util.ReservationNumberGenerator;
 import com.smartclinic.hms.doctor.DoctorRepository;
 import com.smartclinic.hms.domain.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,11 +10,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.Clock;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -32,19 +32,18 @@ class ReservationServiceTest {
     @Mock PatientRepository patientRepository;
     @Mock ReservationRepository reservationRepository;
     @Mock DepartmentRepository departmentRepository;
-    @Spy Clock clock = Clock.systemUTC();
+    @Mock ReservationNumberGenerator reservationNumberGenerator;
 
     @InjectMocks ReservationService reservationService;
 
-    private ReservationCreateForm form;
+    private CreateReservationRequest form;
     private Doctor doctor;
     private Department department;
     private Patient patient;
 
     @BeforeEach
     void setUp() {
-        // ReservationCreateForm이 record로 변경됨에 따라 생성자를 통해 초기화
-        form = new ReservationCreateForm(
+        form = new CreateReservationRequest(
             "홍길동",
             "01012345678",
             1L,
@@ -68,7 +67,7 @@ class ReservationServiceTest {
         given(patientRepository.findByPhone("01012345678")).willReturn(Optional.of(patient));
         given(doctorRepository.findById(1L)).willReturn(Optional.of(doctor));
         given(departmentRepository.findById(1L)).willReturn(Optional.of(department));
-        given(reservationRepository.countByCreatedAtBetween(any(), any())).willReturn(0L);
+        given(reservationNumberGenerator.generate(any(LocalDate.class), any())).willReturn("RES-20260401-001");
 
         // when
         ReservationCompleteInfo info = reservationService.createReservation(form);
@@ -95,7 +94,7 @@ class ReservationServiceTest {
         given(patientRepository.save(any(Patient.class))).willReturn(patient);
         given(doctorRepository.findById(1L)).willReturn(Optional.of(doctor));
         given(departmentRepository.findById(1L)).willReturn(Optional.of(department));
-        given(reservationRepository.countByCreatedAtBetween(any(), any())).willReturn(0L);
+        given(reservationNumberGenerator.generate(any(LocalDate.class), any())).willReturn("RES-20260401-001");
 
         // when
         ReservationCompleteInfo info = reservationService.createReservation(form);
@@ -103,6 +102,36 @@ class ReservationServiceTest {
         // then
         assertThat(info.getPatientName()).isEqualTo("홍길동");
         then(patientRepository).should().save(any(Patient.class));
+    }
+
+    @Test
+    @DisplayName("예약된 슬롯 조회 - 직접 예약용")
+    void getBookedTimeSlots_returnsBookedSlots() {
+        // given
+        given(reservationRepository.findBookedTimeSlots(
+                1L, LocalDate.of(2026, 4, 1), ReservationStatus.CANCELLED))
+            .willReturn(List.of("09:00", "10:30"));
+
+        // when
+        List<String> slots = reservationService.getBookedTimeSlots(1L, LocalDate.of(2026, 4, 1));
+
+        // then
+        assertThat(slots).containsExactlyInAnyOrder("09:00", "10:30");
+    }
+
+    @Test
+    @DisplayName("예약된 슬롯 조회 - 현재 예약 제외 (변경용)")
+    void getBookedTimeSlots_withExcludeId_excludesCurrentReservation() {
+        // given
+        given(reservationRepository.findBookedTimeSlotsExcluding(
+                1L, LocalDate.of(2026, 4, 1), ReservationStatus.CANCELLED, 5L))
+            .willReturn(List.of("10:30"));
+
+        // when
+        List<String> slots = reservationService.getBookedTimeSlots(1L, LocalDate.of(2026, 4, 1), 5L);
+
+        // then
+        assertThat(slots).containsExactly("10:30");
     }
 
     @Test

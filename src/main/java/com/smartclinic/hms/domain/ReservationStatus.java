@@ -6,6 +6,7 @@ package com.smartclinic.hms.domain;
 public enum ReservationStatus {
     RESERVED,
     RECEIVED,
+    IN_TREATMENT,
     COMPLETED,
     CANCELLED
 }

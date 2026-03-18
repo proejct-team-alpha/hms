@@ -16,6 +16,7 @@ public class DoctorReservationDto {
     private final String sourceText;
     private final String sourceBadgeClass;
     private final boolean canComplete;
+    private final boolean canStartTreatment;
 
     public DoctorReservationDto(Reservation r) {
         this.id = r.getId();
@@ -29,18 +30,28 @@ public class DoctorReservationDto {
                 this.statusBadgeClass = "bg-orange-100 text-orange-600";
                 this.cardClass = "border-slate-200 hover:border-indigo-300";
                 this.canComplete = true;
+                this.canStartTreatment = true;
+            }
+            case IN_TREATMENT -> {
+                this.statusText = "진료중";
+                this.statusBadgeClass = "bg-indigo-100 text-indigo-700";
+                this.cardClass = "border-indigo-300 hover:border-indigo-400";
+                this.canComplete = true;
+                this.canStartTreatment = false;
             }
             case COMPLETED -> {
                 this.statusText = "진료 완료";
                 this.statusBadgeClass = "bg-green-600 text-white";
                 this.cardClass = "border-slate-200 opacity-60";
                 this.canComplete = false;
+                this.canStartTreatment = false;
             }
             default -> {
                 this.statusText = "예약";
                 this.statusBadgeClass = "bg-slate-100 text-slate-600";
                 this.cardClass = "border-slate-200 hover:border-indigo-300";
                 this.canComplete = false;
+                this.canStartTreatment = false;
             }
         }
 

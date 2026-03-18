@@ -43,6 +43,12 @@ public class Staff {
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 
+    @Column(length = 100)
+    private String email;
+
+    @Column(length = 20)
+    private String phone;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -65,6 +71,11 @@ public class Staff {
 
     public void updatePassword(String encodedPassword) {
         this.password = encodedPassword;
+    }
+
+    public void updateContact(String email, String phone) {
+        this.email = email;
+        this.phone = phone;
     }
 
     public void update(String name, Department department, boolean active) {

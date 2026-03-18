@@ -1,10 +1,10 @@
 {{! S5 — ITEM_MANAGER 사이드 메뉴. 화면 27~29, 37~39 }}
 <aside class="w-64 bg-white border-r border-slate-200 flex flex-col h-screen fixed left-0 top-0 z-10">
   <div class="p-6 border-b border-slate-200">
-    <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+    <a href="{{dashboardUrl}}" class="text-xl font-bold text-slate-800 flex items-center gap-2 hover:text-indigo-600 transition-colors">
       <i data-feather="activity" class="text-indigo-600"></i>
       MediCare+
-    </h1>
+    </a>
   </div>
   <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
     <div>
@@ -30,6 +30,10 @@
     <a href="/item-manager/item-form" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isItemForm}}bg-indigo-50 text-indigo-700{{/isItemForm}}{{^isItemForm}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isItemForm}}">
       <i data-feather="plus-circle" class="w-5 h-5"></i>
       물품 등록
+    </a>
+    <a href="/item-manager/item-use" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isItemUse}}bg-indigo-50 text-indigo-700{{/isItemUse}}{{^isItemUse}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isItemUse}}">
+      <i data-feather="package" class="w-5 h-5"></i>
+      물품 출고
     </a>
     <a href="/item-manager/item-history" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isItemHistory}}bg-indigo-50 text-indigo-700{{/isItemHistory}}{{^isItemHistory}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isItemHistory}}">
       <i data-feather="clock" class="w-5 h-5"></i>

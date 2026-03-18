@@ -1,7 +1,7 @@
 # 개발자 C (강상민) — SKILL.md
 
 > **역할:** 관리자 대시보드, 예약/환자/직원/진료과/물품/규칙 관리, REST API
-> **담당 URL:** `/admin/`**, `/api/**`
+> **담당 URL:** `/admin/`**, `/api/`**
 > **담당 화면:** S17~S42 (관리자 16개 화면 + 카테고리 관리)
 > **기준 문서:** PRD v1.0 / 프로젝트 계획서 v4.3 / 화면 기능 정의서 v5.1
 
@@ -301,7 +301,7 @@ feature/api-layer
 | `common/service/SlotService.java`   | 책임개발자(김민구) | 인터페이스 호출만          |
 | `llm/LlmService.java`               | 책임개발자(김민구) | 인터페이스 호출만          |
 | `reservation/`**                    | 개발자 A(강태오) | 접근 금지              |
-| `staff/**`, `doctor/**`, `nurse/**` | 개발자 B(조유지) | 접근 금지              |
+| `staff/`**, `doctor/**`, `nurse/**` | 개발자 B(조유지) | 접근 금지              |
 | `ReservationRepository`             | 개발자 A(강태오) | 조회만 허용 (save 금지)   |
 
 
