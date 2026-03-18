@@ -129,6 +129,7 @@
   <script>
     var PAGE_SIZE = 10;
     var currentPage = 1;
+    var totalPages = 1;
     var currentType = '';
     var currentQuery = '';
 
@@ -164,7 +165,7 @@
     function render() {
       var rows = getFilteredRows();
       var total = rows.length;
-      var totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
       if (currentPage < 1) currentPage = 1;
       if (currentPage > totalPages) currentPage = totalPages;
 
@@ -224,7 +225,7 @@
     var btnPrev = document.getElementById('btn-prev');
     var btnNext = document.getElementById('btn-next');
     if (btnPrev) btnPrev.addEventListener('click', function() { currentPage--; if (currentPage < 1) currentPage = 1; render(); });
-    if (btnNext) btnNext.addEventListener('click', function() { currentPage++; render(); });
+    if (btnNext) btnNext.addEventListener('click', function() { currentPage++; if (currentPage > totalPages) currentPage = totalPages; render(); });
 
     render();
   </script>
