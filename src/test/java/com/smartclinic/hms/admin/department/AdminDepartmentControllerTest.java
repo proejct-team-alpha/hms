@@ -24,7 +24,6 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -204,7 +203,7 @@ class AdminDepartmentControllerTest {
     }
 
     @Test
-    @DisplayName("진료과 이름 수정은 성공 후 상세 페이지로 리다이렉트하고 성공 메시지를 남긴다")
+    @DisplayName("진료과 이름 수정은 성공 시 상세 페이지로 리다이렉트하고 성공 메시지를 남긴다")
     void update_redirectsToDetailWithSuccessMessage() throws Exception {
         // given
         given(adminDepartmentService.updateDepartmentName(5L, "내과")).willReturn("진료과명이 수정되었습니다.");
@@ -262,6 +261,98 @@ class AdminDepartmentControllerTest {
     }
 
     @Test
+    @DisplayName("진료과 비활성화는 성공 시 상세 페이지로 리다이렉트하고 성공 메시지를 남긴다")
+    void deactivate_redirectsToDetailWithSuccessMessage() throws Exception {
+        // given
+        given(adminDepartmentService.deactivateDepartment(5L)).willReturn("진료과가 비활성화되었습니다.");
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/department/deactivate")
+                        .param("departmentId", "5")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/department/detail?departmentId=5"))
+                .andExpect(flash().attribute("successMessage", "진료과가 비활성화되었습니다."));
+
+        then(adminDepartmentService).should().deactivateDepartment(5L);
+    }
+
+    @Test
+    @DisplayName("진료과 비활성화는 이미 비활성 상태면 상세 페이지로 돌아가 에러 메시지를 남긴다")
+    void deactivate_redirectsBackToDetailWhenAlreadyInactive() throws Exception {
+        // given
+        given(adminDepartmentService.deactivateDepartment(5L))
+                .willThrow(CustomException.invalidStatusTransition("이미 비활성화된 진료과입니다."));
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/department/deactivate")
+                        .param("departmentId", "5")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/department/detail?departmentId=5"))
+                .andExpect(flash().attribute("errorMessage", "이미 비활성화된 진료과입니다."));
+    }
+
+    @Test
+    @DisplayName("진료과 비활성화는 대상이 없으면 목록으로 돌아가 에러 메시지를 남긴다")
+    void deactivate_redirectsToListWhenDepartmentMissing() throws Exception {
+        // given
+        given(adminDepartmentService.deactivateDepartment(99L))
+                .willThrow(CustomException.notFound("진료과를 찾을 수 없습니다."));
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/department/deactivate")
+                        .param("departmentId", "99")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/department/list"))
+                .andExpect(flash().attribute("errorMessage", "진료과를 찾을 수 없습니다."));
+    }
+
+    @Test
+    @DisplayName("진료과 활성화는 성공 시 상세 페이지로 리다이렉트하고 성공 메시지를 남긴다")
+    void activate_redirectsToDetailWithSuccessMessage() throws Exception {
+        // given
+        given(adminDepartmentService.activateDepartment(7L)).willReturn("진료과가 활성화되었습니다.");
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/department/activate")
+                        .param("departmentId", "7")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/department/detail?departmentId=7"))
+                .andExpect(flash().attribute("successMessage", "진료과가 활성화되었습니다."));
+
+        then(adminDepartmentService).should().activateDepartment(7L);
+    }
+
+    @Test
+    @DisplayName("진료과 활성화는 이미 활성 상태면 상세 페이지로 돌아가 에러 메시지를 남긴다")
+    void activate_redirectsBackToDetailWhenAlreadyActive() throws Exception {
+        // given
+        given(adminDepartmentService.activateDepartment(7L))
+                .willThrow(CustomException.invalidStatusTransition("이미 활성화된 진료과입니다."));
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/department/activate")
+                        .param("departmentId", "7")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/department/detail?departmentId=7"))
+                .andExpect(flash().attribute("errorMessage", "이미 활성화된 진료과입니다."));
+    }
+
+    @Test
     @DisplayName("진료과 등록은 active 체크 여부를 서비스에 전달하고 목록으로 리다이렉트한다")
     void create_passesCheckedActiveAndRedirectsToList() throws Exception {
         // given
@@ -280,7 +371,7 @@ class AdminDepartmentControllerTest {
     }
 
     @Test
-    @DisplayName("진료과 등록은 active 값이 없으면 false로 저장하고 목록으로 리다이렉트한다")
+    @DisplayName("진료과 등록은 active 값이 없으면 false로 전달하고 목록으로 리다이렉트한다")
     void create_defaultsActiveToFalseWhenUnchecked() throws Exception {
         // given
 

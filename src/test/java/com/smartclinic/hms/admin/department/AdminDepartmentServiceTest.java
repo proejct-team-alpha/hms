@@ -93,7 +93,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("진료과 목록 조회는 데이터가 없으면 빈 목록 상태를 반환한다")
+    @DisplayName("진료과 목록 조회 결과가 없으면 빈 목록 상태를 반환한다")
     void getDepartmentList_returnsEmptyStateWhenNoDepartments() {
         // given
         given(adminDepartmentRepository.findAllByOrderByIdDesc(any(Pageable.class)))
@@ -116,7 +116,7 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
-    @DisplayName("진료과 목록 조회는 각 페이지 번호와 링크를 올바르게 계산한다")
+    @DisplayName("진료과 목록 조회는 각 페이지 링크와 URL을 올바르게 계산한다")
     void getDepartmentList_buildsPageLinksWithExpectedUrls() {
         // given
         Department internalMedicine = Department.create("내과", true);
@@ -245,6 +245,83 @@ class AdminDepartmentServiceTest {
         assertThatThrownBy(() -> adminDepartmentService.updateDepartmentName(44L, "새 이름"))
                 .isInstanceOf(CustomException.class)
                 .hasMessage("진료과를 찾을 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("진료과 비활성화는 active 값을 false로 바꾸고 성공 메시지를 반환한다")
+    void deactivateDepartment_deactivatesDepartment() {
+        // given
+        Department department = Department.create("내과", true);
+        ReflectionTestUtils.setField(department, "id", 8L);
+        given(adminDepartmentRepository.findById(8L)).willReturn(Optional.of(department));
+
+        // when
+        String result = adminDepartmentService.deactivateDepartment(8L);
+
+        // then
+        assertThat(result).isEqualTo("진료과가 비활성화되었습니다.");
+        assertThat(department.isActive()).isFalse();
+        then(adminDepartmentRepository).should().save(department);
+    }
+
+    @Test
+    @DisplayName("진료과 비활성화는 이미 비활성 상태인 요청을 거부한다")
+    void deactivateDepartment_throwsWhenAlreadyInactive() {
+        // given
+        Department department = Department.create("외과", false);
+        ReflectionTestUtils.setField(department, "id", 8L);
+        given(adminDepartmentRepository.findById(8L)).willReturn(Optional.of(department));
+
+        // when
+        // then
+        assertThatThrownBy(() -> adminDepartmentService.deactivateDepartment(8L))
+                .isInstanceOf(CustomException.class)
+                .hasMessage("이미 비활성화된 진료과입니다.");
+    }
+
+    @Test
+    @DisplayName("진료과 비활성화는 없는 진료과 요청을 거부한다")
+    void deactivateDepartment_throwsWhenDepartmentMissing() {
+        // given
+        given(adminDepartmentRepository.findById(81L)).willReturn(Optional.empty());
+
+        // when
+        // then
+        assertThatThrownBy(() -> adminDepartmentService.deactivateDepartment(81L))
+                .isInstanceOf(CustomException.class)
+                .hasMessage("진료과를 찾을 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("진료과 활성화는 active 값을 true로 바꾸고 성공 메시지를 반환한다")
+    void activateDepartment_activatesDepartment() {
+        // given
+        Department department = Department.create("외과", false);
+        ReflectionTestUtils.setField(department, "id", 9L);
+        given(adminDepartmentRepository.findById(9L)).willReturn(Optional.of(department));
+
+        // when
+        String result = adminDepartmentService.activateDepartment(9L);
+
+        // then
+        assertThat(result).isEqualTo("진료과가 활성화되었습니다.");
+        assertThat(department.isActive()).isTrue();
+        then(adminDepartmentRepository).should().save(department);
+    }
+
+    @Test
+    @DisplayName("진료과 활성화는 이미 활성 상태인 요청을 거부한다")
+    void activateDepartment_throwsWhenAlreadyActive() {
+        // given
+        Department department = Department.create("내과", true);
+        ReflectionTestUtils.setField(department, "id", 9L);
+        given(adminDepartmentRepository.findById(9L)).willReturn(Optional.of(department));
+
+        // when
+        // then
+        assertThatThrownBy(() -> adminDepartmentService.activateDepartment(9L))
+                .isInstanceOf(CustomException.class)
+                .hasMessage("이미 활성화된 진료과입니다.");
     }
 
     @Test

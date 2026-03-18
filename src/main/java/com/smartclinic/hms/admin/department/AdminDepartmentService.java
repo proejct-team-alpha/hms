@@ -24,6 +24,10 @@ public class AdminDepartmentService {
     private static final String DEPARTMENT_NAME_REQUIRED_MESSAGE = "진료과명은 필수입니다.";
     private static final String DUPLICATE_DEPARTMENT_NAME_MESSAGE = "이미 존재하는 진료과명입니다.";
     private static final String DEPARTMENT_UPDATED_MESSAGE = "진료과명이 수정되었습니다.";
+    private static final String DEPARTMENT_ACTIVATED_MESSAGE = "진료과가 활성화되었습니다.";
+    private static final String DEPARTMENT_DEACTIVATED_MESSAGE = "진료과가 비활성화되었습니다.";
+    private static final String ALREADY_ACTIVE_MESSAGE = "이미 활성화된 진료과입니다.";
+    private static final String ALREADY_INACTIVE_MESSAGE = "이미 비활성화된 진료과입니다.";
 
     private final AdminDepartmentRepository adminDepartmentRepository;
 
@@ -80,6 +84,30 @@ public class AdminDepartmentService {
         department.rename(normalizedName);
         adminDepartmentRepository.save(department);
         return DEPARTMENT_UPDATED_MESSAGE;
+    }
+
+    @Transactional
+    public String deactivateDepartment(Long departmentId) {
+        Department department = findDepartment(departmentId);
+        if (!department.isActive()) {
+            throw CustomException.invalidStatusTransition(ALREADY_INACTIVE_MESSAGE);
+        }
+
+        department.deactivate();
+        adminDepartmentRepository.save(department);
+        return DEPARTMENT_DEACTIVATED_MESSAGE;
+    }
+
+    @Transactional
+    public String activateDepartment(Long departmentId) {
+        Department department = findDepartment(departmentId);
+        if (department.isActive()) {
+            throw CustomException.invalidStatusTransition(ALREADY_ACTIVE_MESSAGE);
+        }
+
+        department.activate();
+        adminDepartmentRepository.save(department);
+        return DEPARTMENT_ACTIVATED_MESSAGE;
     }
 
     private Department findDepartment(Long departmentId) {

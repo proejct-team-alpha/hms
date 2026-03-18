@@ -81,6 +81,40 @@ public class AdminDepartmentController {
         }
     }
 
+    @PostMapping("/deactivate")
+    public RedirectView deactivate(
+            @RequestParam Long departmentId,
+            RedirectAttributes redirectAttributes) {
+        try {
+            String successMessage = adminDepartmentService.deactivateDepartment(departmentId);
+            redirectAttributes.addFlashAttribute("successMessage", successMessage);
+            return redirectToDetail(departmentId);
+        } catch (CustomException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            if (ex.getHttpStatus() == HttpStatus.NOT_FOUND) {
+                return redirectTo("/admin/department/list");
+            }
+            return redirectToDetail(departmentId);
+        }
+    }
+
+    @PostMapping("/activate")
+    public RedirectView activate(
+            @RequestParam Long departmentId,
+            RedirectAttributes redirectAttributes) {
+        try {
+            String successMessage = adminDepartmentService.activateDepartment(departmentId);
+            redirectAttributes.addFlashAttribute("successMessage", successMessage);
+            return redirectToDetail(departmentId);
+        } catch (CustomException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            if (ex.getHttpStatus() == HttpStatus.NOT_FOUND) {
+                return redirectTo("/admin/department/list");
+            }
+            return redirectToDetail(departmentId);
+        }
+    }
+
     private RedirectView redirectToDetail(Long departmentId) {
         return redirectTo("/admin/department/detail?departmentId=" + departmentId);
     }
