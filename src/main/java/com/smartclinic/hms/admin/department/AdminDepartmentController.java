@@ -37,9 +37,7 @@ public class AdminDepartmentController {
             HttpServletRequest req,
             HttpServletResponse response) {
         try {
-            req.setAttribute("model", adminDepartmentService.getDepartmentDetail(departmentId));
-            req.setAttribute("pageTitle", "\uC9C4\uB8CC\uACFC \uC0C1\uC138");
-            return "admin/department-detail";
+            return renderDetailPage(req, adminDepartmentService.getDepartmentDetail(departmentId), null);
         } catch (CustomException ex) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             req.setAttribute("pageTitle", "\uD398\uC774\uC9C0\uB97C \uCC3E\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4");
@@ -63,20 +61,27 @@ public class AdminDepartmentController {
     }
 
     @PostMapping("/update")
-    public RedirectView update(
-            @RequestParam Long departmentId,
-            @RequestParam(defaultValue = "") String name,
+    public Object update(
+            @Valid @ModelAttribute UpdateAdminDepartmentRequest request,
+            BindingResult bindingResult,
+            HttpServletRequest req,
             RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            return renderUpdateValidationFailure(req, request, redirectAttributes, bindingResult);
+        }
+
         try {
-            String successMessage = adminDepartmentService.updateDepartmentName(departmentId, name);
+            String successMessage = adminDepartmentService.updateDepartmentName(
+                    request.getDepartmentId(),
+                    request.getName());
             redirectAttributes.addFlashAttribute("successMessage", successMessage);
-            return redirectToDetail(departmentId);
+            return redirectToDetail(request.getDepartmentId());
         } catch (CustomException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
             if (ex.getHttpStatus() == HttpStatus.NOT_FOUND) {
                 return redirectTo("/admin/department/list");
             }
-            return redirectToDetail(departmentId);
+            return redirectToDetail(request.getDepartmentId());
         }
     }
 
@@ -133,6 +138,36 @@ public class AdminDepartmentController {
         req.setAttribute("openCreateModal", true);
         req.setAttribute("nameError", getFieldError(bindingResult, "name"));
         return "admin/department-list";
+    }
+
+    private String renderDetailPage(
+            HttpServletRequest req,
+            AdminDepartmentDetailResponse model,
+            String editName) {
+        req.setAttribute("model", model);
+        req.setAttribute("pageTitle", "\uC9C4\uB8CC\uACFC \uC0C1\uC138");
+        req.setAttribute("editName", editName == null ? model.name() : editName);
+        return "admin/department-detail";
+    }
+
+    private Object renderUpdateValidationFailure(
+            HttpServletRequest req,
+            UpdateAdminDepartmentRequest request,
+            RedirectAttributes redirectAttributes,
+            BindingResult bindingResult) {
+        if (request.getDepartmentId() == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "\uC785\uB825\uAC12\uC744 \uD655\uC778\uD574\uC8FC\uC138\uC694.");
+            return redirectTo("/admin/department/list");
+        }
+
+        try {
+            AdminDepartmentDetailResponse model = adminDepartmentService.getDepartmentDetail(request.getDepartmentId());
+            req.setAttribute("nameError", getFieldError(bindingResult, "name"));
+            return renderDetailPage(req, model, request.getName());
+        } catch (CustomException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            return redirectTo("/admin/department/list");
+        }
     }
 
     private String getFieldError(BindingResult bindingResult, String fieldName) {
