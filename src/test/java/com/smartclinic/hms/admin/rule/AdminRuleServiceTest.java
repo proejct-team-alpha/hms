@@ -32,7 +32,7 @@ class AdminRuleServiceTest {
     @DisplayName("getRuleList returns mapped dtos from full list")
     void getRuleList_returnsMappedDtos() {
         // given
-        HospitalRule rule1 = HospitalRule.create("응급 지침", "응급실 우선 대응 절차", HospitalRuleCategory.EMERGENCY);
+        HospitalRule rule1 = HospitalRule.create("응급 지침", "응급실 우선 대응 안내", HospitalRuleCategory.EMERGENCY);
         HospitalRule rule2 = HospitalRule.create("물품 관리", "물품 정리 방법", HospitalRuleCategory.SUPPLY);
         given(hospitalRuleRepository.findAllByOrderByCreatedAtDesc()).willReturn(List.of(rule1, rule2));
 
@@ -89,6 +89,10 @@ class AdminRuleServiceTest {
         assertThat(result.hasNext()).isFalse();
         assertThat(result.pageLinks()).hasSize(2);
         assertThat(result.pageLinks().get(1).active()).isTrue();
+        assertThat(result.categoryOptions()).extracting(AdminRuleFilterOptionResponse::label)
+                .containsExactly("전체", "응급", "물품", "근무", "위생", "기타");
+        assertThat(result.activeOptions()).extracting(AdminRuleFilterOptionResponse::label)
+                .containsExactly("전체", "활성", "비활성");
     }
 
     @Test
@@ -109,6 +113,8 @@ class AdminRuleServiceTest {
         assertThat(result.size()).isEqualTo(10);
         assertThat(result.totalCount()).isZero();
         assertThat(result.rules()).isEmpty();
+        assertThat(result.categoryOptions().get(0).selected()).isTrue();
+        assertThat(result.activeOptions().get(0).selected()).isTrue();
     }
 
     @Test
@@ -127,7 +133,7 @@ class AdminRuleServiceTest {
     @DisplayName("AdminRuleDto shows active text for active rule")
     void adminRuleDto_activeRule_showsActiveText() {
         // given
-        HospitalRule rule = HospitalRule.create("위생 규칙", "손 씻기 필수", HospitalRuleCategory.HYGIENE);
+        HospitalRule rule = HospitalRule.create("위생 규칙", "손씻기 필수", HospitalRuleCategory.HYGIENE);
 
         // when
         AdminRuleDto dto = new AdminRuleDto(rule);

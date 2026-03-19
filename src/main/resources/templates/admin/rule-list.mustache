@@ -3,59 +3,157 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>병원 규칙 관리 - MediCare+</title>
+  <title>{{pageTitle}} - MediCare+</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
 </head>
-<body class="min-h-screen flex">
+<body class="min-h-screen flex bg-slate-50">
   {{> common/sidebar-admin}}
 
-  <div class="main-content flex-1 flex flex-col ml-64">
+  <div class="main-content flex-1 flex flex-col ml-64 min-h-screen">
     {{> common/header-staff}}
 
-    <main class="content-wrapper flex-1 p-6">
-      <div class="space-y-4">
-
-        <div class="flex items-center justify-between">
+    <main class="flex-1 p-8">
+      <div class="space-y-6 max-w-6xl mx-auto w-full">
+        <div class="flex items-center justify-between gap-4">
           <div>
-            <h1 class="text-2xl font-bold text-slate-800">병원 규칙 관리</h1>
-            <p class="text-slate-500 mt-1">병원 규칙을 조회하고 관리합니다.</p>
+            <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
+            <p class="text-slate-500 mt-1">카테고리, 활성 여부, 제목 키워드로 병원 규칙을 조회하고 관리합니다.</p>
           </div>
-          <a href="/admin/rule/form"
-            class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
-            <i data-feather="plus" class="w-4 h-4"></i>
-            규칙 등록
-          </a>
-        </div>
-
-        <div class="space-y-3">
-          {{#rules}}
-          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <div class="flex items-start justify-between gap-4">
-              <div class="flex-1">
-                <div class="flex items-center gap-2 mb-2">
-                  <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-700">{{categoryText}}</span>
-                  <span class="{{activeBadgeClass}}">{{activeText}}</span>
-                </div>
-                <h3 class="text-base font-bold text-slate-800 mb-1">{{title}}</h3>
-                <p class="text-sm text-slate-500 line-clamp-2">{{content}}</p>
-              </div>
+          <div class="flex items-center gap-4">
+            <div class="text-sm text-slate-500 text-right">
+              <div>총 <span class="font-semibold text-slate-700">{{model.totalCount}}</span>건</div>
+              {{#model.hasPages}}
+                <div>{{model.currentPage}} / {{model.totalPages}} 페이지</div>
+              {{/model.hasPages}}
+              {{^model.hasPages}}
+                <div>0 / 0 페이지</div>
+              {{/model.hasPages}}
             </div>
+            <a
+              href="/admin/rule/form"
+              class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              규칙 등록
+            </a>
           </div>
-          {{/rules}}
-          {{^hasRules}}
-          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center text-slate-400">
-            등록된 규칙이 없습니다.
-          </div>
-          {{/hasRules}}
         </div>
 
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <form method="get" action="/admin/rule/list" class="p-4 border-b border-slate-200 bg-slate-50">
+            <input type="hidden" name="page" value="1">
+            <input type="hidden" name="size" value="{{model.size}}">
+
+            <div class="flex flex-wrap items-end gap-3">
+              <div class="min-w-[260px] flex-1">
+                <label for="rule-keyword" class="block text-sm font-medium text-slate-700 mb-1.5">제목 검색</label>
+                <div class="relative">
+                  <i data-feather="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                  <input
+                    type="text"
+                    id="rule-keyword"
+                    name="keyword"
+                    value="{{model.keyword}}"
+                    placeholder="규칙 제목 검색"
+                    class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  >
+                </div>
+              </div>
+
+              <div class="min-w-[180px]">
+                <label for="rule-category" class="block text-sm font-medium text-slate-700 mb-1.5">카테고리</label>
+                <select
+                  id="rule-category"
+                  name="category"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                >
+                  {{#model.categoryOptions}}
+                    <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                  {{/model.categoryOptions}}
+                </select>
+              </div>
+
+              <div class="min-w-[180px]">
+                <label for="rule-active" class="block text-sm font-medium text-slate-700 mb-1.5">활성 여부</label>
+                <select
+                  id="rule-active"
+                  name="active"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                >
+                  {{#model.activeOptions}}
+                    <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                  {{/model.activeOptions}}
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                조회
+              </button>
+              <a
+                href="/admin/rule/list"
+                class="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
+              >
+                초기화
+              </a>
+            </div>
+          </form>
+
+          <div class="px-4 py-3 border-b border-slate-200 bg-white text-sm text-slate-500 flex flex-wrap gap-3">
+            {{#model.keyword}}
+              <span>검색어 <span class="font-medium text-slate-700">{{model.keyword}}</span></span>
+            {{/model.keyword}}
+            {{^model.keyword}}
+              <span>전체 규칙을 보고 있습니다.</span>
+            {{/model.keyword}}
+          </div>
+
+          <div class="space-y-3 p-4 bg-slate-50/50">
+            {{#model.rules}}
+              <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <div class="flex items-start justify-between gap-4">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex flex-wrap items-center gap-2 mb-3">
+                      <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-700">{{categoryText}}</span>
+                      <span class="{{activeBadgeClass}}">{{activeText}}</span>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-800 mb-2">{{title}}</h3>
+                    <p class="text-sm text-slate-500 whitespace-pre-line break-words">{{content}}</p>
+                  </div>
+                </div>
+              </div>
+            {{/model.rules}}
+            {{^model.rules}}
+              <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center text-slate-400">
+                조회된 규칙이 없습니다.
+              </div>
+            {{/model.rules}}
+          </div>
+
+          <div class="p-4 border-t border-slate-200 flex items-center justify-center gap-2 bg-slate-50">
+            {{#model.hasPrevious}}
+              <a href="{{model.previousUrl}}" class="px-3 py-1.5 text-sm rounded-md border border-slate-300 text-slate-600 hover:bg-white">이전</a>
+            {{/model.hasPrevious}}
+
+            {{#model.pageLinks}}
+              <a href="{{url}}" class="px-3 py-1.5 text-sm rounded-md border transition-colors {{#active}}bg-slate-800 border-slate-800 text-white{{/active}}{{^active}}border-slate-300 text-slate-600 hover:bg-white{{/active}}">{{page}}</a>
+            {{/model.pageLinks}}
+
+            {{#model.hasNext}}
+              <a href="{{model.nextUrl}}" class="px-3 py-1.5 text-sm rounded-md border border-slate-300 text-slate-600 hover:bg-white">다음</a>
+            {{/model.hasNext}}
+          </div>
+        </div>
       </div>
     </main>
 
     {{> common/footer-staff}}
   </div>
 
-  <script>feather.replace();</script>
+  <script>
+    feather.replace();
+  </script>
 </body>
 </html>

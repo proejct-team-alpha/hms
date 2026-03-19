@@ -57,6 +57,8 @@ public class AdminRuleService {
         return new AdminRuleListResponse(
                 pageResult.getContent().stream().map(AdminRuleDto::new).toList(),
                 buildPageLinks(totalPages, currentPage, safeSize, normalizedCategory, normalizedActive, normalizedKeyword),
+                buildCategoryOptions(normalizedCategory),
+                buildActiveOptions(normalizedActive),
                 normalizedCategory,
                 normalizedActive,
                 normalizedKeyword,
@@ -122,6 +124,25 @@ public class AdminRuleService {
             case "INACTIVE" -> Boolean.FALSE;
             default -> null;
         };
+    }
+
+    private List<AdminRuleFilterOptionResponse> buildCategoryOptions(String selectedCategory) {
+        return List.of(
+                new AdminRuleFilterOptionResponse("ALL", "전체", DEFAULT_CATEGORY.equals(selectedCategory)),
+                new AdminRuleFilterOptionResponse("EMERGENCY", "응급", "EMERGENCY".equals(selectedCategory)),
+                new AdminRuleFilterOptionResponse("SUPPLY", "물품", "SUPPLY".equals(selectedCategory)),
+                new AdminRuleFilterOptionResponse("DUTY", "근무", "DUTY".equals(selectedCategory)),
+                new AdminRuleFilterOptionResponse("HYGIENE", "위생", "HYGIENE".equals(selectedCategory)),
+                new AdminRuleFilterOptionResponse("OTHER", "기타", "OTHER".equals(selectedCategory))
+        );
+    }
+
+    private List<AdminRuleFilterOptionResponse> buildActiveOptions(String selectedActive) {
+        return List.of(
+                new AdminRuleFilterOptionResponse("ALL", "전체", DEFAULT_ACTIVE.equals(selectedActive)),
+                new AdminRuleFilterOptionResponse("ACTIVE", "활성", "ACTIVE".equals(selectedActive)),
+                new AdminRuleFilterOptionResponse("INACTIVE", "비활성", "INACTIVE".equals(selectedActive))
+        );
     }
 
     private List<AdminRulePageLinkResponse> buildPageLinks(

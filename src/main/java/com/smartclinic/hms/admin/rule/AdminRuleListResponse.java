@@ -5,6 +5,8 @@ import java.util.List;
 public record AdminRuleListResponse(
         List<AdminRuleDto> rules,
         List<AdminRulePageLinkResponse> pageLinks,
+        List<AdminRuleFilterOptionResponse> categoryOptions,
+        List<AdminRuleFilterOptionResponse> activeOptions,
         String selectedCategory,
         String selectedActive,
         String keyword,

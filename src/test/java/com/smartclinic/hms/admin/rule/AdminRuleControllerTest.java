@@ -104,20 +104,22 @@ class AdminRuleControllerTest {
         // when // then
         mockMvc.perform(post("/admin/rule/form")
                         .param("title", "응급 지침")
-                        .param("content", "응급실 우선 대응 절차")
+                        .param("content", "응급실 우선 대응 안내")
                         .param("category", "EMERGENCY")
                         .with(user("admin01").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrlPattern("/admin/rule/list*"));
 
-        then(adminRuleService).should().createRule("응급 지침", "응급실 우선 대응 절차", "EMERGENCY");
+        then(adminRuleService).should().createRule("응급 지침", "응급실 우선 대응 안내", "EMERGENCY");
     }
 
     private AdminRuleListResponse createEmptyResponse() {
         return new AdminRuleListResponse(
                 List.of(),
                 List.of(),
+                List.of(new AdminRuleFilterOptionResponse("ALL", "전체", true)),
+                List.of(new AdminRuleFilterOptionResponse("ALL", "전체", true)),
                 "ALL",
                 "ALL",
                 "",
