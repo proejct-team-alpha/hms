@@ -22,6 +22,7 @@ public class AdminRuleService {
 
     private static final int DEFAULT_PAGE = 1;
     private static final int DEFAULT_SIZE = 10;
+    private static final int PAGE_LINK_WINDOW_SIZE = 5;
     private static final String DEFAULT_CATEGORY = "ALL";
     private static final String DEFAULT_ACTIVE = "ALL";
 
@@ -156,7 +157,14 @@ public class AdminRuleService {
             return List.of();
         }
 
-        return IntStream.rangeClosed(1, totalPages)
+        int startPage = Math.max(1, currentPage - PAGE_LINK_WINDOW_SIZE / 2);
+        int endPage = Math.min(totalPages, startPage + PAGE_LINK_WINDOW_SIZE - 1);
+
+        if (endPage - startPage + 1 < PAGE_LINK_WINDOW_SIZE) {
+            startPage = Math.max(1, endPage - PAGE_LINK_WINDOW_SIZE + 1);
+        }
+
+        return IntStream.rangeClosed(startPage, endPage)
                 .mapToObj(page -> new AdminRulePageLinkResponse(
                         page,
                         buildListUrl(page, size, category, active, keyword),

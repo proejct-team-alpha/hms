@@ -125,6 +125,53 @@ class AdminRuleServiceTest {
     }
 
     @Test
+    @DisplayName("page links show first five pages near the beginning")
+    void getRuleList_nearBeginning_showsFirstFivePageLinks() {
+        // given
+        var page = new PageImpl<HospitalRule>(List.of(), PageRequest.of(0, 10), 120);
+        given(hospitalRuleRepository.search(null, null, "", PageRequest.of(0, 10))).willReturn(page);
+
+        // when
+        AdminRuleListResponse result = adminRuleService.getRuleList(1, 10, "ALL", "ALL", "");
+
+        // then
+        assertThat(result.pageLinks()).extracting(AdminRulePageLinkResponse::page)
+                .containsExactly(1, 2, 3, 4, 5);
+    }
+
+    @Test
+    @DisplayName("page links slide around the current page")
+    void getRuleList_nearMiddle_slidesPageLinksAroundCurrentPage() {
+        // given
+        var page = new PageImpl<HospitalRule>(List.of(), PageRequest.of(4, 10), 120);
+        given(hospitalRuleRepository.search(null, null, "", PageRequest.of(4, 10))).willReturn(page);
+
+        // when
+        AdminRuleListResponse result = adminRuleService.getRuleList(5, 10, "ALL", "ALL", "");
+
+        // then
+        assertThat(result.pageLinks()).extracting(AdminRulePageLinkResponse::page)
+                .containsExactly(3, 4, 5, 6, 7);
+        assertThat(result.pageLinks().get(2).active()).isTrue();
+    }
+
+    @Test
+    @DisplayName("page links show the last five pages near the end")
+    void getRuleList_nearEnd_showsLastFivePageLinks() {
+        // given
+        var page = new PageImpl<HospitalRule>(List.of(), PageRequest.of(11, 10), 120);
+        given(hospitalRuleRepository.search(null, null, "", PageRequest.of(11, 10))).willReturn(page);
+
+        // when
+        AdminRuleListResponse result = adminRuleService.getRuleList(12, 10, "ALL", "ALL", "");
+
+        // then
+        assertThat(result.pageLinks()).extracting(AdminRulePageLinkResponse::page)
+                .containsExactly(8, 9, 10, 11, 12);
+        assertThat(result.pageLinks().get(4).active()).isTrue();
+    }
+
+    @Test
     @DisplayName("createRule saves rule with correct category")
     void createRule_savesRuleWithCorrectCategory() {
         // given
