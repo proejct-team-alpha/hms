@@ -191,6 +191,33 @@ class AdminStaffControllerTest {
     }
 
     @Test
+    @DisplayName("직원 수정 검증 실패 시 필드 에러와 입력값을 유지한 채 폼을 다시 렌더링한다")
+    void update_validationFailure_rendersStaffFormView() throws Exception {
+        // given
+        AdminStaffFormResponse response = createEditFormResponse("수정직원", null);
+        given(adminStaffService.getInputCheckMessage()).willReturn(INPUT_CHECK_MESSAGE);
+        given(adminStaffService.getEditForm(any(UpdateAdminStaffRequest.class))).willReturn(response);
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/staff/update")
+                        .param("staffId", "1")
+                        .param("name", "수정직원")
+                        .param("password", "")
+                        .param("specialty", "가정의학")
+                        .param("availableDays", "MON")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/staff-form"))
+                .andExpect(request().attribute("errorMessage", INPUT_CHECK_MESSAGE))
+                .andExpect(request().attribute("departmentIdError", notNullValue()))
+                .andExpect(request().attribute("model", response))
+                .andExpect(content().string(containsString("수정직원")))
+                .andExpect(content().string(containsString("doctor01")));
+    }
+
+    @Test
     @DisplayName("직원 비활성화 성공 시 목록으로 리다이렉트한다")
     void deactivate_success_redirectsToList() throws Exception {
         // given
@@ -293,6 +320,12 @@ class AdminStaffControllerTest {
     }
 
     private AdminStaffFormResponse createEditFormResponse() {
+        return createEditFormResponse("김의사", 1L);
+    }
+
+    private AdminStaffFormResponse createEditFormResponse(
+            String name,
+            Long selectedDepartmentId) {
         return new AdminStaffFormResponse(
                 "직원 수정",
                 "/admin/staff/update",
@@ -300,16 +333,16 @@ class AdminStaffControllerTest {
                 true,
                 1L,
                 "doctor01",
-                "김의사",
+                name,
                 "D-001",
                 "DOCTOR",
                 "의사",
-                1L,
+                selectedDepartmentId,
                 true,
                 true,
                 "내과",
                 List.of(new AdminStaffFormOptionResponse("DOCTOR", "의사", true)),
-                List.of(new AdminStaffDepartmentOptionResponse(1L, "내과", true)),
+                List.of(new AdminStaffDepartmentOptionResponse(1L, "내과", selectedDepartmentId != null && selectedDepartmentId.equals(1L))),
                 List.of(new AdminStaffFormOptionResponse("true", "재직", true)),
                 List.of(new AdminStaffFormOptionResponse("MON", "월요일", true))
         );
