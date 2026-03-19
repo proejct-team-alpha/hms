@@ -6,9 +6,10 @@
 포괄적으로 처리하므로 별도 핸들러 추가는 불필요하다.
 
 ## 작업 목록
-<!-- TODO 1. LlmServiceUnavailableException — CustomException 상속으로 신규 작성 (503) -->
-<!-- TODO 2. LlmTimeoutException — CustomException 상속으로 신규 작성 (504) -->
-<!-- TODO 3. 빌드 확인 -->
+
+1. `LlmServiceUnavailableException` 신규 — `CustomException` 상속으로 작성 (503 Service Unavailable)
+2. `LlmTimeoutException` 신규 — `CustomException` 상속으로 작성 (504 Gateway Timeout)
+3. `./gradlew build` — 오류 없음 검증
 
 ## 진행 현황
 - [x] 1. LlmServiceUnavailableException 작성

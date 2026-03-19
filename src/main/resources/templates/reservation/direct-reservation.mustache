@@ -275,6 +275,13 @@
           const res = await fetch(`/api/reservation/booked-slots?doctorId=${doctorId}&date=${dateStr}`);
           if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
           const booked = await res.json();
+          const today = new Date();
+          const todayStr = today.getFullYear() + '-'
+            + String(today.getMonth() + 1).padStart(2, '0') + '-'
+            + String(today.getDate()).padStart(2, '0');
+          const isToday = dateStr === todayStr;
+          const nowMinutes = today.getHours() * 60 + today.getMinutes();
+
           document.querySelectorAll('#time option').forEach(opt => {
             const original = opt.dataset.originalText;
             if (!original) return;
@@ -282,6 +289,17 @@
               opt.disabled = true;
               opt.classList.add('text-slate-400');
               opt.textContent = original + ' (예약불가)';
+            } else if (isToday && opt.value) {
+              const [h, m] = opt.value.split(':').map(Number);
+              if (h * 60 + m <= nowMinutes) {
+                opt.disabled = true;
+                opt.classList.add('text-slate-400');
+                opt.textContent = original;
+              } else {
+                opt.disabled = false;
+                opt.classList.remove('text-slate-400');
+                opt.textContent = original;
+              }
             } else {
               opt.disabled = false;
               opt.classList.remove('text-slate-400');

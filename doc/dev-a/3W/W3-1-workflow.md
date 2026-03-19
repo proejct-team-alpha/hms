@@ -5,10 +5,11 @@
 분석 버튼 클릭 시 추천 결과 영역이 올바르게 렌더링되도록 한다.
 
 ## 작업 목록
-<!-- DONE 1. SYMPTOM_MAP 키워드 매핑 테이블 정의 -->
-<!-- DONE 2. analyzeSymptom(text) 함수 구현 -->
-<!-- DONE 3. analyzeBtn click 핸들러에서 analyzeSymptom 호출 후 DOM 업데이트 -->
-<!-- DONE 4. proceedToDirect() URL 버그 수정 (/reservation/direct-reservation) -->
+
+1. SYMPTOM_MAP 키워드 매핑 테이블 정의
+2. analyzeSymptom(text) 함수 구현
+3. analyzeBtn click 핸들러에서 analyzeSymptom 호출 후 DOM 업데이트
+4. proceedToDirect() URL 버그 수정 (/reservation/direct-reservation)
 
 ## 수정 파일
 - `src/main/resources/templates/reservation/symptom-reservation.mustache` (script 블록 전체 교체)
