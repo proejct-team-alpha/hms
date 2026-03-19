@@ -22,11 +22,11 @@
 - [x] 기본 정렬을 최신 등록순 기준으로 맞춘다.
 
 ## Task 22-3. 환자 목록 검색 + 페이징 구현
-- [ ] `GET /admin/patient/list`를 추가한다.
-- [ ] 이름/연락처 검색을 구현한다.
-- [ ] 기본 size=20 페이징을 구현한다.
-- [ ] 검색 결과가 없을 때 빈 목록 메시지가 자연스럽게 보이도록 한다.
-- [ ] 결과 요약(총 건수, 현재 검색 조건)을 목록 화면에 반영한다.
+- [x] `GET /admin/patient/list`를 추가한다.
+- [x] 이름/연락처 검색을 구현한다.
+- [x] 기본 size=20 페이징을 구현한다.
+- [x] 검색 결과가 없을 때 빈 목록 메시지가 자연스럽게 보이도록 한다.
+- [x] 결과 요약(총 건수, 현재 검색 조건)을 목록 화면에 반영한다.
 
 ## Task 22-4. 환자 상세 + 전체 예약 이력 구현
 - [ ] `GET /admin/patient/detail?patientId={id}`를 추가한다.
@@ -60,7 +60,7 @@
 ## 추천 진행 순서
 - [x] Task 22-1 현재 환자/예약 조회 구조 점검
 - [x] Task 22-2 환자 목록 응답 구조와 서비스 설계
-- [ ] Task 22-3 환자 목록 검색 + 페이징 구현
+- [x] Task 22-3 환자 목록 검색 + 페이징 구현
 - [ ] Task 22-4 환자 상세 + 전체 예약 이력 구현
 - [ ] Task 22-5 목록/상세 Mustache 화면 구현
 - [ ] Task 22-6 테스트 보강 및 문서 갱신
@@ -84,3 +84,6 @@
 - [x] 상세 응답 골격은 `AdminPatientDetailResponse`, `AdminPatientReservationHistoryItemResponse`로 미리 정의해 다음 단계에서 예약 이력 구현을 바로 연결할 수 있게 했다.
 - [x] 목록 검색 파라미터는 `nameKeyword`, `contactKeyword` 두 축으로 분리했고, 연락처는 하이픈 제거 후 검색하는 방향으로 쿼리 구조를 잡았다.
 - [x] 기본 페이지 크기는 20건, 기본 정렬은 `createdAt desc, id desc` 기준으로 설계했다.
+- [x] `GET /admin/patient/list`를 실제로 추가했고, 기본 size=20과 `nameKeyword`/`contactKeyword` 검색 파라미터를 받도록 연결했다.
+- [x] `patient-list.mustache`를 기본 동작 가능한 검색형 목록 화면으로 추가해 페이지 제목, 설명 문구, 검색 영역, 결과 요약, 목록 테이블, 빈 상태, 페이지네이션을 우선 반영했다.
+- [x] `AdminPatientControllerTest`, `AdminPatientServiceTest`를 추가해 기본 페이징, 요청 파라미터 전달, 이름/연락처 검색, 최신 등록순 정렬을 검증했다.

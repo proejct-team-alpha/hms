@@ -25,9 +25,11 @@ public class AdminPatientService {
     public AdminPatientListResponse getPatientList(int page, int size, String nameKeyword, String contactKeyword) {
         int safePage = page < 1 ? DEFAULT_PAGE : page;
         int safeSize = size < 1 ? DEFAULT_SIZE : size;
+        String normalizedNameKeyword = normalizeKeyword(nameKeyword);
+        String normalizedContactKeyword = normalizeContact(contactKeyword);
 
         Pageable pageable = PageRequest.of(safePage - 1, safeSize);
-        Page<Patient> pageResult = adminPatientRepository.search(nameKeyword, normalizeContact(contactKeyword), pageable);
+        Page<Patient> pageResult = adminPatientRepository.search(normalizedNameKeyword, normalizedContactKeyword, pageable);
 
         int currentPage = pageResult.getNumber() + 1;
         int totalPages = pageResult.getTotalPages();
@@ -38,8 +40,8 @@ public class AdminPatientService {
                 pageResult.getContent().stream()
                         .map(AdminPatientSummary::from)
                         .toList(),
-                buildPageLinks(totalPages, currentPage, safeSize, nameKeyword, contactKeyword),
-                normalizeKeyword(nameKeyword),
+                buildPageLinks(totalPages, currentPage, safeSize, normalizedNameKeyword, normalizeKeyword(contactKeyword)),
+                normalizedNameKeyword,
                 normalizeKeyword(contactKeyword),
                 pageResult.getTotalElements(),
                 currentPage,
@@ -48,8 +50,8 @@ public class AdminPatientService {
                 totalPages > 0,
                 hasPrevious,
                 hasNext,
-                hasPrevious ? buildListUrl(currentPage - 1, safeSize, nameKeyword, contactKeyword) : "",
-                hasNext ? buildListUrl(currentPage + 1, safeSize, nameKeyword, contactKeyword) : ""
+                hasPrevious ? buildListUrl(currentPage - 1, safeSize, normalizedNameKeyword, normalizeKeyword(contactKeyword)) : "",
+                hasNext ? buildListUrl(currentPage + 1, safeSize, normalizedNameKeyword, normalizeKeyword(contactKeyword)) : ""
         );
     }
 
@@ -86,14 +88,11 @@ public class AdminPatientService {
                 .append("&size=")
                 .append(size);
 
-        String normalizedNameKeyword = normalizeKeyword(nameKeyword);
-        String normalizedContactKeyword = normalizeKeyword(contactKeyword);
-
-        if (!normalizedNameKeyword.isBlank()) {
-            builder.append("&nameKeyword=").append(normalizedNameKeyword);
+        if (!nameKeyword.isBlank()) {
+            builder.append("&nameKeyword=").append(nameKeyword);
         }
-        if (!normalizedContactKeyword.isBlank()) {
-            builder.append("&contactKeyword=").append(normalizedContactKeyword);
+        if (!contactKeyword.isBlank()) {
+            builder.append("&contactKeyword=").append(contactKeyword);
         }
         return builder.toString();
     }
