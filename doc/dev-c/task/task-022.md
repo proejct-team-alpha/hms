@@ -36,11 +36,11 @@
 - [x] 없는 `patientId` 상세 요청은 404 또는 프로젝트 규칙에 맞는 에러 화면으로 처리한다.
 
 ## Task 22-5. 목록/상세 Mustache 화면 구현
-- [ ] `patient-list.mustache`를 검색 중심 인덱스 화면으로 구현한다.
-- [ ] `patient-detail.mustache`를 기본 정보 + 예약 이력 중심으로 구현한다.
-- [ ] 관리자 목록 화면의 `model + pageTitle` 패턴을 적용한다.
-- [ ] 목록에서는 과도한 상세 정보/통계/예약 이력 미리보기를 넣지 않는다.
-- [ ] 관리 컬럼은 우선 `상세보기` 기준으로 시작하고, 환자명 링크 연결은 후속 검토 가능하게 둔다.
+- [x] `patient-list.mustache`를 검색 중심 인덱스 화면으로 구현한다.
+- [x] `patient-detail.mustache`를 기본 정보 + 예약 이력 중심으로 구현한다.
+- [x] 관리자 목록 화면의 `model + pageTitle` 패턴을 적용한다.
+- [x] 목록에서는 과도한 상세 정보/통계/예약 이력 미리보기를 넣지 않는다.
+- [x] 관리 컬럼은 우선 `상세보기` 기준으로 시작하고, 환자명 링크 연결은 후속 검토 가능하게 둔다.
 
 ## Task 22-6. 테스트 보강 및 문서 갱신
 - [ ] `AdminPatientControllerTest`를 추가하거나 보강한다.
@@ -62,7 +62,7 @@
 - [x] Task 22-2 환자 목록 응답 구조와 서비스 설계
 - [x] Task 22-3 환자 목록 검색 + 페이징 구현
 - [x] Task 22-4 환자 상세 + 전체 예약 이력 구현
-- [ ] Task 22-5 목록/상세 Mustache 화면 구현
+- [x] Task 22-5 목록/상세 Mustache 화면 구현
 - [ ] Task 22-6 테스트 보강 및 문서 갱신
 
 ## 메모
@@ -92,3 +92,6 @@
 - [x] 없는 `patientId` 상세 요청은 기존 관리자 SSR 상세 패턴에 맞춰 404 상태와 `error/404` 화면으로 처리하도록 연결했다.
 - [x] `patient-detail.mustache`를 추가해 환자 기본 정보 카드와 예약 이력 테이블을 우선 구현했다.
 - [x] `AdminPatientControllerTest`, `AdminPatientServiceTest`에 상세 조회/없는 patientId/예약 이력 매핑 시나리오를 추가해 `admin.patient` 범위 테스트 통과를 확인했다.
+- [x] `patient-list.mustache`는 `환자 관리 > 환자 목록` 톤으로 정리했고, 검색/요약/테이블/페이지네이션만 유지해 인덱스 화면 성격을 분명히 했다.
+- [x] `patient-detail.mustache`는 기본 정보 카드와 예약 이력 섹션을 분리해 목록보다 더 많은 정보를 읽는 화면으로 역할을 분리했다.
+- [x] 관리 컬럼은 `상세보기`만 유지하고, 환자명 링크/추가 액션은 후속 UX 개선 포인트로 남겼다.

@@ -32,6 +32,11 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-200 bg-white">
+            <h2 class="text-base font-semibold text-slate-800">환자 목록</h2>
+            <p class="text-sm text-slate-500 mt-1">환자 한 명당 한 줄로 보여주고, 상세 정보는 상세 화면에서 확인합니다.</p>
+          </div>
+
           <form method="get" action="/admin/patient/list" class="p-4 border-b border-slate-200 bg-slate-50">
             <input type="hidden" name="page" value="1">
             <input type="hidden" name="size" value="{{model.size}}">

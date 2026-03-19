@@ -113,6 +113,7 @@ class AdminPatientControllerTest {
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("이름 또는 연락처로 환자를 검색하세요.")))
+                .andExpect(content().string(containsString("환자 목록")))
                 .andExpect(content().string(containsString("김철수")))
                 .andExpect(content().string(containsString("010-1234-5678")))
                 .andExpect(content().string(containsString("2026-03-19")));
@@ -150,6 +151,9 @@ class AdminPatientControllerTest {
                 .andExpect(view().name("admin/patient-detail"))
                 .andExpect(request().attribute("model", response))
                 .andExpect(request().attribute("pageTitle", "환자 상세"))
+                .andExpect(content().string(containsString("환자 기본 정보와 전체 예약 이력을 확인합니다.")))
+                .andExpect(content().string(containsString("기본 정보")))
+                .andExpect(content().string(containsString("예약 이력")))
                 .andExpect(content().string(containsString("김철수")))
                 .andExpect(content().string(containsString("010-1234-5678")))
                 .andExpect(content().string(containsString("R-1001")))
