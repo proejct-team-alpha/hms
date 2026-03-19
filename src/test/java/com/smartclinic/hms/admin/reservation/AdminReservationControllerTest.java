@@ -24,6 +24,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -77,7 +78,10 @@ class AdminReservationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/reservation-list"))
                 .andExpect(request().attribute("model", viewModel))
-                .andExpect(request().attribute("pageTitle", "예약 목록"));
+                .andExpect(request().attribute("pageTitle", "예약 목록"))
+                .andExpect(content().string(containsString("예약과 접수 현황을 상태별로 확인하고 관리합니다.")))
+                .andExpect(content().string(containsString("상태 필터")))
+                .andExpect(content().string(containsString("조회된 내역이 없습니다.")));
 
         then(adminReservationService).should().getReservationList(1, 10, null);
     }
@@ -116,6 +120,41 @@ class AdminReservationControllerTest {
                 .andExpect(request().attribute("pageTitle", "예약 목록"));
 
         then(adminReservationService).should().getReservationList(2, 5, "RESERVED");
+    }
+
+    @Test
+    @DisplayName("예약 목록은 RECEIVED 상태를 접수 라벨로 렌더링한다")
+    void list_rendersReceivedFilterAsReceptionLabel() throws Exception {
+        // given
+        AdminReservationListResponse viewModel = new AdminReservationListResponse(
+                List.of(),
+                List.of(
+                        new AdminReservationStatusOptionResponse("ALL", "전체", "/admin/reservation/list?page=1&size=10&status=ALL", false),
+                        new AdminReservationStatusOptionResponse("RECEIVED", "접수", "/admin/reservation/list?page=1&size=10&status=RECEIVED", true)
+                ),
+                List.of(new AdminReservationPageLinkResponse(1, "/admin/reservation/list?page=1&size=10&status=RECEIVED", true)),
+                "RECEIVED",
+                0,
+                1,
+                10,
+                1,
+                false,
+                false,
+                "",
+                ""
+        );
+        given(adminReservationService.getReservationList(1, 10, "RECEIVED")).willReturn(viewModel);
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/reservation/list")
+                        .param("status", "RECEIVED")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(">접수</a>")));
+
+        then(adminReservationService).should().getReservationList(1, 10, "RECEIVED");
     }
 
     @Test
