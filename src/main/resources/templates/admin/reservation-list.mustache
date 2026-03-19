@@ -73,13 +73,13 @@
                   </td>
                   <td class="p-4 text-right">
                     {{#cancellable}}
-                      <form method="post" action="/admin/reservation/cancel" class="inline-block" onsubmit="return confirm('예약을 취소하시겠습니까?');">
+                      <form method="post" action="/admin/reservation/cancel" class="inline-block" onsubmit="return confirm('{{#reserved}}예약을 취소하시겠습니까?{{/reserved}}{{#received}}접수를 취소하시겠습니까?{{/received}}');">
                         <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
                         <input type="hidden" name="reservationId" value="{{id}}">
                         <input type="hidden" name="page" value="{{model.currentPage}}">
                         <input type="hidden" name="size" value="{{model.size}}">
                         <input type="hidden" name="status" value="{{model.selectedStatus}}">
-                        <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors">취소</button>
+                        <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors">{{#reserved}}예약 취소{{/reserved}}{{#received}}접수 취소{{/received}}</button>
                       </form>
                     {{/cancellable}}
                     {{^cancellable}}

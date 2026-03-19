@@ -207,9 +207,66 @@ class AdminReservationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("RES-20260319-012")))
                 .andExpect(content().string(containsString("홍길동")))
-                .andExpect(content().string(containsString(">접수</span>")));
+                .andExpect(content().string(containsString(">접수</span>")))
+                .andExpect(content().string(containsString("접수 취소")))
+                .andExpect(content().string(containsString("접수를 취소하시겠습니까?")));
 
         then(adminReservationService).should().getReservationList(1, 10, "RECEIVED");
+    }
+
+    @Test
+    @DisplayName("예약 목록은 예약 상태 row를 예약 취소 버튼과 확인 문구로 렌더링한다")
+    void list_rendersReservedReservationRowWithReservationCancelCopy() throws Exception {
+        // given
+        AdminReservationItemResponse reservedItem = new AdminReservationItemResponse(
+                13L,
+                "RES-20260319-013",
+                "2026-03-19",
+                "11:00",
+                "김예약",
+                "010-9876-5432",
+                "외과",
+                "박의사",
+                "RESERVED",
+                "예약",
+                true,
+                true,
+                false,
+                false,
+                false
+        );
+        AdminReservationListResponse viewModel = new AdminReservationListResponse(
+                List.of(reservedItem),
+                List.of(
+                        new AdminReservationStatusOptionResponse("RESERVED", "예약", "/admin/reservation/list?page=1&size=10&status=RESERVED", true)
+                ),
+                List.of(new AdminReservationPageLinkResponse(1, "/admin/reservation/list?page=1&size=10&status=RESERVED", true)),
+                "RESERVED",
+                1,
+                1,
+                10,
+                1,
+                false,
+                false,
+                "",
+                ""
+        );
+        given(adminReservationService.getReservationList(1, 10, "RESERVED")).willReturn(viewModel);
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/reservation/list")
+                        .param("status", "RESERVED")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("RES-20260319-013")))
+                .andExpect(content().string(containsString("김예약")))
+                .andExpect(content().string(containsString(">예약</span>")))
+                .andExpect(content().string(containsString("예약 취소")))
+                .andExpect(content().string(containsString("예약을 취소하시겠습니까?")));
+
+        then(adminReservationService).should().getReservationList(1, 10, "RESERVED");
     }
 
     @Test
