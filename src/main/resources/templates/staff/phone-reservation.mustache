@@ -101,7 +101,7 @@
                 <label class="block text-sm font-medium text-slate-700 mb-2">예약 날짜</label>
                 <div class="relative">
                   <i data-feather="calendar" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input type="text" name="date" id="dateInput" required readonly placeholder="날짜 선택 (의사 선택 후)" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" />
+                  <input type="text" name="date" id="dateInput" required readonly placeholder="날짜 선택" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" />
                 </div>
               </div>
               <div>
@@ -255,23 +255,64 @@ if (firstAvailable) {
       });
 
       // 의사 availableDays → Flatpickr 갱신
-      function applyDoctorAvailableDays() {
+      async function applyDoctorAvailableDays(autoSelect = false) {
         const selectedOption   = docSelect.options[docSelect.selectedIndex];
-        const availableDaysStr = (selectedOption && selectedOption.dataset.availableDays) || '';
+        
+        if (!selectedOption || !selectedOption.value) {
+          datePicker.set('disable', [function() { return true; }]);
+          datePicker.clear();
+          Array.from(timeSelect.querySelectorAll('option[value]')).forEach(function(opt) {
+            opt.disabled = false;
+            opt.textContent = opt.value;
+          });
+          timeSelect.value = '';
+          return;
+        }
+
+        const availableDaysStr = selectedOption.dataset.availableDays || '';
         const availableDayNums = availableDaysStr
           .split(',')
           .map(function(d) { return DAY_MAP[d.trim()]; })
           .filter(function(n) { return n !== undefined; });
 
-        datePicker.clear();
         if (availableDayNums.length > 0) {
           datePicker.set('disable', [
             function(date) { return !availableDayNums.includes(date.getDay()); }
           ]);
+
+          if (autoSelect) {
+            // 가장 빠른 예약 가능 날짜 찾기
+            let d = new Date();
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const lastSlotMinutes = 17 * 60 + 30; // 마지막 슬롯 17:30
+
+            let foundDate = null;
+            for (let i = 0; i < 30; i++) {
+              if (availableDayNums.includes(d.getDay())) {
+                if (i === 0 && currentMinutes >= lastSlotMinutes) {
+                  // 오늘 마감 시간 지남
+                } else {
+                  foundDate = new Date(d);
+                  break;
+                }
+              }
+              d.setDate(d.getDate() + 1);
+            }
+
+            if (foundDate) {
+              datePicker.setDate(foundDate, true); // onChange 트리거 -> refreshTimeSlots 호출됨
+              return;
+            } else {
+              datePicker.clear();
+            }
+          }
         } else {
           datePicker.set('disable', [function() { return true; }]);
+          datePicker.clear();
         }
-        // 시간 슬롯 초기화
+
+        // 시간 슬롯 초기화 (수동 선택 시)
         Array.from(timeSelect.querySelectorAll('option[value]')).forEach(function(opt) {
           opt.disabled = false;
           opt.textContent = opt.value;
@@ -279,8 +320,8 @@ if (firstAvailable) {
         timeSelect.value = '';
       }
 
-      deptSelect.addEventListener('change', function() { filterDoctorsOnly(); applyDoctorAvailableDays(); });
-      docSelect.addEventListener('change', function() { applyDoctorAvailableDays(); refreshTimeSlots(); });
+      deptSelect.addEventListener('change', function() { filterDoctorsOnly(); applyDoctorAvailableDays(true); });
+      docSelect.addEventListener('change', function() { applyDoctorAvailableDays(true); });
 
       // 폼 오류 복원
       const restoreDeptId = '{{#form}}{{departmentId}}{{/form}}';
