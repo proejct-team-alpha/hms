@@ -30,14 +30,14 @@
 - [x] 필요 시 Repository 테스트 또는 쿼리 검증 추가
 
 ## Task 25-6. 문서 및 최종 검증 마무리
-- [ ] `workflow-025` 완료 처리
-- [ ] `task-025` 완료 처리
-- [ ] `admin.rule` 또는 관련 범위 테스트 실행
-- [ ] 필요 시 전체 `./gradlew test` 확인
+- [x] `workflow-025` 완료 처리
+- [x] `task-025` 완료 처리
+- [x] `admin.rule` 또는 관련 범위 테스트 실행
+- [x] 필요 시 전체 `./gradlew test` 확인
 
 ## Task 25-1 점검 메모
 - `AdminRuleController`
-  - 현재 `GET /admin/rule/list`는 파라미터를 거의 받지 않고 `rules`, `hasRules`, `pageTitle`만 내려주고 있었다.
+  - 기존 `GET /admin/rule/list`는 파라미터를 거의 받지 않고 `rules`, `hasRules`, `pageTitle`만 내려주고 있었다.
   - `page`, `size`, `category`, `active`, `keyword` 전달 구조가 없었다.
 - `AdminRuleService`
   - 기존 `getRuleList()`는 전체 조회 `findAllByOrderByCreatedAtDesc()`만 수행했다.
@@ -46,22 +46,18 @@
   - 기존 메서드는 `findAllByOrderByCreatedAtDesc()` 하나뿐이었다.
   - 카테고리, 활성 여부, 제목 검색, 페이지 조회를 위한 메서드 또는 `@Query`가 필요했다.
 - `AdminRuleDto`
-  - 카테고리 표시 텍스트, 활성 여부 텍스트, 활성 상태 배지 클래스는 이미 가지고 있어 재사용 가능하다.
+  - 카테고리 표시 텍스트, 활성 여부 텍스트, 활성 상태 배지 클래스는 이미 가지고 있어 재사용 가능했다.
 - `rule-list.mustache`
-  - 카드형 목록만 있고 검색 바, 필터 UI, 페이지네이션 UI가 없다.
-  - 인코딩 손상도 있어 템플릿 전체 정리가 필요하다.
-- 테스트 상태
-  - `AdminRuleControllerTest`, `AdminRuleServiceTest`는 전체 조회 기준만 검증하고 있었다.
-  - 검색/필터/페이지네이션 관련 테스트가 없었다.
-- 도메인 메모
-  - `HospitalRule`은 `category`, `active`, `createdAt`을 이미 가지고 있어 이번 목록 완성에 필요한 필드는 충분하다.
-  - 정렬 기준은 `createdAt desc`를 그대로 유지해도 자연스럽다.
+  - 카드형 목록만 있고 검색 바, 필터 UI, 페이지네이션 UI가 없었다.
+  - 인코딩 손상도 있어 템플릿 전체 정리가 필요했다.
 
 ## Task 25-2 설계 메모
 - 목록 row 데이터는 기존 `AdminRuleDto`를 그대로 재사용한다.
 - 바깥 응답은 `AdminRuleListResponse`로 감싼다.
   - `rules`
   - `pageLinks`
+  - `categoryOptions`
+  - `activeOptions`
   - `selectedCategory`
   - `selectedActive`
   - `keyword`
@@ -78,7 +74,7 @@
   - `keyword=''`
 - 조회 책임은 아래처럼 나눈다.
   - Controller: 요청 파라미터 수신, `model + pageTitle` 렌더링
-  - Service: 파라미터 정규화, 페이지 링크 생성, 응답 DTO 조합
+  - Service: 파라미터 정규화, 페이지 링크 생성, 옵션 구성, 응답 DTO 조합
   - Repository: 카테고리/활성/제목 검색 + 최신순 조회
 - 정렬 기준은 `createdAt desc, id desc`를 기본으로 둔다.
 - 연락처나 본문 검색은 이번 범위에 넣지 않고 제목 검색만 지원한다.
@@ -91,8 +87,7 @@
 - 활성 필터는 `ALL`, `ACTIVE`, `INACTIVE` 문자열을 받아 각각 `null`, `true`, `false`로 매핑한다.
 - 카테고리 필터는 `ALL` 외 값을 `HospitalRuleCategory`로 변환하고, 잘못된 값은 `ALL`로 보정한다.
 - URL 생성 시 현재 필터와 검색 조건을 유지한 채 페이지 링크를 만든다.
-- 현재 단계에서는 Mustache 화면을 크게 바꾸지 않기 위해 `rules`, `hasRules`도 함께 내려 기존 템플릿 계약을 유지한다.
-- `AdminRuleControllerTest`는 `model().attribute(...)` matcher로 정리해 MockMvc 모델 검증 회귀를 막았다.
+- 현재 단계에서는 Mustache 화면을 크게 바꾸지 않기 위해 `rules`, `hasRules`도 함께 내려 기존 템플릿 계약을 유지했다.
 
 ## Task 25-4 구현 메모
 - `rule-list.mustache`를 UTF-8 기준으로 다시 정리하고, 카드형 목록 위에 검색/필터 바를 추가했다.
@@ -107,7 +102,11 @@
 - `AdminRuleServiceTest`에는 필터 유지 URL, 옵션 라벨, 빈 결과 메타데이터(`hasPages`, `pageLinks`, `hasPrevious`, `hasNext`) 검증을 보강했다.
 - Repository는 단일 `search(...)` 쿼리 구조가 단순하고, 현재 단계에서는 서비스/컨트롤러 테스트로 회귀를 충분히 막을 수 있다고 판단해 별도 테스트를 추가하지 않았다.
 
+## 최종 검증 결과
+- `./gradlew test --tests 'com.smartclinic.hms.admin.rule.*'` 통과
+- `./gradlew test` 통과
+
 ## 리뷰 포인트
 - 규칙 목록이 대시보드가 아니라 관리용 검색형 인덱스 화면으로 가는 구성이 적절한지
 - 카테고리/활성/키워드 필터 조합 시 현재 조건을 유지하는 URL 설계가 자연스러운지
-- Mustache 작업 전 단계에서 `model`, `rules`, `hasRules`를 함께 유지한 호환 방식이 괜찮은지
+- Mustache에서 `selected` 상태를 응답 DTO로 미리 준비한 방식이 현재 프로젝트 패턴과 잘 맞는지
