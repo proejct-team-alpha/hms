@@ -26,7 +26,7 @@
 
             <div>
               <h1 class="text-2xl font-bold text-slate-900 tracking-tight">{{pageTitle}}</h1>
-              <p class="text-slate-500 mt-1">환자 기본 정보와 전체 예약 이력을 확인합니다.</p>
+              <p class="text-slate-500 mt-1">?섏옄 湲곕낯 ?뺣낫? ?꾩껜 ?덉빟 ?대젰???뺤씤?⑸땲??</p>
             </div>
           </div>
         </div>
@@ -41,16 +41,16 @@
             >
               <div class="p-6 border-b border-slate-100 bg-slate-50/60 flex items-start justify-between gap-4">
                 <div>
-                  <h2 class="font-bold text-slate-800">기본 정보</h2>
-                  <p class="text-sm text-slate-500 mt-1">환자 식별 정보와 연락처를 확인하고 필요한 경우 바로 수정합니다.</p>
+                  <h2 class="font-bold text-slate-800">湲곕낯 ?뺣낫</h2>
+                  <p class="text-sm text-slate-500 mt-1">?섏옄 ?앸퀎 ?뺣낫? ?곕씫泥섎? ?뺤씤?섍퀬 ?꾩슂??寃쎌슦 諛붾줈 ?섏젙?⑸땲??</p>
                 </div>
                 <button
                   type="button"
                   data-patient-edit-toggle
-                  class="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 transition-colors"
+                  class="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
                 >
                   <i data-feather="edit-3" class="w-4 h-4"></i>
-                  정보 수정
+                  ?뺣낫 ?섏젙
                 </button>
               </div>
 
@@ -62,39 +62,39 @@
 
                 <div data-patient-view-section class="space-y-5">
                   <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">환자 ID</p>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">?섏옄 ID</p>
                     <p class="mt-2 text-lg font-semibold text-slate-900">{{model.patientId}}</p>
                   </div>
 
                   <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">이름</p>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">?대쫫</p>
                     <p class="mt-2 text-sm font-medium text-slate-800" data-patient-name-value>{{model.name}}</p>
                   </div>
 
                   <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">연락처</p>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">?곕씫泥?/p>
                     <p class="mt-2 text-sm font-medium text-slate-800" data-patient-phone-value>{{model.phone}}</p>
                   </div>
 
                   <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">이메일</p>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">?대찓??/p>
                     <p class="mt-2 text-sm text-slate-700">{{model.email}}</p>
                   </div>
 
                   <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">주소</p>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">二쇱냼</p>
                     <p class="mt-2 text-sm text-slate-700 leading-relaxed">{{model.address}}</p>
                   </div>
 
                   <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">메모</p>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">硫붾え</p>
                     <p class="mt-2 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap" data-patient-note-value>{{model.note}}</p>
                   </div>
                 </div>
 
                 <form data-patient-edit-form class="hidden space-y-5" novalidate>
                   <div>
-                    <label for="patient-name" class="block text-sm font-semibold text-slate-700 mb-2">이름</label>
+                    <label for="patient-name" class="block text-sm font-semibold text-slate-700 mb-2">?대쫫</label>
                     <input
                       id="patient-name"
                       name="name"
@@ -106,7 +106,7 @@
                   </div>
 
                   <div>
-                    <label for="patient-phone" class="block text-sm font-semibold text-slate-700 mb-2">연락처</label>
+                    <label for="patient-phone" class="block text-sm font-semibold text-slate-700 mb-2">?곕씫泥?/label>
                     <input
                       id="patient-phone"
                       name="phone"
@@ -118,7 +118,7 @@
                   </div>
 
                   <div>
-                    <label for="patient-note" class="block text-sm font-semibold text-slate-700 mb-2">메모</label>
+                    <label for="patient-note" class="block text-sm font-semibold text-slate-700 mb-2">硫붾え</label>
                     <textarea
                       id="patient-note"
                       name="note"
@@ -133,14 +133,13 @@
                       data-patient-edit-cancel
                       class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 text-sm font-semibold rounded-xl hover:bg-slate-50 transition-colors"
                     >
-                      취소
+                      痍⑥냼
                     </button>
                     <button
                       type="submit"
-                      class="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 transition-colors"
+                      class="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
                     >
-                      저장
-                    </button>
+                      ???                    </button>
                   </div>
                 </form>
               </div>
@@ -150,7 +149,7 @@
               <div class="relative z-10">
                 <i data-feather="users" class="w-8 h-8 opacity-60 mb-4"></i>
                 <p class="text-sm font-medium opacity-90 leading-relaxed">
-                  목록 화면은 환자를 찾기 위한 인덱스 역할에 집중하고, 상세 화면에서는 해당 환자의 전체 예약 이력을 함께 확인합니다.
+                  紐⑸줉 ?붾㈃? ?섏옄瑜?李얘린 ?꾪븳 ?몃뜳????븷??吏묒쨷?섍퀬, ?곸꽭 ?붾㈃?먯꽌???대떦 ?섏옄???꾩껜 ?덉빟 ?대젰???④퍡 ?뺤씤?⑸땲??
                 </p>
               </div>
               <i data-feather="file-text" class="absolute -bottom-4 -right-4 w-24 h-24 opacity-10"></i>
@@ -161,8 +160,8 @@
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               <div class="p-6 border-b border-slate-100 bg-slate-50/60">
                 <div>
-                  <h2 class="font-bold text-slate-800">예약 이력</h2>
-                  <p class="text-sm text-slate-500 mt-1">해당 환자의 전체 예약 및 접수 이력을 시간 순으로 확인합니다.</p>
+                  <h2 class="font-bold text-slate-800">?덉빟 ?대젰</h2>
+                  <p class="text-sm text-slate-500 mt-1">?대떦 ?섏옄???꾩껜 ?덉빟 諛??묒닔 ?대젰???쒓컙 ?쒖쑝濡??뺤씤?⑸땲??</p>
                 </div>
               </div>
 
@@ -170,12 +169,12 @@
                 <table class="w-full text-left border-collapse">
                   <thead>
                     <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
-                      <th class="p-4 font-medium">예약번호</th>
-                      <th class="p-4 font-medium">날짜</th>
-                      <th class="p-4 font-medium">시간</th>
-                      <th class="p-4 font-medium">진료과</th>
-                      <th class="p-4 font-medium">의사</th>
-                      <th class="p-4 font-medium">상태</th>
+                      <th class="p-4 font-medium">?덉빟踰덊샇</th>
+                      <th class="p-4 font-medium">?좎쭨</th>
+                      <th class="p-4 font-medium">?쒓컙</th>
+                      <th class="p-4 font-medium">吏꾨즺怨?/th>
+                      <th class="p-4 font-medium">?섏궗</th>
+                      <th class="p-4 font-medium">?곹깭</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-slate-200">
@@ -191,7 +190,7 @@
                     {{/model.reservationHistories}}
                     {{^model.reservationHistories}}
                       <tr>
-                        <td colspan="6" class="p-8 text-center text-slate-500">등록된 예약 이력이 없습니다.</td>
+                        <td colspan="6" class="p-8 text-center text-slate-500">?깅줉???덉빟 ?대젰???놁뒿?덈떎.</td>
                       </tr>
                     {{/model.reservationHistories}}
                   </tbody>
@@ -312,27 +311,27 @@
 
         if (message.includes('VALIDATION_ERROR')) {
           if (message.includes('name:')) {
-            setFieldError('name', '이름을 입력해 주세요.');
+            setFieldError('name', '?대쫫???낅젰??二쇱꽭??');
           }
           if (message.includes('phone:')) {
-            setFieldError('phone', '연락처를 입력해 주세요.');
+            setFieldError('phone', '?곕씫泥섎? ?낅젰??二쇱꽭??');
           }
-          showFeedback('error', '입력값을 확인해 주세요.');
+          showFeedback('error', '?낅젰媛믪쓣 ?뺤씤??二쇱꽭??');
           return;
         }
 
         if (message.includes('DUPLICATE_PATIENT_PHONE')) {
-          setFieldError('phone', '이미 사용 중인 연락처입니다.');
-          showFeedback('error', '연락처를 다시 확인해 주세요.');
+          setFieldError('phone', '?대? ?ъ슜 以묒씤 ?곕씫泥섏엯?덈떎.');
+          showFeedback('error', '?곕씫泥섎? ?ㅼ떆 ?뺤씤??二쇱꽭??');
           return;
         }
 
         if (message.includes('RESOURCE_NOT_FOUND')) {
-          showFeedback('error', '환자 정보를 찾을 수 없습니다. 목록으로 돌아가 다시 확인해 주세요.');
+          showFeedback('error', '?섏옄 ?뺣낫瑜?李얠쓣 ???놁뒿?덈떎. 紐⑸줉?쇰줈 ?뚯븘媛 ?ㅼ떆 ?뺤씤??二쇱꽭??');
           return;
         }
 
-        showFeedback('error', '환자 정보 수정에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+        showFeedback('error', '?섏옄 ?뺣낫 ?섏젙???ㅽ뙣?덉뒿?덈떎. ?좎떆 ???ㅼ떆 ?쒕룄??二쇱꽭??');
       }
 
       editToggleButton.addEventListener('click', enterEditMode);
@@ -368,10 +367,10 @@
 
           updateViewValues(result.body);
           exitEditMode();
-          showFeedback('success', result.body.message || '환자 정보가 수정되었습니다.');
+          showFeedback('success', result.body.message || '?섏옄 ?뺣낫媛 ?섏젙?섏뿀?듬땲??');
         } catch (error) {
           console.error(error);
-          showFeedback('error', '환자 정보 수정 중 오류가 발생했습니다.');
+          showFeedback('error', '?섏옄 ?뺣낫 ?섏젙 以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.');
         }
       });
     }());
