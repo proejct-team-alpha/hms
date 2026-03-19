@@ -3,6 +3,9 @@ package com.smartclinic.hms.admin.department;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -376,6 +379,31 @@ class AdminDepartmentControllerTest {
                                 .andExpect(redirectedUrl("/admin/department/list"));
 
                 then(adminDepartmentService).should().createDepartment("Surgery", false);
+        }
+
+        @Test
+        @DisplayName("create validation failure renders list view with error and keeps input")
+        void create_validationFailure_rendersListView() throws Exception {
+                // given
+                AdminDepartmentListResponse response = createListResponse();
+                given(adminDepartmentService.getDepartmentList(1, 10)).willReturn(response);
+
+                // when
+                // then
+                mockMvc.perform(post("/admin/department/create")
+                                .param("name", " ")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("admin/department-list"))
+                                .andExpect(request().attribute("model", response))
+                                .andExpect(request().attribute("nameError", "진료과명은 필수입니다."))
+                                .andExpect(request().attribute("createName", " "))
+                                .andExpect(request().attribute("createActive", false))
+                                .andExpect(request().attribute("openCreateModal", true));
+
+                then(adminDepartmentService).should().getDepartmentList(1, 10);
+                then(adminDepartmentService).should(never()).createDepartment(anyString(), anyBoolean());
         }
 
         @Test
