@@ -98,6 +98,7 @@ public class AdminPatientService {
                 defaultText(patient.getEmail()),
                 defaultText(patient.getAddress()),
                 defaultText(patient.getNote()),
+                patient.getNote() == null ? "" : patient.getNote().trim(),
                 reservationHistories
         );
     }

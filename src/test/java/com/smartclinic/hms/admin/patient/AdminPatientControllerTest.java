@@ -143,6 +143,7 @@ class AdminPatientControllerTest {
                 "kim@example.com",
                 "Seoul Gangnam-gu",
                 "Peanut allergy",
+                "Peanut allergy",
                 List.of(new AdminPatientReservationHistoryItemResponse(
                         "R-1001",
                         "2026-03-19",
@@ -167,7 +168,10 @@ class AdminPatientControllerTest {
                 .andExpect(content().string(containsString("010-1234-5678")))
                 .andExpect(content().string(containsString("kim@example.com")))
                 .andExpect(content().string(containsString("R-1001")))
-                .andExpect(content().string(containsString("Received")));
+                .andExpect(content().string(containsString("Received")))
+                .andExpect(content().string(containsString("data-patient-edit-toggle")))
+                .andExpect(content().string(containsString("data-patient-edit-form")))
+                .andExpect(content().string(containsString("/admin/api/patients/7/update")));
 
         then(adminPatientService).should().getPatientDetail(7L);
     }

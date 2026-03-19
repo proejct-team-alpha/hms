@@ -9,6 +9,7 @@ public record AdminPatientDetailResponse(
         String email,
         String address,
         String note,
+        String noteValue,
         List<AdminPatientReservationHistoryItemResponse> reservationHistories
 ) {
 }
