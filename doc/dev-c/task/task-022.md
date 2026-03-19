@@ -8,11 +8,11 @@
 - [ ] `admin.patient` 범위 컨트롤러/서비스/템플릿/테스트를 순서대로 정리한다.
 
 ## Task 22-1. 현재 환자/예약 조회 구조 점검
-- [ ] `Patient`, `Reservation` 엔티티와 연관관계를 점검한다.
-- [ ] 환자 기준 목록 조회에 필요한 현재 리포지토리/쿼리 가능 범위를 확인한다.
-- [ ] 같은 환자가 여러 예약을 가진 경우 환자 1명당 1줄로 묶기 위한 기준을 정리한다.
-- [ ] 연락처 검색 시 하이픈 포함/미포함 입력 처리 방법을 메모한다.
-- [ ] 존재하지 않는 `patientId` 상세 요청 시 처리 방식을 프로젝트 규칙 기준으로 정리한다.
+- [x] `Patient`, `Reservation` 엔티티와 연관관계를 점검한다.
+- [x] 환자 기준 목록 조회에 필요한 현재 리포지토리/쿼리 가능 범위를 확인한다.
+- [x] 같은 환자가 여러 예약을 가진 경우 환자 1명당 1줄로 묶기 위한 기준을 정리한다.
+- [x] 연락처 검색 시 하이픈 포함/미포함 입력 처리 방법을 메모한다.
+- [x] 존재하지 않는 `patientId` 상세 요청 시 처리 방식을 프로젝트 규칙 기준으로 정리한다.
 
 ## Task 22-2. 환자 목록 응답 구조와 서비스 설계
 - [ ] `AdminPatientController`, `AdminPatientService`, `AdminPatientRepository`의 기본 책임을 설계한다.
@@ -58,7 +58,7 @@
 - [ ] 관련 `admin.patient` 범위 테스트가 통과한다.
 
 ## 추천 진행 순서
-- [ ] Task 22-1 현재 환자/예약 조회 구조 점검
+- [x] Task 22-1 현재 환자/예약 조회 구조 점검
 - [ ] Task 22-2 환자 목록 응답 구조와 서비스 설계
 - [ ] Task 22-3 환자 목록 검색 + 페이징 구현
 - [ ] Task 22-4 환자 상세 + 전체 예약 이력 구현
@@ -71,3 +71,11 @@
 - [ ] 연락처 검색은 하이픈 포함/미포함 입력 모두 고려해야 한다.
 - [ ] 상세 화면의 예약 이력은 전체 이력 확인용이며, 목록 화면에 이력 미리보기를 넣지 않는다.
 - [ ] 이후 단계에서 예약 목록 환자명 클릭을 환자 상세로 연결하는 UX 개선을 검토할 수 있다.
+- [x] 현재 연관관계는 `Reservation -> Patient`의 `@ManyToOne`이며, `reservation.patient_id` FK로 환자를 참조한다.
+- [x] 온라인 예약, 전화 예약, 방문 접수 모두 전화번호로 기존 환자를 찾고 없으면 새 `Patient`를 생성한 뒤 예약에 연결한다.
+- [x] 현재 `PatientRepository`는 `findByPhone(String phone)`만 제공하므로, 환자 목록 검색/페이징을 위해 `admin.patient` 범위 전용 조회 리포지토리가 추가로 필요하다.
+- [x] `src/main/java/com/smartclinic/hms/admin/patient/FILES.md`에는 `AdminPatientController`, `AdminPatientService`가 예정 파일로만 정의되어 있고 실제 구현 파일은 아직 없다.
+- [x] `templates/admin` 아래에는 `patient-list.mustache`, `patient-detail.mustache`가 아직 없고, `src/test/java/com/smartclinic/hms/admin`에도 환자 관리 테스트가 아직 없다.
+- [x] 같은 환자가 여러 예약을 가진 경우 환자 목록은 `patient.id` 기준으로 1줄이어야 하며, 상세 화면에서만 해당 환자의 전체 예약 이력을 보여주는 방향이 자연스럽다.
+- [x] 연락처 검색은 현재 시스템이 동일 환자 판별에 전화번호 문자열을 사용하므로, 하이픈 포함/미포함을 정규화해서 처리하는 것이 안전하다.
+- [x] 없는 `patientId` 상세 요청은 기존 관리자 SSR 패턴에 맞춰 404 또는 프로젝트 규칙에 맞는 에러 화면으로 처리하는 방향이 적절하다.
