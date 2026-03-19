@@ -44,25 +44,21 @@
                 <div class="relative">
                   <i data-feather="phone" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
                   <input 
-  type="tel" 
-  id="phoneInput"
-  name="phone" 
-  pattern="\d{3}-\d{4}-\d{4}" 
-  maxlength="13" 
-  required 
-  class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" 
-  placeholder="010-1234-5678" 
-  value="{{#form}}{{phone}}{{/form}}" 
-/>
-<p id="phoneTooltip" 
-   class="absolute left-0 mt-2 bg-white border border-yellow-300 text-yellow-800 text-xs px-3 py-2 rounded-lg shadow-lg hidden z-50">
-  
-  💡 숫자만 입력하면 자동으로 '-'가 추가됩니다.
-</p>
-
+                    type="tel" 
+                    id="phoneInput"
+                    name="phone" 
+                    pattern="\d{3}-\d{4}-\d{4}" 
+                    maxlength="13" 
+                    required 
+                    class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" 
+                    placeholder="010-1234-5678" 
+                    value="{{#form}}{{phone}}{{/form}}" 
+                  />
                 </div>
-
-
+                <p class="mt-2 text-xs text-slate-500 flex items-center gap-1.5 ml-1">
+                  <i data-feather="info" class="w-3.5 h-3.5"></i>
+                  숫자만 입력하시면 하이픈(-)이 자동으로 추가됩니다.
+                </p>
               </div>
             </div>
 
@@ -189,26 +185,44 @@
 
         if (availableDayNums.includes(selectedDayNum)) {
           dateWarning.classList.add('hidden');
+          // 다시 진료 가능일이 되면, 비어있을 경우에만 현재 시간으로 채워줌
+          if (!timeInput.value) {
+            setCurrentTime();
+          }
           return true;
         } else {
           dateWarning.classList.remove('hidden');
+          timeInput.value = ''; // 진료 불가능일이면 시간 비움
           return false;
         }
       }
 
-      // 의사 변경 시 달력 제한 업데이트
+      // 의사 변경 시 달력 제한 업데이트 및 날짜/시간 리셋
       function updateDatePickerLimits() {
         const selectedDoc = docSelect.options[docSelect.selectedIndex];
         const availableDaysStr = (selectedDoc && selectedDoc.dataset.availableDays) || '';
-        
+
+        // 1. 먼저 날짜 제한을 일시적으로 해제 (오늘 날짜 설정을 보장하기 위함)
+        datePicker.set('enable', [function() { return true; }]);
+
+        // 2. 날짜와 시간을 현재 시점으로 초기화
+        const now = new Date();
+        const todayStr = now.getFullYear() + '-' + 
+                         String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                         String(now.getDate()).padStart(2, '0');
+
+        datePicker.setDate(todayStr);
+        setCurrentTime();
+
+        // 3. 새 의사의 진료 요일에 맞춰 다시 제한 설정
         if (availableDaysStr) {
           const availableDayNums = availableDaysStr.split(',').map(d => DAY_MAP[d.trim()]);
           datePicker.set('enable', [
             function(date) { return availableDayNums.includes(date.getDay()); }
           ]);
-        } else {
-          datePicker.set('enable', [function() { return true; }]);
         }
+        
+        // 4. 경고 메시지 및 시간 필드 상태 동기화
         validateDoctorAvailability();
       }
 
@@ -250,7 +264,6 @@
   </script>
   <script>
 const phoneInput = document.getElementById('phoneInput');
-const tooltip = document.getElementById('phoneTooltip');
 
 // 자동 하이픈
 phoneInput.addEventListener('input', function (e) {
@@ -265,18 +278,6 @@ phoneInput.addEventListener('input', function (e) {
   }
 
   e.target.value = value;
-
-  tooltip.classList.add('hidden');
-});
-
-// 클릭하면 말풍선
-phoneInput.addEventListener('focus', () => {
-  tooltip.classList.remove('hidden');
-});
-
-// 벗어나면 숨김
-phoneInput.addEventListener('blur', () => {
-  setTimeout(() => tooltip.classList.add('hidden'), 200);
 });
 
 // 시간 입력 자동 콜론 (HH:mm)
