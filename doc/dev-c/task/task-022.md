@@ -15,11 +15,11 @@
 - [x] 존재하지 않는 `patientId` 상세 요청 시 처리 방식을 프로젝트 규칙 기준으로 정리한다.
 
 ## Task 22-2. 환자 목록 응답 구조와 서비스 설계
-- [ ] `AdminPatientController`, `AdminPatientService`, `AdminPatientRepository`의 기본 책임을 설계한다.
-- [ ] 환자 목록용 응답 DTO를 정의한다.
-- [ ] 목록 응답에 검색 조건, 총 건수, page, size, totalPages, pageLinks 구조를 반영한다.
-- [ ] 환자 1명당 1줄로 반환되도록 목록 조회 기준을 정리한다.
-- [ ] 기본 정렬을 최신 등록순 기준으로 맞춘다.
+- [x] `AdminPatientController`, `AdminPatientService`, `AdminPatientRepository`의 기본 책임을 설계한다.
+- [x] 환자 목록용 응답 DTO를 정의한다.
+- [x] 목록 응답에 검색 조건, 총 건수, page, size, totalPages, pageLinks 구조를 반영한다.
+- [x] 환자 1명당 1줄로 반환되도록 목록 조회 기준을 정리한다.
+- [x] 기본 정렬을 최신 등록순 기준으로 맞춘다.
 
 ## Task 22-3. 환자 목록 검색 + 페이징 구현
 - [ ] `GET /admin/patient/list`를 추가한다.
@@ -59,7 +59,7 @@
 
 ## 추천 진행 순서
 - [x] Task 22-1 현재 환자/예약 조회 구조 점검
-- [ ] Task 22-2 환자 목록 응답 구조와 서비스 설계
+- [x] Task 22-2 환자 목록 응답 구조와 서비스 설계
 - [ ] Task 22-3 환자 목록 검색 + 페이징 구현
 - [ ] Task 22-4 환자 상세 + 전체 예약 이력 구현
 - [ ] Task 22-5 목록/상세 Mustache 화면 구현
@@ -79,3 +79,8 @@
 - [x] 같은 환자가 여러 예약을 가진 경우 환자 목록은 `patient.id` 기준으로 1줄이어야 하며, 상세 화면에서만 해당 환자의 전체 예약 이력을 보여주는 방향이 자연스럽다.
 - [x] 연락처 검색은 현재 시스템이 동일 환자 판별에 전화번호 문자열을 사용하므로, 하이픈 포함/미포함을 정규화해서 처리하는 것이 안전하다.
 - [x] 없는 `patientId` 상세 요청은 기존 관리자 SSR 패턴에 맞춰 404 또는 프로젝트 규칙에 맞는 에러 화면으로 처리하는 방향이 적절하다.
+- [x] `admin.patient` 범위에 `AdminPatientController`, `AdminPatientService`, `AdminPatientRepository` 스켈레톤을 추가했다.
+- [x] 목록 응답 구조는 `AdminPatientListResponse`, `AdminPatientPageLinkResponse`, `AdminPatientSummary` 기준으로 정리했고, 기본 page/size/이전·다음 URL 구조를 포함한다.
+- [x] 상세 응답 골격은 `AdminPatientDetailResponse`, `AdminPatientReservationHistoryItemResponse`로 미리 정의해 다음 단계에서 예약 이력 구현을 바로 연결할 수 있게 했다.
+- [x] 목록 검색 파라미터는 `nameKeyword`, `contactKeyword` 두 축으로 분리했고, 연락처는 하이픈 제거 후 검색하는 방향으로 쿼리 구조를 잡았다.
+- [x] 기본 페이지 크기는 20건, 기본 정렬은 `createdAt desc, id desc` 기준으로 설계했다.
