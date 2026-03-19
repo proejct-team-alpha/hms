@@ -1,9 +1,8 @@
 package com.smartclinic.hms.llm;
 
-import com.smartclinic.hms.auth.StaffRepository;
-import com.smartclinic.hms.domain.ChatbotHistoryRepository;
-import com.smartclinic.hms.llm.controller.ChatController;
-import com.smartclinic.hms.llm.service.ChatService;
+import com.smartclinic.hms.llm.controller.SymptomController;
+import com.smartclinic.hms.llm.dto.SymptomResponse;
+import com.smartclinic.hms.llm.service.SymptomAnalysisService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +10,6 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -22,53 +20,33 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(ChatController.class)
-@Import(ChatControllerTest.TestSecurityConfig.class)
-class ChatControllerTest {
+@WebMvcTest(SymptomController.class)
+@Import(SymptomControllerTest.TestSecurityConfig.class)
+class SymptomControllerTest {
 
     @Autowired
     MockMvc mockMvc;
 
     @MockitoBean
-    ChatService chatService;
-
-    @MockitoBean
-    ChatbotHistoryRepository chatbotHistoryRepository;
-
-    @MockitoBean
-    StaffRepository staffRepository;
+    SymptomAnalysisService symptomAnalysisService;
 
     @Test
-    @DisplayName("POST /llm/chatbot/query - 비인증 접근 시 /login 리다이렉트")
-    void query_비인증_리다이렉트() throws Exception {
-        mockMvc.perform(post("/llm/chatbot/query")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"query\":\"당직\"}"))
-                .andExpect(status().is3xxRedirection());
-    }
+    @DisplayName("POST /llm/symptom/analyze - 비인증 200 (permitAll)")
+    void analyze_비인증_200() throws Exception {
+        given(symptomAnalysisService.analyzeSymptom(anyString()))
+                .willReturn(Mono.just(new SymptomResponse("내과", "의사이영희", "09:00")));
 
-    @Test
-    @DisplayName("POST /llm/chatbot/query - DOCTOR 인증 200")
-    void query_인증_200() throws Exception {
-        given(chatService.callRuleLlmApi(anyString())).willReturn(Mono.just("당직 규정 응답"));
-        given(staffRepository.findByUsernameAndActiveTrue(any())).willReturn(java.util.Optional.empty());
-
-        MvcResult result = mockMvc.perform(post("/llm/chatbot/query")
-                        .with(user("doctor").roles("DOCTOR"))
+        MvcResult result = mockMvc.perform(post("/llm/symptom/analyze")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"query\":\"당직\"}"))
+                        .content("{\"symptomText\":\"열이 나요\"}"))
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
@@ -77,30 +55,22 @@ class ChatControllerTest {
     }
 
     @Test
-    @DisplayName("POST /llm/chatbot/query/stream - DOCTOR 인증 SSE 200")
-    void queryStream_인증_200() throws Exception {
-        given(chatService.callRuleLlmApiStream(anyString())).willReturn(Flux.just("token1", "token2"));
+    @DisplayName("POST /llm/symptom/analyze - 응답 구조 확인 (dept, doctor, time)")
+    void analyze_응답구조() throws Exception {
+        given(symptomAnalysisService.analyzeSymptom(anyString()))
+                .willReturn(Mono.just(new SymptomResponse("소아과", "의사최지우", "11:00")));
 
-        MvcResult result = mockMvc.perform(post("/llm/chatbot/query/stream")
-                        .with(user("doctor").roles("DOCTOR"))
+        MvcResult result = mockMvc.perform(post("/llm/symptom/analyze")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"query\":\"당직\"}"))
+                        .content("{\"symptomText\":\"아이가 열이 나요\"}"))
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
         mockMvc.perform(asyncDispatch(result))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    @DisplayName("GET /llm/chatbot/history/{staffId} - DOCTOR 인증 200")
-    void history_인증_200() throws Exception {
-        given(chatbotHistoryRepository.findByStaff_IdOrderByCreatedAtDesc(any(), any()))
-                .willReturn(Page.empty());
-
-        mockMvc.perform(get("/llm/chatbot/history/1")
-                        .with(user("doctor").roles("DOCTOR")))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.dept").value("소아과"))
+                .andExpect(jsonPath("$.doctor").value("의사최지우"))
+                .andExpect(jsonPath("$.time").value("11:00"));
     }
 
     @TestConfiguration
