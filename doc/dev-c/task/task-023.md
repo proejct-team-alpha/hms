@@ -15,11 +15,11 @@
 - [x] 없는 `patientId`, 공백 입력, 중복 전화번호 시나리오를 메모한다.
 
 ## Task 23-2. 환자 수정 요청/응답 DTO 설계
-- [ ] 수정 요청 DTO를 추가한다.
-- [ ] `name`, `phone`에 `@NotBlank` 검증을 적용한다.
-- [ ] `note`는 선택 입력으로 둔다.
-- [ ] 수정 결과 응답 DTO를 정의한다.
-- [ ] 응답 DTO에 수정 후 필요한 환자 정보만 담도록 범위를 정리한다.
+- [x] 수정 요청 DTO를 추가한다.
+- [x] `name`, `phone`에 `@NotBlank` 검증을 적용한다.
+- [x] `note`는 선택 입력으로 둔다.
+- [x] 수정 결과 응답 DTO를 정의한다.
+- [x] 응답 DTO에 수정 후 필요한 환자 정보만 담도록 범위를 정리한다.
 
 ## Task 23-3. 환자 수정 서비스 로직 구현
 - [ ] `AdminPatientService`에 환자 수정 메서드를 추가한다.
@@ -59,7 +59,7 @@
 
 ## 추천 진행 순서
 - [x] Task 23-1 현재 환자 수정 가능 구조 점검
-- [ ] Task 23-2 환자 수정 요청/응답 DTO 설계
+- [x] Task 23-2 환자 수정 요청/응답 DTO 설계
 - [ ] Task 23-3 환자 수정 서비스 로직 구현
 - [ ] Task 23-4 관리자 환자 수정 API 구현
 - [ ] Task 23-5 API 테스트 보강
@@ -73,7 +73,8 @@
 - [x] 관리자 API 패턴은 `@RequestMapping("/admin/api/...")`, `@Valid @RequestBody`, `Resp.ok(...)` 응답 형태로 구현되어 있다.
 - [x] `GlobalExceptionHandler`는 `@RestController` 범위에서 `MethodArgumentNotValidException`, `CustomException` 등을 `Resp.fail(...)` 형식으로 처리한다.
 - [x] 핵심 예외 시나리오는 없는 `patientId`, `name`/`phone` 공백 입력, 다른 환자와 전화번호 중복이다.
-- [x] `note`는 선택 입력으로 둘 수 있지만 null/blank를 어떻게 저장할지는 구현 전에 한 번 더 정리하면 좋다.
+- [x] `note`는 선택 입력으로 두고, 이번 DTO 단계에서는 null/blank 모두 허용한다. 실제 저장 시 정규화 정책은 서비스 구현 단계에서 정리한다.
+- [x] `UpdateAdminPatientApiRequest`에는 `name`, `phone`, `note`만 두고, 수정 결과 응답은 `patientId`, `name`, `phone`, `note`, `message`만 담는 작은 DTO로 정리했다.
 
 ## PR 리뷰 포인트
 - [ ] 환자 수정 API의 URL과 수정 가능 필드 범위가 팀 기준에 맞는지 확인 부탁드립니다.
