@@ -66,4 +66,9 @@ public class Patient {
         this.address = address;
         this.note = note;
     }
+
+    public void updateAddressAndNote(String address, String note) {
+        this.address = address;
+        this.note = note;
+    }
 }

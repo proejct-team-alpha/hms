@@ -87,13 +87,10 @@ public class WalkinService {
                                 request.getTime(),
                                 ReservationSource.WALKIN);
 
+                // 방문 접수는 생성 즉시 '진료 대기'(RECEIVED) 상태로 변경
+                reservation.receive();
+
                 reservationRepository.save(reservation);
-
-                // 방문 접수는 바로 접수 처리
-                ReceptionUpdateRequest req = new ReceptionUpdateRequest();
-                req.setReservationId(reservation.getId());
-
-                receptionService.receive(req);
 
                 return nameMismatch;
         }
