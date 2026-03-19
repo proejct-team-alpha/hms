@@ -226,6 +226,38 @@ class AdminStaffServiceTest {
     }
 
     @Test
+    @DisplayName("update staff keeps existing password when password input is blank")
+    void updateStaff_blankPassword_keepsExistingPassword() {
+        // given
+        Department originalDepartment = persistDepartment("general-admin");
+        Department changedDepartment = persistDepartment("ops-admin");
+        Staff staff = persistStaff("staff-keep-password", "S-011", "existing-staff", StaffRole.STAFF, originalDepartment, true);
+        String originalPassword = staff.getPassword();
+        entityManager.flush();
+        entityManager.clear();
+
+        UpdateAdminStaffRequest request = new UpdateAdminStaffRequest(
+                staff.getId(),
+                "updated-staff",
+                changedDepartment.getId(),
+                "",
+                null,
+                List.of()
+        );
+
+        // when
+        adminStaffService.updateStaff(request);
+        entityManager.flush();
+        entityManager.clear();
+
+        Staff updatedStaff = entityManager.find(Staff.class, staff.getId());
+
+        // then
+        assertThat(updatedStaff.getName()).isEqualTo("updated-staff");
+        assertThat(updatedStaff.getDepartment().getId()).isEqualTo(changedDepartment.getId());
+        assertThat(updatedStaff.getPassword()).isEqualTo(originalPassword);
+    }
+    @Test
     @DisplayName("의사 직원 수정 시 전문 분야와 진료 가능 요일을 변경한다")
     void updateStaff_updatesDoctorFields() {
         // given
