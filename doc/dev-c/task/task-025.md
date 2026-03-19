@@ -1,9 +1,9 @@
 # Task 025 - 규칙 목록 완성
 
 ## Task 25-1. 현재 규칙 목록 구조 점검
-- [ ] `AdminRuleController`, `AdminRuleService`, Repository, 템플릿 현재 구조 확인
-- [ ] 기존 목록 조회 계약과 페이지네이션 유무 확인
-- [ ] 필터/검색/상태 배지 추가 시 영향 범위 메모 정리
+- [x] `AdminRuleController`, `AdminRuleService`, Repository, 템플릿 현재 구조 확인
+- [x] 기존 목록 조회 계약과 페이지네이션 유무 확인
+- [x] 필터/검색/상태 배지 추가 시 영향 범위 메모 정리
 
 ## Task 25-2. 목록 응답 구조와 조회 책임 설계
 - [ ] 규칙 목록 응답 DTO 설계
@@ -34,6 +34,29 @@
 - [ ] `task-025` 완료 처리
 - [ ] `admin.rule` 또는 관련 범위 테스트 실행
 - [ ] 필요 시 전체 `./gradlew test` 재확인
+
+## Task 25-1 점검 메모
+- `AdminRuleController`
+  - 현재 `GET /admin/rule/list`는 파라미터를 전혀 받지 않고 `Model`에 `rules`, `hasRules`, `pageTitle`만 넣는다.
+  - `page`, `size`, `category`, `active`, `keyword` 전달 구조가 아직 없다.
+- `AdminRuleService`
+  - 현재 `getRuleList()`는 전체 조회 `findAllByOrderByCreatedAtDesc()`만 수행한다.
+  - 필터/검색/페이지네이션 로직이 전혀 없다.
+- `HospitalRuleRepository`
+  - 현재 메서드는 `findAllByOrderByCreatedAtDesc()` 하나뿐이다.
+  - 카테고리, 활성 여부, 제목 검색, 페이지 조회를 위한 메서드 또는 `@Query`가 필요하다.
+- `AdminRuleDto`
+  - 현재 카테고리 표시 텍스트, 활성 여부 텍스트, 활성 상태 배지 클래스는 이미 가지고 있다.
+  - 활성 상태 표시 자체는 재사용 가능하지만 목록 응답 DTO와 페이지 링크 DTO는 별도 추가가 필요하다.
+- `rule-list.mustache`
+  - 현재는 카드형 목록만 있고 검색 바, 필터 UI, 페이지네이션 UI가 없다.
+  - 한글 인코딩 손상도 있어 템플릿 전체 정리가 필요하다.
+- 테스트 상태
+  - `AdminRuleControllerTest`, `AdminRuleServiceTest`는 현재 전체 조회 기준만 검증한다.
+  - 검색/필터/페이지네이션 관련 테스트가 없다.
+- 도메인 메모
+  - `HospitalRule`은 `category`, `active`, `createdAt`을 이미 가지고 있어 이번 목록 완성에 필요한 도메인 필드는 충분하다.
+  - 정렬 기준은 `createdAt desc`를 그대로 유지하면 자연스럽다.
 
 ## 리뷰 포인트
 - 규칙 목록을 대시보드가 아닌 관리용 검색형 인덱스 화면으로 두는 구성이 적절한지
