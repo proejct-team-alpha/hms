@@ -4,13 +4,13 @@ import com.smartclinic.hms.admin.staff.dto.AdminStaffListResponse;
 import com.smartclinic.hms.admin.staff.dto.CreateAdminStaffRequest;
 import com.smartclinic.hms.admin.staff.dto.UpdateAdminStaffRequest;
 import com.smartclinic.hms.common.exception.CustomException;
+import com.smartclinic.hms.common.util.SsrValidationViewSupport;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -70,8 +70,7 @@ public class AdminStaffController {
             RedirectAttributes redirectAttributes,
             HttpServletRequest req) {
         if (bindingResult.hasErrors()) {
-            req.setAttribute("errorMessage", adminStaffService.getInputCheckMessage());
-            applyFieldErrors(req, bindingResult);
+            SsrValidationViewSupport.applyErrors(req, bindingResult);
             req.setAttribute("model", adminStaffService.getCreateForm(request));
             return "admin/staff-form";
         }
@@ -94,8 +93,7 @@ public class AdminStaffController {
             RedirectAttributes redirectAttributes,
             HttpServletRequest req) {
         if (bindingResult.hasErrors()) {
-            req.setAttribute("errorMessage", adminStaffService.getInputCheckMessage());
-            applyFieldErrors(req, bindingResult);
+            SsrValidationViewSupport.applyErrors(req, bindingResult);
             req.setAttribute("model", adminStaffService.getEditForm(request));
             return "admin/staff-form";
         }
@@ -123,11 +121,5 @@ public class AdminStaffController {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
         return "redirect:/admin/staff/list";
-    }
-
-    private void applyFieldErrors(HttpServletRequest req, BindingResult bindingResult) {
-        for (FieldError fieldError : bindingResult.getFieldErrors()) {
-            req.setAttribute(fieldError.getField() + "Error", fieldError.getDefaultMessage());
-        }
     }
 }

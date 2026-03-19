@@ -9,6 +9,7 @@ import com.smartclinic.hms.admin.staff.dto.AdminStaffListResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffPageLinkResponse;
 import com.smartclinic.hms.admin.staff.dto.UpdateAdminStaffRequest;
 import com.smartclinic.hms.common.AdminControllerTestSecurityConfig;
+import com.smartclinic.hms.common.util.SsrValidationViewSupport;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,8 +49,6 @@ class AdminStaffControllerTest {
     private static final String STAFF_CREATED_MESSAGE = "직원을 등록했습니다.";
     private static final String STAFF_UPDATED_MESSAGE = "직원 정보를 수정했습니다.";
     private static final String STAFF_DEACTIVATED_MESSAGE = "직원을 비활성화했습니다.";
-    private static final String INPUT_CHECK_MESSAGE = "입력값을 확인해주세요.";
-
     @Autowired
     private MockMvc mockMvc;
 
@@ -142,7 +141,6 @@ class AdminStaffControllerTest {
     void create_validationFailure_rendersStaffFormView() throws Exception {
         // given
         AdminStaffFormResponse response = createDoctorCreateFormResponse("doctor-new", "신규의사", "D-NEW-001", null);
-        given(adminStaffService.getInputCheckMessage()).willReturn(INPUT_CHECK_MESSAGE);
         given(adminStaffService.getCreateForm(any())).willReturn(response);
 
         // when
@@ -157,14 +155,48 @@ class AdminStaffControllerTest {
                         .param("specialty", "가정의학")
                         .param("availableDays", "MON")
                         .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
+                .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/staff-form"))
-                .andExpect(request().attribute("errorMessage", INPUT_CHECK_MESSAGE))
+                .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
                 .andExpect(request().attribute("departmentIdError", notNullValue()))
                 .andExpect(request().attribute("model", response))
                 .andExpect(content().string(containsString("doctor-new")))
                 .andExpect(content().string(containsString("D-NEW-001")));
+
+        then(adminStaffService).should().getCreateForm(any());
+        then(adminStaffService).shouldHaveNoMoreInteractions();
+    }
+
+    @Test
+    @DisplayName("직원 등록 검증 실패 시 공백 로그인 아이디를 필드 에러로 처리한다")
+    void create_validationFailure_withBlankUsername_rendersStaffFormView() throws Exception {
+        // given
+        AdminStaffFormResponse response = createDoctorCreateFormResponse("", "신규의사", "D-NEW-001", 1L);
+        given(adminStaffService.getCreateForm(any())).willReturn(response);
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/staff/create")
+                        .param("username", "   ")
+                        .param("password", "password123")
+                        .param("name", "신규의사")
+                        .param("employeeNumber", "D-NEW-001")
+                        .param("role", "DOCTOR")
+                        .param("departmentId", "1")
+                        .param("active", "true")
+                        .param("specialty", "가정의학")
+                        .param("availableDays", "MON")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/staff-form"))
+                .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
+                .andExpect(request().attribute("usernameError", notNullValue()))
+                .andExpect(request().attribute("model", response));
+
+        then(adminStaffService).should().getCreateForm(any());
+        then(adminStaffService).shouldHaveNoMoreInteractions();
     }
 
     @Test
@@ -195,7 +227,6 @@ class AdminStaffControllerTest {
     void update_validationFailure_rendersStaffFormView() throws Exception {
         // given
         AdminStaffFormResponse response = createEditFormResponse("수정직원", null);
-        given(adminStaffService.getInputCheckMessage()).willReturn(INPUT_CHECK_MESSAGE);
         given(adminStaffService.getEditForm(any(UpdateAdminStaffRequest.class))).willReturn(response);
 
         // when
@@ -207,14 +238,45 @@ class AdminStaffControllerTest {
                         .param("specialty", "가정의학")
                         .param("availableDays", "MON")
                         .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
+                .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/staff-form"))
-                .andExpect(request().attribute("errorMessage", INPUT_CHECK_MESSAGE))
+                .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
                 .andExpect(request().attribute("departmentIdError", notNullValue()))
                 .andExpect(request().attribute("model", response))
                 .andExpect(content().string(containsString("수정직원")))
                 .andExpect(content().string(containsString("doctor01")));
+
+        then(adminStaffService).should().getEditForm(any(UpdateAdminStaffRequest.class));
+        then(adminStaffService).shouldHaveNoMoreInteractions();
+    }
+
+    @Test
+    @DisplayName("직원 수정 검증 실패 시 빈 이름을 필드 에러로 처리한다")
+    void update_validationFailure_withEmptyName_rendersStaffFormView() throws Exception {
+        // given
+        AdminStaffFormResponse response = createEditFormResponse("", 1L);
+        given(adminStaffService.getEditForm(any(UpdateAdminStaffRequest.class))).willReturn(response);
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/staff/update")
+                        .param("staffId", "1")
+                        .param("name", "")
+                        .param("departmentId", "1")
+                        .param("password", "")
+                        .param("specialty", "가정의학")
+                        .param("availableDays", "MON")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/staff-form"))
+                .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
+                .andExpect(request().attribute("nameError", notNullValue()))
+                .andExpect(request().attribute("model", response));
+
+        then(adminStaffService).should().getEditForm(any(UpdateAdminStaffRequest.class));
+        then(adminStaffService).shouldHaveNoMoreInteractions();
     }
 
     @Test

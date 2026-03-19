@@ -1,6 +1,7 @@
 package com.smartclinic.hms.admin.department;
 
 import com.smartclinic.hms.common.exception.CustomException;
+import com.smartclinic.hms.common.util.SsrValidationViewSupport;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -136,7 +137,7 @@ public class AdminDepartmentController {
         req.setAttribute("createName", request.getName());
         req.setAttribute("createActive", request.isActive());
         req.setAttribute("openCreateModal", true);
-        req.setAttribute("nameError", getFieldError(bindingResult, "name"));
+        SsrValidationViewSupport.applyErrors(req, bindingResult);
         return "admin/department-list";
     }
 
@@ -156,25 +157,18 @@ public class AdminDepartmentController {
             RedirectAttributes redirectAttributes,
             BindingResult bindingResult) {
         if (request.getDepartmentId() == null) {
-            redirectAttributes.addFlashAttribute("errorMessage", "\uC785\uB825\uAC12\uC744 \uD655\uC778\uD574\uC8FC\uC138\uC694.");
+            redirectAttributes.addFlashAttribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE);
             return redirectTo("/admin/department/list");
         }
 
         try {
             AdminDepartmentDetailResponse model = adminDepartmentService.getDepartmentDetail(request.getDepartmentId());
-            req.setAttribute("nameError", getFieldError(bindingResult, "name"));
+            SsrValidationViewSupport.applyErrors(req, bindingResult);
             return renderDetailPage(req, model, request.getName());
         } catch (CustomException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
             return redirectTo("/admin/department/list");
         }
-    }
-
-    private String getFieldError(BindingResult bindingResult, String fieldName) {
-        if (bindingResult.getFieldError(fieldName) == null) {
-            return null;
-        }
-        return bindingResult.getFieldError(fieldName).getDefaultMessage();
     }
 
     private RedirectView redirectToDetail(Long departmentId) {
