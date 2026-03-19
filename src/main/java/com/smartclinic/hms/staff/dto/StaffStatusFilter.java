@@ -10,10 +10,11 @@ public class StaffStatusFilter {
     private final String href;
     private final String cssClass;
 
-    public StaffStatusFilter(String label, String value, String selected, String date) {
+    public StaffStatusFilter(String label, String value, String selected, String date, String query) {
         this.label = label;
         this.value = value;
-        this.href = "/staff/reception/list?date=" + date + "&status=" + value;
+        String q = (query == null) ? "" : query;
+        this.href = "/staff/reception/list?date=" + date + "&status=" + value + "&query=" + q;
         boolean isSelected = value.equals(selected == null ? "" : selected);
         this.cssClass = isSelected
                 ? switch (value) {

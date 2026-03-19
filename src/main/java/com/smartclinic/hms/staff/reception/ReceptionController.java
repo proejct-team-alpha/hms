@@ -38,6 +38,7 @@ public class ReceptionController {
     public String list(
             @RequestParam(name = "status", defaultValue = "") String status,
             @RequestParam(name = "date", required = false) String date,
+            @RequestParam(name = "query", required = false) String query,
             @ModelAttribute("date") String flashDate,
             @RequestParam(name = "page", defaultValue = "1") int page,
             Model model) {
@@ -50,7 +51,7 @@ public class ReceptionController {
         LocalDate selectedDate = (date == null || date.isBlank()) ? null : LocalDate.parse(date);
         String dateStr = selectedDate != null ? selectedDate.toString() : "";
 
-        List<StaffReservationDto> all = receptionService.getReservations(selectedDate, status);
+        List<StaffReservationDto> all = receptionService.getReservations(selectedDate, status, query);
 
         // 페이징
         int total = all.size();
@@ -60,11 +61,12 @@ public class ReceptionController {
         int to = Math.min(from + PAGE_SIZE, total);
         List<StaffReservationDto> paged = all.subList(from, to);
 
-        // 페이지 URL 기본 경로 (date, status 포함)
-        String baseUrl = "/staff/reception/list?date=" + dateStr + "&status=" + status;
+        // 페이지 URL 기본 경로 (date, status, query 포함)
+        String q = (query == null) ? "" : query;
+        String baseUrl = "/staff/reception/list?date=" + dateStr + "&status=" + status + "&query=" + q;
 
         model.addAttribute("reservations", paged);
-        model.addAttribute("filters", receptionService.getStatusFilters(status, dateStr));
+        model.addAttribute("filters", receptionService.getStatusFilters(status, dateStr, query));
         // 날짜 네비게이션
         model.addAttribute("hasDate", selectedDate != null);
         model.addAttribute("todayDate", LocalDate.now().toString());
@@ -73,6 +75,7 @@ public class ReceptionController {
         model.addAttribute("nextDate", selectedDate != null ? selectedDate.plusDays(1).toString() : "");
         model.addAttribute("currentDate", dateStr);
         model.addAttribute("currentStatus", status);
+        model.addAttribute("query", q);
         // 페이징
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", totalPages);
