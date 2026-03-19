@@ -27,19 +27,68 @@
         {{/errorMessage}}
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-            <div class="flex gap-2">
-              {{#statusFilters}}
-              <a href="{{url}}" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors {{#selected}}bg-slate-800 text-white{{/selected}}{{^selected}}bg-white border border-slate-300 text-slate-600 hover:bg-slate-100{{/selected}}">
-                {{label}}
-              </a>
-              {{/statusFilters}}
+          <div class="p-4 border-b border-slate-200 bg-slate-50 space-y-4">
+            <div class="flex justify-between items-center">
+              <div class="flex gap-2">
+                {{#statusFilters}}
+                <a href="{{url}}" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors {{#selected}}bg-slate-800 text-white{{/selected}}{{^selected}}bg-white border border-slate-300 text-slate-600 hover:bg-slate-100{{/selected}}">
+                  {{label}}
+                </a>
+                {{/statusFilters}}
+              </div>
+              <form action="/nurse/reception-list" method="get" class="flex items-center gap-2">
+                <input type="hidden" name="status" value="{{currentStatus}}">
+                <div class="relative group">
+                  <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors"></i>
+                  <input type="text" name="query" value="{{query}}" placeholder="환자명, 연락처 검색"
+                         class="pl-12 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 w-72 bg-white shadow-sm transition-all placeholder:text-slate-400">
+                </div>
+                <button type="button" id="btn-toggle-filter" class="p-2 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all shadow-sm">
+                  <i data-feather="sliders" class="w-4 h-4"></i>
+                </button>
+                <a href="/nurse/reception-list" class="p-2 text-slate-400 hover:text-slate-600 transition-colors" title="초기화">
+                  <i data-feather="refresh-cw" class="w-4 h-4"></i>
+                </a>
+
+                {{! 상세 필터 숨은 필드들 (상태 유지를 위해) }}
+                <input type="hidden" name="deptId" id="hidden-deptId" value="{{#deptId}}{{deptId}}{{/deptId}}">
+                <input type="hidden" name="doctorId" id="hidden-doctorId" value="{{#doctorId}}{{doctorId}}{{/doctorId}}">
+                <input type="hidden" name="source" id="hidden-source" value="{{#source}}{{source}}{{/source}}">
+              </form>
             </div>
-            <div class="relative">
-              <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-              <input type="text" id="reception-search" placeholder="환자명·연락처 검색"
-                     class="pl-9 pr-4 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 w-56">
-            </div>
+
+            {{! 상세 필터 패널 (기본 숨김) }}
+            <form id="detailed-filter-form" action="/nurse/reception-list" method="get" class="hidden grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+              <input type="hidden" name="status" value="{{currentStatus}}">
+              <input type="hidden" name="query" value="{{query}}">
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 ml-1">진료과</label>
+                <select name="deptId" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                  <option value="">전체 진료과</option>
+                  {{#departments}}
+                  <option value="{{id}}" {{#selected}}selected{{/selected}}>{{name}}</option>
+                  {{/departments}}
+                </select>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 ml-1">전문의</label>
+                <select name="doctorId" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                  <option value="">전체 전문의</option>
+                  {{#doctors}}
+                  <option value="{{id}}" {{#selected}}selected{{/selected}}>{{name}}</option>
+                  {{/doctors}}
+                </select>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 ml-1">예약 구분</label>
+                <select name="source" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                  <option value="">전체 구분</option>
+                  {{#sources}}
+                  <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                  {{/sources}}
+                </select>
+              </div>
+            </form>
           </div>
 
           <table class="w-full text-left border-collapse">
@@ -49,7 +98,8 @@
                 <th class="p-4 font-medium">환자명</th>
                 <th class="p-4 font-medium">연락처</th>
                 <th class="p-4 font-medium">예약 구분</th>
-                <th class="p-4 font-medium">진료과 / 전문의</th>
+                <th class="p-4 font-medium">진료과</th>
+                <th class="p-4 font-medium">전문의</th>
                 <th class="p-4 font-medium">상태</th>
                 <th class="p-4 font-medium">접수</th>
               </tr>
@@ -67,7 +117,8 @@
                     {{sourceText}}
                   </span>
                 </td>
-                <td class="p-4 text-sm text-slate-600">{{departmentName}} / {{doctorName}}</td>
+                <td class="p-4 text-sm text-slate-600">{{departmentName}}</td>
+                <td class="p-4 text-sm text-slate-600">{{doctorName}}</td>
                 <td class="p-4">
                   <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{statusBadgeClass}}">
                     {{statusText}}
@@ -78,7 +129,7 @@
                   <form method="post" action="/nurse/reservation/receive">
                     <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
                     <input type="hidden" name="id" value="{{id}}">
-                    <button type="submit" class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                    <button type="submit" class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
                       접수
                     </button>
                   </form>
@@ -91,8 +142,9 @@
               {{/reservations}}
               {{^reservations}}
               <tr id="reception-empty">
-                <td colspan="7" class="p-8 text-center text-slate-500">
-                  오늘 예약된 환자가 없습니다.
+                <td colspan="8" class="p-8 text-center text-slate-500">
+                  {{#query}}"{{query}}"에 대한 검색 결과가 없습니다.{{/query}}
+                  {{^query}}오늘 예약된 환자가 없습니다.{{/query}}
                 </td>
               </tr>
               {{/reservations}}
@@ -119,17 +171,22 @@
   </div>
 
   <script>
-    var receptionSearch = document.getElementById('reception-search');
-    if (receptionSearch) {
-      receptionSearch.addEventListener('input', function() {
-        var query = this.value.trim().toLowerCase();
-        document.querySelectorAll('#reception-tbody tr:not(#reception-empty)').forEach(function(row) {
-          var cells = row.querySelectorAll('td');
-          var name  = cells[1] ? cells[1].textContent.trim().toLowerCase() : '';
-          var phone = cells[2] ? cells[2].textContent.trim().toLowerCase() : '';
-          row.style.display = (!query || name.includes(query) || phone.includes(query)) ? '' : 'none';
-        });
+    // 상세 필터 토글
+    const btnToggleFilter = document.getElementById('btn-toggle-filter');
+    const filterPanel = document.getElementById('detailed-filter-form');
+    
+    if (btnToggleFilter && filterPanel) {
+      btnToggleFilter.addEventListener('click', () => {
+        filterPanel.classList.toggle('hidden');
       });
+
+      // 필터가 설정되어 있으면 자동으로 열어둠
+      const hasActiveFilters = {{#deptId}}true{{/deptId}}{{^deptId}}false{{/deptId}} || 
+                               {{#doctorId}}true{{/doctorId}}{{^doctorId}}false{{/doctorId}} || 
+                               {{#source}}true{{/source}}{{^source}}false{{/source}};
+      if (hasActiveFilters) {
+        filterPanel.classList.remove('hidden');
+      }
     }
   </script>
   <script>feather.replace();</script>

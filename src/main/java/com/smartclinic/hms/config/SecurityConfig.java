@@ -105,14 +105,18 @@ public class SecurityConfig {
                 // /llm/rules/** 는 인증 필요 엔드포인트이므로 CSRF 보호 유지.
                 // JS fetch 호출 시 CSRF 토큰을 X-CSRF-TOKEN 헤더로 전송 필요.
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/llm/symptom/**"))
+                        .ignoringRequestMatchers(
+                                "/llm/symptom/**",
+                                "/llm/medical/**",
+                                "/llm/chatbot/**",
+                                "/llm/reservation/**"))
 
                 // ── Security Headers ────────────────────────────────────────
                 .headers(headers -> headers
                         .contentSecurityPolicy(csp -> csp
                                 .policyDirectives(
                                         "default-src 'self'; " +
-                                                "script-src 'self' 'unsafe-inline'; " +
+                                                "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
                                                 "style-src 'self' 'unsafe-inline'; " +
                                                 "img-src 'self' data:; " +
                                                 "font-src 'self'; " +
@@ -145,6 +149,12 @@ public class SecurityConfig {
 
                         // ── LLM 증상 분석 — 비회원 AJAX (§4) ───────────────────
                         .requestMatchers("/llm/symptom/**").permitAll()
+
+                        // ── LLM 의료 상담 — 비회원 허용 ─────────────────────────
+                        .requestMatchers("/llm/medical/**", "/llm/reservation/**").permitAll()
+
+                        // ── LLM 챗봇 — 인증 필요 ────────────────────────────────
+                        .requestMatchers("/llm/chatbot/**").authenticated()
 
                         // ── LLM 규칙 챗봇 — 내부 직원 AJAX (§8) ────────────────
                         .requestMatchers("/llm/rules/**").hasAnyRole("DOCTOR", "NURSE")

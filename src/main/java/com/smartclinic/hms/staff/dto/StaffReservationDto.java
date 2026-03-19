@@ -23,6 +23,7 @@ public class StaffReservationDto {
     private final String statusBadgeClass;
     private final String sourceText;
     private final String sourceBadgeClass;
+    private final String cancellationReason;
     private final boolean canReceive;
     private final boolean canCancel;
 
@@ -38,6 +39,7 @@ public class StaffReservationDto {
         this.timeSlot = r.getTimeSlot();
         this.departmentName = r.getDepartment().getName();
         this.doctorName = r.getDoctor().getStaff().getName();
+        this.cancellationReason = r.getCancellationReason();
 
         this.statusText = switch (r.getStatus()) {
             case RESERVED -> "접수 대기";
@@ -63,8 +65,7 @@ public class StaffReservationDto {
             case PHONE -> "bg-purple-100 text-purple-800";
             case WALKIN -> "bg-orange-100 text-orange-800";
         };
-        this.canReceive = r.getStatus() == ReservationStatus.RESERVED
-                && r.getSource() != ReservationSource.WALKIN;
+        this.canReceive = r.getStatus() == ReservationStatus.RESERVED;
         this.canCancel = r.getStatus() == ReservationStatus.RESERVED
                 || r.getStatus() == ReservationStatus.RECEIVED;
 

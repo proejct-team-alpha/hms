@@ -6,6 +6,7 @@
   <title>원무과 대시보드 - MediCare+</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="min-h-screen flex">
   {{> common/sidebar-staff}}
@@ -58,34 +59,8 @@
           <!-- 시간대별 예약 현황 차트 -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
             <h2 class="text-lg font-bold text-slate-800 mb-6">시간대별 예약 및 접수 현황</h2>
-            <div class="relative" style="height: 200px;">
-              <svg viewBox="0 0 560 180" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
-                <defs>
-                  <linearGradient id="staffChartGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#6366f1" stop-opacity="0.3"/>
-                    <stop offset="100%" stop-color="#6366f1" stop-opacity="0.02"/>
-                  </linearGradient>
-                </defs>
-                <line x1="40" y1="20" x2="540" y2="20" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
-                <line x1="40" y1="55" x2="540" y2="55" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
-                <line x1="40" y1="90" x2="540" y2="90" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
-                <line x1="40" y1="125" x2="540" y2="125" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
-                <text x="30" y="24" text-anchor="end" fill="#94a3b8" font-size="10">16</text>
-                <text x="30" y="59" text-anchor="end" fill="#94a3b8" font-size="10">12</text>
-                <text x="30" y="94" text-anchor="end" fill="#94a3b8" font-size="10">8</text>
-                <text x="30" y="129" text-anchor="end" fill="#94a3b8" font-size="10">4</text>
-                <text x="30" y="160" text-anchor="end" fill="#94a3b8" font-size="10">0</text>
-                <path d="M40,155 C80,145 120,60 180,45 C230,32 260,100 310,105 C360,110 390,35 440,30 C480,26 510,90 540,95 L540,155 L40,155 Z"
-                      fill="url(#staffChartGrad)"/>
-                <path d="M40,155 C80,145 120,60 180,45 C230,32 260,100 310,105 C360,110 390,35 440,30 C480,26 510,90 540,95"
-                      fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <text x="40"  y="172" text-anchor="middle" fill="#94a3b8" font-size="10">09:00</text>
-                <text x="140" y="172" text-anchor="middle" fill="#94a3b8" font-size="10">10:00</text>
-                <text x="240" y="172" text-anchor="middle" fill="#94a3b8" font-size="10">11:00</text>
-                <text x="340" y="172" text-anchor="middle" fill="#94a3b8" font-size="10">13:00</text>
-                <text x="440" y="172" text-anchor="middle" fill="#94a3b8" font-size="10">14:00</text>
-                <text x="540" y="172" text-anchor="middle" fill="#94a3b8" font-size="10">16:00</text>
-              </svg>
+            <div style="position: relative; height: 250px; width: 100%;">
+              <canvas id="hourlyChart"></canvas>
             </div>
           </div>
 
@@ -123,6 +98,120 @@
     {{> common/footer-staff}}
   </div>
 
-  <script>feather.replace();</script>
+  <script>
+    feather.replace();
+
+    // Chart.js 초기화
+    const ctx = document.getElementById('hourlyChart').getContext('2d');
+    const labels = [
+      {{#dashboard.hourlyStats}}"{{label}}",{{/dashboard.hourlyStats}}
+    ];
+    const reservationData = [
+      {{#dashboard.hourlyStats}}{{reservationCount}},{{/dashboard.hourlyStats}}
+    ];
+    const receptionData = [
+      {{#dashboard.hourlyStats}}{{receptionCount}},{{/dashboard.hourlyStats}}
+    ];
+    const totalData = [
+      {{#dashboard.hourlyStats}}{{totalCount}},{{/dashboard.hourlyStats}}
+    ];
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: '총 환자 수',
+            data: totalData,
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.05)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.3, // 곡선을 조금 더 완만하게
+            pointRadius: 0, // 평소에는 점을 숨김
+            pointHoverRadius: 6, // 마우스 올릴 때만 점 표시
+            pointHoverBackgroundColor: '#6366f1',
+            pointHoverBorderColor: '#fff',
+            pointHoverBorderWidth: 3,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+          padding: {
+            top: 10,
+            bottom: 0,
+            left: -10,
+            right: 0
+          }
+        },
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        },
+        plugins: {
+          legend: {
+            display: false // 범례 숨김 (어차피 하나니까요!)
+          },
+          tooltip: {
+            backgroundColor: '#1e293b',
+            titleColor: '#fff',
+            bodyColor: '#fff',
+            padding: 12,
+            displayColors: false,
+            callbacks: {
+              label: function(context) {
+                const index = context.dataIndex;
+                return [
+                  `전체: ${totalData[index]}명`,
+                  `  • 예약: ${reservationData[index]}명`,
+                  `  • 접수: ${receptionData[index]}명`
+                ];
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            display: true,
+            ticks: {
+              stepSize: 10,
+              color: '#94a3b8',
+              font: {
+                family: "'Pretendard', sans-serif",
+                size: 11
+              }
+            },
+            grid: {
+              color: '#f1f5f9',
+              drawBorder: false
+            }
+          },
+          x: {
+            ticks: {
+              color: '#94a3b8',
+              maxRotation: 0,
+              font: {
+                family: "'Pretendard', sans-serif",
+                size: 11
+              },
+              callback: function(val, index) {
+                // 라벨이 너무 많으면 띄엄띄엄 표시 (징그러움 방지)
+                return index % 2 === 0 ? this.getLabelForValue(val) : '';
+              }
+            },
+            grid: {
+              display: false,
+              drawBorder: false
+            }
+          }
+        }
+      }
+    });
+  </script>
 </body>
 </html>

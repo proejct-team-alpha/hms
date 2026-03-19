@@ -57,6 +57,12 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         List<Reservation> findFromDateByStatus(@Param("fromDate") LocalDate fromDate,
                         @Param("status") ReservationStatus status);
 
+        @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date ORDER BY r.timeSlot")
+        List<Reservation> findTodayAll(@Param("date") LocalDate date);
+
+        @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate >= :fromDate ORDER BY r.reservationDate, r.timeSlot")
+        List<Reservation> findFromDateAll(@Param("fromDate") LocalDate fromDate);
+
         @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.id = :id")
         Optional<Reservation> findByIdWithDetails(@Param("id") Long id);
 
@@ -74,6 +80,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                 @Param("doctorId") Long doctorId,
                 @Param("date") LocalDate date,
                 @Param("excluded") ReservationStatus excluded);
+
+        // LLM 예약 슬롯 중복 체크 — startTime 기반
+        long countByDoctor_IdAndReservationDateAndStartTime(
+                Long doctorId, java.time.LocalDate date, java.time.LocalTime startTime);
 
         // 예약 변경 페이지용 — 현재 수정 중인 예약 제외
         @Query("SELECT r.timeSlot FROM Reservation r " +
