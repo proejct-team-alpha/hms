@@ -28,7 +28,7 @@
             </div>
           </div>
 
-          <form method="post" action="/staff/walkin" class="space-y-6">
+          <form id="walkinForm" method="post" action="/staff/walkin" class="space-y-6">
             <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -92,35 +92,15 @@
                 <label class="block text-sm font-medium text-slate-700 mb-2">접수 날짜</label>
                 <div class="relative">
                   <i data-feather="calendar" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input type="text" name="date" id="dateInput" required readonly placeholder="날짜 선택" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" />
+                  <input type="text" name="date" id="dateInput" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" value="{{today}}" />
                 </div>
+                <p id="dateWarning" class="text-xs text-red-500 mt-1 hidden">선택하신 의사의 진료일이 아닙니다.</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">접수 시간</label>
                 <div class="relative">
                   <i data-feather="clock" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <select name="time" id="timeSelect" required
-                          class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none bg-white">
-                    <option value="">선택해주세요</option>
-                    <optgroup label="오전">
-                      <option value="09:00">09:00</option>
-                      <option value="09:30">09:30</option>
-                      <option value="10:00">10:00</option>
-                      <option value="10:30">10:30</option>
-                      <option value="11:00">11:00</option>
-                      <option value="11:30">11:30</option>
-                    </optgroup>
-                    <optgroup label="오후">
-                      <option value="14:00">14:00</option>
-                      <option value="14:30">14:30</option>
-                      <option value="15:00">15:00</option>
-                      <option value="15:30">15:30</option>
-                      <option value="16:00">16:00</option>
-                      <option value="16:30">16:30</option>
-                      <option value="17:00">17:00</option>
-                      <option value="17:30">17:30</option>
-                    </optgroup>
-                  </select>
+                  <input type="text" name="time" id="timeInput" required maxlength="5" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" placeholder="HH:mm" />
                 </div>
               </div>
             </div>
@@ -151,14 +131,31 @@
   <script>alert("{{message}}");</script>
   {{/message}}
   <script>
-    (async function () {
+    (function () {
+      const form       = document.getElementById('walkinForm');
       const deptSelect = document.querySelector('select[name="departmentId"]');
       const docSelect  = document.querySelector('select[name="doctorId"]');
       const dateInput  = document.getElementById('dateInput');
-      const timeSelect = document.getElementById('timeSelect');
+      const timeInput  = document.getElementById('timeInput');
+      const dateWarning = document.getElementById('dateWarning');
       const docOptions = Array.from(docSelect.querySelectorAll('option[data-dept-id]'));
 
       const DAY_MAP = { SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6 };
+
+      // Flatpickr 초기화
+      const datePicker = flatpickr(dateInput, {
+        dateFormat: 'Y-m-d',
+        minDate: 'today',
+        onChange: function() { validateDoctorAvailability(); }
+      });
+
+      // 현재 시간 설정 (HH:mm)
+      function setCurrentTime() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        timeInput.value = `${hours}:${minutes}`;
+      }
 
       // 진료과 → 의사 필터
       function filterDoctorsOnly() {
@@ -172,79 +169,83 @@
         }
       }
 
-      // booked-slots API 호출 → 예약 불가 시간 비활성화
-      async function refreshTimeSlots() {
-        const doctorId = docSelect.value;
-        const date     = dateInput.value;
-        const opts     = Array.from(timeSelect.querySelectorAll('option[value]'));
-        opts.forEach(function(opt) {
-          opt.disabled = false;
-          opt.textContent = opt.value;
-        });
-        if (!doctorId || !date) return;
-        try {
-          const res    = await fetch('/api/reservation/booked-slots?doctorId=' + doctorId + '&date=' + date);
-          const booked = await res.json();
-          opts.forEach(function(opt) {
-            if (booked.includes(opt.value)) {
-              opt.disabled = true;
-              opt.textContent = opt.value + ' (예약불가)';
-              if (timeSelect.value === opt.value) timeSelect.value = '';
-            }
-          });
-        } catch (e) {}
-      }
+      // 의사 선택 시 진료 가능 요일 적용
+      function validateDoctorAvailability() {
+        const selectedDoc = docSelect.options[docSelect.selectedIndex];
+        const availableDaysStr = (selectedDoc && selectedDoc.dataset.availableDays) || '';
+        const selectedDateStr = dateInput.value;
 
-      // Flatpickr 초기화 (의사 선택 전: 전체 날짜 비활성)
-      const datePicker = flatpickr(dateInput, {
-        dateFormat: 'Y-m-d',
-        minDate: 'today',
-        animate: false,
-        disable: [function() { return true; }],
-        onChange: function() { refreshTimeSlots(); }
-      });
+        if (!availableDaysStr || !selectedDateStr) {
+          dateWarning.classList.add('hidden');
+          return true;
+        }
 
-      // 의사 availableDays → Flatpickr 갱신
-      function applyDoctorAvailableDays() {
-        const selectedOption   = docSelect.options[docSelect.selectedIndex];
-        const availableDaysStr = (selectedOption && selectedOption.dataset.availableDays) || '';
         const availableDayNums = availableDaysStr
           .split(',')
-          .map(function(d) { return DAY_MAP[d.trim()]; })
-          .filter(function(n) { return n !== undefined; });
+          .map(d => DAY_MAP[d.trim()]);
 
-        datePicker.clear();
-        if (availableDayNums.length > 0) {
-          datePicker.set('disable', [
-            function(date) { return !availableDayNums.includes(date.getDay()); }
-          ]);
+        const selectedDate = new Date(selectedDateStr);
+        const selectedDayNum = selectedDate.getDay();
+
+        if (availableDayNums.includes(selectedDayNum)) {
+          dateWarning.classList.add('hidden');
+          return true;
         } else {
-          datePicker.set('disable', [function() { return true; }]);
+          dateWarning.classList.remove('hidden');
+          return false;
         }
-        // 시간 슬롯 초기화
-        Array.from(timeSelect.querySelectorAll('option[value]')).forEach(function(opt) {
-          opt.disabled = false;
-          opt.textContent = opt.value;
-        });
-        timeSelect.value = '';
       }
 
-      deptSelect.addEventListener('change', function() { filterDoctorsOnly(); applyDoctorAvailableDays(); });
-      docSelect.addEventListener('change', function() { applyDoctorAvailableDays(); refreshTimeSlots(); });
+      // 의사 변경 시 달력 제한 업데이트
+      function updateDatePickerLimits() {
+        const selectedDoc = docSelect.options[docSelect.selectedIndex];
+        const availableDaysStr = (selectedDoc && selectedDoc.dataset.availableDays) || '';
+        
+        if (availableDaysStr) {
+          const availableDayNums = availableDaysStr.split(',').map(d => DAY_MAP[d.trim()]);
+          datePicker.set('enable', [
+            function(date) { return availableDayNums.includes(date.getDay()); }
+          ]);
+        } else {
+          datePicker.set('enable', [function() { return true; }]);
+        }
+        validateDoctorAvailability();
+      }
 
-      // 폼 오류 복원
+      deptSelect.addEventListener('change', function() { filterDoctorsOnly(); });
+      docSelect.addEventListener('change', function() { updateDatePickerLimits(); });
+
+      // 폼 제출 전 최종 확인
+      form.addEventListener('submit', function(e) {
+        if (!validateDoctorAvailability()) {
+          e.preventDefault();
+          alert('선택하신 의사의 진료일이 아닙니다. 날짜를 확인해주세요.');
+        }
+      });
+
+      // 초기 설정
+      setCurrentTime();
+      
+      // 폼 오류 복원 시 처리
       const restoreDeptId = '{{#form}}{{departmentId}}{{/form}}';
       const restoreDocId  = '{{#form}}{{doctorId}}{{/form}}';
       const restoreDate   = '{{#form}}{{date}}{{/form}}';
       const restoreTime   = '{{#form}}{{time}}{{/form}}';
 
-      if (restoreDeptId) deptSelect.value = restoreDeptId;
-      filterDoctorsOnly();
-      if (restoreDocId) docSelect.value = restoreDocId;
-      applyDoctorAvailableDays();
-      if (restoreDate) datePicker.setDate(restoreDate);
-      await refreshTimeSlots();
-      if (restoreTime) timeSelect.value = restoreTime;
+      if (restoreDeptId) {
+        deptSelect.value = restoreDeptId;
+        filterDoctorsOnly();
+      }
+      if (restoreDocId) {
+        docSelect.value = restoreDocId;
+        updateDatePickerLimits();
+      }
+      if (restoreDate) {
+        datePicker.setDate(restoreDate);
+      }
+      if (restoreTime) {
+        timeInput.value = restoreTime;
+      }
     })();
   </script>
   <script>
@@ -276,6 +277,33 @@ phoneInput.addEventListener('focus', () => {
 // 벗어나면 숨김
 phoneInput.addEventListener('blur', () => {
   setTimeout(() => tooltip.classList.add('hidden'), 200);
+});
+
+// 시간 입력 자동 콜론 (HH:mm)
+const timeInput = document.getElementById('timeInput');
+timeInput.addEventListener('input', function (e) {
+  let value = e.target.value.replace(/\D/g, ''); // 숫자만 남김
+  
+  if (value.length > 2) {
+    value = value.slice(0, 2) + ':' + value.slice(2, 4);
+  }
+  
+  e.target.value = value;
+});
+
+// 시간 유효성 체크 (포커스 아웃 시)
+timeInput.addEventListener('blur', function (e) {
+  const value = e.target.value;
+  if (value.length > 0 && value.length < 5) {
+    alert('시간 형식이 올바르지 않습니다. (예: 14:30)');
+    setTimeout(() => timeInput.focus(), 10);
+  } else if (value.length === 5) {
+    const [h, m] = value.split(':').map(Number);
+    if (h < 0 || h > 23 || m < 0 || m > 59) {
+      alert('유효하지 않은 시간입니다. (00:00 ~ 23:59)');
+      setTimeout(() => timeInput.focus(), 10);
+    }
+  }
 });
 </script>
 </body>
