@@ -185,26 +185,65 @@
 
       // booked-slots API 호출 → 예약 불가 시간 비활성화
       async function refreshTimeSlots() {
-        const doctorId = docSelect.value;
-        const date     = dateInput.value;
-        const opts     = Array.from(timeSelect.querySelectorAll('option[value]'));
-        opts.forEach(function(opt) {
-          opt.disabled = false;
-          opt.textContent = opt.value;
-        });
-        if (!doctorId || !date) return;
-        try {
-          const res    = await fetch('/api/reservation/booked-slots?doctorId=' + doctorId + '&date=' + date);
-          const booked = await res.json();
-          opts.forEach(function(opt) {
-            if (booked.includes(opt.value)) {
-              opt.disabled = true;
-              opt.textContent = opt.value + ' (예약불가)';
-              if (timeSelect.value === opt.value) timeSelect.value = '';
-            }
-          });
-        } catch (e) {}
+  const doctorId = docSelect.value;
+  const date     = dateInput.value;
+  const opts     = Array.from(timeSelect.querySelectorAll('option[value]'));
+
+  // 1. 초기화
+  opts.forEach(function(opt) {
+    opt.disabled = false;
+    opt.textContent = opt.value;
+  });
+
+  if (!doctorId || !date) return;
+
+  try {
+    const res = await fetch('/api/reservation/booked-slots?doctorId=' + doctorId + '&date=' + date);
+    if (!res.ok) throw new Error();
+
+    const booked = await res.json();
+
+    // 2. 예약 불가 처리
+    opts.forEach(function(opt) {
+      if (booked.includes(opt.value)) {
+        opt.disabled = true;
+        opt.textContent = opt.value + ' (예약불가)';
       }
+    });
+
+    // 3. 오늘 기준 마감 처리
+    const today = new Date().toISOString().slice(0, 10);
+
+    if (date === today) {
+      const now = new Date();
+      const currentTime = now.getHours() * 60 + now.getMinutes();
+
+      opts.forEach(function(opt) {
+        const [hour, minute] = opt.value.split(':').map(Number);
+        const optionTime = hour * 60 + minute;
+
+        if (optionTime <= currentTime) {
+          opt.disabled = true;
+          opt.textContent = opt.value + ' (마감)';
+        }
+      });
+    }
+
+    
+
+    // 5. 자동 추천 (가장 빠른 시간 선택)
+    timeSelect.value = ''; // 기존 선택 초기화
+
+const firstAvailable = opts.find(opt => !opt.disabled && opt.value);
+
+if (firstAvailable) {
+  timeSelect.value = firstAvailable.value;
+}
+
+  } catch (e) {
+    console.error('슬롯 조회 실패');
+  }
+}
 
       // Flatpickr 초기화 (의사 선택 전: 전체 날짜 비활성)
       const datePicker = flatpickr(dateInput, {
