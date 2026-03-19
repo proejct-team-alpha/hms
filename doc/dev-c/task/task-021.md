@@ -3,9 +3,9 @@
 ## 목적
 - [x] `workflow-021`의 예약 관리 화면 내 접수 필터 통합 범위를 실제 구현 가능한 작업 단위로 분해한다.
 - [x] 기존 `AdminReservationController`, `AdminReservationService`, `reservation-list.mustache` 구조를 최대한 재사용한다.
-- [ ] 별도 접수 전용 화면 없이 `/admin/reservation/list`에서 `접수` 상태 필터를 자연스럽게 제공한다.
-- [ ] 상태 라벨, 설명 문구, 페이지네이션, 취소 후 복귀 흐름까지 함께 정리한다.
-- [ ] `admin.reservation` 범위 회귀를 테스트로 방어한다.
+- [x] 별도 접수 전용 화면 없이 `/admin/reservation/list`에서 `접수` 상태 필터를 자연스럽게 제공한다.
+- [x] 상태 라벨, 설명 문구, 페이지네이션, 취소 후 복귀 흐름까지 함께 정리한다.
+- [x] `admin.reservation` 범위 회귀를 테스트로 방어한다.
 
 ## Task 21-1. 현재 예약 목록 상태 필터 구조 점검
 - [x] `AdminReservationController`의 상태 파라미터 처리 흐름을 점검한다.
@@ -43,18 +43,18 @@
 - [x] `admin.reservation` 범위 테스트 통과를 확인한다.
 
 ## Task 21-6. 최종 점검 및 문서 갱신
-- [ ] `workflow-021` 방향과 실제 구현 결과가 일치하는지 점검한다.
-- [ ] `task-021` 체크리스트와 완료 기준을 최종 상태로 갱신한다.
-- [ ] 필요 시 전체 테스트 실행 여부와 known issue를 정리한다.
-- [ ] PR에 적을 리뷰 포인트를 메모한다.
-- [ ] 후속으로 별도 접수 화면 분리가 필요한 조건을 다시 정리한다.
+- [x] `workflow-021` 방향과 실제 구현 결과가 일치하는지 점검한다.
+- [x] `task-021` 체크리스트와 완료 기준을 최종 상태로 갱신한다.
+- [x] 전체 테스트 실행 여부와 known issue를 정리한다.
+- [x] PR에 적을 리뷰 포인트를 메모한다.
+- [x] 후속으로 별도 접수 화면 분리가 필요한 조건을 다시 정리한다.
 
 ## 완료 기준
-- [ ] `/admin/reservation/list` 상태 필터에 `접수`가 자연스럽게 노출된다.
-- [ ] `접수` 필터 선택 시 `RECEIVED` 상태 예약 목록이 조회된다.
-- [ ] 별도 `/admin/reception/list` 없이 기존 예약 관리 화면에서 접수 현황 확인이 가능하다.
-- [ ] 취소 후에도 선택한 필터와 페이지 정보가 유지된다.
-- [ ] 관련 `admin.reservation` 테스트가 통과한다.
+- [x] `/admin/reservation/list` 상태 필터에 `접수`가 자연스럽게 노출된다.
+- [x] `접수` 필터 선택 시 `RECEIVED` 상태 예약 목록이 조회된다.
+- [x] 별도 `/admin/reception/list` 없이 기존 예약 관리 화면에서 접수 현황 확인이 가능하다.
+- [x] 취소 후에도 선택한 필터와 페이지 정보가 유지된다.
+- [x] 관련 `admin.reservation` 테스트가 통과한다.
 
 ## 추천 진행 순서
 - [x] Task 21-1 현재 예약 목록 상태 필터 구조 점검
@@ -62,18 +62,25 @@
 - [x] Task 21-3 예약 목록 화면 문구와 필터 UI 정리
 - [x] Task 21-4 취소 후 복귀 흐름과 필터 유지 검증
 - [x] Task 21-5 admin.reservation 범위 테스트 보강
-- [ ] Task 21-6 최종 점검 및 문서 갱신
+- [x] Task 21-6 최종 점검 및 문서 갱신
 
 ## 메모
 - [x] 이번 작업은 새 `AdminReceptionController`를 만드는 것이 아니라 기존 예약 관리 화면을 확장하는 작업이다.
 - [x] `AdminReservationController`는 `page`, `size`, `status`를 그대로 서비스에 전달하고, 취소 후에도 `RedirectAttributes`로 같은 값을 유지한다.
-- [x] `AdminReservationService`는 이미 `STATUS_LABELS`에서 `RECEIVED -> 접수` 매핑을 갖고 있고, 상태 옵션 목록도 `ALL`, `RESERVED`, `RECEIVED`, `COMPLETED`, `CANCELLED` 순서로 구성한다.
+- [x] `AdminReservationService`는 `STATUS_LABELS`에서 `RECEIVED -> 접수` 매핑을 유지하고, 상태 옵션 목록도 `ALL`, `RESERVED`, `RECEIVED`, `COMPLETED`, `CANCELLED` 순서로 구성한다.
 - [x] `toItemResponse()`에서도 `received` 플래그와 상태 라벨을 함께 계산하고 있어, UI 쪽에서는 라벨/문구 정리만 해도 접수 의미를 살릴 수 있다.
-- [x] `reservation-list.mustache`는 상태 필터와 상태 배지 구조를 이미 갖고 있지만, 현재는 인코딩 손상 때문에 설명 문구와 필터/배지 텍스트가 깨져 있다.
-- [x] 기존 테스트는 기본 페이징, 요청 파라미터 전달, 취소 후 `status=RECEIVED` 유지까지는 확인하지만, 사용자 노출 라벨 `접수` 자체를 직접 검증하지는 않는다.
-- [x] Task 21-2에서 서비스 테스트로 `RECEIVED -> 접수` 라벨 계약을 직접 검증했다.
-- [x] Task 21-3에서 예약 목록 설명 문구를 예약과 접수 현황 기준으로 정리하고, 상태 필터 앞에 안내 라벨을 추가해 접수 필터가 더 자연스럽게 보이도록 맞췄다.
+- [x] 예약 목록 설명 문구는 `예약과 접수 현황` 기준으로 정리했고, 상태 필터 앞에 안내 라벨을 추가했다.
+- [x] 예약 취소 후 리다이렉트 status는 정규화해 `RECEIVED` 복귀는 유지하고, 잘못된 값은 `ALL`로 안전하게 보정한다.
+- [x] 서비스/컨트롤러/템플릿 관점의 접수 필터 검증을 묶어 `admin.reservation` 범위 테스트 통과를 다시 확인했다.
+- [x] 전체 테스트 `./gradlew test`도 통과했고, 현재 시점 기준 known issue는 없다.
 
-- [x] Task 21-4에서 예약 취소 후 리다이렉트 status를 정규화해, RECEIVED 복귀는 유지하고 잘못된 값은 ALL로 안전하게 보정하도록 정리했다.
+## PR 리뷰 포인트 메모
+- [x] 별도 접수 전용 화면을 만들지 않고 예약 목록 안에서 `접수` 필터를 통합한 판단이 사용자 경험 측면에서 적절한지 확인 요청
+- [x] `RECEIVED` 내부 상태값은 유지하면서 사용자 노출 라벨만 `접수`로 통일한 구조가 자연스러운지 확인 요청
+- [x] 예약 취소 후 리다이렉트에서 `status`를 정규화해 안전성을 높인 점 공유
 
-- [x] Task 21-5에서 서비스/컨트롤러/템플릿 관점의 접수 필터 검증을 묶어 정리하고, dmin.reservation 범위 테스트 통과까지 다시 확인했다.
+## 후속 분리 기준 메모
+- [x] 접수 전용 통계 카드가 필요해지면 별도 화면 분리 재검토
+- [x] 실시간 모니터링/자동 새로고침 요구가 생기면 분리 재검토
+- [x] 대기 순번 강조나 접수 완료 중심 UX가 커지면 분리 재검토
+- [x] 당일 접수 전용 보드형 레이아웃이 필요해지면 분리 재검토
