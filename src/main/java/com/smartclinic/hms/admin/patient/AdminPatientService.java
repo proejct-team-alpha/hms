@@ -4,6 +4,7 @@ import com.smartclinic.hms.admin.patient.dto.AdminPatientDetailResponse;
 import com.smartclinic.hms.admin.patient.dto.AdminPatientListResponse;
 import com.smartclinic.hms.admin.patient.dto.AdminPatientPageLinkResponse;
 import com.smartclinic.hms.admin.patient.dto.AdminPatientReservationHistoryItemResponse;
+import com.smartclinic.hms.admin.patient.dto.UpdateAdminPatientApiResponse;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.Patient;
 import com.smartclinic.hms.domain.ReservationStatus;
@@ -25,6 +26,9 @@ public class AdminPatientService {
     private static final int DEFAULT_PAGE = 1;
     private static final int DEFAULT_SIZE = 20;
     private static final String PATIENT_NOT_FOUND_MESSAGE = "환자를 찾을 수 없습니다.";
+    private static final String DUPLICATE_PATIENT_PHONE_ERROR_CODE = "DUPLICATE_PATIENT_PHONE";
+    private static final String DUPLICATE_PATIENT_PHONE_MESSAGE = "이미 사용 중인 연락처입니다.";
+    private static final String PATIENT_UPDATED_MESSAGE = "환자 정보가 수정되었습니다.";
     private static final String DEFAULT_TEXT = "-";
     private static final Map<ReservationStatus, String> STATUS_LABELS = Map.of(
             ReservationStatus.RESERVED, "예약",
@@ -41,6 +45,7 @@ public class AdminPatientService {
         int safeSize = size < 1 ? DEFAULT_SIZE : size;
         String normalizedNameKeyword = normalizeKeyword(nameKeyword);
         String normalizedContactKeyword = normalizeContact(contactKeyword);
+        String displayContactKeyword = normalizeKeyword(contactKeyword);
 
         Pageable pageable = PageRequest.of(safePage - 1, safeSize);
         Page<Patient> pageResult = adminPatientRepository.search(normalizedNameKeyword, normalizedContactKeyword, pageable);
@@ -54,9 +59,9 @@ public class AdminPatientService {
                 pageResult.getContent().stream()
                         .map(AdminPatientSummary::from)
                         .toList(),
-                buildPageLinks(totalPages, currentPage, safeSize, normalizedNameKeyword, normalizeKeyword(contactKeyword)),
+                buildPageLinks(totalPages, currentPage, safeSize, normalizedNameKeyword, displayContactKeyword),
                 normalizedNameKeyword,
-                normalizeKeyword(contactKeyword),
+                displayContactKeyword,
                 pageResult.getTotalElements(),
                 currentPage,
                 safeSize,
@@ -64,8 +69,8 @@ public class AdminPatientService {
                 totalPages > 0,
                 hasPrevious,
                 hasNext,
-                hasPrevious ? buildListUrl(currentPage - 1, safeSize, normalizedNameKeyword, normalizeKeyword(contactKeyword)) : "",
-                hasNext ? buildListUrl(currentPage + 1, safeSize, normalizedNameKeyword, normalizeKeyword(contactKeyword)) : ""
+                hasPrevious ? buildListUrl(currentPage - 1, safeSize, normalizedNameKeyword, displayContactKeyword) : "",
+                hasNext ? buildListUrl(currentPage + 1, safeSize, normalizedNameKeyword, displayContactKeyword) : ""
         );
     }
 
@@ -97,12 +102,62 @@ public class AdminPatientService {
         );
     }
 
+    @Transactional
+    public UpdateAdminPatientApiResponse updatePatient(Long patientId, String name, String phone, String note) {
+        Patient patient = adminPatientRepository.findById(patientId)
+                .orElseThrow(() -> CustomException.notFound(PATIENT_NOT_FOUND_MESSAGE));
+
+        String normalizedName = normalizeRequiredText(name);
+        String normalizedPhone = normalizeRequiredText(phone);
+        String comparablePhone = normalizeComparablePhone(normalizedPhone);
+        String normalizedNote = normalizeOptionalText(note);
+
+        if (adminPatientRepository.existsByNormalizedPhoneAndIdNot(patientId, comparablePhone)) {
+            throw CustomException.conflict(DUPLICATE_PATIENT_PHONE_ERROR_CODE, DUPLICATE_PATIENT_PHONE_MESSAGE);
+        }
+
+        patient.updateInfo(
+                normalizedName,
+                normalizedPhone,
+                patient.getEmail(),
+                patient.getAddress(),
+                normalizedNote
+        );
+
+        return new UpdateAdminPatientApiResponse(
+                patient.getId(),
+                patient.getName(),
+                patient.getPhone(),
+                patient.getNote(),
+                PATIENT_UPDATED_MESSAGE
+        );
+    }
+
     private String normalizeKeyword(String keyword) {
         return keyword == null ? "" : keyword.trim();
     }
 
+    private String normalizeRequiredText(String value) {
+        return value == null ? "" : value.trim();
+    }
+
     private String normalizeContact(String contactKeyword) {
         return normalizeKeyword(contactKeyword).replace("-", "");
+    }
+
+    private String normalizeComparablePhone(String phone) {
+        return normalizeRequiredText(phone)
+                .replace("-", "")
+                .replace(" ", "");
+    }
+
+    private String normalizeOptionalText(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private String defaultText(String value) {

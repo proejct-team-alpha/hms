@@ -22,11 +22,11 @@
 - [x] 응답 DTO에 수정 후 필요한 환자 정보만 담도록 범위를 정리한다.
 
 ## Task 23-3. 환자 수정 서비스 로직 구현
-- [ ] `AdminPatientService`에 환자 수정 메서드를 추가한다.
-- [ ] 없는 `patientId`는 not found 예외로 처리한다.
-- [ ] `name`, `phone`, `note` 수정 로직을 구현한다.
-- [ ] 자기 자신을 제외한 다른 환자와 전화번호 중복 시 수정을 차단한다.
-- [ ] 기존 전화번호와 동일한 값으로 다시 저장하는 경우는 정상 허용한다.
+- [x] `AdminPatientService`에 환자 수정 메서드를 추가한다.
+- [x] 없는 `patientId`는 not found 예외로 처리한다.
+- [x] `name`, `phone`, `note` 수정 로직을 구현한다.
+- [x] 자기 자신을 제외한 다른 환자와 전화번호 중복 시 수정을 차단한다.
+- [x] 기존 전화번호와 동일한 값으로 다시 저장하는 경우는 정상 허용한다.
 
 ## Task 23-4. 관리자 환자 수정 API 구현
 - [ ] `POST /admin/api/patients/{id}/update` 엔드포인트를 추가한다.
@@ -60,7 +60,7 @@
 ## 추천 진행 순서
 - [x] Task 23-1 현재 환자 수정 가능 구조 점검
 - [x] Task 23-2 환자 수정 요청/응답 DTO 설계
-- [ ] Task 23-3 환자 수정 서비스 로직 구현
+- [x] Task 23-3 환자 수정 서비스 로직 구현
 - [ ] Task 23-4 관리자 환자 수정 API 구현
 - [ ] Task 23-5 API 테스트 보강
 - [ ] Task 23-6 문서 갱신 및 범위 검증
@@ -75,6 +75,10 @@
 - [x] 핵심 예외 시나리오는 없는 `patientId`, `name`/`phone` 공백 입력, 다른 환자와 전화번호 중복이다.
 - [x] `note`는 선택 입력으로 두고, 이번 DTO 단계에서는 null/blank 모두 허용한다. 실제 저장 시 정규화 정책은 서비스 구현 단계에서 정리한다.
 - [x] `UpdateAdminPatientApiRequest`에는 `name`, `phone`, `note`만 두고, 수정 결과 응답은 `patientId`, `name`, `phone`, `note`, `message`만 담는 작은 DTO로 정리했다.
+- [x] `AdminPatientService.updatePatient(...)`를 추가해 `name`, `phone`, `note`만 수정하고 기존 `email`, `address`는 보존하도록 정리했다.
+- [x] 전화번호 비교는 하이픈/공백 제거 기준으로 자기 자신 제외 중복을 검사하도록 `AdminPatientRepository.existsByNormalizedPhoneAndIdNot(...)`를 추가했다.
+- [x] `note`는 `trim()` 후 빈 문자열이면 `null`로 정규화하는 정책을 서비스에서 확정했다.
+- [x] `AdminPatientServiceTest`에 수정 성공, 없는 환자, 전화번호 중복, 동일 전화번호 유지, blank note 정규화 시나리오를 추가했다.
 
 ## PR 리뷰 포인트
 - [ ] 환자 수정 API의 URL과 수정 가능 필드 범위가 팀 기준에 맞는지 확인 부탁드립니다.

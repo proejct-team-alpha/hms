@@ -40,6 +40,16 @@ public interface AdminPatientRepository extends JpaRepository<Patient, Long> {
             """)
     List<AdminPatientReservationHistoryProjection> findReservationHistoriesByPatientId(@Param("patientId") Long patientId);
 
+    @Query("""
+            SELECT COUNT(p) > 0
+            FROM Patient p
+            WHERE p.id <> :patientId
+              AND REPLACE(REPLACE(p.phone, '-', ''), ' ', '') = :normalizedPhone
+            """)
+    boolean existsByNormalizedPhoneAndIdNot(
+            @Param("patientId") Long patientId,
+            @Param("normalizedPhone") String normalizedPhone);
+
     interface AdminPatientReservationHistoryProjection {
         String getReservationNumber();
         LocalDate getReservationDate();

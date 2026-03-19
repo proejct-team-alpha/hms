@@ -45,7 +45,7 @@ class AdminPatientServiceTest {
         entityManager.clear();
 
         // when
-        var result = adminPatientService.getPatientList(1, 20, "김", "0101234");
+        var result = adminPatientService.getPatientList(1, 20, "김철", "0101234");
 
         // then
         assertThat(result.totalCount()).isEqualTo(1);
@@ -98,7 +98,7 @@ class AdminPatientServiceTest {
     @DisplayName("get patient detail returns patient info with reservation histories")
     void getPatientDetail_returnsPatientInfoWithReservationHistories() {
         // given
-        Department department = persistDepartment("내과");
+        Department department = persistDepartment("치과");
         Staff doctorStaff = persistDoctorStaff("doctor1", "D-001", "김의사", department);
         Doctor doctor = persistDoctor(doctorStaff, department);
 
@@ -132,13 +132,108 @@ class AdminPatientServiceTest {
     @Test
     @DisplayName("get patient detail throws when patient is missing")
     void getPatientDetail_throwsWhenPatientIsMissing() {
-        // given
-
-        // when
-        // then
+        // given // when // then
         assertThatThrownBy(() -> adminPatientService.getPatientDetail(999L))
                 .isInstanceOf(CustomException.class)
                 .hasMessage("환자를 찾을 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("update patient changes name phone note and preserves email address")
+    void updatePatient_changesNamePhoneNoteAndPreservesEmailAddress() {
+        // given
+        Patient patient = Patient.create("김철수", "010-1234-5678", "kim@example.com");
+        patient.updateInfo("김철수", "010-1234-5678", "kim@example.com", "서울시 강남구", "기존 메모");
+        entityManager.persist(patient);
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        var result = adminPatientService.updatePatient(patient.getId(), "  김수정  ", "010-9999-8888", "  수정 메모  ");
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        Patient updated = entityManager.find(Patient.class, patient.getId());
+        assertThat(result.patientId()).isEqualTo(patient.getId());
+        assertThat(result.name()).isEqualTo("김수정");
+        assertThat(result.phone()).isEqualTo("010-9999-8888");
+        assertThat(result.note()).isEqualTo("수정 메모");
+        assertThat(result.message()).isEqualTo("환자 정보가 수정되었습니다.");
+        assertThat(updated.getName()).isEqualTo("김수정");
+        assertThat(updated.getPhone()).isEqualTo("010-9999-8888");
+        assertThat(updated.getNote()).isEqualTo("수정 메모");
+        assertThat(updated.getEmail()).isEqualTo("kim@example.com");
+        assertThat(updated.getAddress()).isEqualTo("서울시 강남구");
+    }
+
+    @Test
+    @DisplayName("update patient converts blank note to null")
+    void updatePatient_convertsBlankNoteToNull() {
+        // given
+        Patient patient = Patient.create("김철수", "010-1234-5678", "kim@example.com");
+        patient.updateInfo("김철수", "010-1234-5678", "kim@example.com", "서울시 강남구", "기존 메모");
+        entityManager.persist(patient);
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        var result = adminPatientService.updatePatient(patient.getId(), "김철수", "010-1234-5678", "   ");
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        Patient updated = entityManager.find(Patient.class, patient.getId());
+        assertThat(result.note()).isNull();
+        assertThat(updated.getNote()).isNull();
+    }
+
+    @Test
+    @DisplayName("update patient throws when patient is missing")
+    void updatePatient_throwsWhenPatientIsMissing() {
+        // given // when // then
+        assertThatThrownBy(() -> adminPatientService.updatePatient(999L, "김철수", "010-1234-5678", "메모"))
+                .isInstanceOf(CustomException.class)
+                .hasMessage("환자를 찾을 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("update patient throws when phone is duplicated by another patient")
+    void updatePatient_throwsWhenPhoneIsDuplicatedByAnotherPatient() {
+        // given
+        Patient first = Patient.create("김철수", "010-1234-5678", "kim@example.com");
+        Patient second = Patient.create("박영희", "010-7777-8888", "park@example.com");
+        entityManager.persist(first);
+        entityManager.persist(second);
+        entityManager.flush();
+        entityManager.clear();
+
+        // when // then
+        assertThatThrownBy(() -> adminPatientService.updatePatient(second.getId(), "박영희", "01012345678", "메모"))
+                .isInstanceOf(CustomException.class)
+                .hasMessage("이미 사용 중인 연락처입니다.");
+    }
+
+    @Test
+    @DisplayName("update patient allows keeping the same phone")
+    void updatePatient_allowsKeepingTheSamePhone() {
+        // given
+        Patient patient = Patient.create("김철수", "010-1234-5678", "kim@example.com");
+        patient.updateInfo("김철수", "010-1234-5678", "kim@example.com", "서울시 강남구", null);
+        entityManager.persist(patient);
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        var result = adminPatientService.updatePatient(patient.getId(), "김철수 수정", "010-1234-5678", null);
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        Patient updated = entityManager.find(Patient.class, patient.getId());
+        assertThat(result.phone()).isEqualTo("010-1234-5678");
+        assertThat(updated.getName()).isEqualTo("김철수 수정");
+        assertThat(updated.getPhone()).isEqualTo("010-1234-5678");
     }
 
     private void persistPatient(String name, String phone, LocalDateTime createdAt) {
@@ -162,7 +257,7 @@ class AdminPatientServiceTest {
     }
 
     private Doctor persistDoctor(Staff staff, Department department) {
-        Doctor doctor = Doctor.create(staff, department, "MON,TUE", "내과");
+        Doctor doctor = Doctor.create(staff, department, "MON,TUE", "치과");
         entityManager.persist(doctor);
         return doctor;
     }
