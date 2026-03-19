@@ -85,4 +85,55 @@ INSERT INTO item (name, category, quantity, min_quantity, created_at, updated_at
 -- | doctor01 | password123 | DOCTOR      |
 -- | nurse01  | password123 | NURSE       |
 -- | item01   | password123 | ITEM_MANAGER|
+--
+-- 병원 규칙 더미데이터 (카테고리별 60건, 총 300건)
+INSERT INTO hospital_rule (title, content, category, is_active, created_at, updated_at)
+SELECT
+    '응급 대응 프로토콜 ' || CAST(n.x AS VARCHAR),
+    '응급 호출 접수 후 1분 이내 담당 의사와 간호사에게 전파하고, 환자 상태 분류, 응급 카트 준비, 처치 기록을 순서대로 수행한다. 점검 코드 ER-' || CAST(n.x AS VARCHAR),
+    'EMERGENCY',
+    CASE WHEN MOD(n.x, 10) = 0 THEN FALSE ELSE TRUE END,
+    DATEADD('MINUTE', -n.x, CURRENT_TIMESTAMP),
+    DATEADD('MINUTE', -n.x, CURRENT_TIMESTAMP)
+FROM SYSTEM_RANGE(1, 60) n;
+
+INSERT INTO hospital_rule (title, content, category, is_active, created_at, updated_at)
+SELECT
+    '물품 재고 점검 규칙 ' || CAST(n.x AS VARCHAR),
+    '일일 물품 라운드 시 재고 수량, 유효기간, 보관 위치, 멸균 상태를 함께 확인하고 부족 물품은 교대 종료 전까지 발주 요청한다. 점검 코드 SP-' || CAST(n.x AS VARCHAR),
+    'SUPPLY',
+    CASE WHEN MOD(n.x, 8) = 0 THEN FALSE ELSE TRUE END,
+    DATEADD('MINUTE', -(60 + n.x), CURRENT_TIMESTAMP),
+    DATEADD('MINUTE', -(60 + n.x), CURRENT_TIMESTAMP)
+FROM SYSTEM_RANGE(1, 60) n;
+
+INSERT INTO hospital_rule (title, content, category, is_active, created_at, updated_at)
+SELECT
+    '근무 인수인계 기준 ' || CAST(n.x AS VARCHAR),
+    '교대 시작 전 환자 상태, 우선 처치 대상, 미완료 업무, 특이사항을 인수인계 체크리스트에 기록하고 담당자 서명을 남긴다. 점검 코드 DU-' || CAST(n.x AS VARCHAR),
+    'DUTY',
+    CASE WHEN MOD(n.x, 12) = 0 THEN FALSE ELSE TRUE END,
+    DATEADD('MINUTE', -(120 + n.x), CURRENT_TIMESTAMP),
+    DATEADD('MINUTE', -(120 + n.x), CURRENT_TIMESTAMP)
+FROM SYSTEM_RANGE(1, 60) n;
+
+INSERT INTO hospital_rule (title, content, category, is_active, created_at, updated_at)
+SELECT
+    '위생 관리 체크 규칙 ' || CAST(n.x AS VARCHAR),
+    '진료 전후 손 위생을 수행하고 표면 소독, 폐기물 분리배출, 보호구 교체 여부를 체크리스트에 남긴다. 점검 코드 HY-' || CAST(n.x AS VARCHAR),
+    'HYGIENE',
+    CASE WHEN MOD(n.x, 15) = 0 THEN FALSE ELSE TRUE END,
+    DATEADD('MINUTE', -(180 + n.x), CURRENT_TIMESTAMP),
+    DATEADD('MINUTE', -(180 + n.x), CURRENT_TIMESTAMP)
+FROM SYSTEM_RANGE(1, 60) n;
+
+INSERT INTO hospital_rule (title, content, category, is_active, created_at, updated_at)
+SELECT
+    '병원 운영 공통 안내 ' || CAST(n.x AS VARCHAR),
+    '내부 공지 확인, 문서 보관, 환자 응대, 보안 점검, 시설 이상 보고 절차를 숙지하고 근무 중 변경 사항은 즉시 공유한다. 점검 코드 OT-' || CAST(n.x AS VARCHAR),
+    'OTHER',
+    CASE WHEN MOD(n.x, 20) = 0 THEN FALSE ELSE TRUE END,
+    DATEADD('MINUTE', -(240 + n.x), CURRENT_TIMESTAMP),
+    DATEADD('MINUTE', -(240 + n.x), CURRENT_TIMESTAMP)
+FROM SYSTEM_RANGE(1, 60) n;
 -- ==============================================================================

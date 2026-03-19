@@ -32,8 +32,8 @@ class AdminRuleServiceTest {
     @DisplayName("getRuleList returns mapped dtos from full list")
     void getRuleList_returnsMappedDtos() {
         // given
-        HospitalRule rule1 = HospitalRule.create("응급 지침", "응급실 우선 대응 안내", HospitalRuleCategory.EMERGENCY);
-        HospitalRule rule2 = HospitalRule.create("물품 관리", "물품 정리 방법", HospitalRuleCategory.SUPPLY);
+        HospitalRule rule1 = HospitalRule.create("emergency-rule", "emergency first response", HospitalRuleCategory.EMERGENCY);
+        HospitalRule rule2 = HospitalRule.create("supply-rule", "supply arrangement guide", HospitalRuleCategory.SUPPLY);
         given(hospitalRuleRepository.findAllByOrderByCreatedAtDesc()).willReturn(List.of(rule1, rule2));
 
         // when
@@ -41,10 +41,10 @@ class AdminRuleServiceTest {
 
         // then
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).getTitle()).isEqualTo("응급 지침");
-        assertThat(result.get(0).getCategoryText()).isEqualTo("응급");
-        assertThat(result.get(1).getTitle()).isEqualTo("물품 관리");
-        assertThat(result.get(1).getCategoryText()).isEqualTo("물품");
+        assertThat(result.get(0).getTitle()).isEqualTo("emergency-rule");
+        assertThat(result.get(0).getCategoryText()).isEqualTo("\uC751\uAE09");
+        assertThat(result.get(1).getTitle()).isEqualTo("supply-rule");
+        assertThat(result.get(1).getCategoryText()).isEqualTo("\uBB3C\uD488");
     }
 
     @Test
@@ -64,8 +64,8 @@ class AdminRuleServiceTest {
     @DisplayName("filtered rule list normalizes params and returns paging metadata")
     void getRuleList_withFilters_returnsPagedResponse() {
         // given
-        HospitalRule rule = HospitalRule.create("야간 근무 지침", "야간 근무 인수인계 규칙", HospitalRuleCategory.DUTY);
-        var page = new PageImpl<>(List.of(rule), PageRequest.of(1, 5), 6);
+        HospitalRule rule = HospitalRule.create("night-duty-rule", "night shift handoff guideline", HospitalRuleCategory.DUTY);
+        var page = new PageImpl<>(List.of(rule), PageRequest.of(1, 5), 12);
         given(hospitalRuleRepository.search(
                 eq(HospitalRuleCategory.DUTY),
                 eq(Boolean.TRUE),
@@ -83,16 +83,19 @@ class AdminRuleServiceTest {
         assertThat(result.keyword()).isEqualTo("night");
         assertThat(result.currentPage()).isEqualTo(2);
         assertThat(result.size()).isEqualTo(5);
-        assertThat(result.totalPages()).isEqualTo(2);
+        assertThat(result.totalPages()).isEqualTo(3);
         assertThat(result.hasPages()).isTrue();
         assertThat(result.hasPrevious()).isTrue();
-        assertThat(result.hasNext()).isFalse();
-        assertThat(result.pageLinks()).hasSize(2);
+        assertThat(result.hasNext()).isTrue();
+        assertThat(result.previousUrl()).isEqualTo("/admin/rule/list?page=1&size=5&category=DUTY&active=ACTIVE&keyword=night");
+        assertThat(result.nextUrl()).isEqualTo("/admin/rule/list?page=3&size=5&category=DUTY&active=ACTIVE&keyword=night");
+        assertThat(result.pageLinks()).hasSize(3);
+        assertThat(result.pageLinks().get(0).url()).isEqualTo("/admin/rule/list?page=1&size=5&category=DUTY&active=ACTIVE&keyword=night");
         assertThat(result.pageLinks().get(1).active()).isTrue();
         assertThat(result.categoryOptions()).extracting(AdminRuleFilterOptionResponse::label)
-                .containsExactly("전체", "응급", "물품", "근무", "위생", "기타");
+                .containsExactly("\uC804\uCCB4", "\uC751\uAE09", "\uBB3C\uD488", "\uADFC\uBB34", "\uC704\uC0DD", "\uAE30\uD0C0");
         assertThat(result.activeOptions()).extracting(AdminRuleFilterOptionResponse::label)
-                .containsExactly("전체", "활성", "비활성");
+                .containsExactly("\uC804\uCCB4", "\uD65C\uC131", "\uBE44\uD65C\uC131");
     }
 
     @Test
@@ -113,6 +116,10 @@ class AdminRuleServiceTest {
         assertThat(result.size()).isEqualTo(10);
         assertThat(result.totalCount()).isZero();
         assertThat(result.rules()).isEmpty();
+        assertThat(result.hasPages()).isFalse();
+        assertThat(result.hasPrevious()).isFalse();
+        assertThat(result.hasNext()).isFalse();
+        assertThat(result.pageLinks()).isEmpty();
         assertThat(result.categoryOptions().get(0).selected()).isTrue();
         assertThat(result.activeOptions().get(0).selected()).isTrue();
     }
@@ -123,7 +130,7 @@ class AdminRuleServiceTest {
         // given
 
         // when
-        adminRuleService.createRule("근무 지침", "야간 근무 시 주의사항", "DUTY");
+        adminRuleService.createRule("duty-rule", "night shift warning", "DUTY");
 
         // then
         then(hospitalRuleRepository).should().save(any(HospitalRule.class));
@@ -133,24 +140,24 @@ class AdminRuleServiceTest {
     @DisplayName("AdminRuleDto shows active text for active rule")
     void adminRuleDto_activeRule_showsActiveText() {
         // given
-        HospitalRule rule = HospitalRule.create("위생 규칙", "손씻기 필수", HospitalRuleCategory.HYGIENE);
+        HospitalRule rule = HospitalRule.create("hygiene-rule", "wash hands", HospitalRuleCategory.HYGIENE);
 
         // when
         AdminRuleDto dto = new AdminRuleDto(rule);
 
         // then
         assertThat(dto.isActive()).isTrue();
-        assertThat(dto.getActiveText()).isEqualTo("활성");
+        assertThat(dto.getActiveText()).isEqualTo("\uD65C\uC131");
     }
 
     @Test
     @DisplayName("AdminRuleDto converts category text correctly")
     void adminRuleDto_categoryText_convertsCorrectly() {
         // given // when // then
-        assertThat(new AdminRuleDto(HospitalRule.create("t", "c", HospitalRuleCategory.EMERGENCY)).getCategoryText()).isEqualTo("응급");
-        assertThat(new AdminRuleDto(HospitalRule.create("t", "c", HospitalRuleCategory.SUPPLY)).getCategoryText()).isEqualTo("물품");
-        assertThat(new AdminRuleDto(HospitalRule.create("t", "c", HospitalRuleCategory.DUTY)).getCategoryText()).isEqualTo("근무");
-        assertThat(new AdminRuleDto(HospitalRule.create("t", "c", HospitalRuleCategory.HYGIENE)).getCategoryText()).isEqualTo("위생");
-        assertThat(new AdminRuleDto(HospitalRule.create("t", "c", HospitalRuleCategory.OTHER)).getCategoryText()).isEqualTo("기타");
+        assertThat(new AdminRuleDto(HospitalRule.create("t", "c", HospitalRuleCategory.EMERGENCY)).getCategoryText()).isEqualTo("\uC751\uAE09");
+        assertThat(new AdminRuleDto(HospitalRule.create("t", "c", HospitalRuleCategory.SUPPLY)).getCategoryText()).isEqualTo("\uBB3C\uD488");
+        assertThat(new AdminRuleDto(HospitalRule.create("t", "c", HospitalRuleCategory.DUTY)).getCategoryText()).isEqualTo("\uADFC\uBB34");
+        assertThat(new AdminRuleDto(HospitalRule.create("t", "c", HospitalRuleCategory.HYGIENE)).getCategoryText()).isEqualTo("\uC704\uC0DD");
+        assertThat(new AdminRuleDto(HospitalRule.create("t", "c", HospitalRuleCategory.OTHER)).getCategoryText()).isEqualTo("\uAE30\uD0C0");
     }
 }
