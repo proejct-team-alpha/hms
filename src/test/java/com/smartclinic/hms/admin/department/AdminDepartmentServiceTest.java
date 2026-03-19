@@ -322,6 +322,32 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
+    @DisplayName("activateDepartment rejects missing department")
+    void activateDepartment_throwsWhenDepartmentMissing() {
+        // given
+        given(adminDepartmentRepository.findById(91L)).willReturn(Optional.empty());
+
+        // when
+        // then
+        assertThatThrownBy(() -> adminDepartmentService.activateDepartment(91L))
+                .isInstanceOf(CustomException.class)
+                .hasMessage("진료과를 찾을 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("createDepartment rejects duplicate name")
+    void createDepartment_throwsWhenNameDuplicated() {
+        // given
+        given(adminDepartmentRepository.existsByNameIgnoreCase("내과")).willReturn(true);
+
+        // when
+        // then
+        assertThatThrownBy(() -> adminDepartmentService.createDepartment("내과", true))
+                .isInstanceOf(CustomException.class)
+                .hasMessage("이미 존재하는 진료과명입니다.");
+    }
+
+    @Test
     @DisplayName("createDepartment stores active flag from request")
     void createDepartment_savesActiveValueFromRequest() {
         // given

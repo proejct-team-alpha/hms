@@ -68,7 +68,14 @@ public class AdminDepartmentService {
 
     @Transactional
     public void createDepartment(String name, boolean active) {
-        adminDepartmentRepository.save(Department.create(name, active));
+        String normalizedName = normalizeName(name);
+        validateDepartmentName(normalizedName);
+
+        if (adminDepartmentRepository.existsByNameIgnoreCase(normalizedName)) {
+            throw CustomException.conflict("DUPLICATE_DEPARTMENT_NAME", DUPLICATE_DEPARTMENT_NAME_MESSAGE);
+        }
+
+        adminDepartmentRepository.save(Department.create(normalizedName, active));
     }
 
     @Transactional

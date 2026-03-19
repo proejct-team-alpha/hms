@@ -1,12 +1,16 @@
 package com.smartclinic.hms.admin.department;
 
 import com.smartclinic.hms.common.exception.CustomException;
+import com.smartclinic.hms.common.util.SsrValidationViewSupport;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,9 +29,7 @@ public class AdminDepartmentController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             HttpServletRequest req) {
-        req.setAttribute("model", adminDepartmentService.getDepartmentList(page, size));
-        req.setAttribute("pageTitle", "진료과 관리");
-        return "admin/department-list";
+        return renderListPage(req, adminDepartmentService.getDepartmentList(page, size));
     }
 
     @GetMapping("/detail")
@@ -36,12 +38,10 @@ public class AdminDepartmentController {
             HttpServletRequest req,
             HttpServletResponse response) {
         try {
-            req.setAttribute("model", adminDepartmentService.getDepartmentDetail(departmentId));
-            req.setAttribute("pageTitle", "진료과 상세");
-            return "admin/department-detail";
+            return renderDetailPage(req, adminDepartmentService.getDepartmentDetail(departmentId), null);
         } catch (CustomException ex) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            req.setAttribute("pageTitle", "페이지를 찾을 수 없습니다");
+            req.setAttribute("pageTitle", "\uD398\uC774\uC9C0\uB97C \uCC3E\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4");
             req.setAttribute("errorMessage", ex.getMessage());
             req.setAttribute("path", req.getRequestURI());
             return "error/404";
@@ -49,28 +49,40 @@ public class AdminDepartmentController {
     }
 
     @PostMapping("/create")
-    public RedirectView create(
-            @RequestParam String name,
-            @RequestParam(defaultValue = "false") boolean active) {
-        adminDepartmentService.createDepartment(name, active);
+    public Object create(
+            @Valid @ModelAttribute CreateAdminDepartmentRequest request,
+            BindingResult bindingResult,
+            HttpServletRequest req) {
+        if (bindingResult.hasErrors()) {
+            return renderCreateValidationFailure(req, request, bindingResult);
+        }
+
+        adminDepartmentService.createDepartment(request.getName(), request.isActive());
         return redirectTo("/admin/department/list");
     }
 
     @PostMapping("/update")
-    public RedirectView update(
-            @RequestParam Long departmentId,
-            @RequestParam(defaultValue = "") String name,
+    public Object update(
+            @Valid @ModelAttribute UpdateAdminDepartmentRequest request,
+            BindingResult bindingResult,
+            HttpServletRequest req,
             RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            return renderUpdateValidationFailure(req, request, redirectAttributes, bindingResult);
+        }
+
         try {
-            String successMessage = adminDepartmentService.updateDepartmentName(departmentId, name);
+            String successMessage = adminDepartmentService.updateDepartmentName(
+                    request.getDepartmentId(),
+                    request.getName());
             redirectAttributes.addFlashAttribute("successMessage", successMessage);
-            return redirectToDetail(departmentId);
+            return redirectToDetail(request.getDepartmentId());
         } catch (CustomException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
             if (ex.getHttpStatus() == HttpStatus.NOT_FOUND) {
                 return redirectTo("/admin/department/list");
             }
-            return redirectToDetail(departmentId);
+            return redirectToDetail(request.getDepartmentId());
         }
     }
 
@@ -105,6 +117,57 @@ public class AdminDepartmentController {
                 return redirectTo("/admin/department/list");
             }
             return redirectToDetail(departmentId);
+        }
+    }
+
+    private String renderListPage(HttpServletRequest req, AdminDepartmentListResponse model) {
+        req.setAttribute("model", model);
+        req.setAttribute("pageTitle", "\uC9C4\uB8CC\uACFC \uAD00\uB9AC");
+        req.setAttribute("createName", "");
+        req.setAttribute("createActive", true);
+        return "admin/department-list";
+    }
+
+    private String renderCreateValidationFailure(
+            HttpServletRequest req,
+            CreateAdminDepartmentRequest request,
+            BindingResult bindingResult) {
+        req.setAttribute("model", adminDepartmentService.getDepartmentList(1, 10));
+        req.setAttribute("pageTitle", "\uC9C4\uB8CC\uACFC \uAD00\uB9AC");
+        req.setAttribute("createName", request.getName());
+        req.setAttribute("createActive", request.isActive());
+        req.setAttribute("openCreateModal", true);
+        SsrValidationViewSupport.applyErrors(req, bindingResult);
+        return "admin/department-list";
+    }
+
+    private String renderDetailPage(
+            HttpServletRequest req,
+            AdminDepartmentDetailResponse model,
+            String editName) {
+        req.setAttribute("model", model);
+        req.setAttribute("pageTitle", "\uC9C4\uB8CC\uACFC \uC0C1\uC138");
+        req.setAttribute("editName", editName == null ? model.name() : editName);
+        return "admin/department-detail";
+    }
+
+    private Object renderUpdateValidationFailure(
+            HttpServletRequest req,
+            UpdateAdminDepartmentRequest request,
+            RedirectAttributes redirectAttributes,
+            BindingResult bindingResult) {
+        if (request.getDepartmentId() == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE);
+            return redirectTo("/admin/department/list");
+        }
+
+        try {
+            AdminDepartmentDetailResponse model = adminDepartmentService.getDepartmentDetail(request.getDepartmentId());
+            SsrValidationViewSupport.applyErrors(req, bindingResult);
+            return renderDetailPage(req, model, request.getName());
+        } catch (CustomException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            return redirectTo("/admin/department/list");
         }
     }
 

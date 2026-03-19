@@ -69,7 +69,7 @@
               <div class="relative z-10">
                 <i data-feather="info" class="w-8 h-8 opacity-60 mb-4"></i>
                 <p class="text-sm font-medium opacity-90 leading-relaxed">
-                  운영 상태 변경은 이름 수정과 분리되어 처리됩니다. 상태 변경 시 사용자 노출 여부에 바로 영향을 줄 수 있으니 신중하게 진행하세요.
+                  운영 상태 변경은 이름 수정과 분리해서 처리합니다. 상태 변경은 사용자 노출 여부에 영향을 줄 수 있으니 신중하게 진행해 주세요.
                 </p>
               </div>
               <i data-feather="shield" class="absolute -bottom-4 -right-4 w-24 h-24 opacity-10"></i>
@@ -100,11 +100,14 @@
                     type="text"
                     id="department-name"
                     name="name"
-                    value="{{model.name}}"
+                    value="{{editName}}"
                     required
                     class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-slate-800 font-medium"
-                    placeholder="진료과명을 입력하세요"
+                    placeholder="진료과명을 입력해 주세요"
                   >
+                  {{#nameError}}
+                    <p class="text-sm font-medium text-red-600">{{nameError}}</p>
+                  {{/nameError}}
                 </div>
 
                 <div class="pt-2 flex items-center justify-end gap-3">

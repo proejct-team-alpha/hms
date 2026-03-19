@@ -15,19 +15,19 @@
 
     <main class="content-wrapper flex-1 p-6">
       <div class="space-y-6 max-w-6xl mx-auto">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-4">
           <div>
             <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
             <p class="text-slate-500 mt-1">진료과 정보를 조회하고 관리합니다.</p>
           </div>
           <div class="flex items-center gap-4">
             <div class="text-sm text-slate-500 text-right">
-              <div>총 <span class="font-semibold text-slate-700">{{model.totalCount}}</span>개</div>
+              <div>총 <span class="font-semibold text-slate-700">{{model.totalCount}}</span>건</div>
               {{#model.hasPages}}
-                <div>{{model.currentPage}} / {{model.totalPages}}페이지</div>
+                <div>{{model.currentPage}} / {{model.totalPages}} 페이지</div>
               {{/model.hasPages}}
               {{^model.hasPages}}
-                <div>0 / 0페이지</div>
+                <div>0 / 0 페이지</div>
               {{/model.hasPages}}
             </div>
             <button
@@ -51,6 +51,11 @@
             {{errorMessage}}
           </div>
         {{/errorMessage}}
+        {{#pageError}}
+          <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {{pageError}}
+          </div>
+        {{/pageError}}
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div class="overflow-x-auto">
@@ -72,9 +77,9 @@
                     <span class="{{activeBadgeClass}}">{{activeText}}</span>
                   </td>
                   <td class="px-4 py-3">
-                    <a href="/admin/department/detail?departmentId={{id}}" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-300 text-slate-600 hover:bg-white">
+                    <a href="/admin/department/detail?departmentId={{id}}" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-300 text-slate-600 hover:bg-white transition-colors">
                       <i data-feather="external-link" class="w-3.5 h-3.5"></i>
-                      상세
+                      상세보기
                     </a>
                   </td>
                 </tr>
@@ -105,7 +110,7 @@
       </div>
     </main>
 
-    <div id="addModal" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div id="addModal" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-lg font-bold text-slate-800">진료과 등록</h2>
@@ -127,12 +132,16 @@
             <input
               type="text"
               name="name"
+              value="{{createName}}"
               required
               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
             >
+            {{#nameError}}
+              <p class="mt-2 text-sm font-medium text-red-600">{{nameError}}</p>
+            {{/nameError}}
           </div>
           <div class="flex items-center gap-2">
-            <input type="checkbox" name="active" id="activeCheck" value="true" checked class="w-4 h-4 accent-indigo-600">
+            <input type="checkbox" name="active" id="activeCheck" value="true" {{#createActive}}checked{{/createActive}} class="w-4 h-4 accent-indigo-600">
             <label for="activeCheck" class="text-sm text-slate-700">운영 중</label>
           </div>
           <div class="flex gap-3 pt-2">
@@ -156,6 +165,9 @@
 
   <script>
     feather.replace();
+    {{#openCreateModal}}
+    document.getElementById('addModal').classList.remove('hidden');
+    {{/openCreateModal}}
   </script>
 </body>
 </html>

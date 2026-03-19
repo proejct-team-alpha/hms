@@ -4,6 +4,7 @@ import com.smartclinic.hms.admin.staff.dto.AdminStaffListResponse;
 import com.smartclinic.hms.admin.staff.dto.CreateAdminStaffRequest;
 import com.smartclinic.hms.admin.staff.dto.UpdateAdminStaffRequest;
 import com.smartclinic.hms.common.exception.CustomException;
+import com.smartclinic.hms.common.util.SsrValidationViewSupport;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -69,7 +70,7 @@ public class AdminStaffController {
             RedirectAttributes redirectAttributes,
             HttpServletRequest req) {
         if (bindingResult.hasErrors()) {
-            req.setAttribute("errorMessage", adminStaffService.getInputCheckMessage());
+            SsrValidationViewSupport.applyErrors(req, bindingResult);
             req.setAttribute("model", adminStaffService.getCreateForm(request));
             return "admin/staff-form";
         }
@@ -92,7 +93,7 @@ public class AdminStaffController {
             RedirectAttributes redirectAttributes,
             HttpServletRequest req) {
         if (bindingResult.hasErrors()) {
-            req.setAttribute("errorMessage", adminStaffService.getInputCheckMessage());
+            SsrValidationViewSupport.applyErrors(req, bindingResult);
             req.setAttribute("model", adminStaffService.getEditForm(request));
             return "admin/staff-form";
         }
