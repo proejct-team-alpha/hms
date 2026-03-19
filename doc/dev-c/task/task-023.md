@@ -5,7 +5,7 @@
 - [x] 관리자 환자 수정 API를 `POST /admin/api/patients/{id}/update` 기준으로 정리한다.
 - [x] 수정 가능 필드를 `name`, `phone`, `note`로 제한한다.
 - [x] 기본 검증, 전화번호 중복 방지, 공통 API 응답 패턴을 함께 정리한다.
-- [ ] `admin.patient` 범위 API 테스트와 문서를 순서대로 마무리한다.
+- [x] `admin.patient` 범위 API 테스트와 문서를 순서대로 마무리한다.
 
 ## Task 23-1. 현재 환자 수정 관련 구조 점검
 - [x] `Patient` 엔티티의 수정 가능 필드와 현재 변경 메서드를 점검한다.
@@ -44,10 +44,10 @@
 
 ## Task 23-6. 문서 갱신 및 범위 검증
 - [x] `admin.patient` API 범위 테스트를 수행한다.
-- [ ] 필요 시 서비스 테스트에 전화번호 중복 수정 시나리오를 추가한다.
-- [ ] `workflow-023`, `task-023` 완료 기준을 현재 구현 상태에 맞게 갱신한다.
-- [ ] PR 리뷰 포인트와 후속 확장 메모를 문서에 반영한다.
-- [ ] 전체 테스트 또는 영향 범위 테스트를 최종 확인한다.
+- [x] 서비스 테스트에 전화번호 중복 수정 시나리오가 포함되어 있는지 확인한다.
+- [x] `workflow-023`, `task-023` 완료 기준을 현재 구현 상태에 맞게 갱신한다.
+- [x] PR 리뷰 포인트와 후속 확장 메모를 문서에 반영한다.
+- [x] 전체 테스트 또는 영향 범위 테스트를 최종 확인한다.
 
 ## 완료 기준
 - [x] `POST /admin/api/patients/{id}/update`가 동작한다.
@@ -63,7 +63,7 @@
 - [x] Task 23-3 환자 수정 서비스 로직 구현
 - [x] Task 23-4 관리자 환자 수정 API 구현
 - [x] Task 23-5 API 테스트 보강
-- [ ] Task 23-6 문서 갱신 및 범위 검증
+- [x] Task 23-6 문서 갱신 및 범위 검증
 
 ## 메모
 - [x] `Patient` 엔티티는 `updateInfo(name, phone, email, address, note)` 메서드만 제공하므로 부분 수정 API에서는 기존 `email`, `address`를 보존한 채 `name`, `phone`, `note`만 안전하게 바꾸는 서비스 로직이 필요하다.
@@ -80,10 +80,11 @@
 - [x] `note`는 `trim()` 후 빈 문자열이면 `null`로 정규화하도록 서비스에 반영했다.
 - [x] `AdminPatientServiceTest`에는 수정 성공, 없는 환자, 전화번호 중복, 동일 전화번호 유지, blank note 정규화 시나리오를 추가했다.
 - [x] `AdminPatientApiController`를 추가해 `POST /admin/api/patients/{id}/update`를 `@Valid @RequestBody` + `Resp.ok(...)` 패턴으로 연결했다.
-- [x] `AdminPatientApiControllerTest`를 추가해 성공, 권한, 공백 검증, 중복 전화번호, 없는 환자 시나리오를 검증한다.
-- [x] API 테스트 범위를 다시 확인하는 과정에서 기존 `AdminPatientControllerTest`의 인코딩 손상 흔적을 현재 템플릿/컨트롤러 계약 기준으로 정리했다.
+- [x] `AdminPatientApiControllerTest`를 추가해 성공, 권한, 공백 검증, 중복 전화번호, 없는 환자 시나리오를 검증했다.
+- [x] API 테스트 범위를 다시 확인하는 과정에서 기존 `AdminPatientControllerTest`의 인코딩 손상 흔적도 현재 템플릿/컨트롤러 계약 기준으로 정리했다.
+- [x] `./gradlew test --tests 'com.smartclinic.hms.admin.patient.*'`와 `./gradlew test`를 다시 실행해 범위/전체 테스트를 모두 확인했다.
 
 ## PR 리뷰 포인트
-- [ ] 환자 수정 API의 URL과 수정 가능 필드 범위가 팀 기준에 맞는지 확인 부탁드립니다.
-- [ ] 전화번호 중복 방지 규칙이 기존 환자 동일성 판단 기준과 같은 방향으로 충분한지 봐주시면 좋겠습니다.
-- [ ] 이번 범위에서 `note`를 선택 입력으로 두고 `null/blank`를 정규화하는 방식이 적절한지 확인 부탁드립니다.
+- [x] 환자 수정 API의 URL과 수정 가능 필드 범위를 문서에 반영했다.
+- [x] 전화번호 중복 방지 규칙이 기존 환자 동일성 판단 기준과 같은 방향임을 명시했다.
+- [x] `note`를 선택 입력으로 두고 `null/blank`를 정규화하는 방식을 메모와 workflow에 반영했다.
