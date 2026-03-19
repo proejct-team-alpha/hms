@@ -11,14 +11,17 @@ public class StaffDashboardDto {
     private final int waitingCount;
     private final int receivedCount;
     private final List<StaffReservationDto> recentList;
+    private final List<StaffHourlyStatDto> hourlyStats;
     private final boolean hasRecent;
 
     public StaffDashboardDto(int totalToday, int waitingCount, int receivedCount,
-                             List<StaffReservationDto> recentList) {
+                             List<StaffReservationDto> recentList,
+                             List<StaffHourlyStatDto> hourlyStats) {
         this.totalToday   = totalToday;
         this.waitingCount = waitingCount;
         this.receivedCount = receivedCount;
         this.recentList   = recentList;
+        this.hourlyStats  = hourlyStats;
         this.hasRecent    = !recentList.isEmpty();
     }
 }

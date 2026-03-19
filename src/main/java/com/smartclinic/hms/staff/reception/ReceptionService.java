@@ -200,7 +200,35 @@ public class ReceptionService {
                 .limit(5)
                 .map(StaffReservationDto::new)
                 .collect(Collectors.toList());
-        return new StaffDashboardDto(total, waiting, received, recent);
+
+        // 시간대별 통계 생성 (09시 ~ 18시)
+        java.util.List<com.smartclinic.hms.staff.dto.StaffHourlyStatDto> hourlyStats = new java.util.ArrayList<>();
+        for (int hour = 9; hour <= 18; hour++) {
+            String label = String.format("%02d:00", hour);
+            final int h = hour;
+
+            long resCount = all.stream()
+                    .filter(r -> r.getTimeSlot().startsWith(String.format("%02d:", h)))
+                    .filter(r -> r.getStatus() == ReservationStatus.RESERVED)
+                    .count();
+
+            long recCount = all.stream()
+                    .filter(r -> r.getTimeSlot().startsWith(String.format("%02d:", h)))
+                    .filter(r -> r.getStatus() != ReservationStatus.RESERVED)
+                    .count();
+
+            int totalCount = (int) (resCount + recCount);
+            hourlyStats.add(new com.smartclinic.hms.staff.dto.StaffHourlyStatDto(label, (int) resCount, (int) recCount, totalCount));
+        }
+
+        // 테스트용 샘플 데이터 (데이터가 없을 때도 그래프 확인용)
+        if (all.isEmpty()) {
+            hourlyStats.set(0, new com.smartclinic.hms.staff.dto.StaffHourlyStatDto("09:00", 2, 1, 3));
+            hourlyStats.set(1, new com.smartclinic.hms.staff.dto.StaffHourlyStatDto("10:00", 5, 3, 8));
+            hourlyStats.set(2, new com.smartclinic.hms.staff.dto.StaffHourlyStatDto("11:00", 3, 4, 7));
+        }
+
+        return new StaffDashboardDto(total, waiting, received, recent, hourlyStats);
     }
 
     // 폼용 진료과 목록
