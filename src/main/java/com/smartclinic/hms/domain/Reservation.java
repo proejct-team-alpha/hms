@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * 예약 엔티티 (ERD §2.5)
@@ -45,6 +46,12 @@ public class Reservation {
 
     @Column(name = "time_slot", nullable = false, length = 10)
     private String timeSlot;
+
+    @Column(name = "start_time")
+    private LocalTime startTime;
+
+    @Column(name = "end_time")
+    private LocalTime endTime;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

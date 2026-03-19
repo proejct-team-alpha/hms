@@ -157,14 +157,14 @@
 
   <script>
     // ===== 물품 목록 검색 + 페이징 =====
-    var ITEM_LIST_PAGE_SIZE = 10;
-    var itemListPage = 1;
-    var itemListQuery = '';
+    const ITEM_LIST_PAGE_SIZE = 10;
+    let itemListPage = 1;
+    let itemListQuery = '';
 
-    var CHOSUNG_LIST = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+    const CHOSUNG_LIST = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
     function getChosung(str) {
       return str.split('').map(function(ch) {
-        var code = ch.charCodeAt(0);
+        const code = ch.charCodeAt(0);
         if (code >= 0xAC00 && code <= 0xD7A3) return CHOSUNG_LIST[Math.floor((code - 0xAC00) / 588)];
         return ch;
       }).join('');
@@ -172,30 +172,30 @@
     function isChosungOnly(str) { return /^[ㄱ-ㅎ]+$/.test(str); }
     function itemListMatches(name, query) {
       if (!query) return true;
-      var q = query.toLowerCase();
+      const q = query.toLowerCase();
       if (isChosungOnly(q)) return getChosung(name).includes(q);
       return name.toLowerCase().includes(q);
     }
 
     function getItemListRows() {
       return Array.from(document.querySelectorAll('#item-list-tbody tr:not(#empty-row):not(#js-empty-row)')).filter(function(row) {
-        var name = row.querySelector('td:first-child') ? row.querySelector('td:first-child').textContent.trim() : '';
+        const name = row.querySelector('td:first-child') ? row.querySelector('td:first-child').textContent.trim() : '';
         return itemListMatches(name, itemListQuery);
       });
     }
 
     function buildItemListPageNumbers(totalPages) {
-      var half = 2;
-      var start = Math.max(1, itemListPage - half);
-      var end = Math.min(totalPages, start + 4);
+      const half = 2;
+      let start = Math.max(1, itemListPage - half);
+      const end = Math.min(totalPages, start + 4);
       start = Math.max(1, end - 4);
-      var html = '';
+      let html = '';
       if (start > 1) {
         html += '<button type="button" data-page="1" class="il-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors">1</button>';
         if (start > 2) html += '<span class="px-1 text-xs text-slate-400">...</span>';
       }
-      for (var p = start; p <= end; p++) {
-        var active = p === itemListPage ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100';
+      for (let p = start; p <= end; p++) {
+        const active = p === itemListPage ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100';
         html += '<button type="button" data-page="' + p + '" class="il-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 ' + active + ' transition-colors">' + p + '</button>';
       }
       if (end < totalPages) {
@@ -206,25 +206,25 @@
     }
 
     function renderItemList() {
-      var rows = getItemListRows();
-      var total = rows.length;
-      var totalPages = Math.max(1, Math.ceil(total / ITEM_LIST_PAGE_SIZE));
+      const rows = getItemListRows();
+      const total = rows.length;
+      const totalPages = Math.max(1, Math.ceil(total / ITEM_LIST_PAGE_SIZE));
       if (itemListPage > totalPages) itemListPage = totalPages;
 
-      var start = (itemListPage - 1) * ITEM_LIST_PAGE_SIZE;
-      var end = start + ITEM_LIST_PAGE_SIZE;
+      const start = (itemListPage - 1) * ITEM_LIST_PAGE_SIZE;
+      const end = start + ITEM_LIST_PAGE_SIZE;
 
       document.querySelectorAll('#item-list-tbody tr:not(#empty-row):not(#js-empty-row)').forEach(function(r) { r.style.display = 'none'; });
       rows.forEach(function(r, i) { r.style.display = (i >= start && i < end) ? '' : 'none'; });
-      var jsEmptyRow = document.getElementById('js-empty-row');
+      const jsEmptyRow = document.getElementById('js-empty-row');
       if (jsEmptyRow) jsEmptyRow.style.display = (total === 0) ? '' : 'none';
 
-      var bar = document.getElementById('item-list-pagination');
+      const bar = document.getElementById('item-list-pagination');
       if (!bar) return;
       if (totalPages <= 1) { bar.style.removeProperty('display'); bar.style.display = 'none'; return; }
       bar.style.removeProperty('display');
 
-      var numbersEl = document.getElementById('item-list-page-numbers');
+      const numbersEl = document.getElementById('item-list-page-numbers');
       if (numbersEl) {
         numbersEl.innerHTML = buildItemListPageNumbers(totalPages);
         numbersEl.querySelectorAll('.il-page-btn').forEach(function(btn) {
@@ -232,16 +232,16 @@
         });
       }
 
-      var info = document.getElementById('item-list-page-info');
+      const info = document.getElementById('item-list-page-info');
       if (info) info.textContent = total + '건 / ' + totalPages + '페이지';
 
-      var prev = document.getElementById('item-list-prev');
-      var next = document.getElementById('item-list-next');
+      const prev = document.getElementById('item-list-prev');
+      const next = document.getElementById('item-list-next');
       if (prev) prev.disabled = itemListPage <= 1;
       if (next) next.disabled = itemListPage >= totalPages;
     }
 
-    var ilSearch = document.getElementById('item-list-search');
+    const ilSearch = document.getElementById('item-list-search');
     if (ilSearch) {
       ilSearch.addEventListener('input', function() {
         itemListQuery = this.value.trim();
@@ -250,8 +250,8 @@
       });
     }
 
-    var ilPrev = document.getElementById('item-list-prev');
-    var ilNext = document.getElementById('item-list-next');
+    const ilPrev = document.getElementById('item-list-prev');
+    const ilNext = document.getElementById('item-list-next');
     if (ilPrev) ilPrev.addEventListener('click', function() { itemListPage--; renderItemList(); });
     if (ilNext) ilNext.addEventListener('click', function() { itemListPage++; renderItemList(); });
 
@@ -262,19 +262,19 @@
       form.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        var input = form.querySelector('input[name="amount"]');
-        var value = input.value.trim();
-        var amount = Number(value);
+        const input = form.querySelector('input[name="amount"]');
+        const value = input.value.trim();
+        const amount = Number(value);
 
         if (value === '' || isNaN(amount) || !Number.isInteger(amount) || amount < 0) {
           alert('올바른 수량을 입력해주세요. (0 이상의 정수)');
           return;
         }
 
-        var id = form.querySelector('input[name="id"]').value;
-        var csrfInput = form.querySelector('input[type="hidden"]:not([name="id"]):not([name="redirectTo"])');
+        const id = form.querySelector('input[name="id"]').value;
+        const csrfInput = form.querySelector('input[type="hidden"]:not([name="id"]):not([name="redirectTo"])');
 
-        var params = new URLSearchParams();
+        const params = new URLSearchParams();
         params.append('id', id);
         params.append('amount', value);
         params.append(csrfInput.name, csrfInput.value);
@@ -284,15 +284,19 @@
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: params.toString()
         })
-        .then(function(res) { return res.json(); })
+        .then(function(res) {
+          if (!res.ok) { return res.json().then(function(d) { alert(d.error || '서버 오류가 발생했습니다.'); throw new Error('server error'); }); }
+          return res.json();
+        })
         .then(function(data) {
           if (data.quantity !== undefined) {
-            var row = form.closest('tr');
-            var span = row.querySelector('td:nth-child(3) span');
+            const row = form.closest('tr');
+            const span = row.querySelector('td:nth-child(3) span');
             span.textContent = data.quantity + '개';
             input.value = '';
           }
-        });
+        })
+        .catch(function(err) { if (err.message !== 'server error') alert('오류가 발생했습니다. 다시 시도해주세요.'); });
       });
     });
   </script>

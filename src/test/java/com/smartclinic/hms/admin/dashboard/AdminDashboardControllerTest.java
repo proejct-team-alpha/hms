@@ -5,16 +5,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
+import com.smartclinic.hms.common.AdminControllerTestSecurityConfig;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -34,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 "spring.mustache.servlet.allow-request-override=true"
         }
 )
-@Import(AdminDashboardControllerTest.TestSecurityConfig.class)
+@Import(AdminControllerTestSecurityConfig.class)
 class AdminDashboardControllerTest {
 
     @Autowired
@@ -52,16 +45,12 @@ class AdminDashboardControllerTest {
     @Test
     @DisplayName("ROLE_ADMIN can render admin dashboard")
     void dashboard_withAdminRole_rendersDashboardView() throws Exception {
-        AdminDashboardStatsResponse stats = new AdminDashboardStatsResponse(7L, 70L, 12L, 4L);
-
-        given(adminDashboardStatsService.getDashboardStats()).willReturn(stats);
-
         mockMvc.perform(get("/admin/dashboard")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/dashboard"))
-                .andExpect(request().attribute("model", stats))
+                .andExpect(request().attribute("model", new AdminDashboardStatsResponse(7L, 70L, 12L, 4L)))
                 .andExpect(request().attribute("pageTitle", "관리자 대시보드"));
     }
 
@@ -78,31 +67,5 @@ class AdminDashboardControllerTest {
     void dashboard_withNonAdminRole_isForbidden() throws Exception {
         mockMvc.perform(get("/admin/dashboard").with(user("staff").roles("STAFF")))
                 .andExpect(status().isForbidden());
-    }
-
-    @TestConfiguration
-    @EnableWebSecurity
-    static class TestSecurityConfig {
-
-        @Bean
-        SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            return http
-                    .authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/login").permitAll()
-                            .requestMatchers("/admin/**").hasRole("ADMIN")
-                            .anyRequest().authenticated())
-                    .formLogin(form -> form
-                            .loginPage("/login")
-                            .permitAll())
-                    .csrf(csrf -> csrf.disable())
-                    .build();
-        }
-
-        @Bean
-        UserDetailsService userDetailsService() {
-            return new InMemoryUserDetailsManager(
-                    User.withUsername("admin").password("{noop}password").roles("ADMIN").build(),
-                    User.withUsername("staff").password("{noop}password").roles("STAFF").build());
-        }
     }
 }

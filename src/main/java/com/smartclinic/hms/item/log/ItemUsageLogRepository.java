@@ -11,4 +11,7 @@ public interface ItemUsageLogRepository extends JpaRepository<ItemUsageLog, Long
 
     List<ItemUsageLog> findByReservationIdIsNullAndUsedAtBetweenOrderByUsedAtDesc(
             LocalDateTime start, LocalDateTime end);
+
+    List<ItemUsageLog> findByReservationIdIsNullAndUsedByAndUsedAtBetweenOrderByUsedAtDesc(
+            String usedBy, LocalDateTime start, LocalDateTime end);
 }

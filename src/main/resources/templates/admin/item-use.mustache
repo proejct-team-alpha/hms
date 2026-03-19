@@ -279,10 +279,11 @@
       if (logs && logs.length > 0) {
         if (emptyRow) emptyRow.style.display = 'none';
         logs.forEach(function(log) {
-          var tr = document.createElement('tr');
-          tr.innerHTML = '<td class="px-3 py-2 text-slate-700 font-medium">' + log.itemName + '</td>' +
-                         '<td class="px-3 py-2 text-right text-slate-600">' + log.amount + '개</td>' +
-                         '<td class="px-3 py-2 text-right text-slate-400">' + log.usedAt + '</td>';
+          const tr = document.createElement('tr');
+          const td1 = document.createElement('td'); td1.className = 'px-3 py-2 text-slate-700 font-medium'; td1.textContent = log.itemName;
+          const td2 = document.createElement('td'); td2.className = 'px-3 py-2 text-right text-slate-600'; td2.textContent = log.amount + '개';
+          const td3 = document.createElement('td'); td3.className = 'px-3 py-2 text-right text-slate-400'; td3.textContent = log.usedAt;
+          tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
           tbody.appendChild(tr);
         });
       } else {
@@ -314,7 +315,10 @@
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: params.toString()
         })
-        .then(function(res) { return res.json(); })
+        .then(function(res) {
+          if (!res.ok) { return res.json().then(function(d) { alert(d.error || '서버 오류가 발생했습니다.'); throw new Error('server error'); }); }
+          return res.json();
+        })
         .then(function(data) {
           if (data.quantity !== undefined) {
             form.closest('.item-card').querySelector('.quantity-span').textContent = data.quantity;
@@ -323,7 +327,8 @@
           } else if (data.error) {
             alert(data.error);
           }
-        });
+        })
+        .catch(function(err) { if (err.message !== 'server error') alert('오류가 발생했습니다. 다시 시도해주세요.'); });
       });
     });
 

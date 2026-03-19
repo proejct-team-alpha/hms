@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 증상 상담 - MediCare+</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/feather.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-light: #334155;
+      --border: rgba(255,255,255,0.06);
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --text-muted: #64748b;
+      --accent: #60a5fa;
+      --accent-dim: rgba(96,165,250,0.12);
+      --user-bg: #2563eb;
+      --green: #4ade80;
+      --green-dim: rgba(74,222,128,0.12);
+      --red: #fca5a5;
+      --red-bg: rgba(239,68,68,0.1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+    .llm-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 64px); /* header-public 높이 제외 */
+    }
+
+    /* Header */
+    .chat-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 40px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+    .header-pulse {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+    .header-info { flex: 1; }
+    .header-title { font-size: 15px; font-weight: 600; color: var(--text); }
+    .header-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Messages */
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: var(--surface-light); border-radius: 2px; }
+
+    .message { display: flex; gap: 12px; align-items: flex-start; }
+    .message.user { flex-direction: row-reverse; }
+
+    .avatar {
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 600; flex-shrink: 0;
+    }
+    .avatar.bot { background: var(--accent-dim); color: var(--accent); }
+    .avatar.user { background: var(--user-bg); color: #fff; }
+
+    .message-bubble {
+      max-width: 72%;
+      padding: 14px 20px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.7;
+      word-break: break-word;
+    }
+    .message.user .message-bubble {
+      background: var(--user-bg); color: #fff; border-bottom-right-radius: 4px;
+    }
+    .message.bot .message-bubble {
+      background: var(--surface); color: var(--text);
+      border-bottom-left-radius: 4px; border: 1px solid var(--border);
+    }
+    .message.error .message-bubble {
+      background: var(--red-bg); color: var(--red);
+      border: 1px solid rgba(239,68,68,0.15); border-bottom-left-radius: 4px;
+    }
+
+    /* Typing */
+    .typing-indicator { display: none; gap: 12px; align-items: flex-start; }
+    .typing-indicator.active { display: flex; }
+    .typing-indicator .message-bubble {
+      background: var(--surface);
+      padding: 16px 28px; border-bottom-left-radius: 4px;
+      border: 1px solid var(--border);
+      display: flex; gap: 6px; align-items: center;
+      min-width: 72px; justify-content: center;
+    }
+    .typing-dot {
+      width: 7px; height: 7px;
+      background: var(--text-muted); border-radius: 50%;
+      animation: bounce 1.2s ease-in-out infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-5px); }
+    }
+
+    /* Doctor Cards */
+    .doctor-card-container { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+    .result-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden; max-width: 400px;
+    }
+    .result-section { padding: 14px 18px; border-bottom: 1px solid var(--border); }
+    .result-section:last-child { border-bottom: none; }
+    .section-label {
+      font-size: 10px; font-weight: 600; color: var(--text-muted);
+      letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px;
+    }
+    .dept-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--accent-dim); color: var(--accent);
+      padding: 6px 14px; border-radius: 20px;
+      font-size: 13px; font-weight: 600;
+    }
+    .doctor-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+      transition: background 0.15s; border-radius: 8px;
+      margin: 0 -6px; padding-left: 6px; padding-right: 6px;
+    }
+    .doctor-item:last-child { border-bottom: none; }
+    .doctor-item:hover { background: rgba(255,255,255,0.03); }
+    .doc-avatar {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--accent-dim); color: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600; flex-shrink: 0;
+    }
+    .doc-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .doc-spec { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .doc-schedule { font-size: 11px; color: var(--accent); margin-left: auto; white-space: nowrap; }
+
+    /* Slots */
+    .slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .slot {
+      padding: 10px 6px; border: 1px solid var(--border); border-radius: 10px;
+      font-size: 11px; text-align: center; cursor: pointer;
+      color: var(--text-dim); background: transparent; line-height: 1.4;
+      transition: all 0.15s;
+    }
+    .slot:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    .slot.selected { border-color: var(--accent); background: var(--user-bg); color: #fff; }
+    .slot.unavailable { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; }
+    .slot-date { font-weight: 600; font-size: 11px; }
+
+    /* Chips */
+    .quick-chips {
+      display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto;
+      padding: 14px 40px 6px; scrollbar-width: none;
+    }
+    .quick-chips::-webkit-scrollbar { display: none; }
+    .chip {
+      padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px;
+      font-size: 13px; color: var(--text-dim); cursor: pointer; background: transparent;
+      transition: all 0.15s; white-space: nowrap; flex-shrink: 0; font-family: inherit;
+    }
+    .chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+    /* Input */
+    .chat-input-area {
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 18px 40px; flex-shrink: 0;
+    }
+    .chat-input-wrapper { display: flex; gap: 12px; align-items: flex-end; }
+    .chat-input-wrapper textarea {
+      flex: 1; border: 1px solid var(--border); border-radius: 14px;
+      padding: 14px 20px; font-size: 14px; font-family: inherit;
+      resize: none; min-height: 50px; max-height: 120px; line-height: 1.5;
+      background: var(--bg); color: var(--text); transition: border-color 0.15s;
+    }
+    .chat-input-wrapper textarea::placeholder { color: var(--text-muted); }
+    .chat-input-wrapper textarea:focus { outline: none; border-color: var(--accent); }
+    .send-btn {
+      width: 46px; height: 46px; border: none; border-radius: 12px;
+      background: var(--user-bg); color: #fff; font-size: 18px;
+      cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .send-btn:hover { background: #1d4ed8; }
+    .send-btn:disabled { background: var(--surface-light); color: var(--text-muted); cursor: not-allowed; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col" style="background: var(--bg);">
+  {{> common/header-public}}
+
+  <div class="llm-body">
+    <div class="chat-header">
+      <div class="header-pulse"></div>
+      <div class="header-info">
+        <div class="header-title">AI 증상 상담</div>
+        <div class="header-sub">증상을 입력하면 진료과 · 의사 · 예약 일정을 안내해 드립니다</div>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="message bot">
+        <div class="avatar bot">AI</div>
+        <div class="message-bubble">
+          안녕하세요! 어디가 불편하신가요? 증상을 자세히 알려주시면 적합한 진료과와 의사 선생님을 추천해 드릴게요.
+        </div>
+      </div>
+
+      <div class="typing-indicator" id="typingIndicator">
+        <div class="avatar bot">AI</div>
+        <div class="message-bubble">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quick-chips" id="quickChips">
+      <div class="chip" onclick="sendChip(this)">다리가 저리고 무릎이 안 펴져요</div>
+      <div class="chip" onclick="sendChip(this)">두통과 어지러움이 있어요</div>
+      <div class="chip" onclick="sendChip(this)">소화불량과 복통</div>
+      <div class="chip" onclick="sendChip(this)">피부 발진이 생겼어요</div>
+      <div class="chip" onclick="sendChip(this)">허리가 너무 아파요</div>
+    </div>
+
+    <div class="chat-input-area">
+      <div class="chat-input-wrapper">
+        <textarea id="chatInput" rows="1" placeholder="증상을 입력해 주세요..." oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="submitQuery()">&#9654;</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    feather.replace();
+
+    var STREAM_URL = "/llm/medical/query/stream";
+    var CONSULT_URL = "/llm/medical/query/consult";
+    var SLOTS_URL = "/llm/reservation/slots";
+    var chatHistory = [];
+
+    function autoResize(el) {
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, 120) + "px";
+    }
+    function sendChip(el) {
+      document.getElementById("chatInput").value = el.textContent.trim();
+      submitQuery();
+    }
+    function scrollToBottom() {
+      var c = document.getElementById("chatMessages");
+      c.scrollTop = c.scrollHeight;
+    }
+    function escapeHtml(text) {
+      var div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    function escapeRegExp(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+    function renderMarkdown(text) {
+      var html = escapeHtml(text);
+      html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+      html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
+      html = html.replace(/\n/g, "<br>");
+      return html;
+    }
+    function addMessage(role, content) {
+      var container = document.getElementById("chatMessages");
+      var indicator = document.getElementById("typingIndicator");
+      var msgDiv = document.createElement("div");
+      msgDiv.className = "message " + role;
+      var av = document.createElement("div");
+      av.className = "avatar " + role;
+      av.textContent = role === "bot" ? "AI" : "나";
+      var bubble = document.createElement("div");
+      bubble.className = "message-bubble";
+      if (typeof content === "string") {
+        bubble.innerHTML = renderMarkdown(content);
+      } else {
+        bubble.appendChild(content);
+      }
+      msgDiv.appendChild(av);
+      msgDiv.appendChild(bubble);
+      container.insertBefore(msgDiv, indicator);
+      scrollToBottom();
+      return bubble;
+    }
+    function addStreamBubble() {
+      var container = document.getElementById("chatMessages");
+      var indicator = document.getElementById("typingIndicator");
+      var msgDiv = document.createElement("div");
+      msgDiv.className = "message bot";
+      msgDiv.style.display = "none";
+      var av = document.createElement("div");
+      av.className = "avatar bot";
+      av.textContent = "AI";
+      var bubble = document.createElement("div");
+      bubble.className = "message-bubble";
+      bubble.id = "streamBubble";
+      msgDiv.appendChild(av);
+      msgDiv.appendChild(bubble);
+      container.insertBefore(msgDiv, indicator);
+      return bubble;
+    }
+    async function submitQuery() {
+      var input = document.getElementById("chatInput");
+      var query = input.value.trim();
+      if (!query) return;
+      addMessage("user", query);
+      chatHistory.push({ role: "user", content: query });
+      input.value = "";
+      input.style.height = "auto";
+      document.getElementById("sendBtn").disabled = true;
+      document.getElementById("typingIndicator").classList.add("active");
+      document.getElementById("quickChips").style.display = "none";
+      scrollToBottom();
+      var streamPromise = streamResponse(query).catch(function (err) {
+        console.warn("스트리밍 실패:", err);
+        return "";
+      });
+      var doctorPromise = fetchDoctorData(query);
+      var streamedText = await streamPromise;
+      try {
+        var data = await doctorPromise;
+        if (streamedText && data.recommendedDepartment) {
+          cleanStreamedResponse(streamedText, data);
+        } else if (!streamedText) {
+          renderLlmResponse(data);
+        }
+        renderDoctorCards(data);
+      } catch (error) {
+        if (!streamedText) addMessage("error", "오류: " + error.message);
+      } finally {
+        document.getElementById("sendBtn").disabled = false;
+        document.getElementById("typingIndicator").classList.remove("active");
+        input.focus();
+      }
+    }
+    async function fetchDoctorData(query) {
+      var response = await fetch(CONSULT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: query }),
+      });
+      if (!response.ok) {
+        var err = await response.json().catch(function () { return {}; });
+        throw new Error(err.detail || "서버 오류 (" + response.status + ")");
+      }
+      return response.json();
+    }
+    async function streamResponse(query) {
+      var bubble = addStreamBubble();
+      bubble.textContent = "";
+      var response = await fetch(STREAM_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: query, max_length: 512, temperature: 0.3, history: chatHistory.slice(-6) }),
+      });
+      if (!response.ok) throw new Error("스트리밍 오류 (" + response.status + ")");
+      var reader = response.body.getReader();
+      var decoder = new TextDecoder();
+      var fullText = "";
+      var buffer = "";
+      var firstToken = true;
+      while (true) {
+        var result = await reader.read();
+        if (result.done) break;
+        buffer += decoder.decode(result.value, { stream: true });
+        var lines = buffer.split("\n");
+        buffer = lines.pop();
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i];
+          if (!line.startsWith("data:")) continue;
+          var sseData = line.substring(5).trim();
+          if (sseData === "[DONE]") continue;
+          try {
+            var parsed = JSON.parse(sseData);
+            if (parsed.error) throw new Error(parsed.error);
+            if (parsed.token) {
+              if (firstToken) { firstToken = false; bubble.parentElement.style.display = ""; document.getElementById("typingIndicator").classList.remove("active"); }
+              fullText += parsed.token;
+              bubble.innerHTML = renderMarkdown(fullText);
+              scrollToBottom();
+            }
+          } catch (e) { /* ignore */ }
+        }
+      }
+      chatHistory.push({ role: "assistant", content: fullText });
+      return fullText;
+    }
+    function cleanStreamedResponse(streamedText, data) {
+      var text = streamedText;
+      if (data.recommendedDepartment) {
+        text = text.replace(/^[ \t]*(?:\d+\.?\s*)?[-*]?\s*\*{0,2}추천\s*진료과\s*\*{0,2}\s*[:：]?\s*[^\n]*\n*/gim, "");
+        var dept = escapeRegExp(data.recommendedDepartment);
+        text = text.replace(new RegExp("^[ \\t]*(?:\\d+\\.?\\s*)?[-*]?\\s*\\*{0,2}" + dept + "\\*{0,2}\\s*[（(][^)）]*[)）]?\\s*[.。]?\\s*$", "gim"), "");
+        text = text.replace(/^\s*\n+/, "");
+        text = text.replace(/\n{3,}/g, "\n\n");
+        var num = 1;
+        text = text.replace(/^(\d+)\.\s/gm, function () { return num++ + ". "; });
+      }
+      var bubble = document.getElementById("streamBubble");
+      if (bubble) bubble.innerHTML = renderMarkdown(text);
+    }
+    function renderLlmResponse(data) {
+      var text = data.generatedText || "";
+      if (data.recommendedDepartment) {
+        text = text.replace(/\*{0,2}추천\s*진료과\*{0,2}\s*[:：]\s*\*{0,2}[^\n]+\*{0,2}\s*\n*/g, "");
+        text = text.replace(/^\s*\n+/, "");
+      }
+      addMessage("bot", text);
+      chatHistory.push({ role: "assistant", content: text });
+    }
+    function renderDoctorCards(data) {
+      if (!data.recommendedDepartment && (!data.doctors || data.doctors.length === 0)) return;
+      var container = document.createElement("div");
+      container.className = "doctor-card-container";
+      var card = document.createElement("div");
+      card.className = "result-card";
+      if (data.recommendedDepartment) {
+        var s1 = document.createElement("div");
+        s1.className = "result-section";
+        var s1Label = document.createElement("div");
+        s1Label.className = "section-label";
+        s1Label.textContent = "추천 진료과";
+        var s1Badge = document.createElement("div");
+        s1Badge.className = "dept-badge";
+        s1Badge.textContent = data.recommendedDepartment;
+        s1.appendChild(s1Label);
+        s1.appendChild(s1Badge);
+        card.appendChild(s1);
+      }
+      if (data.doctors && data.doctors.length > 0) {
+        var s2 = document.createElement("div");
+        s2.className = "result-section";
+        var s2Label = document.createElement("div");
+        s2Label.className = "section-label";
+        s2Label.textContent = "추천 의사";
+        s2.appendChild(s2Label);
+        data.doctors.forEach(function (doc) {
+          var item = document.createElement("div");
+          item.className = "doctor-item";
+          item.style.cursor = "pointer";
+          item.onclick = function () { loadSlots(doc.id, item); };
+          var docAv = document.createElement("div");
+          docAv.className = "doc-avatar";
+          docAv.textContent = doc.name.charAt(0);
+          var infoDiv = document.createElement("div");
+          infoDiv.style.cssText = "flex:1;min-width:0";
+          var nameEl = document.createElement("div");
+          nameEl.className = "doc-name";
+          nameEl.textContent = doc.name;
+          var specEl = document.createElement("div");
+          specEl.className = "doc-spec";
+          specEl.textContent = (doc.specialty || doc.department) + " · MediCare+";
+          infoDiv.appendChild(nameEl);
+          infoDiv.appendChild(specEl);
+          var schedEl = document.createElement("div");
+          schedEl.className = "doc-schedule";
+          schedEl.textContent = formatSchedules(doc.schedules);
+          item.appendChild(docAv);
+          item.appendChild(infoDiv);
+          item.appendChild(schedEl);
+          s2.appendChild(item);
+        });
+        card.appendChild(s2);
+        var s3 = document.createElement("div");
+        s3.className = "result-section";
+        s3.id = "slotSection";
+        var s3Label = document.createElement("div");
+        s3Label.className = "section-label";
+        s3Label.textContent = "예약 가능 일정";
+        var s3Hint = document.createElement("p");
+        s3Hint.style.cssText = "font-size:12px;color:var(--text-muted)";
+        s3Hint.textContent = "위 의사를 클릭하면 예약 가능 일정이 표시됩니다.";
+        s3.appendChild(s3Label);
+        s3.appendChild(s3Hint);
+        card.appendChild(s3);
+      }
+      container.appendChild(card);
+      addMessage("bot", container);
+    }
+    async function loadSlots(doctorId, el) {
+      var items = el.closest(".result-section").querySelectorAll(".doctor-item");
+      items.forEach(function (item) { item.style.background = ""; });
+      el.style.background = "rgba(255,255,255,0.03)";
+      var slotSection = document.getElementById("slotSection");
+      if (!slotSection) return;
+      slotSection.textContent = "";
+      var loadLabel = document.createElement("div");
+      loadLabel.className = "section-label";
+      loadLabel.textContent = "예약 가능 일정";
+      var loadMsg = document.createElement("p");
+      loadMsg.style.cssText = "font-size:12px;color:var(--text-muted)";
+      loadMsg.textContent = "로딩 중...";
+      slotSection.appendChild(loadLabel);
+      slotSection.appendChild(loadMsg);
+      try {
+        var res = await fetch(SLOTS_URL + "/" + doctorId);
+        if (!res.ok) throw new Error("슬롯 조회 실패");
+        var slotData = await res.json();
+        var dayMap = { 0: "일", 1: "월", 2: "화", 3: "수", 4: "목", 5: "금", 6: "토" };
+        slotSection.textContent = "";
+        var label = document.createElement("div");
+        label.className = "section-label";
+        label.textContent = "예약 가능 일정 — " + slotData.doctorName;
+        slotSection.appendChild(label);
+        if (slotData.slots && slotData.slots.length > 0) {
+          var grid = document.createElement("div");
+          grid.className = "slots-grid";
+          slotData.slots.forEach(function (slot) {
+            var d = new Date(slot.date);
+            var dayName = dayMap[d.getDay()];
+            var dateStr = (d.getMonth() + 1) + "/" + d.getDate() + "(" + dayName + ")";
+            var timeStr = slot.startTime.substring(0, 5);
+            var slotEl = document.createElement("div");
+            slotEl.className = slot.available ? "slot" : "slot unavailable";
+            slotEl.dataset.doctorId = doctorId;
+            slotEl.dataset.date = slot.date;
+            slotEl.dataset.start = slot.startTime;
+            slotEl.dataset.end = slot.endTime;
+            if (slot.available) { slotEl.onclick = function () { selectSlot(slotEl); }; }
+            var dateDiv = document.createElement("div");
+            dateDiv.className = "slot-date";
+            dateDiv.textContent = dateStr;
+            var timeDiv = document.createElement("div");
+            timeDiv.textContent = timeStr;
+            slotEl.appendChild(dateDiv);
+            slotEl.appendChild(timeDiv);
+            grid.appendChild(slotEl);
+          });
+          slotSection.appendChild(grid);
+          var reserveLink = document.createElement("a");
+          reserveLink.href = "/reservation";
+          reserveLink.style.cssText = "display:block;width:100%;padding:11px;background:var(--user-bg);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;text-align:center;text-decoration:none;margin-top:8px;transition:all 0.15s;";
+          reserveLink.textContent = "예약 페이지로 이동";
+          slotSection.appendChild(reserveLink);
+        } else {
+          var noSlot = document.createElement("p");
+          noSlot.style.cssText = "font-size:12px;color:var(--text-muted)";
+          noSlot.textContent = "예약 가능한 일정이 없습니다.";
+          slotSection.appendChild(noSlot);
+        }
+      } catch (err) {
+        slotSection.textContent = "";
+        var errLabel = document.createElement("div");
+        errLabel.className = "section-label";
+        errLabel.textContent = "예약 가능 일정";
+        var errMsg = document.createElement("p");
+        errMsg.style.cssText = "font-size:12px;color:var(--red)";
+        errMsg.textContent = "일정 조회 실패: " + err.message;
+        slotSection.appendChild(errLabel);
+        slotSection.appendChild(errMsg);
+      }
+    }
+    function selectSlot(el) {
+      if (el.classList.contains("unavailable")) return;
+      el.closest(".slots-grid").querySelectorAll(".slot").forEach(function (s) { s.classList.remove("selected"); });
+      el.classList.add("selected");
+    }
+    function formatSchedules(schedules) {
+      if (!schedules || schedules.length === 0) return "";
+      var dayMap = { MON: "월", TUE: "화", WED: "수", THU: "목", FRI: "금", SAT: "토", SUN: "일" };
+      var result = schedules.filter(function (s) { return s.isAvailable !== false; }).slice(0, 2).map(function (s) { return dayMap[s.dayOfWeek] || s.dayOfWeek; }).join(",");
+      return result + (schedules.length > 2 ? "..." : "");
+    }
+    document.getElementById("chatInput").addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitQuery(); }
+    });
+  </script>
+</body>
+</html>

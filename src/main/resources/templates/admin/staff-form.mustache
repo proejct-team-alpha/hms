@@ -54,6 +54,9 @@
                     class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
                     placeholder="예: staff02"
                   />
+                  {{#usernameError}}
+                    <p class="mt-2 text-sm text-red-600">{{usernameError}}</p>
+                  {{/usernameError}}
                 </div>
                 <div>
                   <label for="staff-password" class="block text-sm font-medium text-slate-700 mb-2">비밀번호</label>
@@ -65,6 +68,9 @@
                     class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
                     placeholder="8자 이상 입력"
                   />
+                  {{#passwordError}}
+                    <p class="mt-2 text-sm text-red-600">{{passwordError}}</p>
+                  {{/passwordError}}
                 </div>
               </div>
             {{/model.editMode}}
@@ -90,6 +96,9 @@
                   class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
                   placeholder="변경할 때만 입력"
                 />
+                {{#passwordError}}
+                  <p class="mt-2 text-sm text-red-600">{{passwordError}}</p>
+                {{/passwordError}}
                 <p class="text-xs text-slate-500 mt-2">비밀번호를 변경하지 않으면 비워두세요.</p>
               </div>
             {{/model.editMode}}
@@ -106,6 +115,9 @@
                   class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
                   placeholder="예: 김직원"
                 />
+                {{#nameError}}
+                  <p class="mt-2 text-sm text-red-600">{{nameError}}</p>
+                {{/nameError}}
               </div>
 
               {{^model.editMode}}
@@ -120,6 +132,9 @@
                     class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
                     placeholder="예: S-20260301"
                   />
+                  {{#employeeNumberError}}
+                    <p class="mt-2 text-sm text-red-600">{{employeeNumberError}}</p>
+                  {{/employeeNumberError}}
                 </div>
               {{/model.editMode}}
 
@@ -135,23 +150,28 @@
               {{^model.editMode}}
                 <div>
                   <label for="staff-role" class="block text-sm font-medium text-slate-700 mb-2">역할</label>
-                  <select
-                    id="staff-role"
-                    name="role"
-                    class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
-                  >
+                <select
+                  id="staff-role"
+                  name="role"
+                  required
+                  class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                >
                     {{#model.roleOptions}}
-                      <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
-                    {{/model.roleOptions}}
-                  </select>
-                </div>
-              {{/model.editMode}}
+                    <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                  {{/model.roleOptions}}
+                </select>
+                {{#roleError}}
+                  <p class="mt-2 text-sm text-red-600">{{roleError}}</p>
+                {{/roleError}}
+              </div>
+            {{/model.editMode}}
 
               <div>
                 <label for="staff-department" class="block text-sm font-medium text-slate-700 mb-2">부서</label>
                 <select
                   id="staff-department"
                   name="departmentId"
+                  required
                   class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
                 >
                   <option value="">부서 선택 안함</option>
@@ -159,6 +179,9 @@
                     <option value="{{id}}" {{#selected}}selected{{/selected}}>{{label}}</option>
                   {{/model.departmentOptions}}
                 </select>
+                {{#departmentIdError}}
+                  <p class="mt-2 text-sm text-red-600">{{departmentIdError}}</p>
+                {{/departmentIdError}}
               </div>
             </div>
 

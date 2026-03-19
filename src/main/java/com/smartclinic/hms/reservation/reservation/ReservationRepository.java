@@ -81,6 +81,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                 @Param("date") LocalDate date,
                 @Param("excluded") ReservationStatus excluded);
 
+        // LLM 예약 슬롯 중복 체크 — startTime 기반
+        long countByDoctor_IdAndReservationDateAndStartTime(
+                Long doctorId, java.time.LocalDate date, java.time.LocalTime startTime);
+
         // 예약 변경 페이지용 — 현재 수정 중인 예약 제외
         @Query("SELECT r.timeSlot FROM Reservation r " +
                "WHERE r.doctor.id = :doctorId " +
