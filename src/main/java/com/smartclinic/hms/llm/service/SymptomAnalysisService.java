@@ -36,7 +36,7 @@ public class SymptomAnalysisService {
 
         return llmWebClient.post()
                 .uri("/infer/medical")
-                .bodyValue(Map.of("query", prompt, "max_length", 256, "temperature", 0.1))
+                .bodyValue(Map.of("query", prompt, "max_length", 64, "temperature", 0.1))
                 .retrieve()
                 .bodyToMono(LlmResponse.class)
                 .map(response -> parseText(response.getGeneratedText()));

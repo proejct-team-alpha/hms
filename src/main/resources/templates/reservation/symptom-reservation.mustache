@@ -122,18 +122,39 @@
       return res.json();
     }
 
+    const LOADING_STEPS = [
+      '증상을 분석하고 있습니다...',
+      '진료과를 찾고 있습니다...',
+      '전문의를 확인하고 있습니다...',
+      '예약 가능 시간을 조회하고 있습니다...',
+    ];
+
+    function startLoadingSteps() {
+      let step = 0;
+      setLoadingText(LOADING_STEPS[step]);
+      return setInterval(() => {
+        step = (step + 1) % LOADING_STEPS.length;
+        setLoadingText(LOADING_STEPS[step]);
+      }, 1800);
+    }
+
+    function setLoadingText(msg) {
+      analyzeBtn.innerHTML = `
+        <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+        ${msg}
+      `;
+    }
+
     analyzeBtn.addEventListener('click', async () => {
       const text = symptomInput.value.trim();
       if (!text) return;
 
       analyzeBtn.disabled = true;
-      analyzeBtn.innerHTML = `
-        <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-        AI가 분석 중입니다...
-      `;
+      const timer = startLoadingSteps();
 
       try {
         const result = await callSymptomApi(text);
+        clearInterval(timer);
         document.getElementById('rec-dept').textContent   = result.dept;
         document.getElementById('rec-doctor').textContent = result.doctor;
         document.getElementById('rec-time').textContent   = result.time;
@@ -141,6 +162,7 @@
         feather.replace();
         analyzeBtn.innerHTML = '증상 분석 완료';
       } catch (e) {
+        clearInterval(timer);
         errorToast.classList.remove('hidden');
         feather.replace();
         setTimeout(() => {
