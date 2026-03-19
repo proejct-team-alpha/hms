@@ -16,6 +16,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping("/admin/patient")
 public class AdminPatientController {
 
+    private static final String PATIENT_LIST_TITLE = "환자 관리";
+    private static final String PATIENT_DETAIL_TITLE = "환자 상세";
+    private static final String NOT_FOUND_TITLE = "페이지를 찾을 수 없습니다";
+
     private final AdminPatientService adminPatientService;
 
     @GetMapping("/list")
@@ -39,7 +43,7 @@ public class AdminPatientController {
             return renderDetailPage(req, result);
         } catch (CustomException ex) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            req.setAttribute("pageTitle", "페이지를 찾을 수 없습니다");
+            req.setAttribute("pageTitle", NOT_FOUND_TITLE);
             req.setAttribute("errorMessage", ex.getMessage());
             req.setAttribute("path", req.getRequestURI());
             return "error/404";
@@ -48,13 +52,13 @@ public class AdminPatientController {
 
     String renderListPage(HttpServletRequest req, AdminPatientListResponse res) {
         req.setAttribute("model", res);
-        req.setAttribute("pageTitle", "환자 관리");
+        req.setAttribute("pageTitle", PATIENT_LIST_TITLE);
         return "admin/patient-list";
     }
 
     String renderDetailPage(HttpServletRequest req, AdminPatientDetailResponse res) {
         req.setAttribute("model", res);
-        req.setAttribute("pageTitle", "환자 상세");
+        req.setAttribute("pageTitle", PATIENT_DETAIL_TITLE);
         return "admin/patient-detail";
     }
 }

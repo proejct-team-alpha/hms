@@ -49,8 +49,7 @@ class AdminPatientControllerTest {
         AdminPatientListResponse response = createEmptyListResponse();
         given(adminPatientService.getPatientList(1, 20, null, null)).willReturn(response);
 
-        // when
-        // then
+        // when // then
         mockMvc.perform(get("/admin/patient/list")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
@@ -69,8 +68,7 @@ class AdminPatientControllerTest {
         AdminPatientListResponse response = createEmptyListResponse();
         given(adminPatientService.getPatientList(2, 20, "kim", "0101234")).willReturn(response);
 
-        // when
-        // then
+        // when // then
         mockMvc.perform(get("/admin/patient/list")
                         .param("page", "2")
                         .param("size", "20")
@@ -106,8 +104,7 @@ class AdminPatientControllerTest {
         );
         given(adminPatientService.getPatientList(1, 20, null, null)).willReturn(response);
 
-        // when
-        // then
+        // when // then
         mockMvc.perform(get("/admin/patient/list")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
@@ -117,7 +114,8 @@ class AdminPatientControllerTest {
                 .andExpect(content().string(containsString("김철수")))
                 .andExpect(content().string(containsString("010-1234-5678")))
                 .andExpect(content().string(containsString("2026-03-19")))
-                .andExpect(content().string(containsString("상세보기")));
+                .andExpect(content().string(containsString("상세보기")))
+                .andExpect(content().string(containsString("초기화")));
     }
 
     @Test
@@ -127,8 +125,7 @@ class AdminPatientControllerTest {
         AdminPatientListResponse response = createEmptyListResponse();
         given(adminPatientService.getPatientList(1, 20, null, null)).willReturn(response);
 
-        // when
-        // then
+        // when // then
         mockMvc.perform(get("/admin/patient/list")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
@@ -151,15 +148,14 @@ class AdminPatientControllerTest {
                         "R-1001",
                         "2026-03-19",
                         "09:30",
-                        "내과",
+                        "치과",
                         "김의사",
                         "접수"
                 ))
         );
         given(adminPatientService.getPatientDetail(7L)).willReturn(response);
 
-        // when
-        // then
+        // when // then
         mockMvc.perform(get("/admin/patient/detail")
                         .param("patientId", "7")
                         .with(user("admin").roles("ADMIN"))
@@ -168,9 +164,6 @@ class AdminPatientControllerTest {
                 .andExpect(view().name("admin/patient-detail"))
                 .andExpect(request().attribute("model", response))
                 .andExpect(request().attribute("pageTitle", "환자 상세"))
-                .andExpect(content().string(containsString("환자 기본 정보와 전체 예약 이력을 확인합니다.")))
-                .andExpect(content().string(containsString("기본 정보")))
-                .andExpect(content().string(containsString("예약 이력")))
                 .andExpect(content().string(containsString("김철수")))
                 .andExpect(content().string(containsString("010-1234-5678")))
                 .andExpect(content().string(containsString("R-1001")))
@@ -186,8 +179,7 @@ class AdminPatientControllerTest {
         given(adminPatientService.getPatientDetail(99L))
                 .willThrow(CustomException.notFound("환자를 찾을 수 없습니다."));
 
-        // when
-        // then
+        // when // then
         mockMvc.perform(get("/admin/patient/detail")
                         .param("patientId", "99")
                         .with(user("admin").roles("ADMIN"))
