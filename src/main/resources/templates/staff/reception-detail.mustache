@@ -17,7 +17,7 @@
       <div class="max-w-3xl mx-auto space-y-6">
         <div class="flex items-center justify-between">
           <h1 class="text-2xl font-bold text-slate-800">예약 환자 접수</h1>
-          <a href="/staff/reception/list" class="text-sm font-medium text-slate-500 hover:text-slate-700">
+          <a href="/staff/reception/list?date={{currentDate}}&status={{currentStatus}}&page={{currentPage}}" class="text-sm font-medium text-slate-500 hover:text-slate-700">
             목록으로 돌아가기
           </a>
         </div>
@@ -120,13 +120,16 @@
 
             <!-- 액션 버튼 -->
             <div class="pt-8 border-t border-slate-200 flex justify-end gap-3">
-              <a href="/staff/reception/list" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors">
+              <a href="/staff/reception/list?date={{currentDate}}&status={{currentStatus}}&page={{currentPage}}" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors">
                 목록으로
               </a>
               {{#detail.canReceive}}
               <form method="post" action="/staff/reception/receive" class="inline">
                 <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
                 <input type="hidden" name="reservationId" value="{{detail.id}}">
+                <input type="hidden" name="date" value="{{currentDate}}">
+                <input type="hidden" name="status" value="{{currentStatus}}">
+                <input type="hidden" name="page" value="{{currentPage}}">
                 <button type="submit" class="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2">
                   <i data-feather="check-circle" class="w-5 h-5"></i>
                   접수 완료 처리
@@ -134,14 +137,29 @@
               </form>
               {{/detail.canReceive}}
               {{#detail.canCancel}}
-              <form method="post" action="/staff/reception/cancel" class="inline" onsubmit="return confirm('예약을 취소하시겠습니까?')">
+              <form method="post" action="/staff/reception/cancel" class="inline" onsubmit="return handleCancel(this)">
                 <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
                 <input type="hidden" name="id" value="{{detail.id}}">
+                <input type="hidden" name="reason" id="cancelReasonInput">
+                <input type="hidden" name="date" value="{{currentDate}}">
+                <input type="hidden" name="status" value="{{currentStatus}}">
+                <input type="hidden" name="page" value="{{currentPage}}">
                 <button type="submit" class="px-6 py-3 bg-red-50 text-red-600 font-medium rounded-xl hover:bg-red-100 transition-colors flex items-center gap-2">
                   <i data-feather="x-circle" class="w-5 h-5"></i>
                   예약 취소
                 </button>
               </form>
+
+              <script>
+                function handleCancel(form) {
+                  const reason = window.prompt('예약을 취소하시겠습니까? 취소 사유를 입력해주세요:');
+                  if (reason === null) {
+                    return false;
+                  }
+                  form.querySelector('#cancelReasonInput').value = reason;
+                  return true;
+                }
+              </script>
               {{/detail.canCancel}}
             </div>
           </div>

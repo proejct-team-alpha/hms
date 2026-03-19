@@ -116,13 +116,13 @@ public class ReceptionService {
         if (date == null) {
             LocalDate today = LocalDate.now();
             if (status == null || status.isBlank()) {
-                reservations = reservationRepository.findFromDateExcludingStatus(today, ReservationStatus.CANCELLED);
+                reservations = reservationRepository.findFromDateAll(today);
             } else {
                 reservations = reservationRepository.findFromDateByStatus(today, ReservationStatus.valueOf(status));
             }
         } else {
             if (status == null || status.isBlank()) {
-                reservations = reservationRepository.findTodayExcludingStatus(date, ReservationStatus.CANCELLED);
+                reservations = reservationRepository.findTodayAll(date);
             } else {
                 reservations = reservationRepository.findTodayByStatus(date, ReservationStatus.valueOf(status));
             }
@@ -137,7 +137,8 @@ public class ReceptionService {
                 new StaffStatusFilter("전체", "", s, date),
                 new StaffStatusFilter("접수 대기", "RESERVED", s, date),
                 new StaffStatusFilter("진료 대기", "RECEIVED", s, date),
-                new StaffStatusFilter("진료 완료", "COMPLETED", s, date));
+                new StaffStatusFilter("진료 완료", "COMPLETED", s, date),
+                new StaffStatusFilter("취소", "CANCELLED", s, date));
     }
 
     // 예약 상세 조회
@@ -149,10 +150,11 @@ public class ReceptionService {
 
     // 예약 취소
     @Transactional
-    public void cancel(Long id) {
+    public Reservation cancel(Long id, String reason) {
         Reservation r = reservationRepository.findById(id)
                 .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
-        r.cancel();
+        r.cancel(reason);
+        return r;
     }
 
     // 대시보드 통계

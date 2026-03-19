@@ -78,7 +78,7 @@
             </thead>
             <tbody class="divide-y divide-slate-200">
               {{#reservations}}
-              <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="location.href='/staff/reception/detail?id={{id}}'">
+              <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="location.href='/staff/reception/detail?id={{id}}&date={{#hasDate}}{{currentDate}}{{/hasDate}}&status={{currentStatus}}&page={{currentPage}}'">
                 <td class="p-4 text-sm text-slate-600">{{reservationDate}}</td>
                 <td class="p-4 text-sm font-medium text-slate-900">{{timeSlot}}</td>
                 <td class="p-4 text-sm font-semibold text-slate-800">{{patientName}}</td>
@@ -96,6 +96,12 @@
                 </td>
                 <td class="p-4 text-right">
                   <div class="flex justify-end gap-2" onclick="event.stopPropagation()">
+                    {{#cancellationReason}}
+                    <span class="text-xs text-red-500 italic bg-red-50 px-2 py-1 rounded-md border border-red-100 max-w-[150px] truncate" title="{{cancellationReason}}">
+                      사유: {{cancellationReason}}
+                    </span>
+                    {{/cancellationReason}}
+                    
                     {{#canReceive}}
                     
                     <button 
@@ -214,8 +220,10 @@ if (data.success) {
 
 async function cancelAjax(id, button, currentStatus) {
 
-  if (!confirm('예약을 취소하시겠습니까?')) {
-    return;
+  const reason = window.prompt('예약을 취소하시겠습니까? 취소 사유를 입력해주세요:');
+  
+  if (reason === null) {
+    return; // 취소 클릭
   }
 
   try {
@@ -226,7 +234,8 @@ async function cancelAjax(id, button, currentStatus) {
         'X-CSRF-TOKEN': '{{_csrf.token}}'
       },
       body: JSON.stringify({
-        id: id
+        id: id,
+        reason: reason
       })
     });
 
@@ -234,18 +243,35 @@ async function cancelAjax(id, button, currentStatus) {
 
     if (data.success) {
       const row = button.closest('tr');
-      const statusCell = row.children[6];
 
-      // 상태 변경
+      // 현재 탭 필터가 변경된 상태와 맞지 않으면 행 삭제
+      // 예: '진료 대기' 탭인데 '접수 대기'로 바뀌었거나, '접수 대기' 탭인데 '취소'로 바뀐 경우
+      if (currentStatus === 'RECEIVED' && data.newStatus === 'RESERVED') {
+        row.remove();
+        return;
+      }
+      if (currentStatus === 'RESERVED' && data.newStatus === 'CANCELLED') {
+        row.remove();
+        return;
+      }
+
+      // '전체' 탭이거나 필터에 여전히 해당되는 경우 UI만 업데이트
+      const statusCell = row.children[6];
       statusCell.innerHTML = `
-        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
-          취소
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${data.statusClass}">
+          ${data.statusText}
         </span>
       `;
 
-      // 버튼 영역 전체 제거
-      const actionCell = row.children[7];
-      actionCell.innerHTML = '';
+      if (data.newStatus === 'CANCELLED') {
+        // 최종 취소인 경우 버튼 영역 전체 제거
+        const actionCell = row.children[7];
+        actionCell.innerHTML = '';
+      } else if (data.newStatus === 'RESERVED') {
+        // 접수 대기로 돌아온 경우, '접수' 버튼을 다시 표시해야 함 (필요시 새로고침 권장)
+        // 일단은 버튼 영역을 비우거나 페이지 새로고침을 유도할 수 있음
+        location.reload(); 
+      }
     } else {
       alert('취소 실패');
     }
