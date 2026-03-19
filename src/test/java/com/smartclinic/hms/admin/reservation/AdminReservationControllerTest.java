@@ -199,4 +199,42 @@ class AdminReservationControllerTest {
         then(adminReservationService).should().cancelReservation(100L);
     }
 
+    @Test
+    @DisplayName("예약 취소 후 잘못된 status 파라미터는 ALL로 정규화된다")
+    void cancel_invalidStatus_redirectsWithAllFallback() throws Exception {
+        // when
+        // then
+        mockMvc.perform(post("/admin/reservation/cancel")
+                        .param("reservationId", "100")
+                        .param("page", "3")
+                        .param("size", "5")
+                        .param("status", "INVALID")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", containsString("/admin/reservation/list?page=3&size=5&status=ALL")))
+                .andExpect(flash().attribute("successMessage", CANCEL_SUCCESS_MESSAGE));
+
+        then(adminReservationService).should().cancelReservation(100L);
+    }
+
+    @Test
+    @DisplayName("예약 취소 후 소문자 status 파라미터도 정상적으로 복귀한다")
+    void cancel_lowercaseReceived_redirectsWithNormalizedStatus() throws Exception {
+        // when
+        // then
+        mockMvc.perform(post("/admin/reservation/cancel")
+                        .param("reservationId", "100")
+                        .param("page", "1")
+                        .param("size", "10")
+                        .param("status", "received")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", containsString("/admin/reservation/list?page=1&size=10&status=RECEIVED")))
+                .andExpect(flash().attribute("successMessage", CANCEL_SUCCESS_MESSAGE));
+
+        then(adminReservationService).should().cancelReservation(100L);
+    }
+
 }
