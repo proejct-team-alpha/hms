@@ -19,6 +19,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.smartclinic.hms.domain.Reservation;
 import com.smartclinic.hms.domain.ReservationStatus;
 import com.smartclinic.hms.staff.dto.StaffReservationDto;
+import com.smartclinic.hms.staff.reception.dto.PatientInfoUpdateRequest;
 import com.smartclinic.hms.staff.reception.dto.ReceptionUpdateRequest;
 
 import jakarta.validation.Valid;
@@ -39,6 +40,9 @@ public class ReceptionController {
             @RequestParam(name = "status", defaultValue = "") String status,
             @RequestParam(name = "date", required = false) String date,
             @RequestParam(name = "query", required = false) String query,
+            @RequestParam(name = "deptId", required = false) Long deptId,
+            @RequestParam(name = "doctorId", required = false) Long doctorId,
+            @RequestParam(name = "source", required = false) String source,
             @ModelAttribute("date") String flashDate,
             @RequestParam(name = "page", defaultValue = "1") int page,
             Model model) {
@@ -51,7 +55,7 @@ public class ReceptionController {
         LocalDate selectedDate = (date == null || date.isBlank()) ? null : LocalDate.parse(date);
         String dateStr = selectedDate != null ? selectedDate.toString() : "";
 
-        List<StaffReservationDto> all = receptionService.getReservations(selectedDate, status, query);
+        List<StaffReservationDto> all = receptionService.getReservations(selectedDate, status, query, deptId, doctorId, source);
 
         // 페이징
         int total = all.size();
@@ -61,12 +65,30 @@ public class ReceptionController {
         int to = Math.min(from + PAGE_SIZE, total);
         List<StaffReservationDto> paged = all.subList(from, to);
 
-        // 페이지 URL 기본 경로 (date, status, query 포함)
+        // 페이지 URL 기본 경로 (필터 포함)
         String q = (query == null) ? "" : query;
-        String baseUrl = "/staff/reception/list?date=" + dateStr + "&status=" + status + "&query=" + q;
+        StringBuilder baseUrlBuilder = new StringBuilder("/staff/reception/list?date=" + dateStr + "&status=" + status + "&query=" + q);
+        if (deptId != null) baseUrlBuilder.append("&deptId=").append(deptId);
+        if (doctorId != null) baseUrlBuilder.append("&doctorId=").append(doctorId);
+        if (source != null && !source.isBlank()) baseUrlBuilder.append("&source=").append(source);
+        String baseUrl = baseUrlBuilder.toString();
 
         model.addAttribute("reservations", paged);
-        model.addAttribute("filters", receptionService.getStatusFilters(status, dateStr, query));
+        model.addAttribute("filters", receptionService.getStatusFilters(status, dateStr, query, deptId, doctorId, source));
+        
+        // 필터 데이터
+        model.addAttribute("departments", receptionService.getAllDepartments().stream()
+                .map(d -> Map.of("id", d.getId(), "name", d.getName(), "selected", d.getId().equals(deptId)))
+                .toList());
+        model.addAttribute("doctors", receptionService.getAllDoctors().stream()
+                .map(d -> Map.of("id", d.getId(), "name", d.getDisplayName(), "selected", d.getId().equals(doctorId)))
+                .toList());
+        model.addAttribute("sources", List.of(
+            Map.of("value", "ONLINE", "label", "온라인", "selected", "ONLINE".equals(source)),
+            Map.of("value", "PHONE", "label", "전화", "selected", "PHONE".equals(source)),
+            Map.of("value", "WALKIN", "label", "방문", "selected", "WALKIN".equals(source))
+        ));
+
         // 날짜 네비게이션
         model.addAttribute("hasDate", selectedDate != null);
         model.addAttribute("todayDate", LocalDate.now().toString());
@@ -76,6 +98,9 @@ public class ReceptionController {
         model.addAttribute("currentDate", dateStr);
         model.addAttribute("currentStatus", status);
         model.addAttribute("query", q);
+        model.addAttribute("deptId", deptId);
+        model.addAttribute("doctorId", doctorId);
+        model.addAttribute("source", source);
         // 페이징
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", totalPages);
@@ -172,6 +197,17 @@ public class ReceptionController {
             result.put("statusClass", "bg-red-100 text-red-700");
         }
 
+        return result;
+    }
+
+    // 환자 정보 수정 (주소, 특이사항)
+    @PostMapping("/update-patient-info")
+    @ResponseBody
+    public Map<String, Object> updatePatientInfo(@RequestBody @Valid PatientInfoUpdateRequest request) {
+        receptionService.updatePatientInfo(request);
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("message", "환자 정보가 수정되었습니다.");
         return result;
     }
 

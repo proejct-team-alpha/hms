@@ -33,57 +33,98 @@
         </div>
 
         {{! 상단 검색/날짜 툴바 }}
-        <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200">
-          <form action="/staff/reception/list" method="get" class="flex flex-wrap items-center gap-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+          <form id="filter-form" action="/staff/reception/list" method="get" class="space-y-5">
             <input type="hidden" name="status" value="{{currentStatus}}">
             
-            {{! 날짜 컨트롤 }}
-            <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg p-1">
-              {{#hasDate}}
-              <a href="/staff/reception/list?date={{prevDate}}&status={{currentStatus}}&query={{query}}" 
-                 class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-md transition-all">
-                <i data-feather="chevron-left" class="w-4 h-4"></i>
-              </a>
-              {{/hasDate}}
-              
-              <input type="date" id="date" name="date" value="{{currentDate}}" 
-                     onchange="this.form.submit()"
-                     class="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer px-2 py-1 w-32">
+            <div class="flex flex-col lg:flex-row lg:items-center gap-5">
+              {{! 날짜 컨트롤 영역: 고정 크기 유지하여 정렬 안정성 확보 }}
+              <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl p-1.5 shadow-sm shrink-0 w-fit">
+                {{#hasDate}}
+                <a href="/staff/reception/list?date={{prevDate}}&status={{currentStatus}}&query={{query}}&deptId={{#deptId}}{{deptId}}{{/deptId}}&doctorId={{#doctorId}}{{doctorId}}{{/doctorId}}&source={{#source}}{{source}}{{/source}}" 
+                   class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-lg transition-all">
+                  <i data-feather="chevron-left" class="w-4 h-4"></i>
+                </a>
+                {{/hasDate}}
+                
+                <input type="date" id="date" name="date" value="{{currentDate}}" 
+                       onchange="this.form.submit()"
+                       class="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer px-3 py-1 w-40">
 
-              {{#hasDate}}
-              <a href="/staff/reception/list?date={{nextDate}}&status={{currentStatus}}&query={{query}}" 
-                 class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-md transition-all">
-                <i data-feather="chevron-right" class="w-4 h-4"></i>
-              </a>
-              {{/hasDate}}
+                {{#hasDate}}
+                <a href="/staff/reception/list?date={{nextDate}}&status={{currentStatus}}&query={{query}}&deptId={{#deptId}}{{deptId}}{{/deptId}}&doctorId={{#doctorId}}{{doctorId}}{{/doctorId}}&source={{#source}}{{source}}{{/source}}" 
+                   class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-lg transition-all">
+                  <i data-feather="chevron-right" class="w-4 h-4"></i>
+                </a>
+                {{/hasDate}}
 
-              <div class="w-px h-4 bg-slate-200 mx-1"></div>
-              
-              {{#hasDate}}
-              <a href="/staff/reception/list?status={{currentStatus}}&query={{query}}" 
-                 class="px-3 py-1 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors">전체</a>
-              {{/hasDate}}
-              {{^hasDate}}
-              <a href="/staff/reception/list?date={{todayDate}}&status={{currentStatus}}&query={{query}}" 
-                 class="px-3 py-1 text-xs font-bold text-indigo-600">오늘</a>
-              {{/hasDate}}
+                <div class="w-px h-4 bg-slate-200 mx-2"></div>
+                
+                <div class="flex">
+                  {{#hasDate}}
+                  <a href="/staff/reception/list?status={{currentStatus}}&query={{query}}&deptId={{#deptId}}{{deptId}}{{/deptId}}&doctorId={{#doctorId}}{{doctorId}}{{/doctorId}}&source={{#source}}{{source}}{{/source}}" 
+                     class="px-4 py-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 hover:bg-white rounded-lg transition-all">전체</a>
+                  {{/hasDate}}
+                  {{^hasDate}}
+                  <a href="/staff/reception/list?date={{todayDate}}&status={{currentStatus}}&query={{query}}&deptId={{#deptId}}{{deptId}}{{/deptId}}&doctorId={{#doctorId}}{{doctorId}}{{/doctorId}}&source={{#source}}{{source}}{{/source}}" 
+                     class="px-4 py-1.5 text-xs font-bold text-indigo-600 bg-white rounded-lg shadow-sm">오늘</a>
+                  {{/hasDate}}
+                </div>
+              </div>
+
+              {{! 검색 컨트롤 영역: 유연하게 늘어나되 너무 벌어지지 않게 제한 }}
+              <div class="flex-1 flex items-center gap-3">
+                <div class="relative flex-1 group min-w-[200px]">
+                  <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i data-feather="search" class="w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors"></i>
+                  </div>
+                  <input type="text" name="query" value="{{query}}" placeholder="  환자명, 연락처 검색" 
+                         class="w-full pl-14 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all shadow-sm">
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <button type="submit" class="px-6 py-3 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-sm hover:shadow-md">
+                    검색
+                  </button>
+                  <button type="button" id="btn-toggle-filter" class="p-3 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2">
+                    <i data-feather="sliders" class="w-4 h-4"></i>
+                    <span class="text-xs font-bold hidden sm:inline">필터</span>
+                  </button>
+                  <a href="/staff/reception/list" class="p-3 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all" title="초기화">
+                    <i data-feather="refresh-cw" class="w-4 h-4"></i>
+                  </a>
+                </div>
+              </div>
             </div>
 
-            {{! 검색 컨트롤 }}
-            <div class="flex-1 flex items-center gap-2 min-w-[300px]">
-              <div class="relative flex-1">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <i data-feather="search" class="w-4 h-4 text-slate-400"></i>
-                </div>
-                <input type="text" name="query" value="{{query}}" placeholder="환자명, 연락처 검색..." 
-                       class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+            {{! 상세 필터 패널 (기본 숨김) }}
+            <div id="filter-panel" class="hidden grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 shadow-inner">
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 ml-1">진료과</label>
+                <select name="deptId" onchange="this.form.submit()" class="w-full bg-white border border-slate-200 rounded-lg text-sm px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                  <option value="">전체 진료과</option>
+                  {{#departments}}
+                  <option value="{{id}}" {{#selected}}selected{{/selected}}>{{name}}</option>
+                  {{/departments}}
+                </select>
               </div>
-              <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-700 transition-all shrink-0">
-                검색
-              </button>
-              <a href="/staff/reception/list" class="p-2.5 text-slate-400 hover:text-slate-600" title="초기화">
-                <i data-feather="refresh-cw" class="w-4 h-4"></i>
-              </a>
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 ml-1">전문의</label>
+                <select name="doctorId" onchange="this.form.submit()" class="w-full bg-white border border-slate-200 rounded-lg text-sm px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                  <option value="">전체 전문의</option>
+                  {{#doctors}}
+                  <option value="{{id}}" {{#selected}}selected{{/selected}}>{{name}}</option>
+                  {{/doctors}}
+                </select>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 ml-1">예약 구분</label>
+                <select name="source" onchange="this.form.submit()" class="w-full bg-white border border-slate-200 rounded-lg text-sm px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                  <option value="">전체 구분</option>
+                  {{#sources}}
+                  <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                  {{/sources}}
+                </select>
+              </div>
             </div>
           </form>
         </div>
@@ -108,7 +149,8 @@
                 <th class="p-4 font-medium">환자명</th>
                 <th class="p-4 font-medium">연락처</th>
                 <th class="p-4 font-medium">예약 구분</th>
-                <th class="p-4 font-medium">진료과 / 전문의</th>
+                <th class="p-4 font-medium">진료과</th>
+                <th class="p-4 font-medium">전문의</th>
                 <th class="p-4 font-medium text-center">상태</th>
                 <th class="p-4 font-medium text-center">비고</th>
               </tr>
@@ -125,7 +167,8 @@
                     {{sourceText}}
                   </span>
                 </td>
-                <td class="p-4 text-sm text-slate-600">{{departmentName}} / {{doctorName}}</td>
+                <td class="p-4 text-sm text-slate-600">{{departmentName}}</td>
+                <td class="p-4 text-sm text-slate-600">{{doctorName}}</td>
                 <td class="p-4">
                   <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{statusBadgeClass}}">
                     {{statusText}}
@@ -167,7 +210,7 @@
               {{/reservations}}
               {{^reservations}}
               <tr>
-                <td colspan="8" class="p-8 text-center text-slate-500">
+                <td colspan="9" class="p-8 text-center text-slate-500">
                   {{selectedDate}} 예약된 환자가 없습니다.
                 </td>
               </tr>
@@ -234,7 +277,8 @@ if (data.success) {
     row.remove();
   } else {
     // 다른 탭이면 상태만 변경
-    const statusCell = row.children[6];
+    // index 7 (0:날짜, 1:시간, 2:이름, 3:연락처, 4:구분, 5:진료과, 6:전문의, 7:상태)
+    const statusCell = row.children[7];
 
     statusCell.innerHTML = `
       <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
@@ -293,7 +337,7 @@ async function cancelAjax(id, button, currentStatus) {
       }
 
       // '전체' 탭이거나 필터에 여전히 해당되는 경우 UI만 업데이트
-      const statusCell = row.children[6];
+      const statusCell = row.children[7];
       statusCell.innerHTML = `
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${data.statusClass}">
           ${data.statusText}
@@ -302,7 +346,7 @@ async function cancelAjax(id, button, currentStatus) {
 
       if (data.newStatus === 'CANCELLED') {
         // 최종 취소인 경우 버튼 영역 전체 제거
-        const actionCell = row.children[7];
+        const actionCell = row.children[8];
         actionCell.innerHTML = '';
       } else if (data.newStatus === 'RESERVED') {
         // 접수 대기로 돌아온 경우, '접수' 버튼을 다시 표시해야 함 (필요시 새로고침 권장)
@@ -320,6 +364,26 @@ async function cancelAjax(id, button, currentStatus) {
 }
 
 
+</script>
+
+<script>
+  // 상세 필터 토글
+  const btnToggleFilter = document.getElementById('btn-toggle-filter');
+  const filterPanel = document.getElementById('filter-panel');
+  
+  if (btnToggleFilter && filterPanel) {
+    btnToggleFilter.addEventListener('click', () => {
+      filterPanel.classList.toggle('hidden');
+    });
+
+    // 필터가 설정되어 있으면 자동으로 열어둠
+    const hasActiveFilters = {{#deptId}}true{{/deptId}}{{^deptId}}false{{/deptId}} || 
+                             {{#doctorId}}true{{/doctorId}}{{^doctorId}}false{{/doctorId}} || 
+                             {{#source}}true{{/source}}{{^source}}false{{/source}};
+    if (hasActiveFilters) {
+      filterPanel.classList.remove('hidden');
+    }
+  }
 </script>
 
 </body>

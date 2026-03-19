@@ -23,6 +23,7 @@ import com.smartclinic.hms.staff.dto.StaffDepartmentOptionDto;
 import com.smartclinic.hms.staff.dto.StaffDoctorOptionDto;
 import com.smartclinic.hms.staff.dto.StaffReservationDto;
 import com.smartclinic.hms.staff.dto.StaffStatusFilter;
+import com.smartclinic.hms.staff.reception.dto.PatientInfoUpdateRequest;
 import com.smartclinic.hms.staff.reception.dto.ReceptionUpdateRequest;
 import com.smartclinic.hms.staff.reservation.dto.PhoneReservationRequestDto;
 import com.smartclinic.hms.common.exception.CustomException;
@@ -110,8 +111,17 @@ public class ReceptionService {
         reservation.receive();
     }
 
+    // 환자 정보 수정
+    @Transactional
+    public void updatePatientInfo(PatientInfoUpdateRequest request) {
+        Reservation reservation = reservationRepository.findById(request.getReservationId())
+                .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
+        Patient patient = reservation.getPatient();
+        patient.updateAddressAndNote(request.getAddress(), request.getNote());
+    }
+
     // 날짜별 예약 목록 (date=null이면 오늘 이후 전체, 취소 제외 or 특정 상태)
-    public List<StaffReservationDto> getReservations(LocalDate date, String status, String query) {
+    public List<StaffReservationDto> getReservations(LocalDate date, String status, String query, Long deptId, Long doctorId, String source) {
         List<Reservation> reservations;
         if (date == null) {
             LocalDate today = LocalDate.now();
@@ -128,28 +138,39 @@ public class ReceptionService {
             }
         }
         
-        // 검색어 필터링 (환자명 또는 전화번호)
-        if (query != null && !query.isBlank()) {
-            String q = query.toLowerCase();
-            return reservations.stream()
-                    .filter(r -> r.getPatient().getName().toLowerCase().contains(q) || 
-                                r.getPatient().getPhone().contains(q))
-                    .map(StaffReservationDto::new)
-                    .collect(Collectors.toList());
-        }
-        
-        return reservations.stream().map(StaffReservationDto::new).collect(Collectors.toList());
+        return reservations.stream()
+                .filter(r -> {
+                    // 검색어 필터링 (환자명, 전화번호, 진료과, 전문의)
+                    if (query != null && !query.isBlank()) {
+                        String q = query.toLowerCase();
+                        boolean matches = r.getPatient().getName().toLowerCase().contains(q) || 
+                                          r.getPatient().getPhone().contains(q) ||
+                                          r.getDepartment().getName().toLowerCase().contains(q) ||
+                                          r.getDoctor().getStaff().getName().toLowerCase().contains(q);
+                        if (!matches) return false;
+                    }
+                    // 진료과 필터
+                    if (deptId != null && !r.getDepartment().getId().equals(deptId)) return false;
+                    // 전문의 필터
+                    if (doctorId != null && !r.getDoctor().getId().equals(doctorId)) return false;
+                    // 예약 구분 필터
+                    if (source != null && !source.isBlank() && !r.getSource().name().equals(source)) return false;
+                    
+                    return true;
+                })
+                .map(StaffReservationDto::new)
+                .collect(Collectors.toList());
     }
 
     // 상태 필터 탭 목록
-    public List<StaffStatusFilter> getStatusFilters(String selected, String date, String query) {
+    public List<StaffStatusFilter> getStatusFilters(String selected, String date, String query, Long deptId, Long doctorId, String source) {
         String s = (selected == null) ? "" : selected;
         return List.of(
-                new StaffStatusFilter("전체", "", s, date, query),
-                new StaffStatusFilter("접수 대기", "RESERVED", s, date, query),
-                new StaffStatusFilter("진료 대기", "RECEIVED", s, date, query),
-                new StaffStatusFilter("진료 완료", "COMPLETED", s, date, query),
-                new StaffStatusFilter("취소", "CANCELLED", s, date, query));
+                new StaffStatusFilter("전체", "", s, date, query, deptId, doctorId, source),
+                new StaffStatusFilter("접수 대기", "RESERVED", s, date, query, deptId, doctorId, source),
+                new StaffStatusFilter("진료 대기", "RECEIVED", s, date, query, deptId, doctorId, source),
+                new StaffStatusFilter("진료 완료", "COMPLETED", s, date, query, deptId, doctorId, source),
+                new StaffStatusFilter("취소", "CANCELLED", s, date, query, deptId, doctorId, source));
     }
 
     // 예약 상세 조회
