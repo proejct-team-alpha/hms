@@ -346,6 +346,7 @@ class AdminDepartmentServiceTest {
                 .isInstanceOf(CustomException.class)
                 .hasMessage("이미 존재하는 진료과명입니다.");
     }
+
     @Test
     @DisplayName("createDepartment stores active flag from request")
     void createDepartment_savesActiveValueFromRequest() {

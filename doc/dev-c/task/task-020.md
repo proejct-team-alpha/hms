@@ -43,17 +43,17 @@
 - [x] 없는 진료과 상태 변경 요청 차단을 보강한다.
 
 ## Task 20-6. 테스트 구조 정리 및 범위 검증
-- [ ] 두 서비스 테스트 파일을 Given-When-Then 흐름으로 읽기 쉽게 정리한다.
-- [ ] 중복되거나 의미가 겹치는 테스트 이름과 배치를 정리한다.
-- [ ] `admin.staff`, `admin.department` 범위 테스트를 실행해 통과 여부를 확인한다.
-- [ ] 필요 시 전체 테스트 실행 후 known issue 여부를 다시 정리한다.
-- [ ] `task-020` 완료 기준과 메모를 최종 상태로 갱신한다.
+- [x] 두 서비스 테스트 파일을 Given-When-Then 흐름으로 읽기 쉽게 정리한다.
+- [x] 중복되거나 의미가 겹치는 테스트 이름과 배치를 정리한다.
+- [x] `admin.staff`, `admin.department` 범위 테스트를 실행해 통과 여부를 확인한다.
+- [x] 필요 시 전체 테스트 실행 후 known issue 여부를 다시 정리한다.
+- [x] `task-020` 완료 기준과 메모를 최종 상태로 갱신한다.
 
 ## 완료 기준
-- [ ] `AdminStaffServiceTest`에 생성/수정/중복 방지/암호화/비활성화 핵심 시나리오가 보강된다.
-- [ ] `AdminDepartmentServiceTest`에 생성/수정/중복 방지/상태 전이 핵심 시나리오가 보강된다.
-- [ ] 두 테스트 파일이 기존보다 읽기 쉬운 구조로 정리된다.
-- [ ] `admin.staff`, `admin.department` 범위 테스트가 통과한다.
+- [x] `AdminStaffServiceTest`에 생성/수정/중복 방지/암호화/비활성화 핵심 시나리오가 보강된다.
+- [x] `AdminDepartmentServiceTest`에 생성/수정/중복 방지/상태 전이 핵심 시나리오가 보강된다.
+- [x] 두 테스트 파일이 기존보다 읽기 쉬운 구조로 정리된다.
+- [x] `admin.staff`, `admin.department` 범위 테스트가 통과한다.
 
 ## 추천 진행 순서
 - [x] Task 20-1 현재 서비스 테스트 구조 점검
@@ -61,7 +61,7 @@
 - [x] Task 20-3 직원 수정/비활성화 테스트 보강
 - [x] Task 20-4 진료과 생성/수정/중복 방지 테스트 보강
 - [x] Task 20-5 진료과 상태 전이 테스트 보강
-- [ ] Task 20-6 테스트 구조 정리 및 범위 검증
+- [x] Task 20-6 테스트 구조 정리 및 범위 검증
 
 ## 메모
 - [x] 이번 작업은 컨트롤러가 아니라 서비스 테스트 중심으로 진행한다.
@@ -72,4 +72,4 @@
 - [x] `AdminStaffServiceTest`의 주요 누락이던 `employeeNumber` 중복 차단과 비밀번호 미입력 시 기존 비밀번호 유지 시나리오를 보강했다.
 - [x] `AdminDepartmentServiceTest`에는 목록/상세/수정/활성화/비활성화 기본 시나리오가 있다.
 - [x] `AdminDepartmentServiceTest`의 주요 누락이던 생성 중복 방지와 활성화 시 없는 ID 차단 시나리오를 보강했다.
-- [ ] PR 직전에는 사용자 요청에 맞춰 전체 테스트 실행 여부를 다시 판단한다.
+- [x] Task 20-6에서 `admin.staff`, `admin.department` 범위 테스트와 전체 `./gradlew test`를 순차 실행해 모두 통과를 확인했다.

@@ -193,6 +193,7 @@ class AdminStaffServiceTest {
                 .isInstanceOf(CustomException.class)
                 .hasMessage("이미 사용 중인 사번입니다.");
     }
+
     @Test
     @DisplayName("직원 수정 시 이름과 부서, 비밀번호를 변경한다")
     void updateStaff_updatesNameDepartmentAndPassword() {
@@ -257,6 +258,7 @@ class AdminStaffServiceTest {
         assertThat(updatedStaff.getDepartment().getId()).isEqualTo(changedDepartment.getId());
         assertThat(updatedStaff.getPassword()).isEqualTo(originalPassword);
     }
+
     @Test
     @DisplayName("의사 직원 수정 시 전문 분야와 진료 가능 요일을 변경한다")
     void updateStaff_updatesDoctorFields() {
