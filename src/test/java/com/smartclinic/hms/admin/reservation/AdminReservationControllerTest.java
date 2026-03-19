@@ -1,6 +1,7 @@
 package com.smartclinic.hms.admin.reservation;
 
 import com.smartclinic.hms.admin.reservation.dto.AdminReservationListResponse;
+import com.smartclinic.hms.admin.reservation.dto.AdminReservationItemResponse;
 import com.smartclinic.hms.admin.reservation.dto.AdminReservationPageLinkResponse;
 import com.smartclinic.hms.admin.reservation.dto.AdminReservationStatusOptionResponse;
 import com.smartclinic.hms.common.exception.CustomException;
@@ -153,6 +154,59 @@ class AdminReservationControllerTest {
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(">접수</a>")));
+
+        then(adminReservationService).should().getReservationList(1, 10, "RECEIVED");
+    }
+
+    @Test
+    @DisplayName("예약 목록은 접수 상태 예약 row를 접수 배지로 렌더링한다")
+    void list_rendersReceivedReservationRowWithReceptionBadge() throws Exception {
+        // given
+        AdminReservationItemResponse receivedItem = new AdminReservationItemResponse(
+                12L,
+                "RES-20260319-012",
+                "2026-03-19",
+                "10:30",
+                "홍길동",
+                "010-1234-5678",
+                "내과",
+                "김의사",
+                "RECEIVED",
+                "접수",
+                true,
+                false,
+                true,
+                false,
+                false
+        );
+        AdminReservationListResponse viewModel = new AdminReservationListResponse(
+                List.of(receivedItem),
+                List.of(
+                        new AdminReservationStatusOptionResponse("RECEIVED", "접수", "/admin/reservation/list?page=1&size=10&status=RECEIVED", true)
+                ),
+                List.of(new AdminReservationPageLinkResponse(1, "/admin/reservation/list?page=1&size=10&status=RECEIVED", true)),
+                "RECEIVED",
+                1,
+                1,
+                10,
+                1,
+                false,
+                false,
+                "",
+                ""
+        );
+        given(adminReservationService.getReservationList(1, 10, "RECEIVED")).willReturn(viewModel);
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/reservation/list")
+                        .param("status", "RECEIVED")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("RES-20260319-012")))
+                .andExpect(content().string(containsString("홍길동")))
+                .andExpect(content().string(containsString(">접수</span>")));
 
         then(adminReservationService).should().getReservationList(1, 10, "RECEIVED");
     }
