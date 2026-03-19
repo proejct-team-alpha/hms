@@ -1,6 +1,7 @@
 package com.smartclinic.hms.admin.staff.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
@@ -25,6 +26,7 @@ public record CreateAdminStaffRequest(
         @NotBlank(message = "역할은 필수입니다.")
         String role,
 
+        @NotNull(message = "부서는 필수입니다.")
         Long departmentId,
 
         boolean active,

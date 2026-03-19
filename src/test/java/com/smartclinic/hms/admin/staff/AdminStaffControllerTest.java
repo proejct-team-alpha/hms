@@ -8,11 +8,10 @@ import com.smartclinic.hms.admin.staff.dto.AdminStaffItemResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffListResponse;
 import com.smartclinic.hms.admin.staff.dto.AdminStaffPageLinkResponse;
 import com.smartclinic.hms.admin.staff.dto.UpdateAdminStaffRequest;
-import com.smartclinic.hms.common.exception.CustomException;
+import com.smartclinic.hms.common.AdminControllerTestSecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.smartclinic.hms.common.AdminControllerTestSecurityConfig;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -21,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -28,6 +28,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -107,7 +108,7 @@ class AdminStaffControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/staff-list"))
                 .andExpect(request().attribute("model", response))
-                .andExpect(request().attribute("pageTitle", org.hamcrest.Matchers.notNullValue()));
+                .andExpect(request().attribute("pageTitle", notNullValue()));
     }
 
     @Test
@@ -137,20 +138,20 @@ class AdminStaffControllerTest {
     }
 
     @Test
-    @DisplayName("직원 등록 검증 실패 시 등록 폼을 다시 렌더링한다")
+    @DisplayName("직원 등록 검증 실패 시 필드 에러와 입력값을 유지한 채 폼을 다시 렌더링한다")
     void create_validationFailure_rendersStaffFormView() throws Exception {
         // given
-        AdminStaffFormResponse response = createDoctorCreateFormResponse();
+        AdminStaffFormResponse response = createDoctorCreateFormResponse("doctor-new", "신규의사", "D-NEW-001", null);
         given(adminStaffService.getInputCheckMessage()).willReturn(INPUT_CHECK_MESSAGE);
         given(adminStaffService.getCreateForm(any())).willReturn(response);
 
         // when
         // then
         mockMvc.perform(post("/admin/staff/create")
-                        .param("username", "")
-                        .param("password", "123")
-                        .param("name", "")
-                        .param("employeeNumber", "")
+                        .param("username", "doctor-new")
+                        .param("password", "password123")
+                        .param("name", "신규의사")
+                        .param("employeeNumber", "D-NEW-001")
                         .param("role", "DOCTOR")
                         .param("active", "true")
                         .param("specialty", "가정의학")
@@ -160,7 +161,10 @@ class AdminStaffControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/staff-form"))
                 .andExpect(request().attribute("errorMessage", INPUT_CHECK_MESSAGE))
-                .andExpect(request().attribute("model", response));
+                .andExpect(request().attribute("departmentIdError", notNullValue()))
+                .andExpect(request().attribute("model", response))
+                .andExpect(content().string(containsString("doctor-new")))
+                .andExpect(content().string(containsString("D-NEW-001")));
     }
 
     @Test
@@ -213,7 +217,7 @@ class AdminStaffControllerTest {
                         "STAFF",
                         "직원",
                         "bg-purple-100 text-purple-800",
-                        "내과",
+                        "원무과",
                         true,
                         "재직",
                         "bg-green-100 text-green-800",
@@ -255,25 +259,29 @@ class AdminStaffControllerTest {
                 false,
                 "",
                 List.of(new AdminStaffFormOptionResponse("STAFF", "직원", true)),
-                List.of(new AdminStaffDepartmentOptionResponse(1L, "내과", false)),
+                List.of(new AdminStaffDepartmentOptionResponse(1L, "원무과", false)),
                 List.of(new AdminStaffFormOptionResponse("true", "재직", true)),
                 List.of()
         );
     }
 
-    private AdminStaffFormResponse createDoctorCreateFormResponse() {
+    private AdminStaffFormResponse createDoctorCreateFormResponse(
+            String username,
+            String name,
+            String employeeNumber,
+            Long selectedDepartmentId) {
         return new AdminStaffFormResponse(
                 "직원 등록",
                 "/admin/staff/create",
                 "등록하기",
                 false,
                 null,
-                "",
-                "",
-                "",
+                username,
+                name,
+                employeeNumber,
                 "DOCTOR",
                 "의사",
-                null,
+                selectedDepartmentId,
                 true,
                 true,
                 "가정의학",
