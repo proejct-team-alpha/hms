@@ -208,7 +208,7 @@ class AdminReservationControllerTest {
                 .andExpect(content().string(containsString("RES-20260319-012")))
                 .andExpect(content().string(containsString("홍길동")))
                 .andExpect(content().string(containsString(">접수</span>")))
-                .andExpect(content().string(containsString("접수 취소")))
+                .andExpect(content().string(containsString(">취소</button>")))
                 .andExpect(content().string(containsString("접수를 취소하시겠습니까?")));
 
         then(adminReservationService).should().getReservationList(1, 10, "RECEIVED");
@@ -263,7 +263,7 @@ class AdminReservationControllerTest {
                 .andExpect(content().string(containsString("RES-20260319-013")))
                 .andExpect(content().string(containsString("김예약")))
                 .andExpect(content().string(containsString(">예약</span>")))
-                .andExpect(content().string(containsString("예약 취소")))
+                .andExpect(content().string(containsString(">취소</button>")))
                 .andExpect(content().string(containsString("예약을 취소하시겠습니까?")));
 
         then(adminReservationService).should().getReservationList(1, 10, "RESERVED");
