@@ -17,32 +17,20 @@
 
 ---
 
-## 작업 목록 (주석)
+## 작업 목록
 
-```
-// [1] llm/dto/SymptomRequest.java 신규
-//     - @NotBlank symptomText 필드
-//
-// [2] llm/dto/SymptomResponse.java 신규
-//     - String dept, doctor, time 필드
-//
-// [3] llm/service/SymptomAnalysisService.java 신규
-//     - claudeRestClient 주입 (@RequiredArgsConstructor)
-//     - @Value("${claude.api.model}") String model
-//     - analyzeSymptom(String symptomText) : SymptomResponse
-//       → Claude POST /v1/messages 호출
-//       → 응답 content[0].text 에서 "진료과:", "전문의:", "시간:" 파싱
-//       → 파싱 실패 시 기본값 반환 (내과 / 의사이영희 / 09:00)
-//
-// [4] llm/controller/SymptomController.java 신규
-//     - @RestController, @RequestMapping("/llm/symptom")
-//     - POST /llm/symptom/analyze : @RequestBody SymptomRequest → SymptomResponse
-//
-// [5] symptom-reservation.mustache 수정
-//     - <head>에 CSRF 메타 태그 추가
-//     - callSymptomApi 더미(setTimeout) → 실제 fetch('/llm/symptom/analyze') 로 교체
-//     - X-CSRF-TOKEN 헤더 포함
-```
+1. `llm/dto/SymptomRequest.java` 신규 — `symptomText` 필드
+2. `llm/dto/SymptomResponse.java` 신규 — `dept`, `doctor`, `time` 필드
+3. `llm/service/SymptomAnalysisService.java` 신규
+   - `claudeRestClient` 주입, `@Value("${claude.api.model}")` String model
+   - `analyzeSymptom(String symptomText)` → Claude `POST /v1/messages` 호출
+   - 응답 `content[0].text`에서 `"진료과:"`, `"전문의:"`, `"시간:"` 정규식 파싱
+   - 파싱 실패 시 기본값 반환 (`내과 / 의사이영희 / 09:00`)
+4. `llm/controller/SymptomController.java` 신규 — `POST /llm/symptom/analyze`, `@RequestBody SymptomRequest → SymptomResponse`
+5. `symptom-reservation.mustache` 수정
+   - `<head>`에 CSRF 메타 태그(`_csrf.token`, `_csrf.headerName`) 추가
+   - `callSymptomApi` 더미(setTimeout) → 실제 `fetch('/llm/symptom/analyze')` 교체
+   - `X-CSRF-TOKEN` 헤더 포함, `SYMPTOM_MAP` 로컬 매핑 제거
 
 ---
 

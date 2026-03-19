@@ -8,27 +8,19 @@
 
 ## 작업 목록
 
-```
-// [1] ChatControllerTest 신규
-//     MockBean: ChatService, ChatbotHistoryRepository, StaffRepository
-//     - POST /llm/chatbot/query — 비인증 리다이렉트
-//     - POST /llm/chatbot/query — DOCTOR 인증 200 (Mono<String> asyncDispatch)
-//     - POST /llm/chatbot/query/stream — DOCTOR 인증 200 (Flux SSE)
-//     - GET /llm/chatbot/history/{staffId} — DOCTOR 인증 200
-//
-// [2] MedicalControllerTest 신규
-//     MockBean: MedicalService, MedicalHistoryRepository, DoctorService, LlmResponseParser, StaffRepository
-//     - POST /llm/medical/query — 비인증 200 (permitAll, Mono<String> asyncDispatch)
-//     - POST /llm/medical/query/consult — 비인증 200 (Mono<MedicalLlmResponse> asyncDispatch)
-//     - GET /llm/medical/history/{staffId} — 인증 200
-//
-// [3] SymptomControllerTest 신규
-//     MockBean: SymptomAnalysisService
-//     - POST /llm/symptom/analyze — 비인증 200 (permitAll)
-//     - 응답 구조 확인 — dept, doctor, time 필드
-//
-// [4] ./gradlew test 전체 통과 확인
-```
+1. `ChatControllerTest` 신규 — `@MockitoBean`: `ChatService`, `ChatbotHistoryRepository`, `StaffRepository`
+   - `POST /llm/chatbot/query` 비인증 리다이렉트
+   - `POST /llm/chatbot/query` DOCTOR 인증 200 (`Mono<String>` asyncDispatch 패턴)
+   - `POST /llm/chatbot/query/stream` DOCTOR 인증 200 (Flux SSE)
+   - `GET /llm/chatbot/history/{staffId}` DOCTOR 인증 200
+2. `MedicalControllerTest` 신규 — `@MockitoBean`: `MedicalService`, `MedicalHistoryRepository`, `DoctorService`, `LlmResponseParser`, `StaffRepository`
+   - `POST /llm/medical/query` 비인증 200 (permitAll, asyncDispatch)
+   - `POST /llm/medical/query/consult` 비인증 200 (asyncDispatch)
+   - `GET /llm/medical/history/{staffId}` 인증 200
+3. `SymptomControllerTest` 신규 — `@MockitoBean`: `SymptomAnalysisService`
+   - `POST /llm/symptom/analyze` 비인증 200 (permitAll)
+   - 응답 구조 확인 — `dept`, `doctor`, `time` 필드
+4. `./gradlew test` — 전체 통과 확인
 
 ---
 
