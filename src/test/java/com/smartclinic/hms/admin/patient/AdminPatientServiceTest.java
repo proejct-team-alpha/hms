@@ -6,6 +6,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.Department;
 import com.smartclinic.hms.domain.Doctor;
+import com.smartclinic.hms.domain.Patient;
+import com.smartclinic.hms.domain.Reservation;
+import com.smartclinic.hms.domain.ReservationSource;
+import com.smartclinic.hms.domain.ReservationStatus;
+import com.smartclinic.hms.domain.Staff;
+import com.smartclinic.hms.domain.StaffRole;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,13 +22,6 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import com.smartclinic.hms.domain.Patient;
-import com.smartclinic.hms.domain.Reservation;
-import com.smartclinic.hms.domain.ReservationSource;
-import com.smartclinic.hms.domain.ReservationStatus;
-import com.smartclinic.hms.domain.Staff;
-import com.smartclinic.hms.domain.StaffRole;
 
 @DataJpaTest
 @Import(AdminPatientService.class)
@@ -75,6 +74,24 @@ class AdminPatientServiceTest {
         assertThat(result.hasNext()).isTrue();
         assertThat(result.patients()).hasSize(20);
         assertThat(result.patients().getFirst().name()).isEqualTo("patient-21");
+    }
+
+    @Test
+    @DisplayName("get patient list returns empty result when no patient matches")
+    void getPatientList_returnsEmptyResultWhenNoPatientMatches() {
+        // given
+        persistPatient("김철수", "010-1234-5678", LocalDateTime.of(2026, 3, 18, 10, 0));
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        var result = adminPatientService.getPatientList(1, 20, "박", "0109999");
+
+        // then
+        assertThat(result.totalCount()).isZero();
+        assertThat(result.patients()).isEmpty();
+        assertThat(result.hasPages()).isFalse();
+        assertThat(result.pageLinks()).isEmpty();
     }
 
     @Test

@@ -46,7 +46,7 @@ class AdminPatientControllerTest {
     @DisplayName("list uses default paging and renders view")
     void list_usesDefaultPagingAndRendersView() throws Exception {
         // given
-        AdminPatientListResponse response = createListResponse();
+        AdminPatientListResponse response = createEmptyListResponse();
         given(adminPatientService.getPatientList(1, 20, null, null)).willReturn(response);
 
         // when
@@ -66,7 +66,7 @@ class AdminPatientControllerTest {
     @DisplayName("list passes request params to service")
     void list_passesRequestParamsToService() throws Exception {
         // given
-        AdminPatientListResponse response = createListResponse();
+        AdminPatientListResponse response = createEmptyListResponse();
         given(adminPatientService.getPatientList(2, 20, "kim", "0101234")).willReturn(response);
 
         // when
@@ -86,8 +86,8 @@ class AdminPatientControllerTest {
     }
 
     @Test
-    @DisplayName("list renders patient row and empty state copy")
-    void list_rendersPatientRowAndEmptyStateCopy() throws Exception {
+    @DisplayName("list renders patient row")
+    void list_rendersPatientRow() throws Exception {
         // given
         AdminPatientListResponse response = new AdminPatientListResponse(
                 List.of(new AdminPatientSummary(3L, "김철수", "010-1234-5678", "2026-03-19", "/admin/patient/detail?patientId=3")),
@@ -116,7 +116,24 @@ class AdminPatientControllerTest {
                 .andExpect(content().string(containsString("환자 목록")))
                 .andExpect(content().string(containsString("김철수")))
                 .andExpect(content().string(containsString("010-1234-5678")))
-                .andExpect(content().string(containsString("2026-03-19")));
+                .andExpect(content().string(containsString("2026-03-19")))
+                .andExpect(content().string(containsString("상세보기")));
+    }
+
+    @Test
+    @DisplayName("list renders empty state when no patients found")
+    void list_rendersEmptyStateWhenNoPatientsFound() throws Exception {
+        // given
+        AdminPatientListResponse response = createEmptyListResponse();
+        given(adminPatientService.getPatientList(1, 20, null, null)).willReturn(response);
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/patient/list")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("조회된 환자가 없습니다.")));
     }
 
     @Test
@@ -180,7 +197,7 @@ class AdminPatientControllerTest {
                 .andExpect(request().attribute("errorMessage", "환자를 찾을 수 없습니다."));
     }
 
-    private AdminPatientListResponse createListResponse() {
+    private AdminPatientListResponse createEmptyListResponse() {
         return new AdminPatientListResponse(
                 List.of(),
                 List.of(),

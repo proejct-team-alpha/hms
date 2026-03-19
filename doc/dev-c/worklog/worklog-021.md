@@ -24,9 +24,13 @@
 - `report-20260319-1412-task-21-4.md`
 - `report-20260319-1415-task-21-5.md`
 - `report-20260319-1419-task-21-6.md`
+- `report-20260319-1433-reservation-cancel-message-refactor.md`
+- `report-20260319-1442-reservation-cancel-copy-refactor.md`
+- `report-20260319-1446-reservation-cancel-button-width-refactor.md`
 
 ## 변경 파일
 
+- `src/main/java/com/smartclinic/hms/admin/reservation/AdminReservationService.java`
 - `src/main/java/com/smartclinic/hms/admin/reservation/AdminReservationController.java`
 - `src/main/resources/templates/admin/reservation-list.mustache`
 - `src/test/java/com/smartclinic/hms/admin/reservation/AdminReservationControllerTest.java`
@@ -59,6 +63,19 @@
 - 컨트롤러 테스트에 `RECEIVED` 상태 row가 실제 HTML에서 `접수` 배지로 렌더링되는지 확인하는 검증을 추가했다.
 - 서비스 라벨, 필터 렌더링, 취소 후 복귀, 템플릿 문구를 묶어 `admin.reservation` 범위 테스트를 다시 통과시켰다.
 - 마지막으로 `workflow-021.md`, `task-021.md`를 완료 상태로 갱신하고, 후속 분리 기준과 PR 리뷰 포인트를 문서에 정리했다.
+
+### 5. 취소 성공 메시지와 확인 문구 정리
+
+- `AdminReservationService.cancelReservation()`은 이제 취소 직전 원래 상태를 기준으로 성공 메시지를 반환한다.
+- `RESERVED` 취소는 `예약이 취소되었습니다.`, `RECEIVED` 취소는 `접수가 취소되었습니다.`로 분기해 SSR 성공 메시지 표현을 더 정확하게 맞췄다.
+- `AdminReservationController`는 메시지를 직접 만들지 않고, 서비스가 반환한 문구를 flash attribute로 전달만 하도록 얇게 정리했다.
+- 템플릿에서는 `reserved`, `received` 플래그를 활용해 확인 팝업 문구를 `예약을 취소하시겠습니까?`와 `접수를 취소하시겠습니까?`로 나눴다.
+
+### 6. 취소 버튼 텍스트 통일과 화면 안정성 보강
+
+- 한 단계에서는 row 상태 기준으로 `예약 취소` / `접수 취소` 버튼을 나눴다가, 최종적으로는 액션 컬럼 너비 흔들림을 줄이기 위해 버튼 텍스트를 `취소`로 다시 통일했다.
+- 대신 확인 팝업 문구와 성공 메시지는 상태별 분기를 유지해, 레이아웃 안정성과 의미 전달을 함께 확보했다.
+- 관련 컨트롤러 테스트 기대값도 버튼 텍스트는 `취소`, 팝업 문구는 상태별 분기 기준으로 갱신했다.
 
 ## 검증 결과
 
