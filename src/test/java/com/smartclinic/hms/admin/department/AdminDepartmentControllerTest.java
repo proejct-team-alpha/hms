@@ -1,8 +1,12 @@
 package com.smartclinic.hms.admin.department;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -14,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
+import com.smartclinic.hms.common.util.SsrValidationViewSupport;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.Department;
 import java.util.List;
@@ -170,6 +175,7 @@ class AdminDepartmentControllerTest {
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("admin/department-detail"))
                                 .andExpect(request().attribute("model", response))
+                                .andExpect(request().attribute("editName", "Dept"))
                                 .andExpect(content().string(containsString("Dept")))
                                 .andExpect(content().string(containsString("/admin/department/update")))
                                 .andExpect(content().string(containsString("/admin/department/deactivate")));
@@ -214,11 +220,21 @@ class AdminDepartmentControllerTest {
         }
 
         @Test
-        @DisplayName("update redirects back to detail on validation failure")
-        void update_redirectsBackToDetailWhenValidationFails() throws Exception {
+        @DisplayName("update validation failure renders detail view with field error")
+        void update_validationFailure_rendersDetailView() throws Exception {
                 // given
-                given(adminDepartmentService.updateDepartmentName(5L, "   "))
-                                .willThrow(CustomException.badRequest("VALIDATION_ERROR", "invalid name"));
+                AdminDepartmentDetailResponse response = new AdminDepartmentDetailResponse(
+                                5L,
+                                "기존 진료과",
+                                true,
+                                "ACTIVE",
+                                "px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700",
+                                false,
+                                true,
+                                "/admin/department/update",
+                                "/admin/department/activate",
+                                "/admin/department/deactivate");
+                given(adminDepartmentService.getDepartmentDetail(5L)).willReturn(response);
 
                 // when
                 // then
@@ -227,9 +243,34 @@ class AdminDepartmentControllerTest {
                                 .param("name", "   ")
                                 .with(user("admin").roles("ADMIN"))
                                 .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/department-detail"))
+                .andExpect(request().attribute("model", response))
+                .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
+                .andExpect(request().attribute("editName", "   "))
+                .andExpect(request().attribute("nameError", "진료과명은 필수입니다."));
+
+                then(adminDepartmentService).should().getDepartmentDetail(5L);
+                then(adminDepartmentService).should(never()).updateDepartmentName(any(), anyString());
+        }
+
+        @Test
+        @DisplayName("update redirects back to detail when service validation fails")
+        void update_redirectsBackToDetailWhenServiceValidationFails() throws Exception {
+                // given
+                given(adminDepartmentService.updateDepartmentName(5L, "Dept"))
+                                .willThrow(CustomException.conflict("DUPLICATE_DEPARTMENT_NAME", "duplicate name"));
+
+                // when
+                // then
+                mockMvc.perform(post("/admin/department/update")
+                                .param("departmentId", "5")
+                                .param("name", "Dept")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
                                 .andExpect(status().is3xxRedirection())
                                 .andExpect(redirectedUrl("/admin/department/detail?departmentId=5"))
-                                .andExpect(flash().attribute("errorMessage", "invalid name"));
+                                .andExpect(flash().attribute("errorMessage", "duplicate name"));
         }
 
         @Test
@@ -376,6 +417,59 @@ class AdminDepartmentControllerTest {
                                 .andExpect(redirectedUrl("/admin/department/list"));
 
                 then(adminDepartmentService).should().createDepartment("Surgery", false);
+        }
+
+        @Test
+        @DisplayName("create validation failure renders list view with error and keeps input")
+        void create_validationFailure_rendersListView() throws Exception {
+                // given
+                AdminDepartmentListResponse response = createListResponse();
+                given(adminDepartmentService.getDepartmentList(1, 10)).willReturn(response);
+
+                // when
+                // then
+                mockMvc.perform(post("/admin/department/create")
+                                .param("name", " ")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/department-list"))
+                .andExpect(request().attribute("model", response))
+                .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
+                .andExpect(request().attribute("nameError", "진료과명은 필수입니다."))
+                .andExpect(request().attribute("createName", " "))
+                .andExpect(request().attribute("createActive", false))
+                .andExpect(request().attribute("openCreateModal", true));
+
+                then(adminDepartmentService).should().getDepartmentList(1, 10);
+                then(adminDepartmentService).should(never()).createDepartment(anyString(), anyBoolean());
+        }
+
+        @Test
+        @DisplayName("create validation failure handles empty input as field error")
+        void create_validationFailure_withEmptyName_rendersListView() throws Exception {
+                // given
+                AdminDepartmentListResponse response = createListResponse();
+                given(adminDepartmentService.getDepartmentList(1, 10)).willReturn(response);
+
+                // when
+                // then
+                mockMvc.perform(post("/admin/department/create")
+                                .param("name", "")
+                                .param("active", "true")
+                                .with(user("admin").roles("ADMIN"))
+                                .with(csrf()))
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("admin/department-list"))
+                                .andExpect(request().attribute("model", response))
+                                .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
+                                .andExpect(request().attribute("nameError", "진료과명은 필수입니다."))
+                                .andExpect(request().attribute("createName", ""))
+                                .andExpect(request().attribute("createActive", true))
+                                .andExpect(request().attribute("openCreateModal", true));
+
+                then(adminDepartmentService).should().getDepartmentList(1, 10);
+                then(adminDepartmentService).should(never()).createDepartment(anyString(), anyBoolean());
         }
 
         @Test

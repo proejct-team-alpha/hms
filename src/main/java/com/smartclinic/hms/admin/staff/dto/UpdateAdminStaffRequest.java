@@ -14,6 +14,7 @@ public record UpdateAdminStaffRequest(
         @Size(max = 50, message = "이름은 50자 이하로 입력해주세요.")
         String name,
 
+        @NotNull(message = "부서는 필수입니다.")
         Long departmentId,
 
         @Size(max = 100, message = "비밀번호는 100자 이하로 입력해주세요.")

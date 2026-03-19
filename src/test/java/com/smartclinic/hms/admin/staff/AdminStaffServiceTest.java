@@ -167,6 +167,34 @@ class AdminStaffServiceTest {
     }
 
     @Test
+    @DisplayName("중복 사번으로 직원 등록 시 예외가 발생한다")
+    void createStaff_duplicateEmployeeNumber_throwsException() {
+        // given
+        Department department = persistDepartment("정형외과");
+        persistStaff("existing-user", "S-001", "기존직원", StaffRole.STAFF, department, true);
+        entityManager.flush();
+        entityManager.clear();
+
+        CreateAdminStaffRequest request = new CreateAdminStaffRequest(
+                "new-user",
+                "password123",
+                "신규직원",
+                "S-001",
+                "STAFF",
+                department.getId(),
+                true,
+                null,
+                List.of()
+        );
+
+        // when
+        // then
+        assertThatThrownBy(() -> adminStaffService.createStaff(request))
+                .isInstanceOf(CustomException.class)
+                .hasMessage("이미 사용 중인 사번입니다.");
+    }
+
+    @Test
     @DisplayName("직원 수정 시 이름과 부서, 비밀번호를 변경한다")
     void updateStaff_updatesNameDepartmentAndPassword() {
         // given
@@ -196,6 +224,39 @@ class AdminStaffServiceTest {
         assertThat(updatedStaff.getName()).isEqualTo("수정직원");
         assertThat(updatedStaff.getDepartment().getId()).isEqualTo(changedDepartment.getId());
         assertThat(passwordEncoder.matches("newpassword123", updatedStaff.getPassword())).isTrue();
+    }
+
+    @Test
+    @DisplayName("update staff keeps existing password when password input is blank")
+    void updateStaff_blankPassword_keepsExistingPassword() {
+        // given
+        Department originalDepartment = persistDepartment("general-admin");
+        Department changedDepartment = persistDepartment("ops-admin");
+        Staff staff = persistStaff("staff-keep-password", "S-011", "existing-staff", StaffRole.STAFF, originalDepartment, true);
+        String originalPassword = staff.getPassword();
+        entityManager.flush();
+        entityManager.clear();
+
+        UpdateAdminStaffRequest request = new UpdateAdminStaffRequest(
+                staff.getId(),
+                "updated-staff",
+                changedDepartment.getId(),
+                "",
+                null,
+                List.of()
+        );
+
+        // when
+        adminStaffService.updateStaff(request);
+        entityManager.flush();
+        entityManager.clear();
+
+        Staff updatedStaff = entityManager.find(Staff.class, staff.getId());
+
+        // then
+        assertThat(updatedStaff.getName()).isEqualTo("updated-staff");
+        assertThat(updatedStaff.getDepartment().getId()).isEqualTo(changedDepartment.getId());
+        assertThat(updatedStaff.getPassword()).isEqualTo(originalPassword);
     }
 
     @Test

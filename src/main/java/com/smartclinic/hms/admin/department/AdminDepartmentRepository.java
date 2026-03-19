@@ -17,5 +17,7 @@ public interface AdminDepartmentRepository extends JpaRepository<Department, Lon
 
     Optional<Department> findByIdAndActiveTrue(Long id);
 
+    boolean existsByNameIgnoreCase(String name);
+
     boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);
 }
