@@ -1,6 +1,9 @@
 package com.smartclinic.hms.admin.patient;
 
+import com.smartclinic.hms.domain.ReservationStatus;
 import com.smartclinic.hms.domain.Patient;
+import java.time.LocalDate;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,4 +23,29 @@ public interface AdminPatientRepository extends JpaRepository<Patient, Long> {
             @Param("nameKeyword") String nameKeyword,
             @Param("contactKeyword") String contactKeyword,
             Pageable pageable);
+
+    @Query("""
+            SELECT r.reservationNumber AS reservationNumber,
+                   r.reservationDate AS reservationDate,
+                   r.timeSlot AS timeSlot,
+                   department.name AS departmentName,
+                   staff.name AS doctorName,
+                   r.status AS status
+            FROM Reservation r
+            JOIN r.department department
+            JOIN r.doctor doctor
+            JOIN doctor.staff staff
+            WHERE r.patient.id = :patientId
+            ORDER BY r.reservationDate DESC, r.timeSlot DESC, r.id DESC
+            """)
+    List<AdminPatientReservationHistoryProjection> findReservationHistoriesByPatientId(@Param("patientId") Long patientId);
+
+    interface AdminPatientReservationHistoryProjection {
+        String getReservationNumber();
+        LocalDate getReservationDate();
+        String getTimeSlot();
+        String getDepartmentName();
+        String getDoctorName();
+        ReservationStatus getStatus();
+    }
 }

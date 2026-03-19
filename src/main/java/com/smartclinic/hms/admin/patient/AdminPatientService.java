@@ -1,9 +1,14 @@
 package com.smartclinic.hms.admin.patient;
 
+import com.smartclinic.hms.admin.patient.dto.AdminPatientDetailResponse;
 import com.smartclinic.hms.admin.patient.dto.AdminPatientListResponse;
 import com.smartclinic.hms.admin.patient.dto.AdminPatientPageLinkResponse;
+import com.smartclinic.hms.admin.patient.dto.AdminPatientReservationHistoryItemResponse;
+import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.Patient;
+import com.smartclinic.hms.domain.ReservationStatus;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,6 +24,15 @@ public class AdminPatientService {
 
     private static final int DEFAULT_PAGE = 1;
     private static final int DEFAULT_SIZE = 20;
+    private static final String PATIENT_NOT_FOUND_MESSAGE = "환자를 찾을 수 없습니다.";
+    private static final String DEFAULT_TEXT = "-";
+    private static final Map<ReservationStatus, String> STATUS_LABELS = Map.of(
+            ReservationStatus.RESERVED, "예약",
+            ReservationStatus.RECEIVED, "접수",
+            ReservationStatus.IN_TREATMENT, "진료 중",
+            ReservationStatus.COMPLETED, "완료",
+            ReservationStatus.CANCELLED, "취소"
+    );
 
     private final AdminPatientRepository adminPatientRepository;
 
@@ -55,12 +69,44 @@ public class AdminPatientService {
         );
     }
 
+    public AdminPatientDetailResponse getPatientDetail(Long patientId) {
+        Patient patient = adminPatientRepository.findById(patientId)
+                .orElseThrow(() -> CustomException.notFound(PATIENT_NOT_FOUND_MESSAGE));
+
+        List<AdminPatientReservationHistoryItemResponse> reservationHistories = adminPatientRepository
+                .findReservationHistoriesByPatientId(patientId)
+                .stream()
+                .map(history -> new AdminPatientReservationHistoryItemResponse(
+                        history.getReservationNumber(),
+                        history.getReservationDate().toString(),
+                        history.getTimeSlot(),
+                        history.getDepartmentName(),
+                        history.getDoctorName(),
+                        STATUS_LABELS.getOrDefault(history.getStatus(), history.getStatus().name())
+                ))
+                .toList();
+
+        return new AdminPatientDetailResponse(
+                patient.getId(),
+                patient.getName(),
+                patient.getPhone(),
+                defaultText(patient.getEmail()),
+                defaultText(patient.getAddress()),
+                defaultText(patient.getNote()),
+                reservationHistories
+        );
+    }
+
     private String normalizeKeyword(String keyword) {
         return keyword == null ? "" : keyword.trim();
     }
 
     private String normalizeContact(String contactKeyword) {
         return normalizeKeyword(contactKeyword).replace("-", "");
+    }
+
+    private String defaultText(String value) {
+        return value == null || value.isBlank() ? DEFAULT_TEXT : value.trim();
     }
 
     private List<AdminPatientPageLinkResponse> buildPageLinks(

@@ -2,7 +2,9 @@ package com.smartclinic.hms.admin.patient;
 
 import com.smartclinic.hms.admin.patient.dto.AdminPatientDetailResponse;
 import com.smartclinic.hms.admin.patient.dto.AdminPatientListResponse;
+import com.smartclinic.hms.common.exception.CustomException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,15 +29,32 @@ public class AdminPatientController {
         return renderListPage(req, result);
     }
 
+    @GetMapping("/detail")
+    public String detail(
+            @RequestParam("patientId") Long patientId,
+            HttpServletRequest req,
+            HttpServletResponse response) {
+        try {
+            AdminPatientDetailResponse result = adminPatientService.getPatientDetail(patientId);
+            return renderDetailPage(req, result);
+        } catch (CustomException ex) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            req.setAttribute("pageTitle", "페이지를 찾을 수 없습니다");
+            req.setAttribute("errorMessage", ex.getMessage());
+            req.setAttribute("path", req.getRequestURI());
+            return "error/404";
+        }
+    }
+
     String renderListPage(HttpServletRequest req, AdminPatientListResponse res) {
         req.setAttribute("model", res);
-        req.setAttribute("pageTitle", "\uD658\uC790 \uAD00\uB9AC");
+        req.setAttribute("pageTitle", "환자 관리");
         return "admin/patient-list";
     }
 
     String renderDetailPage(HttpServletRequest req, AdminPatientDetailResponse res) {
         req.setAttribute("model", res);
-        req.setAttribute("pageTitle", "\uD658\uC790 \uC0C1\uC138");
+        req.setAttribute("pageTitle", "환자 상세");
         return "admin/patient-detail";
     }
 }

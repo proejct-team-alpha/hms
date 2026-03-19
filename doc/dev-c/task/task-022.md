@@ -29,11 +29,11 @@
 - [x] 결과 요약(총 건수, 현재 검색 조건)을 목록 화면에 반영한다.
 
 ## Task 22-4. 환자 상세 + 전체 예약 이력 구현
-- [ ] `GET /admin/patient/detail?patientId={id}`를 추가한다.
-- [ ] 환자 기본 정보(이름, 연락처, 이메일, 주소, 메모)를 표시한다.
-- [ ] 해당 환자의 전체 예약 이력을 함께 조회한다.
-- [ ] 예약 이력에는 예약번호, 날짜, 시간, 진료과, 의사, 상태를 우선 검토한다.
-- [ ] 없는 `patientId` 상세 요청은 404 또는 프로젝트 규칙에 맞는 에러 화면으로 처리한다.
+- [x] `GET /admin/patient/detail?patientId={id}`를 추가한다.
+- [x] 환자 기본 정보(이름, 연락처, 이메일, 주소, 메모)를 표시한다.
+- [x] 해당 환자의 전체 예약 이력을 함께 조회한다.
+- [x] 예약 이력에는 예약번호, 날짜, 시간, 진료과, 의사, 상태를 우선 검토한다.
+- [x] 없는 `patientId` 상세 요청은 404 또는 프로젝트 규칙에 맞는 에러 화면으로 처리한다.
 
 ## Task 22-5. 목록/상세 Mustache 화면 구현
 - [ ] `patient-list.mustache`를 검색 중심 인덱스 화면으로 구현한다.
@@ -61,7 +61,7 @@
 - [x] Task 22-1 현재 환자/예약 조회 구조 점검
 - [x] Task 22-2 환자 목록 응답 구조와 서비스 설계
 - [x] Task 22-3 환자 목록 검색 + 페이징 구현
-- [ ] Task 22-4 환자 상세 + 전체 예약 이력 구현
+- [x] Task 22-4 환자 상세 + 전체 예약 이력 구현
 - [ ] Task 22-5 목록/상세 Mustache 화면 구현
 - [ ] Task 22-6 테스트 보강 및 문서 갱신
 
@@ -87,3 +87,8 @@
 - [x] `GET /admin/patient/list`를 실제로 추가했고, 기본 size=20과 `nameKeyword`/`contactKeyword` 검색 파라미터를 받도록 연결했다.
 - [x] `patient-list.mustache`를 기본 동작 가능한 검색형 목록 화면으로 추가해 페이지 제목, 설명 문구, 검색 영역, 결과 요약, 목록 테이블, 빈 상태, 페이지네이션을 우선 반영했다.
 - [x] `AdminPatientControllerTest`, `AdminPatientServiceTest`를 추가해 기본 페이징, 요청 파라미터 전달, 이름/연락처 검색, 최신 등록순 정렬을 검증했다.
+- [x] `GET /admin/patient/detail`를 추가했고, `AdminPatientService.getPatientDetail(...)`에서 환자 기본 정보와 예약 이력을 함께 반환하도록 구현했다.
+- [x] 예약 이력은 `Reservation -> Doctor -> Staff`, `Reservation -> Department`를 조회해 예약번호/날짜/시간/진료과/의사/상태 문구를 표시하는 구조로 정리했다.
+- [x] 없는 `patientId` 상세 요청은 기존 관리자 SSR 상세 패턴에 맞춰 404 상태와 `error/404` 화면으로 처리하도록 연결했다.
+- [x] `patient-detail.mustache`를 추가해 환자 기본 정보 카드와 예약 이력 테이블을 우선 구현했다.
+- [x] `AdminPatientControllerTest`, `AdminPatientServiceTest`에 상세 조회/없는 patientId/예약 이력 매핑 시나리오를 추가해 `admin.patient` 범위 테스트 통과를 확인했다.

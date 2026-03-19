@@ -11,9 +11,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
+import com.smartclinic.hms.admin.patient.dto.AdminPatientDetailResponse;
 import com.smartclinic.hms.admin.patient.dto.AdminPatientListResponse;
 import com.smartclinic.hms.admin.patient.dto.AdminPatientPageLinkResponse;
+import com.smartclinic.hms.admin.patient.dto.AdminPatientReservationHistoryItemResponse;
 import com.smartclinic.hms.common.AdminControllerTestSecurityConfig;
+import com.smartclinic.hms.common.exception.CustomException;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -113,6 +116,64 @@ class AdminPatientControllerTest {
                 .andExpect(content().string(containsString("김철수")))
                 .andExpect(content().string(containsString("010-1234-5678")))
                 .andExpect(content().string(containsString("2026-03-19")));
+    }
+
+    @Test
+    @DisplayName("detail renders patient info and reservation histories")
+    void detail_rendersPatientInfoAndReservationHistories() throws Exception {
+        // given
+        AdminPatientDetailResponse response = new AdminPatientDetailResponse(
+                7L,
+                "김철수",
+                "010-1234-5678",
+                "kim@example.com",
+                "서울시 강남구",
+                "알레르기 주의",
+                List.of(new AdminPatientReservationHistoryItemResponse(
+                        "R-1001",
+                        "2026-03-19",
+                        "09:30",
+                        "내과",
+                        "김의사",
+                        "접수"
+                ))
+        );
+        given(adminPatientService.getPatientDetail(7L)).willReturn(response);
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/patient/detail")
+                        .param("patientId", "7")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/patient-detail"))
+                .andExpect(request().attribute("model", response))
+                .andExpect(request().attribute("pageTitle", "환자 상세"))
+                .andExpect(content().string(containsString("김철수")))
+                .andExpect(content().string(containsString("010-1234-5678")))
+                .andExpect(content().string(containsString("R-1001")))
+                .andExpect(content().string(containsString("접수")));
+
+        then(adminPatientService).should().getPatientDetail(7L);
+    }
+
+    @Test
+    @DisplayName("detail returns 404 when patient is missing")
+    void detail_returns404WhenPatientIsMissing() throws Exception {
+        // given
+        given(adminPatientService.getPatientDetail(99L))
+                .willThrow(CustomException.notFound("환자를 찾을 수 없습니다."));
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/patient/detail")
+                        .param("patientId", "99")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isNotFound())
+                .andExpect(view().name("error/404"))
+                .andExpect(request().attribute("errorMessage", "환자를 찾을 수 없습니다."));
     }
 
     private AdminPatientListResponse createListResponse() {
