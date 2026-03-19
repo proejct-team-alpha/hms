@@ -34,7 +34,7 @@ class AdminReservationServiceTest {
     private EntityManager entityManager;
 
     @Test
-    @DisplayName("status媛 ?섎せ??媛믪씠硫?ALL濡?fallback ?쒕떎")
+    @DisplayName("status invalid value falls back to ALL")
     void invalidStatus_fallbackToAll() {
         // given
         persistReservation("RES-20260310-001", LocalDate.of(2026, 3, 10), "09:00", "RESERVED");
@@ -52,7 +52,7 @@ class AdminReservationServiceTest {
     }
 
     @Test
-    @DisplayName("?곹깭 ?꾪꽣? 湲곕낯 ?뺣젹(reservationDate DESC, timeSlot DESC)???곸슜?쒕떎")
+    @DisplayName("status filter and default sort are applied")
     void statusFilterAndDefaultSort_applied() {
         // given
         persistReservation("RES-20260310-001", LocalDate.of(2026, 3, 10), "09:00", "RECEIVED");
@@ -73,7 +73,34 @@ class AdminReservationServiceTest {
     }
 
     @Test
-    @DisplayName("湲곕낯 ?섏씠吏?page=1, size=10)???곸슜?쒕떎")
+    @DisplayName("received status uses 접수 label in option and row response")
+    void receivedStatus_usesReceptionLabel() {
+        // given
+        persistReservation("RES-20260310-101", LocalDate.of(2026, 3, 10), "10:30", "RECEIVED");
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        AdminReservationListResponse result = adminReservationService.getReservationList(1, 10, "RECEIVED");
+
+        // then
+        assertThat(result.selectedStatus()).isEqualTo("RECEIVED");
+        assertThat(result.statusOptions())
+                .filteredOn(option -> "RECEIVED".equals(option.value()))
+                .singleElement()
+                .satisfies(option -> {
+                    assertThat(option.label()).isEqualTo("접수");
+                    assertThat(option.selected()).isTrue();
+                });
+        assertThat(result.reservations()).singleElement().satisfies(item -> {
+            assertThat(item.status()).isEqualTo("RECEIVED");
+            assertThat(item.statusLabel()).isEqualTo("접수");
+            assertThat(item.received()).isTrue();
+        });
+    }
+
+    @Test
+    @DisplayName("default paging is applied")
     void defaultPaging_applied() {
         // given
         for (int i = 1; i <= 12; i++) {
