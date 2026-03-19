@@ -322,6 +322,19 @@ class AdminDepartmentServiceTest {
     }
 
     @Test
+    @DisplayName("activateDepartment rejects missing department")
+    void activateDepartment_throwsWhenDepartmentMissing() {
+        // given
+        given(adminDepartmentRepository.findById(91L)).willReturn(Optional.empty());
+
+        // when
+        // then
+        assertThatThrownBy(() -> adminDepartmentService.activateDepartment(91L))
+                .isInstanceOf(CustomException.class)
+                .hasMessage("진료과를 찾을 수 없습니다.");
+    }
+
+    @Test
     @DisplayName("createDepartment rejects duplicate name")
     void createDepartment_throwsWhenNameDuplicated() {
         // given
