@@ -19,8 +19,6 @@ import java.util.Locale;
 @RequestMapping("/admin/reservation")
 public class AdminReservationController {
 
-    // 예약 취소 성공 메시지
-    private static final String CANCEL_SUCCESS_MESSAGE = "예약이 취소되었습니다.";
     private static final Set<String> ALLOWED_STATUSES = Set.of("ALL", "RESERVED", "RECEIVED", "COMPLETED", "CANCELLED");
 
     // 서비스 선언
@@ -47,8 +45,8 @@ public class AdminReservationController {
             RedirectAttributes redirectAttributes) {
 
         try {
-            adminReservationService.cancelReservation(reservationId);
-            redirectAttributes.addFlashAttribute("successMessage", CANCEL_SUCCESS_MESSAGE);
+            String successMessage = adminReservationService.cancelReservation(reservationId);
+            redirectAttributes.addFlashAttribute("successMessage", successMessage);
         } catch (CustomException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }

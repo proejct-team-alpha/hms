@@ -27,6 +27,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @TestPropertySource(properties = "spring.sql.init.mode=never")
 class AdminReservationServiceTest {
 
+    private static final String RESERVATION_CANCELLED_MESSAGE = "예약이 취소되었습니다.";
+    private static final String RECEPTION_CANCELLED_MESSAGE = "접수가 취소되었습니다.";
+
     @Autowired
     private AdminReservationService adminReservationService;
 
@@ -120,8 +123,8 @@ class AdminReservationServiceTest {
     }
 
     @Test
-    @DisplayName("예약/접수 상태는 취소 처리된다")
-    void cancelReservation_success() {
+    @DisplayName("예약 상태 취소 시 예약 취소 메시지를 반환한다")
+    void cancelReservation_reserved_returnsReservationCancelledMessage() {
         // given
         persistReservation("RES-20260310-901", LocalDate.of(2026, 3, 10), "09:00", "RESERVED");
         entityManager.flush();
@@ -133,13 +136,39 @@ class AdminReservationServiceTest {
                 .getSingleResult();
 
         // when
-        adminReservationService.cancelReservation(reservationId);
+        String result = adminReservationService.cancelReservation(reservationId);
         entityManager.flush();
         entityManager.clear();
 
         Reservation reservation = entityManager.find(Reservation.class, reservationId);
 
         // then
+        assertThat(result).isEqualTo(RESERVATION_CANCELLED_MESSAGE);
+        assertThat(reservation.getStatus().name()).isEqualTo("CANCELLED");
+    }
+
+    @Test
+    @DisplayName("접수 상태 취소 시 접수 취소 메시지를 반환한다")
+    void cancelReservation_received_returnsReceptionCancelledMessage() {
+        // given
+        persistReservation("RES-20260310-903", LocalDate.of(2026, 3, 10), "10:00", "RECEIVED");
+        entityManager.flush();
+        entityManager.clear();
+
+        Long reservationId = entityManager.createQuery(
+                        "select r.id from Reservation r where r.reservationNumber = :number", Long.class)
+                .setParameter("number", "RES-20260310-903")
+                .getSingleResult();
+
+        // when
+        String result = adminReservationService.cancelReservation(reservationId);
+        entityManager.flush();
+        entityManager.clear();
+
+        Reservation reservation = entityManager.find(Reservation.class, reservationId);
+
+        // then
+        assertThat(result).isEqualTo(RECEPTION_CANCELLED_MESSAGE);
         assertThat(reservation.getStatus().name()).isEqualTo("CANCELLED");
     }
 

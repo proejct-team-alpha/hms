@@ -42,7 +42,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(AdminControllerTestSecurityConfig.class)
 class AdminReservationControllerTest {
 
-    private static final String CANCEL_SUCCESS_MESSAGE = "예약이 취소되었습니다.";
+    private static final String RESERVATION_CANCELLED_MESSAGE = "예약이 취소되었습니다.";
+    private static final String RECEPTION_CANCELLED_MESSAGE = "접수가 취소되었습니다.";
     private static final String INVALID_STATUS_MESSAGE = "취소할 수 없는 상태입니다.";
 
     @Autowired
@@ -212,8 +213,11 @@ class AdminReservationControllerTest {
     }
 
     @Test
-    @DisplayName("예약 취소 성공 시 목록으로 리다이렉트하고 성공 메시지를 남긴다")
-    void cancel_success_redirectsWithSuccessMessage() throws Exception {
+    @DisplayName("접수 취소 성공 시 서비스가 반환한 성공 메시지로 목록에 복귀한다")
+    void cancel_success_redirectsWithReturnedSuccessMessage() throws Exception {
+        // given
+        given(adminReservationService.cancelReservation(100L)).willReturn(RECEPTION_CANCELLED_MESSAGE);
+
         // when
         // then
         mockMvc.perform(post("/admin/reservation/cancel")
@@ -225,7 +229,7 @@ class AdminReservationControllerTest {
                         .with(csrf()))
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", containsString("/admin/reservation/list?page=2&size=10&status=RECEIVED")))
-                .andExpect(flash().attribute("successMessage", CANCEL_SUCCESS_MESSAGE));
+                .andExpect(flash().attribute("successMessage", RECEPTION_CANCELLED_MESSAGE));
 
         then(adminReservationService).should().cancelReservation(100L);
     }
@@ -256,6 +260,9 @@ class AdminReservationControllerTest {
     @Test
     @DisplayName("예약 취소 후 잘못된 status 파라미터는 ALL로 정규화된다")
     void cancel_invalidStatus_redirectsWithAllFallback() throws Exception {
+        // given
+        given(adminReservationService.cancelReservation(100L)).willReturn(RESERVATION_CANCELLED_MESSAGE);
+
         // when
         // then
         mockMvc.perform(post("/admin/reservation/cancel")
@@ -267,7 +274,7 @@ class AdminReservationControllerTest {
                         .with(csrf()))
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", containsString("/admin/reservation/list?page=3&size=5&status=ALL")))
-                .andExpect(flash().attribute("successMessage", CANCEL_SUCCESS_MESSAGE));
+                .andExpect(flash().attribute("successMessage", RESERVATION_CANCELLED_MESSAGE));
 
         then(adminReservationService).should().cancelReservation(100L);
     }
@@ -275,6 +282,9 @@ class AdminReservationControllerTest {
     @Test
     @DisplayName("예약 취소 후 소문자 status 파라미터도 정상적으로 복귀한다")
     void cancel_lowercaseReceived_redirectsWithNormalizedStatus() throws Exception {
+        // given
+        given(adminReservationService.cancelReservation(100L)).willReturn(RECEPTION_CANCELLED_MESSAGE);
+
         // when
         // then
         mockMvc.perform(post("/admin/reservation/cancel")
@@ -286,7 +296,7 @@ class AdminReservationControllerTest {
                         .with(csrf()))
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", containsString("/admin/reservation/list?page=1&size=10&status=RECEIVED")))
-                .andExpect(flash().attribute("successMessage", CANCEL_SUCCESS_MESSAGE));
+                .andExpect(flash().attribute("successMessage", RECEPTION_CANCELLED_MESSAGE));
 
         then(adminReservationService).should().cancelReservation(100L);
     }

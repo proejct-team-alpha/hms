@@ -27,6 +27,8 @@ public class AdminReservationService {
         // 페이지네이션
         private static final int DEFAULT_PAGE = 1;
         private static final int DEFAULT_SIZE = 10;
+        private static final String RESERVATION_CANCELLED_MESSAGE = "예약이 취소되었습니다.";
+        private static final String RECEPTION_CANCELLED_MESSAGE = "접수가 취소되었습니다.";
 
         // 상태값 화면에 보여줄 한글 라벨
         private static final Map<String, String> STATUS_LABELS = Map.of(
@@ -166,14 +168,24 @@ public class AdminReservationService {
         }
 
         @Transactional
-        public void cancelReservation(Long reservationId) {
+        public String cancelReservation(Long reservationId) {
                 var reservation = adminReservationRepository.findById(reservationId)
                                 .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다. ID: " + reservationId));
+                ReservationStatus originalStatus = reservation.getStatus();
 
                 try {
                         reservation.cancel();
                 } catch (IllegalStateException ex) {
                         throw CustomException.invalidStatusTransition(ex.getMessage());
                 }
+
+                return buildCancelSuccessMessage(originalStatus);
+        }
+
+        private String buildCancelSuccessMessage(ReservationStatus originalStatus) {
+                if (originalStatus == ReservationStatus.RECEIVED) {
+                        return RECEPTION_CANCELLED_MESSAGE;
+                }
+                return RESERVATION_CANCELLED_MESSAGE;
         }
 }
