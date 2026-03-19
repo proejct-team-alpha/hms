@@ -15,19 +15,19 @@
 
     <main class="content-wrapper flex-1 p-6">
       <div class="space-y-6 max-w-6xl mx-auto">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-4">
           <div>
             <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
-            <p class="text-slate-500 mt-1">吏꾨즺怨??뺣낫瑜?議고쉶?섍퀬 愿由ы빀?덈떎.</p>
+            <p class="text-slate-500 mt-1">진료과 정보를 조회하고 관리합니다.</p>
           </div>
           <div class="flex items-center gap-4">
             <div class="text-sm text-slate-500 text-right">
-              <div>珥?<span class="font-semibold text-slate-700">{{model.totalCount}}</span>嫄?/div>
+              <div>총 <span class="font-semibold text-slate-700">{{model.totalCount}}</span>건</div>
               {{#model.hasPages}}
-                <div>{{model.currentPage}} / {{model.totalPages}}?섏씠吏</div>
+                <div>{{model.currentPage}} / {{model.totalPages}} 페이지</div>
               {{/model.hasPages}}
               {{^model.hasPages}}
-                <div>0 / 0?섏씠吏</div>
+                <div>0 / 0 페이지</div>
               {{/model.hasPages}}
             </div>
             <button
@@ -36,7 +36,7 @@
               class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
             >
               <i data-feather="plus" class="w-4 h-4"></i>
-              吏꾨즺怨??깅줉
+              진료과 등록
             </button>
           </div>
         </div>
@@ -51,6 +51,11 @@
             {{errorMessage}}
           </div>
         {{/errorMessage}}
+        {{#pageError}}
+          <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {{pageError}}
+          </div>
+        {{/pageError}}
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div class="overflow-x-auto">
@@ -58,9 +63,9 @@
               <thead class="bg-slate-50 border-b border-slate-200">
                 <tr>
                   <th class="text-left px-4 py-3 font-semibold text-slate-600">ID</th>
-                  <th class="text-left px-4 py-3 font-semibold text-slate-600">吏꾨즺怨쇰챸</th>
-                  <th class="text-left px-4 py-3 font-semibold text-slate-600">?곹깭</th>
-                  <th class="text-left px-4 py-3 font-semibold text-slate-600">愿由?/th>
+                  <th class="text-left px-4 py-3 font-semibold text-slate-600">진료과명</th>
+                  <th class="text-left px-4 py-3 font-semibold text-slate-600">상태</th>
+                  <th class="text-left px-4 py-3 font-semibold text-slate-600">관리</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
@@ -72,16 +77,16 @@
                     <span class="{{activeBadgeClass}}">{{activeText}}</span>
                   </td>
                   <td class="px-4 py-3">
-                    <a href="/admin/department/detail?departmentId={{id}}" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-300 text-slate-600 hover:bg-white">
+                    <a href="/admin/department/detail?departmentId={{id}}" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-300 text-slate-600 hover:bg-white transition-colors">
                       <i data-feather="external-link" class="w-3.5 h-3.5"></i>
-                      ?곸꽭
+                      상세보기
                     </a>
                   </td>
                 </tr>
                 {{/model.departments}}
                 {{^model.departments}}
                 <tr>
-                  <td colspan="4" class="px-4 py-12 text-center text-slate-400">?깅줉??吏꾨즺怨쇨? ?놁뒿?덈떎.</td>
+                  <td colspan="4" class="px-4 py-12 text-center text-slate-400">등록된 진료과가 없습니다.</td>
                 </tr>
                 {{/model.departments}}
               </tbody>
@@ -90,7 +95,7 @@
 
           <div class="p-4 border-t border-slate-200 flex items-center justify-center gap-2 bg-slate-50">
             {{#model.hasPrevious}}
-              <a href="{{model.previousUrl}}" class="px-3 py-1.5 text-sm rounded-md border border-slate-300 text-slate-600 hover:bg-white">?댁쟾</a>
+              <a href="{{model.previousUrl}}" class="px-3 py-1.5 text-sm rounded-md border border-slate-300 text-slate-600 hover:bg-white">이전</a>
             {{/model.hasPrevious}}
 
             {{#model.pageLinks}}
@@ -98,17 +103,17 @@
             {{/model.pageLinks}}
 
             {{#model.hasNext}}
-              <a href="{{model.nextUrl}}" class="px-3 py-1.5 text-sm rounded-md border border-slate-300 text-slate-600 hover:bg-white">?ㅼ쓬</a>
+              <a href="{{model.nextUrl}}" class="px-3 py-1.5 text-sm rounded-md border border-slate-300 text-slate-600 hover:bg-white">다음</a>
             {{/model.hasNext}}
           </div>
         </div>
       </div>
     </main>
 
-    <div id="addModal" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div id="addModal" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-lg font-bold text-slate-800">吏꾨즺怨??깅줉</h2>
+          <h2 class="text-lg font-bold text-slate-800">진료과 등록</h2>
           <button
             type="button"
             onclick="document.getElementById('addModal').classList.add('hidden')"
@@ -122,7 +127,7 @@
           <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
           <div>
             <label class="block text-sm font-semibold text-slate-700 mb-1.5">
-              吏꾨즺怨쇰챸 <span class="text-red-500">*</span>
+              진료과명 <span class="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -137,18 +142,18 @@
           </div>
           <div class="flex items-center gap-2">
             <input type="checkbox" name="active" id="activeCheck" value="true" {{#createActive}}checked{{/createActive}} class="w-4 h-4 accent-indigo-600">
-            <label for="activeCheck" class="text-sm text-slate-700">?댁쁺 以?/label>
+            <label for="activeCheck" class="text-sm text-slate-700">운영 중</label>
           </div>
           <div class="flex gap-3 pt-2">
             <button type="submit" class="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700">
-              ?깅줉
+              등록
             </button>
             <button
               type="button"
               onclick="document.getElementById('addModal').classList.add('hidden')"
               class="flex-1 py-2.5 bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-200"
             >
-              痍⑥냼
+              취소
             </button>
           </div>
         </form>
