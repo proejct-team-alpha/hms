@@ -104,6 +104,22 @@ public class DoctorTreatmentController {
         return "redirect:/doctor/treatment-detail?id=" + id;
     }
 
+    @PostMapping("/treatment/save")
+    public String saveTreatment(@RequestParam("id") Long id,
+                                @RequestParam("diagnosis") String diagnosis,
+                                @RequestParam("prescription") String prescription,
+                                @RequestParam(name = "remark", required = false) String remark,
+                                Authentication auth,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            treatmentService.saveTreatmentRecord(id, auth.getName(), diagnosis, prescription, remark);
+            redirectAttributes.addFlashAttribute("message", "진료 기록이 저장되었습니다.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/doctor/treatment-detail?id=" + id;
+    }
+
     @PostMapping("/treatment/complete")
     public String completeTreatment(@RequestParam("id") Long id,
                                     @RequestParam("diagnosis") String diagnosis,

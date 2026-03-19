@@ -39,6 +39,9 @@
         {{#errorMessage}}
           <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">{{errorMessage}}</div>
         {{/errorMessage}}
+        {{#message}}
+          <div class="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">{{message}}</div>
+        {{/message}}
 
         <div class="grid grid-cols-3 gap-6">
           <!-- 좌측: 환자 정보 -->
@@ -76,9 +79,34 @@
 
           <!-- 우측: 진료 기록 작성 or 완료된 기록 -->
           <div class="col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col">
-            <div class="p-6 border-b border-slate-200 flex items-center gap-2">
-              <i data-feather="file-text" class="w-5 h-5 text-indigo-600"></i>
-              <h2 class="text-lg font-bold text-slate-800">진료 기록</h2>
+            <div class="p-6 border-b border-slate-200 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i data-feather="file-text" class="w-5 h-5 text-indigo-600"></i>
+                <h2 class="text-lg font-bold text-slate-800">진료 기록</h2>
+              </div>
+              <div class="flex items-center gap-2">
+                {{#detail.canComplete}}
+                  {{#detail.canStartTreatment}}
+                    <form method="post" action="/doctor/treatment/start">
+                      <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                      <input type="hidden" name="id" value="{{detail.reservationId}}">
+                      <button type="submit"
+                              class="px-4 py-2 text-sm font-medium rounded-lg shadow-sm flex items-center gap-1.5 transition-colors hover:opacity-90"
+                              style="background-color:#ea580c;color:#fff;">
+                        <i data-feather="play" class="w-4 h-4"></i>
+                        진료 시작
+                      </button>
+                    </form>
+                  {{/detail.canStartTreatment}}
+                  <button type="submit"
+                          form="complete-form"
+                          formaction="/doctor/treatment/save"
+                          class="px-4 py-2 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-900 transition-colors shadow-sm flex items-center gap-1.5">
+                    <i data-feather="save" class="w-4 h-4"></i>
+                    저장
+                  </button>
+                {{/detail.canComplete}}
+              </div>
             </div>
 
             {{#detail.canComplete}}
@@ -95,7 +123,7 @@
                       required
                       class="flex-1 w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-slate-700 leading-relaxed"
                       placeholder="진단 내용을 입력해주세요."
-                    ></textarea>
+                    >{{#detail.diagnosis}}{{detail.diagnosis}}{{/detail.diagnosis}}</textarea>
                   </div>
                   <div class="flex-1 flex flex-col">
                     <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">처방 내역</label>
@@ -104,7 +132,7 @@
                       required
                       class="flex-1 w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-slate-700 leading-relaxed"
                       placeholder="처방 내역을 입력해주세요."
-                    ></textarea>
+                    >{{#detail.prescription}}{{detail.prescription}}{{/detail.prescription}}</textarea>
                   </div>
                   <div>
                     <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">특이사항 (선택)</label>
@@ -113,27 +141,13 @@
                       rows="2"
                       class="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-slate-700 leading-relaxed"
                       placeholder="특이사항을 입력해주세요."
-                    ></textarea>
+                    >{{#detail.remark}}{{detail.remark}}{{/detail.remark}}</textarea>
                   </div>
                 </div>
               </form>
 
-              <!-- 푸터: 진료 시작 form + 진료 완료 버튼 (form 밖에 별도 배치) -->
-              <div class="p-6 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex justify-between items-center">
-                <div>
-                  {{#detail.canStartTreatment}}
-                  <form method="post" action="/doctor/treatment/start">
-                    <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
-                    <input type="hidden" name="id" value="{{detail.reservationId}}">
-                    <button type="submit"
-                            class="px-6 py-3 font-medium rounded-xl shadow-sm flex items-center gap-2"
-                            style="background-color:#ea580c;color:#fff;">
-                      <i data-feather="play" class="w-5 h-5"></i>
-                      진료 시작
-                    </button>
-                  </form>
-                  {{/detail.canStartTreatment}}
-                </div>
+              <!-- 푸터: 진료 완료 버튼 -->
+              <div class="p-6 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex justify-end items-center">
                 <button
                   type="submit"
                   form="complete-form"
