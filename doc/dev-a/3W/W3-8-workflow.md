@@ -1,38 +1,142 @@
-# W3-8 워크플로우 - 물품 담당자 페이지 페이징 + 검색
+# W3-8 Workflow — 물품 담당자 페이지 페이징 + 검색
 
-## 작업 목표
-물품 담당자의 3개 페이지(물품 목록, 물품 출고, 입출고 내역)에 클라이언트 사이드 JS 페이징(10건/페이지, 번호 버튼)을 추가하고, 물품 목록에 초성·영문 검색창을 추가한다.
+> **작성일**: 3W
+> **목표**: 물품 목록·출고·입출고 내역 3개 페이지에 JS 페이징(10건/페이지) + 물품 목록 검색 추가
+
+---
+
+## 전체 흐름
+
+```
+클라이언트 사이드 JS 페이징 (서버 페이징 X)
+  - item-list: 검색 + 페이징
+  - item-use: 오늘 출고 내역 + 카드 그리드 페이징
+  - item-history: 번호 버튼 페이징 교체
+```
+
+---
+
+## 인터뷰 결과
+
+| 항목 | 내용 |
+|------|------|
+| 방식 | 클라이언트 사이드 JS 페이징 |
+| 페이지당 항목 | 10건 |
+| 페이징 UI | 번호 버튼 |
+| 검색 | 초성·영문 검색 (item-list만) |
+| 설계 문서 | `W3-8-spec.md` 참조 |
+
+---
+
+## 실행 흐름
+
+```
+Task 1 — item-list.mustache
+  검색어 입력 → getChosung() + itemListMatches() → 필터링
+  renderItemList(page) → 10건씩 표시 + 번호 버튼 생성
+
+Task 2 — item-use.mustache (오늘 출고 내역)
+  renderTodayLog(page) → 10건씩 표시 + 번호 버튼 생성
+
+Task 3 — item-use.mustache (카드 그리드)
+  applyFilter() 페이징 통합 버전
+  카테고리/검색 변경 시 cardPage = 1 리셋
+
+Task 4 — item-history.mustache
+  기존 스크립트 교체 → PAGE_SIZE=10 + 번호 버튼 로직
+```
+
+---
+
+## UI Mockup
+
+```
+[item-list 검색 + 페이징]
+┌────────────────────────────────────────┐
+│ [검색: ____________________]            │
+├────────────────────────────────────────┤
+│ 항목1 | 항목2 | ...                    │  10건
+│ 항목11| ...                            │
+├────────────────────────────────────────┤
+│  [1] [2] [3] [4] [5]                   │  ← 번호 버튼
+└────────────────────────────────────────┘
+```
+
+---
 
 ## 작업 목록
 
-### Task 1 — 물품 목록 (`item-list.mustache`) 검색 + 페이징
+1. `item-list.mustache` — `#item-list-tbody`, `#empty-row` id 추가 + 검색창 HTML + 페이징 바 + JS
+2. `item-use.mustache` — `#today-log-tbody` id 추가 + 페이징 바 + `renderTodayLog` JS
+3. `item-use.mustache` — `#item-use-grid` 페이징 바 + `applyFilter()` 페이징 통합
+4. `item-history.mustache` — 페이징 바 번호 버튼 div + 기존 `<script>` 교체
 
-1. `<tbody>`에 id="item-list-tbody" 추가, 빈 상태 `<tr>`에 id="empty-row" 추가
-2. 카테고리 필터 아래 검색창 HTML 삽입
-3. 테이블 아래 페이징 바 HTML 삽입
-4. JS: getChosung + itemListMatches + renderItemList 추가
+---
 
-### Task 2 — 물품 출고 오늘 출고 내역 테이블 페이징 (`item-use.mustache`)
+## 작업 진행내용
 
-1. `<tbody>`에 id="today-log-tbody" 추가
-2. {{#todayLogs}} 블록 아래 페이징 바 HTML 삽입
-3. JS: renderTodayLog 추가
+- [x] item-list.mustache 검색 + 페이징
+- [x] item-use.mustache 오늘 출고 내역 페이징
+- [x] item-use.mustache 카드 그리드 페이징
+- [x] item-history.mustache 번호 버튼 페이징 교체
 
-### Task 3 — 물품 출고 카드 그리드 페이징 (`item-use.mustache`)
+---
 
-1. #item-use-grid 아래 페이징 바 HTML 삽입
-2. 기존 applyFilter()를 페이징 통합 버전으로 교체
-3. 카테고리/검색 변경 시 cardPage = 1 리셋 추가
+## 실행 흐름에 대한 코드
 
-### Task 4 — 입출고 내역 페이징 교체 (`item-history.mustache`)
+### item-list — getChosung + renderItemList
 
-1. 페이징 바 HTML에 번호 버튼 div 추가
-2. 기존 `<script>` 전체를 PAGE_SIZE=10 + 번호 버튼 로직으로 교체
+```javascript
+const PAGE_SIZE = 10;
+let currentPage = 1;
+let filteredItems = allItems;
 
-## 수정 파일
-- `src/main/resources/templates/item-manager/item-list.mustache`
-- `src/main/resources/templates/item-manager/item-use.mustache`
-- `src/main/resources/templates/item-manager/item-history.mustache`
+function getChosung(str) { /* 초성 추출 */ }
+function itemListMatches(item, query) { /* 초성·영문 매칭 */ }
 
-## 관련 문서
-- 설계: `doc/dev-a/3W/W3-8-spec.md`
+function renderItemList(page) {
+    const start = (page - 1) * PAGE_SIZE;
+    const pageItems = filteredItems.slice(start, start + PAGE_SIZE);
+    // tbody 업데이트
+    // 번호 버튼 생성
+}
+
+document.getElementById('search-input').addEventListener('input', function () {
+    filteredItems = allItems.filter(item => itemListMatches(item, this.value));
+    currentPage = 1;
+    renderItemList(1);
+});
+```
+
+### item-history — PAGE_SIZE 번호 버튼
+
+```javascript
+const PAGE_SIZE = 10;
+let currentPage = 1;
+
+function renderPage(page) {
+    const start = (page - 1) * PAGE_SIZE;
+    // 테이블 행 표시/숨김
+    // 번호 버튼 갱신
+}
+```
+
+---
+
+## 테스트 진행
+
+| 케이스 | 조건 | 기대 결과 |
+|--------|------|-----------|
+| item-list 검색 | 초성 검색 "ㄱ" | 매칭 항목만 표시 |
+| 페이징 클릭 | 2페이지 클릭 | 11~20번 항목 표시 |
+| 카테고리 변경 | 필터 변경 | cardPage 1로 리셋 |
+| item-history | 번호 버튼 클릭 | 해당 페이지 표시 |
+
+---
+
+## 완료 기준
+
+- [x] item-list 검색 + 10건 페이징
+- [x] item-use 오늘 출고 내역 페이징
+- [x] item-use 카드 그리드 페이징
+- [x] item-history 번호 버튼 페이징

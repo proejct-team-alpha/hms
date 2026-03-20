@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
  * - 복합 트랜잭션(2개 이상 Repository 참여): @Transactional 단일 트랜잭션 유지
  * ════════════════════════════════════════════════════════════════════════════
  */
+@Profile("dev")
 @Slf4j
 @Service
 @RequiredArgsConstructor

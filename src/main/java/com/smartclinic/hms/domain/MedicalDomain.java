@@ -3,12 +3,10 @@ package com.smartclinic.hms.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "medical_domain")
 @Getter
-@Setter
 @NoArgsConstructor
 public class MedicalDomain {
 

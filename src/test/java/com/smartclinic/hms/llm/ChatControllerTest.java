@@ -1,6 +1,7 @@
 package com.smartclinic.hms.llm;
 
 import com.smartclinic.hms.auth.StaffRepository;
+import com.smartclinic.hms.common.util.SecurityUtils;
 import com.smartclinic.hms.domain.ChatbotHistoryRepository;
 import com.smartclinic.hms.llm.controller.ChatController;
 import com.smartclinic.hms.llm.service.ChatService;
@@ -50,6 +51,9 @@ class ChatControllerTest {
     @MockitoBean
     StaffRepository staffRepository;
 
+    @MockitoBean
+    SecurityUtils securityUtils;
+
     @Test
     @DisplayName("POST /llm/chatbot/query - 비인증 접근 시 /login 리다이렉트")
     void query_비인증_리다이렉트() throws Exception {
@@ -93,14 +97,27 @@ class ChatControllerTest {
     }
 
     @Test
-    @DisplayName("GET /llm/chatbot/history/{staffId} - DOCTOR 인증 200")
+    @DisplayName("GET /llm/chatbot/history/{staffId} - DOCTOR 인증, 본인 staffId 일치 시 200")
     void history_인증_200() throws Exception {
+        // given - securityUtils가 인증된 staffId 1L 반환 (path variable과 일치)
+        given(securityUtils.resolveStaffId()).willReturn(1L);
         given(chatbotHistoryRepository.findByStaff_IdOrderByCreatedAtDesc(any(), any()))
                 .willReturn(Page.empty());
 
         mockMvc.perform(get("/llm/chatbot/history/1")
                         .with(user("doctor").roles("DOCTOR")))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /llm/chatbot/history/{staffId} - 타인의 staffId 접근 시 403")
+    void history_타인staffId_403() throws Exception {
+        // given - 인증된 사용자 staffId가 2L이지만 path variable은 1L
+        given(securityUtils.resolveStaffId()).willReturn(2L);
+
+        mockMvc.perform(get("/llm/chatbot/history/1")
+                        .with(user("doctor").roles("DOCTOR")))
+                .andExpect(status().isForbidden());
     }
 
     @TestConfiguration

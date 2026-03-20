@@ -12,7 +12,7 @@ public record CreateReservationRequest(
     String name,
 
     @NotBlank(message = "연락처를 입력해주세요.")
-    @Pattern(regexp = "^$|^01[0-9][- ]?(\\d{3,4})[- ]?\\d{4}$", message = "연락처 형식이 올바르지 않습니다.")
+    @Pattern(regexp = "^01[0-9][- ]?(\\d{3,4})[- ]?\\d{4}$", message = "연락처 형식이 올바르지 않습니다.")
     String phone,
 
     @NotNull(message = "진료과를 선택해주세요.")
@@ -26,7 +26,7 @@ public record CreateReservationRequest(
     LocalDate reservationDate,
 
     @NotBlank(message = "예약 시간을 선택해주세요.")
-    @Pattern(regexp = "^$|^\\d{2}:\\d{2}$", message = "시간 형식이 올바르지 않습니다.")
+    @Pattern(regexp = "^\\d{2}:\\d{2}$", message = "시간 형식이 올바르지 않습니다.")
     String timeSlot
 ) {
 }

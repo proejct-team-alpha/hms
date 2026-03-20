@@ -1,14 +1,26 @@
 # W5-1 Workflow — POST /llm/symptom/analyze 실제 Claude API 연동
 
-> **작성일**: 2026-03-19
+> **작성일**: 5W
 > **브랜치**: `feature/reservation-Llm`
 > **목표**: symptom-reservation.mustache의 더미 callSymptomApi를 실제 Claude API fetch로 교체
 
 ---
 
+## 전체 흐름
+
+```
+SymptomRequest / SymptomResponse DTO 신규
+  → SymptomAnalysisService 신규 (claudeRestClient → Claude API 호출 + 정규식 파싱)
+  → SymptomController 신규 (POST /llm/symptom/analyze)
+  → symptom-reservation.mustache 수정 (CSRF 메타태그 + fetch 교체)
+  → ./gradlew build 검증
+```
+
+---
+
 ## 인터뷰 결과
 
-| 항목 | 결정 |
+| 항목 | 내용 |
 |------|------|
 | Claude 응답 포맷 | 자유 텍스트 → 정규식 파싱 |
 | direct-reservation 자동 채움 | 이미 구현 완료 (URL 파라미터 방식) |
@@ -17,54 +29,79 @@
 
 ---
 
-## 작업 목록
+## 실행 흐름
 
-1. `llm/dto/SymptomRequest.java` 신규 — `symptomText` 필드
-2. `llm/dto/SymptomResponse.java` 신규 — `dept`, `doctor`, `time` 필드
-3. `llm/service/SymptomAnalysisService.java` 신규
-   - `claudeRestClient` 주입, `@Value("${claude.api.model}")` String model
-   - `analyzeSymptom(String symptomText)` → Claude `POST /v1/messages` 호출
-   - 응답 `content[0].text`에서 `"진료과:"`, `"전문의:"`, `"시간:"` 정규식 파싱
-   - 파싱 실패 시 기본값 반환 (`내과 / 의사이영희 / 09:00`)
-4. `llm/controller/SymptomController.java` 신규 — `POST /llm/symptom/analyze`, `@RequestBody SymptomRequest → SymptomResponse`
-5. `symptom-reservation.mustache` 수정
-   - `<head>`에 CSRF 메타 태그(`_csrf.token`, `_csrf.headerName`) 추가
-   - `callSymptomApi` 더미(setTimeout) → 실제 `fetch('/llm/symptom/analyze')` 교체
-   - `X-CSRF-TOKEN` 헤더 포함, `SYMPTOM_MAP` 로컬 매핑 제거
-
----
-
-## Step 1: SymptomRequest DTO
-
-**파일**: `src/main/java/com/smartclinic/hms/llm/dto/SymptomRequest.java`
-
-```java
-package com.smartclinic.hms.llm.dto;
-
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-@Getter
-@NoArgsConstructor
-public class SymptomRequest {
-    private String symptomText;
-}
+```
+[1] llm/dto/SymptomRequest.java 신규 — symptomText 필드
+[2] llm/dto/SymptomResponse.java 신규 — dept, doctor, time 필드
+[3] llm/service/SymptomAnalysisService.java 신규
+    - claudeRestClient 주입, @Value("${claude.api.model}") model
+    - analyzeSymptom() → Claude POST /v1/messages 호출
+    - content[0].text 정규식 파싱 (진료과/전문의/시간)
+    - 파싱 실패 시 기본값 반환 (내과/의사이영희/09:00)
+[4] llm/controller/SymptomController.java 신규 — POST /llm/symptom/analyze
+[5] symptom-reservation.mustache 수정
+    - <head>에 CSRF 메타태그 추가
+    - callSymptomApi 더미 → 실제 fetch 교체
+    - SYMPTOM_MAP 로컬 매핑 제거
+[6] ./gradlew build 검증
 ```
 
 ---
 
-## Step 2: SymptomResponse DTO
+## UI Mockup
 
-**파일**: `src/main/java/com/smartclinic/hms/llm/dto/SymptomResponse.java`
+```
+[증상 분석 API — UI 직접 변경 없음, 기존 mustache 내부 로직 교체]
+
+symptom-reservation.mustache 변경 전:
+┌──────────────────────────────────┐
+│  증상 입력 → setTimeout 더미 응답 │
+│  SYMPTOM_MAP 로컬 분석           │
+└──────────────────────────────────┘
+
+변경 후:
+┌──────────────────────────────────┐
+│  증상 입력 → POST /llm/symptom/analyze │
+│  Claude API 실제 응답 파싱       │
+└──────────────────────────────────┘
+```
+
+---
+
+## 작업 목록
+
+1. `llm/dto/SymptomRequest.java` 신규 — `symptomText` 필드
+2. `llm/dto/SymptomResponse.java` 신규 — `dept`, `doctor`, `time` 필드
+3. `llm/service/SymptomAnalysisService.java` 신규 — claudeRestClient 주입, 정규식 파싱, 기본값 반환
+4. `llm/controller/SymptomController.java` 신규 — `POST /llm/symptom/analyze`
+5. `symptom-reservation.mustache` 수정 — CSRF 메타태그 + fetch 교체, SYMPTOM_MAP 제거
+6. `./gradlew build` 검증
+
+---
+
+## 작업 진행내용
+
+- [x] SymptomRequest DTO 생성
+- [x] SymptomResponse DTO 생성
+- [x] SymptomAnalysisService 생성
+- [x] SymptomController 생성
+- [x] symptom-reservation.mustache 수정
+- [x] 빌드 확인 — BUILD SUCCESSFUL
+
+---
+
+## 실행 흐름에 대한 코드
+
+### SymptomRequest / SymptomResponse DTO
 
 ```java
-package com.smartclinic.hms.llm.dto;
+@Getter @NoArgsConstructor
+public class SymptomRequest {
+    private String symptomText;
+}
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-@Getter
-@AllArgsConstructor
+@Getter @AllArgsConstructor
 public class SymptomResponse {
     private String dept;
     private String doctor;
@@ -72,63 +109,32 @@ public class SymptomResponse {
 }
 ```
 
----
+### SymptomAnalysisService — Claude API 호출 + 파싱
 
-## Step 3: SymptomAnalysisService
-
-**파일**: `src/main/java/com/smartclinic/hms/llm/service/SymptomAnalysisService.java`
-
-핵심 로직:
-- Claude `POST /v1/messages` 호출
-- `max_tokens: 200`, `temperature: 0` (결정론적)
-- 프롬프트: 진료과/전문의/시간을 지정된 형식으로만 답변 요청
-- 응답 `content[0].text` 에서 정규식으로 파싱
-- 파싱 실패 시 기본값 `{ "내과", "의사이영희", "09:00" }` 반환
-
-**Claude 요청 body 구조**:
-```json
+```java
+// Claude 요청 body 구조
 {
   "model": "${claude.api.model}",
   "max_tokens": 200,
-  "messages": [
-    {
-      "role": "user",
-      "content": "프롬프트..."
-    }
-  ]
+  "messages": [{"role": "user", "content": "프롬프트..."}]
 }
+
+// 프롬프트
+"다음 증상을 분석하고 아래 형식으로만 답변하세요:\n"
++ "진료과: [내과|외과|소아과|이비인후과 중 하나]\n"
++ "전문의: [해당 진료과 의사 1명]\n"
++ "시간: [09:00~15:30 사이 HH:mm]\n\n"
++ "증상: " + symptomText
+
+// 파싱 정규식
+Pattern.compile("진료과:\\s*(.+)");
+Pattern.compile("전문의:\\s*(.+)");
+Pattern.compile("시간:\\s*(\\d{2}:\\d{2})");
 ```
 
-**프롬프트**:
-```
-다음 증상을 분석하고 아래 형식으로만 답변하세요:
-진료과: [내과|외과|소아과|이비인후과 중 하나]
-전문의: [해당 진료과 의사 1명]
-시간: [09:00~15:30 사이 HH:mm]
+### SymptomController
 
-증상: {symptomText}
-```
-
-**파싱 정규식**:
-- 진료과: `진료과:\s*(.+)`
-- 전문의: `전문의:\s*(.+)`
-- 시간: `시간:\s*(\d{2}:\d{2})`
-
-**응답 JSON 역직렬화 대상** (Claude API 응답):
-```json
-{
-  "content": [{ "type": "text", "text": "..." }]
-}
-```
-→ `Map<String, Object>` 또는 전용 내부 record로 역직렬화
-
----
-
-## Step 4: SymptomController
-
-**파일**: `src/main/java/com/smartclinic/hms/llm/controller/SymptomController.java`
-
-```
+```java
 @RestController
 @RequestMapping("/llm/symptom")
 @RequiredArgsConstructor
@@ -142,20 +148,15 @@ public class SymptomController {
 }
 ```
 
-> POST이므로 `HttpServletRequest` 파라미터 불필요 (`@RequestBody` 사용)
+### symptom-reservation.mustache — CSRF + fetch 교체
 
----
-
-## Step 5: symptom-reservation.mustache 수정
-
-**수정 위치 1** — `<head>` 상단에 CSRF 메타 태그 추가:
 ```html
+<!-- CSRF 메타태그 추가 -->
 <meta name="_csrf" content="{{_csrf.token}}">
 <meta name="_csrf_header" content="{{_csrf.headerName}}">
 ```
 
-**수정 위치 2** — `callSymptomApi` 더미 함수 교체:
-```js
+```javascript
 // 변경 전 (더미)
 async function callSymptomApi(symptomText) {
   return new Promise(resolve => {
@@ -168,32 +169,32 @@ async function callSymptomApi(symptomText) {
   const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
   const res = await fetch('/llm/symptom/analyze', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-TOKEN': csrfToken
-    },
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
     body: JSON.stringify({ symptomText })
   });
   if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
   return res.json();
 }
+// analyzeSymptom() 함수와 SYMPTOM_MAP 삭제
 ```
 
-> `analyzeSymptom()` 함수와 `SYMPTOM_MAP`은 삭제 (더 이상 불필요)
+---
+
+## 테스트 진행
+
+| 케이스 | 조건 | 기대 결과 |
+|--------|------|-----------|
+| 빌드 | ./gradlew build | BUILD SUCCESSFUL |
+| POST /llm/symptom/analyze | 증상 텍스트 입력 | dept, doctor, time JSON 반환 |
+| 파싱 실패 | Claude 응답 포맷 불일치 | 기본값 반환 (내과/의사이영희/09:00) |
+| 수동 테스트 | 증상 입력 → 결과 화면 표시 | direct-reservation 자동 채움 동작 |
 
 ---
 
 ## 완료 기준
 
-- [ ] `SymptomRequest`, `SymptomResponse` DTO 생성
-- [ ] `SymptomAnalysisService` 생성 (claudeRestClient 호출 + 파싱)
-- [ ] `SymptomController` 생성 (`POST /llm/symptom/analyze`)
-- [ ] `symptom-reservation.mustache` CSRF 메타 태그 + fetch 교체
-- [ ] `./gradlew build` 오류 없음
-- [ ] 수동 테스트: 증상 입력 → `/llm/symptom/analyze` → 결과 화면 표시
-
----
-
-## 다음 작업
-
-완료 후 → `W5-1-report.md` 작성
+- [x] `SymptomRequest`, `SymptomResponse` DTO 생성
+- [x] `SymptomAnalysisService` 생성 (claudeRestClient 호출 + 파싱)
+- [x] `SymptomController` 생성 (`POST /llm/symptom/analyze`)
+- [x] `symptom-reservation.mustache` CSRF 메타태그 + fetch 교체
+- [x] `./gradlew build` 오류 없음
