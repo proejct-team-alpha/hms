@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     ollama_embed_model: str = Field(default="nomic-embed-text", description="Ollama 임베딩 모델명")
 
     # vLLM (OpenAI 호환 API)
-    vllm_base_url: str = Field(default="http://localhost:8000", description="vLLM 서버 URL")
+    vllm_base_url: str = Field(default="http://localhost:9000", description="vLLM 서버 URL")
     vllm_model: str = Field(default="qwen2.5-7b", description="vLLM 모델명")
 
     # ChromaDB (벡터 검색 - Docker HttpClient)
@@ -54,11 +54,11 @@ class Settings(BaseSettings):
     use_reranking: bool = Field(default=False, description="Re-ranking 사용 여부")
 
     # MySQL (의학데이터 조회)
-    mysql_host: str = Field(default="127.0.0.1", description="MySQL 호스트")
-    mysql_port: int = Field(default=3307, ge=1, le=65535, description="MySQL 포트")
-    mysql_user: str = Field(default="root", description="MySQL 사용자")
-    mysql_password: str = Field(default="", description="MySQL 비밀번호 (환경변수 MYSQL_PASSWORD 필수)")
-    mysql_db: str = Field(default="llm_db", description="MySQL 데이터베이스명")
+    mysql_host: str = Field(default="192.168.0.22", description="MySQL 호스트")
+    mysql_port: int = Field(default=3306, ge=1, le=65535, description="MySQL 포트")
+    mysql_user: str = Field(default="hms_admin", description="MySQL 사용자")
+    mysql_password: str = Field(default="hms_password", description="MySQL 비밀번호 (환경변수 MYSQL_PASSWORD)")
+    mysql_db: str = Field(default="hms_db", description="MySQL 데이터베이스명")
 
     # CORS
     cors_origins: str = Field(default="http://localhost:8080,http://127.0.0.1:8080", description="허용 CORS origins (콤마 구분)")
