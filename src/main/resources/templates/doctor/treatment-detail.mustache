@@ -161,67 +161,58 @@
 
             {{^detail.canComplete}}
               <!-- 완료된 진료 기록 조회 -->
-              <div class="p-6 flex-1 flex flex-col gap-4">
+              <div class="p-6 flex-1 flex flex-col gap-6">
                 {{#detail.diagnosis}}
-                  <div>
-                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">진단 내용</h3>
-                    <div class="bg-slate-50 text-slate-700 p-4 rounded-xl text-sm border border-slate-100 leading-relaxed">{{detail.diagnosis}}</div>
-                  </div>
-                  <div>
-                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">처방 내역</h3>
-                    <div class="bg-slate-50 text-slate-700 p-4 rounded-xl text-sm border border-slate-100 leading-relaxed">{{detail.prescription}}</div>
+                  <div class="grid grid-cols-2 gap-6">
+                    <div>
+                      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">진단 내용</h3>
+                      <div class="bg-slate-50 text-slate-700 p-4 rounded-xl text-sm border border-slate-100 leading-relaxed whitespace-pre-wrap">{{detail.diagnosis}}</div>
+                    </div>
+                    <div>
+                      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">처방 내역</h3>
+                      <div class="bg-slate-50 text-slate-700 p-4 rounded-xl text-sm border border-slate-100 leading-relaxed whitespace-pre-wrap">{{detail.prescription}}</div>
+                    </div>
                   </div>
                   {{#detail.remark}}
                     <div>
                       <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">특이사항</h3>
-                      <div class="bg-slate-50 text-slate-700 p-4 rounded-xl text-sm border border-slate-100 leading-relaxed">{{detail.remark}}</div>
+                      <div class="bg-slate-50 text-slate-700 p-4 rounded-xl text-sm border border-slate-100 leading-relaxed whitespace-pre-wrap">{{detail.remark}}</div>
                     </div>
                   {{/detail.remark}}
                 {{/detail.diagnosis}}
                 {{^detail.diagnosis}}
-                  <div class="flex-1 flex items-center justify-center text-slate-400 text-sm">
-                    아직 진료 기록이 없습니다.
+                  <div class="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
+                    <i data-feather="inbox" class="w-12 h-12 opacity-20"></i>
+                    <p>기록된 진료 내용이 없습니다.</p>
                   </div>
                 {{/detail.diagnosis}}
-              </div>
 
-              <div class="px-6 pb-4 space-y-2">
-                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">사용 물품 내역</h3>
-                <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
-                  <table class="w-full text-xs">
-                    <thead class="bg-slate-100 text-slate-500">
-                      <tr>
-                        <th class="px-3 py-2 text-left font-medium">물품명</th>
-                        <th class="px-3 py-2 text-right font-medium">수량</th>
-                        <th class="px-3 py-2 text-right font-medium">시간</th>
-                      </tr>
-                    </thead>
-                    <tbody id="usage-log-tbody" class="divide-y divide-slate-100">
-                      {{#usageLogs}}
-                      <tr>
-                        <td class="px-3 py-2 text-slate-700 font-medium">{{itemName}}</td>
-                        <td class="px-3 py-2 text-right text-slate-600">{{amount}}개</td>
-                        <td class="px-3 py-2 text-right text-slate-400">{{usedAt}}</td>
-                      </tr>
-                      {{/usageLogs}}
-                      {{^usageLogs}}
-                      <tr id="usage-log-empty"><td colspan="3" class="px-3 py-2 text-xs text-slate-400">사용된 물품이 없습니다.</td></tr>
-                      {{/usageLogs}}
-                    </tbody>
-                  </table>
-                </div>
-                <div id="usage-log-pagination" class="flex items-center justify-between pt-1" style="display:none!important">
-                  <span id="usage-log-page-info" class="text-xs text-slate-500"></span>
-                  <div class="flex items-center gap-2">
-                    <button id="usage-log-prev" type="button"
-                            class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                      이전
-                    </button>
-                    <div id="usage-log-page-numbers" class="flex items-center gap-1"></div>
-                    <button id="usage-log-next" type="button"
-                            class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                      다음
-                    </button>
+                <div class="space-y-3">
+                  <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">사용한 물품 내역</h3>
+                  <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+                    <table class="w-full text-xs">
+                      <thead class="bg-slate-100 text-slate-500">
+                        <tr>
+                          <th class="px-3 py-2 text-left font-medium">물품명</th>
+                          <th class="px-3 py-2 text-left font-medium">사용자</th>
+                          <th class="px-3 py-2 text-right font-medium">수량</th>
+                          <th class="px-3 py-2 text-right font-medium">시간</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-100">
+                        {{#usageLogs}}
+                        <tr>
+                          <td class="px-3 py-2 text-slate-700 font-medium">{{itemName}}</td>
+                          <td class="px-3 py-2 text-slate-500">{{usedBy}}</td>
+                          <td class="px-3 py-2 text-right text-slate-600">{{amount}}개</td>
+                          <td class="px-3 py-2 text-right text-slate-400">{{usedAt}}</td>
+                        </tr>
+                        {{/usageLogs}}
+                        {{^usageLogs}}
+                        <tr><td colspan="4" class="px-3 py-2 text-xs text-slate-400 text-center">사용한 물품이 없습니다.</td></tr>
+                        {{/usageLogs}}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
@@ -229,10 +220,10 @@
               <div class="p-6 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex items-center justify-between">
                 <span class="text-sm font-medium text-green-600 flex items-center gap-1">
                   <i data-feather="check-circle" class="w-4 h-4"></i>
-                  진료 완료
+                  진료 완료됨
                 </span>
-                <a href="/doctor/completed-list" class="text-sm text-indigo-600 hover:text-indigo-800">
-                  완료 목록 보기
+                <a href="/doctor/completed-list" class="text-sm font-bold text-indigo-600 hover:text-indigo-800">
+                  목록으로 돌아가기
                 </a>
               </div>
             {{/detail.canComplete}}
@@ -243,10 +234,17 @@
         <!-- 물품 사용 섹션 — 진료 기록 아래 전체 너비 -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
           <div class="flex items-center justify-between">
-            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-              <i data-feather="package" class="w-5 h-5 text-indigo-600"></i>
-              물품 사용
-            </h3>
+            <div class="flex items-center gap-4">
+              <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                <i data-feather="package" class="w-5 h-5 text-indigo-600"></i>
+                물품 사용
+              </h3>
+              <button type="button" id="item-batch-use-btn"
+                      class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-1.5">
+                <i data-feather="plus-square" class="w-4 h-4"></i>
+                선택 물품 일괄 사용
+              </button>
+            </div>
             <!-- 카테고리 필터 -->
             <div class="flex gap-1.5" id="item-category-btns">
               <button type="button" data-cat="" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors">전체</button>
@@ -255,6 +253,49 @@
               <button type="button" data-cat="GENERAL_SUPPLIES" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">사무/비품</button>
             </div>
           </div>
+
+          <!-- 사용 물품 내역 — 실시간 목록 -->
+          <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+            <table class="w-full text-xs">
+              <thead class="bg-slate-100 text-slate-500">
+                <tr>
+                  <th class="px-3 py-2 text-left font-medium">물품명</th>
+                  <th class="px-3 py-2 text-left font-medium">사용자</th>
+                  <th class="px-3 py-2 text-right font-medium">수량</th>
+                  <th class="px-3 py-2 text-right font-medium">시간</th>
+                  <th class="px-3 py-2 text-center font-medium">관리</th>
+                </tr>
+              </thead>
+              <tbody id="usage-log-tbody" class="divide-y divide-slate-100">
+                {{#usageLogs}}
+                <tr>
+                  <td class="px-3 py-2 text-slate-700 font-medium">{{itemName}}</td>
+                  <td class="px-3 py-2 text-slate-500">{{usedBy}}</td>
+                  <td class="px-3 py-2 text-right text-slate-600">{{amount}}개</td>
+                  <td class="px-3 py-2 text-right text-slate-400">{{usedAt}}</td>
+                  <td class="px-3 py-2 text-center">
+                    <button type="button" onclick="cancelUsage({{id}})"
+                            class="p-1 text-red-500 hover:bg-red-50 rounded transition-colors" title="사용 취소">
+                      <i data-feather="x-circle" class="w-4 h-4"></i>
+                    </button>
+                  </td>
+                </tr>
+                {{/usageLogs}}
+                <tr id="usage-log-empty" style="{{#usageLogs.size}}display:none{{/usageLogs.size}}">
+                  <td colspan="5" class="px-3 py-2 text-xs text-slate-400 text-center">사용된 물품이 없습니다.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- 페이징 바 추가 (JS에서 사용하므로 상시 노출) -->
+          <div id="usage-log-pagination" class="flex items-center justify-center pt-1" style="display:none">
+            <div class="flex items-center gap-2">
+              <button id="usage-log-prev" type="button" class="px-2 py-1 text-[10px] border border-slate-200 rounded">이전</button>
+              <div id="usage-log-page-numbers" class="flex items-center gap-1"></div>
+              <button id="usage-log-next" type="button" class="px-2 py-1 text-[10px] border border-slate-200 rounded">다음</button>
+            </div>
+          </div>
+
           <!-- 검색 -->
           <div class="relative">
             <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
@@ -264,7 +305,7 @@
           <!-- 물품 카드 목록 — 가로 배치 -->
           <div class="grid grid-cols-4 gap-3" id="item-use-grid">
             {{#items}}
-            <div class="item-card border border-slate-200 rounded-xl p-3 space-y-2" data-category="{{category}}">
+            <div class="item-card border border-slate-200 rounded-xl p-3 space-y-2" data-category="{{category}}" data-id="{{id}}">
               <div class="item-name text-sm font-bold text-slate-800 truncate">{{name}}</div>
               <div class="text-xs text-slate-500">{{categoryText}}</div>
               <div class="text-xs font-bold {{#lowStock}}text-red-600{{/lowStock}}{{^lowStock}}text-slate-600{{/lowStock}}">
@@ -480,16 +521,66 @@
         logs.forEach(function(log) {
           const tr = document.createElement('tr');
           const td1 = document.createElement('td'); td1.className = 'px-3 py-2 text-slate-700 font-medium'; td1.textContent = log.itemName;
-          const td2 = document.createElement('td'); td2.className = 'px-3 py-2 text-right text-slate-600'; td2.textContent = log.amount + '개';
-          const td3 = document.createElement('td'); td3.className = 'px-3 py-2 text-right text-slate-400'; td3.textContent = log.usedAt;
-          tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
+          const td2 = document.createElement('td'); td2.className = 'px-3 py-2 text-slate-500'; td2.textContent = log.usedBy;
+          const td3 = document.createElement('td'); td3.className = 'px-3 py-2 text-right text-slate-600'; td3.textContent = log.amount + '개';
+          const td4 = document.createElement('td'); td4.className = 'px-3 py-2 text-right text-slate-400'; td4.textContent = log.usedAt;
+          
+          const td5 = document.createElement('td'); td5.className = 'px-3 py-2 text-center';
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'p-1 text-red-500 hover:bg-red-50 rounded transition-colors';
+          btn.title = '사용 취소';
+          btn.onclick = function() { cancelUsage(log.id); };
+          
+          const icon = document.createElement('i');
+          icon.setAttribute('data-feather', 'x-circle');
+          icon.className = 'w-4 h-4';
+          btn.appendChild(icon);
+          td5.appendChild(btn);
+
+          tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4); tr.appendChild(td5);
           tbody.appendChild(tr);
         });
+        if (typeof feather !== 'undefined') feather.replace();
       } else {
         if (emptyRow) emptyRow.style.display = '';
       }
       usageLogPage = 1;
       renderUsageLog();
+    }
+
+    // 물품 사용 취소
+    function cancelUsage(logId) {
+      if (!confirm('해당 물품 사용을 취소하시겠습니까? (재고가 복구됩니다)')) return;
+      
+      var reservationId = '{{detail.reservationId}}';
+      var csrfToken = '{{_csrf.token}}';
+      var csrfParam = '{{_csrf.parameterName}}';
+
+      var params = new URLSearchParams();
+      params.append('logId', logId);
+      params.append('reservationId', reservationId);
+      params.append(csrfParam, csrfToken);
+
+      fetch('/doctor/item/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString()
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data.itemId !== undefined && data.quantity !== undefined) {
+          // 해당 물품 카드를 찾아서 재고 수량 업데이트
+          var card = document.querySelector('.item-card[data-id="' + data.itemId + '"]');
+          if (card) {
+            var qtySpan = card.querySelector('.quantity-span');
+            if (qtySpan) qtySpan.textContent = data.quantity;
+          }
+          refreshUsageLogs(data.logs || []);
+        } else if (data.error) {
+          alert(data.error);
+        }
+      });
     }
 
     // 물품 사용 AJAX
@@ -533,6 +624,85 @@
 
     // 초기 렌더
     if (document.getElementById('item-use-grid')) applyFilter();
+
+    // 일괄 사용 버튼 클릭 이벤트
+    var batchBtn = document.getElementById('item-batch-use-btn');
+    if (batchBtn) {
+      batchBtn.addEventListener('click', function() {
+        var requests = [];
+        // 화면에 보이는 수량 입력 칸 중 0보다 큰 값을 가진 것들 수집
+        document.querySelectorAll('.item-card').forEach(function(card) {
+          var input = card.querySelector('input[name="amount"]');
+          var value = input.value.trim();
+          if (value !== '' && !isNaN(value) && Number(value) > 0) {
+            requests.push({
+              id: card.dataset.id,
+              amount: value
+            });
+          }
+        });
+
+        if (requests.length === 0) {
+          alert('수량을 입력한 물품이 없습니다.');
+          return;
+        }
+
+        if (!confirm(requests.length + '종의 물품을 일괄 사용 처리하시겠습니까?')) return;
+
+        var reservationId = '{{detail.reservationId}}';
+        var csrfToken = '{{_csrf.token}}';
+        var csrfHeader = '{{_csrf.headerName}}'; // 또는 URLSearchParams용 파라미터명
+
+        fetch('/doctor/item/use-batch', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+          },
+          body: JSON.stringify({
+            requests: requests,
+            reservationId: reservationId
+          })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.error) {
+            // 0. 전체적인 서버 에러 처리 (예: 잘못된 요청 등)
+            alert('요청을 처리할 수 없습니다:\n' + data.error);
+            return;
+          }
+
+          // 1. 성공한 항목들 재고 갱신 및 입력칸 비우기
+          var successCount = 0;
+          if (data.successes) {
+            successCount = data.successes.length;
+            data.successes.forEach(function(res) {
+              var card = document.querySelector('.item-card[data-id="' + res.itemId + '"]');
+              if (card) {
+                card.querySelector('.quantity-span').textContent = res.quantity;
+                card.querySelector('input[name="amount"]').value = '';
+              }
+            });
+          }
+
+          // 2. 로그 갱신
+          if (data.logs) refreshUsageLogs(data.logs);
+
+          // 3. 에러 발생 항목 알림 (구체적으로 어떤 품목인지)
+          if (data.errors && data.errors.length > 0) {
+            var msg = '일부 물품 처리에 실패했습니다 (' + successCount + '건 성공, ' + data.errors.length + '건 실패):\n\n';
+            msg += data.errors.join('\n');
+            msg += '\n\n실패한 물품의 수량을 확인하고 다시 시도해 주세요.';
+            alert(msg);
+          } else if (successCount > 0) {
+            alert('선택한 ' + successCount + '종의 모든 물품이 정상적으로 처리되었습니다.');
+          }
+        })
+        .catch(function(err) {
+          alert('네트워크 오류 또는 시스템 오류가 발생했습니다.\n잠시 후 다시 시도해 주세요.\n(상세내용: ' + err.message + ')');
+        });
+      });
+    }
   </script>
   <script>feather.replace();</script>
 </body>

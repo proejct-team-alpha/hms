@@ -92,6 +92,36 @@ public class DoctorTreatmentController {
         }
     }
 
+    @PostMapping("/item/use-batch")
+    @ResponseBody
+    public ResponseEntity<?> useItemBatch(@org.springframework.web.bind.annotation.RequestBody Map<String, Object> body) {
+        try {
+            List<Map<String, Object>> requests = (List<Map<String, Object>>) body.get("requests");
+            Long reservationId = Long.valueOf(body.get("reservationId").toString());
+            Map<String, Object> result = itemManagerService.useItemsBatch(requests, reservationId);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/item/cancel")
+    @ResponseBody
+    public ResponseEntity<?> cancelItem(@RequestParam("logId") Long logId,
+                                        @RequestParam("reservationId") Long reservationId) {
+        try {
+            java.util.Map<String, Object> result = itemManagerService.cancelItemUsage(logId);
+            List<ItemUsageLogDto> logs = itemManagerService.getUsageLogs(reservationId);
+            return ResponseEntity.ok(Map.of(
+                "itemId", result.get("itemId"),
+                "quantity", result.get("quantity"),
+                "logs", logs
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/treatment/start")
     public String startTreatment(@RequestParam("id") Long id,
                                  Authentication auth,
