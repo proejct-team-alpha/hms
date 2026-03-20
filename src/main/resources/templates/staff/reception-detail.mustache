@@ -31,8 +31,14 @@
               </div>
               <div>
                 <div class="flex items-center gap-2 mb-1">
+                  {{#detail.isFirstVisit}}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500 shrink-0">초</span>
+                  {{/detail.isFirstVisit}}
+                  {{^detail.isFirstVisit}}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500 shrink-0">재</span>
+                  {{/detail.isFirstVisit}}
                   <h2 class="text-xl font-bold text-slate-800">{{detail.patientName}}</h2>
-                  <span class="px-2.5 py-0.5 rounded-full text-xs font-medium {{detail.sourceBadgeClass}}">
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-medium {{detail.sourceBadgeClass}} ml-1">
                     {{detail.sourceText}} 예약
                   </span>
                 </div>

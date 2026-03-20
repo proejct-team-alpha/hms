@@ -96,4 +96,27 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                 @Param("date") LocalDate date,
                 @Param("excluded") ReservationStatus excluded,
                 @Param("excludeId") Long excludeId);
+
+        // ==========================================
+        // [신규 추가] 환자 초재진 판별 및 히스토리 관리용
+        // ==========================================
+
+        /**
+         * 특정 환자의 특정 상태(예: COMPLETED) 예약 건수를 조회합니다.
+         * (0건이면 초진, 1건 이상이면 재진으로 판단하는 근거가 됩니다.)
+         */
+        long countByPatient_IdAndStatus(Long patientId, ReservationStatus status);
+
+        /**
+         * 특정 환자의 모든 예약 이력을 최신순으로 조회합니다.
+         * (환자, 의사, 부서 정보를 한 번에 가져오도록 JOIN FETCH를 사용합니다.)
+         */
+        @Query("SELECT r FROM Reservation r " +
+               "JOIN FETCH r.patient " +
+               "JOIN FETCH r.doctor d " +
+               "JOIN FETCH d.staff " +
+               "JOIN FETCH r.department " +
+               "WHERE r.patient.id = :patientId " +
+               "ORDER BY r.reservationDate DESC, r.timeSlot DESC")
+        List<Reservation> findByPatient_IdOrderByReservationDateDesc(@Param("patientId") Long patientId);
 }

@@ -27,7 +27,32 @@ public class StaffReservationDto {
     private final boolean canReceive;
     private final boolean canCancel;
 
+    // ==========================================
+    // [신규 추가] 팀 프로젝트 - 환자 초재진 정보
+    // ==========================================
+    
+    /**
+     * 초진 여부 (true: 초진, false: 재진)
+     * 진료 완료된 이력이 0건이면 초진으로 표시됩니다.
+     */
+    private final boolean isFirstVisit;
+
+    /**
+     * 총 진료 완료 횟수
+     * 해당 환자가 지금까지 병원에서 진료를 마친 총 횟수입니다.
+     */
+    private final long visitCount;
+
     public StaffReservationDto(Reservation r) {
+        this(r, 0L); // 기본값 0으로 처리하는 생성자
+    }
+
+    /**
+     * 초재진 정보를 포함한 상세 생성자
+     * @param r 예약 엔티티
+     * @param completedCount 해당 환자의 진료 완료된 예약 건수
+     */
+    public StaffReservationDto(Reservation r, long completedCount) {
         this.id = r.getId();
         this.reservationNumber = r.getReservationNumber();
         this.patientName = r.getPatient().getName();
@@ -69,5 +94,8 @@ public class StaffReservationDto {
         this.canCancel = r.getStatus() == ReservationStatus.RESERVED
                 || r.getStatus() == ReservationStatus.RECEIVED;
 
+        // 초재진 판별 로직 적용
+        this.visitCount = completedCount;
+        this.isFirstVisit = (completedCount == 0);
     }
 }

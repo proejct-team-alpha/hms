@@ -20,12 +20,22 @@ public class DoctorTreatmentDetailDto {
     private final String prescription;
     private final String remark;
 
+    /**
+     * 초진 여부 (true: 초진, false: 재진)
+     */
+    private final boolean isFirstVisit;
+
     public DoctorTreatmentDetailDto(Reservation r, TreatmentRecord record) {
+        this(r, record, false);
+    }
+
+    public DoctorTreatmentDetailDto(Reservation r, TreatmentRecord record, boolean isFirstVisit) {
         this.reservationId = r.getId();
         this.patientName = r.getPatient().getName();
         this.patientPhone = r.getPatient().getPhone();
         this.note = r.getPatient().getNote() != null ? r.getPatient().getNote() : "증상 없음";
         this.timeSlot = r.getTimeSlot();
+        this.isFirstVisit = isFirstVisit;
         this.canStartTreatment = r.getStatus() == ReservationStatus.RECEIVED;
         this.canComplete = r.getStatus() == ReservationStatus.RECEIVED
                         || r.getStatus() == ReservationStatus.IN_TREATMENT;

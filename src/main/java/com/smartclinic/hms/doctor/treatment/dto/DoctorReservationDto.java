@@ -18,11 +18,21 @@ public class DoctorReservationDto {
     private final boolean canComplete;
     private final boolean canStartTreatment;
 
+    /**
+     * 초진 여부 (true: 초진, false: 재진)
+     */
+    private final boolean isFirstVisit;
+
     public DoctorReservationDto(Reservation r) {
+        this(r, false); // 기본값 설정
+    }
+
+    public DoctorReservationDto(Reservation r, boolean isFirstVisit) {
         this.id = r.getId();
         this.patientName = r.getPatient().getName();
         this.timeSlot = r.getTimeSlot();
         this.note = r.getPatient().getNote() != null ? r.getPatient().getNote() : "증상 없음";
+        this.isFirstVisit = isFirstVisit;
 
         switch (r.getStatus()) {
             case RECEIVED -> {

@@ -35,7 +35,15 @@
                     <i data-feather="user" class="w-5 h-5"></i>
                   </div>
                   <div>
-                    <h3 class="font-bold text-slate-800 text-lg">{{patientName}}</h3>
+                    <div class="flex items-center gap-2 mb-1">
+                      {{#isFirstVisit}}
+                      <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 shrink-0">초</span>
+                      {{/isFirstVisit}}
+                      {{^isFirstVisit}}
+                      <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 shrink-0">재</span>
+                      {{/isFirstVisit}}
+                      <h3 class="font-bold text-slate-800 text-lg">{{patientName}}</h3>
+                    </div>
                     <div class="flex items-center gap-1.5 text-sm text-slate-500 font-medium">
                       <i data-feather="clock" class="w-3.5 h-3.5"></i>
                       {{timeSlot}}

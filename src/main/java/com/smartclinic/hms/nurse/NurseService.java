@@ -4,6 +4,7 @@ import com.smartclinic.hms.domain.*;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.doctor.DoctorRepository;
 import com.smartclinic.hms.reservation.reservation.DepartmentRepository;
+import com.smartclinic.hms.reservation.reservation.ReservationRepository;
 import com.smartclinic.hms.staff.dto.StaffDepartmentOptionDto;
 import com.smartclinic.hms.staff.dto.StaffDoctorOptionDto;
 import com.smartclinic.hms.nurse.dto.*;
@@ -22,18 +23,22 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class NurseService {
 
-    private final NurseReservationRepository reservationRepository;
+    private final NurseReservationRepository nurseReservationRepository;
+    private final ReservationRepository reservationRepository; // 초재진 확인용
     private final NursePatientRepository patientRepository;
     private final DepartmentRepository departmentRepository;
     private final DoctorRepository doctorRepository;
 
     public NurseDashboardDto getDashboard() {
         LocalDate today = LocalDate.now();
-        List<Reservation> all = reservationRepository.findTodayNonCancelled(today, ReservationStatus.CANCELLED);
+        List<Reservation> all = nurseReservationRepository.findTodayNonCancelled(today, ReservationStatus.CANCELLED);
 
         List<NurseReservationDto> waitingList = all.stream()
                 .filter(r -> r.getStatus() == ReservationStatus.RECEIVED)
-                .map(NurseReservationDto::new)
+                .map(r -> {
+                    long count = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
+                    return new NurseReservationDto(r, count == 0);
+                })
                 .toList();
 
         long specialCount = all.stream()
@@ -56,24 +61,27 @@ public class NurseService {
             }
         }
 
+        Page<Reservation> reservationPage;
         if (status == null || status.isBlank()) {
-            return reservationRepository
+            reservationPage = nurseReservationRepository
                     .findTodayNonCancelledWithFiltersPage(today, ReservationStatus.CANCELLED, query, deptId, doctorId,
-                            src, pageable)
-                    .map(NurseReservationDto::new);
+                            src, pageable);
+        } else {
+            try {
+                ReservationStatus st = ReservationStatus.valueOf(status);
+                reservationPage = nurseReservationRepository
+                        .findTodayByStatusWithFiltersPage(today, st, query, deptId, doctorId, src, pageable);
+            } catch (IllegalArgumentException e) {
+                reservationPage = nurseReservationRepository
+                        .findTodayNonCancelledWithFiltersPage(today, ReservationStatus.CANCELLED, query, deptId, doctorId,
+                                src, pageable);
+            }
         }
 
-        try {
-            ReservationStatus st = ReservationStatus.valueOf(status);
-            return reservationRepository
-                    .findTodayByStatusWithFiltersPage(today, st, query, deptId, doctorId, src, pageable)
-                    .map(NurseReservationDto::new);
-        } catch (IllegalArgumentException e) {
-            return reservationRepository
-                    .findTodayNonCancelledWithFiltersPage(today, ReservationStatus.CANCELLED, query, deptId, doctorId,
-                            src, pageable)
-                    .map(NurseReservationDto::new);
-        }
+        return reservationPage.map(r -> {
+            long count = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
+            return new NurseReservationDto(r, count == 0);
+        });
     }
 
     public List<NurseStatusFilter> getStatusFilters(String selected, String query, Long deptId, Long doctorId,
@@ -117,14 +125,15 @@ public class NurseService {
     }
 
     public NursePatientDto getPatientDetail(Long reservationId) {
-        Reservation r = reservationRepository.findByIdWithDetails(reservationId)
+        Reservation r = nurseReservationRepository.findByIdWithDetails(reservationId)
                 .orElseThrow(() -> CustomException.notFound("예약 정보를 찾을 수 없습니다."));
-        return new NursePatientDto(r);
+        long count = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
+        return new NursePatientDto(r, count == 0);
     }
 
     @Transactional
     public void receiveReservation(Long reservationId) {
-        Reservation r = reservationRepository.findById(reservationId)
+        Reservation r = nurseReservationRepository.findById(reservationId)
                 .orElseThrow(() -> CustomException.notFound("예약 정보를 찾을 수 없습니다."));
         r.receive();
     }
