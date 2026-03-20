@@ -24,10 +24,10 @@ public class AdminPatientController {
 
     @GetMapping("/list")
     public String list(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String nameKeyword,
-            @RequestParam(required = false) String contactKeyword,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "nameKeyword", required = false) String nameKeyword,
+            @RequestParam(name = "contactKeyword", required = false) String contactKeyword,
             HttpServletRequest req) {
         AdminPatientListResponse result = adminPatientService.getPatientList(page, size, nameKeyword, contactKeyword);
         return renderListPage(req, result);
