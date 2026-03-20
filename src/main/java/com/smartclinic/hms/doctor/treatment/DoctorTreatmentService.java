@@ -32,7 +32,7 @@ public class DoctorTreatmentService {
         List<Reservation> active = reservationRepository.findTodayActiveByDoctor(username, today, ReservationStatus.CANCELLED);
         List<Reservation> completed = reservationRepository.findTodayByDoctorAndStatus(username, today, ReservationStatus.COMPLETED);
 
-        int totalPatients = active.size() + completed.size();
+        int totalPatients = active.size();
         int completedCount = completed.size();
         int waitingCount = (int) active.stream()
                 .filter(r -> r.getStatus() == ReservationStatus.RECEIVED)
@@ -104,6 +104,22 @@ public class DoctorTreatmentService {
     }
 
     @Transactional
+    public void saveTreatmentRecord(Long id, String username, String diagnosis, String prescription, String remark) {
+        Reservation reservation = reservationRepository.findByIdAndDoctor(id, username)
+                .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
+        Doctor doctor = doctorRepository.findByStaff_Username(username)
+                .orElseThrow(() -> CustomException.notFound("의사 정보를 찾을 수 없습니다."));
+
+        TreatmentRecord record = treatmentRecordRepository.findByReservation_Id(id).orElse(null);
+        if (record != null) {
+            record.update(diagnosis, prescription, remark);
+        } else {
+            record = TreatmentRecord.create(reservation, doctor, diagnosis, prescription, remark);
+            treatmentRecordRepository.save(record);
+        }
+    }
+
+    @Transactional
     public void completeTreatment(Long id, String username, String diagnosis, String prescription, String remark) {
         Reservation reservation = reservationRepository.findByIdAndDoctor(id, username)
                 .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
@@ -112,8 +128,12 @@ public class DoctorTreatmentService {
 
         reservation.complete();
 
-        TreatmentRecord record = TreatmentRecord.create(
-                reservation, doctor, diagnosis, prescription, remark != null ? remark : "");
-        treatmentRecordRepository.save(record);
+        TreatmentRecord record = treatmentRecordRepository.findByReservation_Id(id).orElse(null);
+        if (record != null) {
+            record.update(diagnosis, prescription, remark);
+        } else {
+            record = TreatmentRecord.create(reservation, doctor, diagnosis, prescription, remark);
+            treatmentRecordRepository.save(record);
+        }
     }
 }
