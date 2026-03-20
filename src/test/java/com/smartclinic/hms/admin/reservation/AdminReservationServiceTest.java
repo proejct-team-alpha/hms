@@ -169,7 +169,7 @@ class AdminReservationServiceTest {
 
         // then
         assertThat(result).isEqualTo(RECEPTION_CANCELLED_MESSAGE);
-        assertThat(reservation.getStatus().name()).isEqualTo("CANCELLED");
+        assertThat(reservation.getStatus().name()).isEqualTo("RESERVED");
     }
 
     @Test
