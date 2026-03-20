@@ -28,12 +28,12 @@ public class AdminMypageController {
 
     @PostMapping("/mypage")
     public String updateMypage(Authentication auth,
-                               @RequestParam String name,
-                               @RequestParam(required = false) String email,
-                               @RequestParam(required = false) String phone,
-                               @RequestParam(required = false) String currentPassword,
-                               @RequestParam(required = false) String newPassword,
-                               @RequestParam(required = false) String confirmPassword,
+                               @RequestParam(name = "name") String name,
+                               @RequestParam(name = "email", required = false) String email,
+                               @RequestParam(name = "phone", required = false) String phone,
+                               @RequestParam(name = "currentPassword", required = false) String currentPassword,
+                               @RequestParam(name = "newPassword", required = false) String newPassword,
+                               @RequestParam(name = "confirmPassword", required = false) String confirmPassword,
                                RedirectAttributes ra) {
         try {
             adminMypageService.updateMypage(auth.getName(), name, email, phone, currentPassword, newPassword, confirmPassword);
