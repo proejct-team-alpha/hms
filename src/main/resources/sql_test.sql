@@ -76,6 +76,59 @@ INSERT INTO item (name, category, quantity, min_quantity, created_at, updated_at
 ('마스크 (KF94)',      'MEDICAL_SUPPLIES',  3,  50, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- ==============================================================================
+-- [추가] 히스토리 테스트용 더미 데이터 (김명준 환자: 010-1111-2222)
+-- ==============================================================================
+
+-- 1. 과거 예약 데이터 (상태: COMPLETED)
+INSERT INTO reservation (reservation_number, patient_id, doctor_id, department_id, reservation_date, time_slot, status, source, created_at, updated_at) VALUES
+('RES-20260310-999', 1, 1, 1, '2026-03-10', '10:30', 'COMPLETED', 'PHONE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('RES-20260312-999', 1, 5, 4, '2026-03-12', '15:00', 'COMPLETED', 'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('RES-20260305-999', 1, 2, 2, '2026-03-05', '11:00', 'COMPLETED', 'WALKIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('RES-20260308-999', 1, 1, 1, '2026-03-08', '09:30', 'COMPLETED', 'PHONE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+-- 추가: 취소된 내역 (원무과 히스토리 확인용)
+('RES-20260220-000', 1, 2, 2, '2026-02-20', '14:00', 'CANCELLED', 'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('RES-20260301-000', 1, 5, 4, '2026-03-01', '16:30', 'CANCELLED', 'WALKIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+-- 추가: 아주 오래된 완료 내역 (페이징 2페이지 이상 확인용)
+('RES-20260115-000', 1, 1, 1, '2026-01-15', '10:00', 'COMPLETED', 'PHONE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+-- 추가: 이서연 환자(ID:2) 재진 테스트용 (완료 기록 1건 추가)
+('RES-20260301-002', 2, 2, 2, '2026-03-01', '11:00', 'COMPLETED', 'PHONE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- 2. 위 예약에 대한 진료 기록 (Treatment Record)
+-- 2026-03-10 내과 진료 기록
+INSERT INTO treatment_record (reservation_id, doctor_id, diagnosis, prescription, remark, created_at)
+SELECT r.id, 1, '만성 위염', '알마겔 1포, 무코스타 1정 (7일분 처방)', '자극적인 음식 피하고 식후 30분 복용 지도함 (SOAP TEST)', CURRENT_TIMESTAMP
+FROM reservation r WHERE r.reservation_number = 'RES-20260310-999';
+
+-- 2026-03-12 이비인후과 진료 기록
+INSERT INTO treatment_record (reservation_id, doctor_id, diagnosis, prescription, remark, created_at)
+SELECT r.id, 5, '알레르기성 비염', '씨잘정 1정, 나조넥스 나잘스프레이 (14일분)', '침구류 세탁 및 환기 자주 할 것을 권고함 (SOAP TEST)', CURRENT_TIMESTAMP
+FROM reservation r WHERE r.reservation_number = 'RES-20260312-999';
+
+-- 2026-03-05 외과 진료 기록
+INSERT INTO treatment_record (reservation_id, doctor_id, diagnosis, prescription, remark, created_at)
+SELECT r.id, 2, '장염 의증', '스멕타 1포, 에어탈 1정 (3일분)', '탈수 예방 위해 미지근한 물 자주 섭취 지도함 (SOAP TEST)', CURRENT_TIMESTAMP
+FROM reservation r WHERE r.reservation_number = 'RES-20260305-999';
+
+-- 2026-03-08 내과 진료 기록
+INSERT INTO treatment_record (reservation_id, doctor_id, diagnosis, prescription, remark, created_at)
+SELECT r.id, 1, '단순 몸살 감기', '타이레놀 ER 1정 (2일분)', '충분한 휴식과 수면 권고함 (SOAP TEST)', CURRENT_TIMESTAMP
+FROM reservation r WHERE r.reservation_number = 'RES-20260308-999';
+
+-- 2026-01-15 내과 진료 기록 (김명준 환자 오래된 기록)
+INSERT INTO treatment_record (reservation_id, doctor_id, diagnosis, prescription, remark, created_at)
+SELECT r.id, 1, '역류성 식도염', '넥시움정 20mg (28일분)', '취침 3시간 전 음식 섭취 금지 안내 (SOAP TEST)', CURRENT_TIMESTAMP
+FROM reservation r WHERE r.reservation_number = 'RES-20260115-000';
+
+-- 2026-03-01 외과 진료 기록 (이서연 환자 완료 기록)
+INSERT INTO treatment_record (reservation_id, doctor_id, diagnosis, prescription, remark, created_at)
+SELECT r.id, 2, '찰과상', '드레싱 및 항생제 연고 도포', '상처 부위 물 닿지 않게 주의 당부함', CURRENT_TIMESTAMP
+FROM reservation r WHERE r.reservation_number = 'RES-20260301-002';
+
+-- 3. 취소 사유 업데이트 (김명준 환자 취소 건)
+UPDATE reservation SET cancellation_reason = '갑작스러운 출장으로 인한 일정 변경' WHERE reservation_number = 'RES-20260220-000';
+UPDATE reservation SET cancellation_reason = '단순 변심 및 타 병원 방문' WHERE reservation_number = 'RES-20260301-000';
+
+-- ==============================================================================
 -- 테스트 로그인 정보
 -- ==============================================================================
 -- | 아이디   | 비밀번호    | 역할        |

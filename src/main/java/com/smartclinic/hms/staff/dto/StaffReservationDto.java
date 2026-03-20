@@ -39,20 +39,29 @@ public class StaffReservationDto {
 
     /**
      * 총 진료 완료 횟수
-     * 해당 환자가 지금까지 병원에서 진료를 마친 총 횟수입니다.
      */
     private final long visitCount;
 
+    /**
+     * 과거 진료 이력 목록 (최신순)
+     */
+    private final java.util.List<com.smartclinic.hms.domain.PatientHistoryDto> history;
+
     public StaffReservationDto(Reservation r) {
-        this(r, 0L); // 기본값 0으로 처리하는 생성자
+        this(r, 0L, new java.util.ArrayList<>()); // 기본값 처리
+    }
+
+    public StaffReservationDto(Reservation r, long completedCount) {
+        this(r, completedCount, new java.util.ArrayList<>()); // 히스토리 없이 생성하는 경우
     }
 
     /**
      * 초재진 정보를 포함한 상세 생성자
      * @param r 예약 엔티티
      * @param completedCount 해당 환자의 진료 완료된 예약 건수
+     * @param history 과거 전체 히스토리 목록
      */
-    public StaffReservationDto(Reservation r, long completedCount) {
+    public StaffReservationDto(Reservation r, long completedCount, java.util.List<com.smartclinic.hms.domain.PatientHistoryDto> history) {
         this.id = r.getId();
         this.reservationNumber = r.getReservationNumber();
         this.patientName = r.getPatient().getName();
@@ -65,6 +74,7 @@ public class StaffReservationDto {
         this.departmentName = r.getDepartment().getName();
         this.doctorName = r.getDoctor().getStaff().getName();
         this.cancellationReason = r.getCancellationReason();
+        this.history = history;
 
         this.statusText = switch (r.getStatus()) {
             case RESERVED -> "접수 대기";

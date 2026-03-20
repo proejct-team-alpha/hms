@@ -109,7 +109,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
         /**
          * 특정 환자의 모든 예약 이력을 최신순으로 조회합니다.
-         * (환자, 의사, 부서 정보를 한 번에 가져오도록 JOIN FETCH를 사용합니다.)
          */
         @Query("SELECT r FROM Reservation r " +
                "JOIN FETCH r.patient " +

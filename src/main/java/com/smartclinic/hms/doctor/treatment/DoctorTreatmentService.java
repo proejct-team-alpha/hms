@@ -9,6 +9,7 @@ import com.smartclinic.hms.domain.Doctor;
 import com.smartclinic.hms.domain.Reservation;
 import com.smartclinic.hms.domain.ReservationStatus;
 import com.smartclinic.hms.domain.TreatmentRecord;
+import com.smartclinic.hms.domain.PatientHistoryDto;
 import com.smartclinic.hms.reservation.reservation.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -120,8 +121,24 @@ public class DoctorTreatmentService {
         Reservation reservation = doctorReservationRepository.findByIdAndDoctor(id, username)
                 .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
         TreatmentRecord record = treatmentRecordRepository.findByReservation_Id(id).orElse(null);
+        
+        // 1. 초재진 판별을 위한 카운트
         long count = reservationRepository.countByPatient_IdAndStatus(reservation.getPatient().getId(), ReservationStatus.COMPLETED);
-        return new DoctorTreatmentDetailDto(reservation, record, count == 0);
+        
+        // 2. 과거 진료 히스토리 조회 (상태가 COMPLETED인 것만 필터링)
+        List<PatientHistoryDto> history = reservationRepository
+                .findByPatient_IdOrderByReservationDateDesc(reservation.getPatient().getId())
+                .stream()
+                .filter(r -> r.getStatus() == ReservationStatus.COMPLETED) // 진료 완료된 것만
+                .filter(r -> !r.getId().equals(id)) // 현재 보고 있는 예약은 제외
+                .map(r -> {
+                    // 각 예약에 해당하는 진료 기록을 찾아서 DTO 생성
+                    TreatmentRecord hRecord = treatmentRecordRepository.findByReservation_Id(r.getId()).orElse(null);
+                    return new PatientHistoryDto(r, hRecord);
+                })
+                .toList();
+
+        return new DoctorTreatmentDetailDto(reservation, record, count == 0, history);
     }
 
     @Transactional
