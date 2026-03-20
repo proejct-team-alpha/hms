@@ -8,6 +8,23 @@
   <meta name="_csrf_header" content="{{_csrf.headerName}}">
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
+  <style>
+    @keyframes skeleton-shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+      background-size: 200% 100%;
+      animation: skeleton-shimmer 1.5s ease-in-out infinite;
+      border-radius: 8px;
+    }
+    .skeleton-text { height: 14px; margin-bottom: 8px; }
+    .skeleton-text.w-60 { width: 60%; }
+    .skeleton-text.w-80 { width: 80%; }
+    .skeleton-text.w-40 { width: 40%; }
+    .skeleton-box { height: 56px; width: 100%; }
+  </style>
 </head>
 <body class="min-h-screen flex flex-col">
   {{> common/header-public}}
@@ -44,6 +61,23 @@
             >
               <span id="analyze-text">증상 분석하기</span>
             </button>
+
+            <div id="skeleton-result" class="hidden mt-8 p-6 bg-slate-50 rounded-xl border border-slate-200">
+              <div class="flex items-start gap-4">
+                <div class="skeleton" style="width:24px;height:24px;border-radius:50%;flex-shrink:0"></div>
+                <div class="w-full">
+                  <div class="skeleton skeleton-text w-40" style="height:20px;margin-bottom:12px"></div>
+                  <div class="skeleton skeleton-text w-80"></div>
+                  <div class="skeleton skeleton-text w-60"></div>
+                  <div class="grid grid-cols-3 gap-4 mt-4 mb-4">
+                    <div class="skeleton skeleton-box"></div>
+                    <div class="skeleton skeleton-box"></div>
+                    <div class="skeleton skeleton-box"></div>
+                  </div>
+                  <div class="skeleton" style="height:44px;width:100%;border-radius:12px"></div>
+                </div>
+              </div>
+            </div>
 
             <div id="recommendation-result" class="hidden mt-8 p-6 bg-indigo-50 rounded-xl border border-indigo-100 animate-in">
               <div class="flex items-start gap-4">
@@ -100,6 +134,7 @@
     const symptomInput         = document.getElementById('symptom-input');
     const analyzeBtn           = document.getElementById('analyze-btn');
     const recommendationResult = document.getElementById('recommendation-result');
+    const skeletonResult       = document.getElementById('skeleton-result');
     const errorToast           = document.getElementById('error-toast');
 
     analyzeBtn.disabled = true;
@@ -151,6 +186,8 @@
 
       analyzeBtn.disabled = true;
       const timer = startLoadingSteps();
+      skeletonResult.classList.remove('hidden');
+      recommendationResult.classList.add('hidden');
 
       try {
         const result = await callSymptomApi(text);
@@ -158,11 +195,13 @@
         document.getElementById('rec-dept').textContent   = result.dept;
         document.getElementById('rec-doctor').textContent = result.doctor;
         document.getElementById('rec-time').textContent   = result.time;
+        skeletonResult.classList.add('hidden');
         recommendationResult.classList.remove('hidden');
         feather.replace();
-        analyzeBtn.innerHTML = '증상 분석 완료';
+        document.getElementById('analyze-text').textContent = '증상 분석 완료';
       } catch (e) {
         clearInterval(timer);
+        skeletonResult.classList.add('hidden');
         errorToast.classList.remove('hidden');
         feather.replace();
         setTimeout(() => {
