@@ -3,90 +3,199 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>진료 완료 목록 - MediCare+</title>
+  <title>진료 완료 목록 - MediCare+ EMR</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
+  <style>
+    .calendar-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .calendar-day-header { text-align: center; font-size: 11px; font-weight: 700; padding: 8px 0; color: #64748b; }
+    .calendar-day-header.sun { color: #ef4444; }
+    .calendar-day { 
+      aspect-ratio: 1 / 1; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 12px; 
+      cursor: pointer; 
+      border-radius: 8px; 
+      transition: all 0.15s;
+      color: #334155;
+    }
+    .calendar-day:hover { background-color: #f1f5f9; }
+    .calendar-day.sun { color: #ef4444; }
+    .calendar-day.active { background-color: #4f46e5 !important; color: white !important; font-weight: 700; }
+    .calendar-day.today { color: #4f46e5; font-weight: 800; background-color: #eef2ff; }
+    .calendar-empty { aspect-ratio: 1 / 1; }
+    
+    .emr-row {
+      display: grid;
+      grid-template-columns: 100px 120px 150px 1fr 100px;
+      align-items: center;
+      padding: 1.1rem 1.5rem;
+      border-bottom: 1px solid #f1f5f9;
+      transition: all 0.2s;
+    }
+    .emr-row.clickable { cursor: pointer; }
+    .emr-row.clickable:hover { background-color: #f1f5f9; }
+    .emr-row:last-child { border-bottom: none; }
+  </style>
 </head>
-<body class="min-h-screen flex">
+<body class="min-h-screen flex text-slate-900 bg-[#f8fafc]">
   {{> common/sidebar-doctor}}
 
   <div class="main-content flex-1 flex flex-col ml-64">
     {{> common/header-staff}}
 
-    <main class="content-wrapper flex-1 p-6">
-      <div class="space-y-6 max-w-5xl mx-auto">
-        <div class="flex items-center gap-3 mb-8">
-          <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600">
-            <i data-feather="check-circle" class="w-6 h-6"></i>
+    <main class="content-wrapper flex-1 p-8">
+      <div class="max-w-6xl mx-auto">
+        
+        <!-- 상단 헤더 섹션 -->
+        <div class="flex items-end justify-between mb-8">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2 text-indigo-600 font-bold text-sm mb-1">
+              <i data-feather="calendar" class="w-4 h-4"></i>
+              <span>MediCare+</span>
+            </div>
+            <h1 class="text-3xl font-black text-slate-800 tracking-tight">
+              {{searchDate}} <span class="text-slate-400 font-light text-2xl ml-1">진료 완료 목록</span>
+            </h1>
           </div>
-          <div>
-            <h1 class="text-2xl font-bold text-slate-800">진료 완료 목록</h1>
-            <p class="text-slate-500 mt-1">오늘 진료가 완료된 환자 목록입니다.</p>
+          <div class="flex items-center gap-6">
+            <!-- 검색창 및 검색 버튼 추가 -->
+            <form action="/doctor/completed-list" method="get" class="flex items-center gap-2">
+              <input type="hidden" name="date" value="{{searchDate}}">
+              <div class="relative group">
+                <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors"></i>
+                <input type="text" name="query" value="{{#query}}{{query}}{{/query}}" placeholder="환자 이름 검색" 
+                       style="padding-left: 3.5rem !important;"
+                       class="pr-4 py-2.5 w-64 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm">
+              </div>
+              <button type="submit" class="px-5 py-2.5 bg-slate-800 text-white text-sm font-bold rounded-2xl hover:bg-slate-900 transition-all shadow-sm flex items-center gap-2">
+                검색
+              </button>
+            </form>
+            
+            <!-- 완료 환자 수 (해당 날짜 전체 카운트 고정) -->
+            <div class="text-right border-l border-slate-200 pl-6">
+              <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">일일 완료 환자</div>
+              <div class="text-2xl font-black text-slate-800">{{totalForDate}}<span class="text-sm font-medium text-slate-400 ml-1">명</span></div>
+            </div>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {{#reservations}}
-            <div onclick="location.href='/doctor/completed-detail?id={{id}}'"
-                 class="bg-white rounded-2xl p-6 border border-slate-200 transition-all cursor-pointer hover:shadow-md">
-              <div class="flex justify-between items-start mb-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-full flex items-center justify-center bg-green-100 text-green-600">
-                    <i data-feather="user" class="w-5 h-5"></i>
+        <div class="flex gap-8 items-start">
+          <!-- 왼쪽: 캘린더 사이드바 -->
+          <div class="w-72 shrink-0 space-y-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+              <div class="flex items-center justify-between mb-5">
+                <span id="calendar-header" class="text-sm font-bold text-slate-800"></span>
+                <div class="flex gap-1">
+                  <button type="button" id="prevMonth" class="p-1 hover:bg-slate-100 rounded-md transition-colors"><i data-feather="chevron-left" class="w-4 h-4 text-slate-400"></i></button>
+                  <button type="button" id="nextMonth" class="p-1 hover:bg-slate-100 rounded-md transition-colors"><i data-feather="chevron-right" class="w-4 h-4 text-slate-400"></i></button>
+                </div>
+              </div>
+              
+              <div class="calendar-container">
+                <div class="calendar-day-header sun">일</div>
+                <div class="calendar-day-header">월</div>
+                <div class="calendar-day-header">화</div>
+                <div class="calendar-day-header">수</div>
+                <div class="calendar-day-header">목</div>
+                <div class="calendar-day-header">금</div>
+                <div class="calendar-day-header text-blue-400">토</div>
+              </div>
+              
+              <div id="calendar-body" class="calendar-container">
+                <!-- JS 생성 -->
+              </div>
+            </div>
+
+            <button type="button" onclick="location.href='/doctor/completed-list'" 
+                    class="w-full py-3 bg-white border border-slate-200 text-slate-600 text-sm font-bold rounded-2xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm">
+              <i data-feather="refresh-cw" class="w-4 h-4"></i>
+              오늘 날짜로 돌아가기
+            </button>
+          </div>
+
+          <!-- 오른쪽: EMR 리스트 메인 -->
+          <div class="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <!-- 리스트 헤더 (호버 효과 및 클릭 기능 없음) -->
+            <div class="emr-row bg-slate-50 border-b border-slate-200 text-[11px] font-black text-slate-400 uppercase tracking-wider">
+              <div>진료 시간</div>
+              <div>이름</div>
+              <div>연락처</div>
+              <div>진단명</div>
+              <div class="text-right pr-4">진료기록</div>
+            </div>
+
+            <div class="divide-y divide-slate-100">
+              {{#reservations}}
+                <div class="emr-row clickable group" onclick="location.href='/doctor/completed-detail?id={{id}}'">
+                  <!-- 시간 -->
+                  <div class="flex items-center gap-2 text-sm font-bold text-slate-500">
+                    <i data-feather="clock" class="w-3.5 h-3.5 text-slate-300"></i>
+                    {{timeSlot}}
                   </div>
-                  <div>
-                    <div class="flex items-center gap-2 mb-1">
-                      {{#isFirstVisit}}
-                      <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 shrink-0">초</span>
-                      {{/isFirstVisit}}
-                      {{^isFirstVisit}}
-                      <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 shrink-0">재</span>
-                      {{/isFirstVisit}}
-                      <h3 class="font-bold text-slate-800 text-lg">{{patientName}}</h3>
-                    </div>
-                    <div class="flex items-center gap-1.5 text-sm text-slate-500 font-medium">
-                      <i data-feather="clock" class="w-3.5 h-3.5"></i>
-                      {{timeSlot}}
-                    </div>
+                  
+                  <!-- 이름 -->
+                  <div class="flex items-center gap-2">
+                    {{#isFirstVisit}}
+                    <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[9px] font-bold">초</span>
+                    {{/isFirstVisit}}
+                    {{^isFirstVisit}}
+                    <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[9px] font-bold">재</span>
+                    {{/isFirstVisit}}
+                    <span class="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{{patientName}}</span>
+                  </div>
+
+                  <!-- 연락처 -->
+                  <div class="text-sm text-slate-500 font-medium">
+                    {{patientPhone}}
+                  </div>
+
+                  <!-- 확정 진단명 -->
+                  <div class="text-sm text-slate-700 font-semibold truncate pr-8">
+                    {{diagnosis}}
+                  </div>
+
+                  <!-- 관리 버튼 -->
+                  <div class="text-right pr-4">
+                    <span class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-300 group-hover:text-indigo-600 transition-colors">
+                      <i data-feather="file-text" class="w-3.5 h-3.5"></i>
+                      보기
+                    </span>
                   </div>
                 </div>
-                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-green-600 text-white">
-                  진료 완료
-                </span>
-              </div>
-
-              <div class="bg-slate-50 rounded-xl p-3 text-sm text-slate-600 border border-slate-100 line-clamp-2">
-                {{note}}
-              </div>
-
-              <div class="mt-4 flex justify-between items-center">
-                <span class="text-xs font-medium px-2 py-1 rounded-md {{sourceBadgeClass}}">
-                  {{sourceText}}
-                </span>
-                <span class="text-sm font-medium text-green-600 flex items-center gap-1">
-                  완료됨 <i data-feather="check-circle" class="w-4 h-4"></i>
-                </span>
-              </div>
+              {{/reservations}}
+              
+              {{^reservations}}
+                <div class="py-32 flex flex-col items-center justify-center text-slate-400">
+                  <i data-feather="folder-minus" class="w-12 h-12 mb-4 opacity-10"></i>
+                  <p class="text-sm font-medium">
+                    {{#query}}"{{query}}"에 대한 검색 결과가 없습니다.{{/query}}
+                    {{^query}}선택하신 날짜에 진료 내역이 없습니다.{{/query}}
+                  </p>
+                </div>
+              {{/reservations}}
             </div>
-          {{/reservations}}
-          {{^reservations}}
-            <div class="col-span-3 p-8 text-center text-slate-500 bg-white rounded-2xl border border-slate-200">
-              진료 완료된 환자가 없습니다.
-            </div>
-          {{/reservations}}
-        </div>
 
-        <!-- 페이징 -->
-        <div class="flex items-center justify-center gap-1 py-4">
-          {{#hasPrev}}
-          <a href="{{prevUrl}}" class="px-3 py-1.5 rounded-lg text-sm text-slate-600 border border-slate-300 bg-white hover:bg-slate-100 transition-colors">이전</a>
-          {{/hasPrev}}
-          {{#pageLinks}}
-          <a href="{{url}}" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors {{#current}}bg-indigo-600 text-white{{/current}}{{^current}}text-slate-600 border border-slate-300 bg-white hover:bg-slate-100{{/current}}">{{num}}</a>
-          {{/pageLinks}}
-          {{#hasNext}}
-          <a href="{{nextUrl}}" class="px-3 py-1.5 rounded-lg text-sm text-slate-600 border border-slate-300 bg-white hover:bg-slate-100 transition-colors">다음</a>
-          {{/hasNext}}
+            <!-- 페이징 -->
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-center gap-1">
+              {{#hasPrev}}
+              <a href="{{prevUrl}}" class="p-2 rounded-lg hover:bg-white transition-colors text-slate-400"><i data-feather="chevron-left" class="w-4 h-4"></i></a>
+              {{/hasPrev}}
+              
+              <div class="flex items-center px-4 gap-2">
+                {{#pageLinks}}
+                <a href="{{url}}" class="w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all {{#current}}bg-indigo-600 text-white shadow-md{{/current}}{{^current}}text-slate-500 hover:bg-white{{/current}}">{{num}}</a>
+                {{/pageLinks}}
+              </div>
+
+              {{#hasNext}}
+              <a href="{{nextUrl}}" class="p-2 rounded-lg hover:bg-white transition-colors text-slate-400"><i data-feather="chevron-right" class="w-4 h-4"></i></a>
+              {{/hasNext}}
+            </div>
+          </div>
         </div>
       </div>
     </main>
@@ -94,6 +203,50 @@
     {{> common/footer-staff}}
   </div>
 
-  <script>feather.replace();</script>
+  <script>
+    feather.replace();
+
+    (function() {
+      var currentSearchDate = "{{searchDate}}";
+      var [sYear, sMonth, sDay] = currentSearchDate.split('-').map(Number);
+      var displayDate = new Date(sYear, sMonth - 1, 1);
+      
+      function renderCalendar() {
+        var year = displayDate.getFullYear();
+        var month = displayDate.getMonth();
+        document.getElementById('calendar-header').textContent = year + "년 " + (month + 1) + "월";
+        var firstDay = new Date(year, month, 1).getDay();
+        var lastDate = new Date(year, month + 1, 0).getDate();
+        var body = document.getElementById('calendar-body');
+        body.innerHTML = '';
+        
+        for (var i = 0; i < firstDay; i++) body.appendChild(document.createElement('div'));
+        
+        for (var d = 1; d <= lastDate; d++) {
+          var div = document.createElement('div');
+          div.className = 'calendar-day';
+          
+          var dayOfWeek = (firstDay + d - 1) % 7;
+          if (dayOfWeek === 0) div.classList.add('sun');
+          
+          div.textContent = d;
+          var f = year + "-" + String(month + 1).padStart(2, '0') + "-" + String(d).padStart(2, '0');
+          if (f === currentSearchDate) div.classList.add('active');
+          var today = new Date();
+          if (year === today.getFullYear() && month === today.getMonth() && d === today.getDate()) div.classList.add('today');
+          
+          var searchQuery = "{{#query}}{{query}}{{/query}}";
+          var targetUrl = "/doctor/completed-list?date=" + f;
+          if (searchQuery) targetUrl += "&query=" + encodeURIComponent(searchQuery);
+          
+          div.onclick = (function(url) { return function() { location.href = url; }; })(targetUrl);
+          body.appendChild(div);
+        }
+      }
+      document.getElementById('prevMonth').onclick = function() { displayDate.setMonth(displayDate.getMonth() - 1); renderCalendar(); feather.replace(); };
+      document.getElementById('nextMonth').onclick = function() { displayDate.setMonth(displayDate.getMonth() + 1); renderCalendar(); feather.replace(); };
+      renderCalendar();
+    })();
+  </script>
 </body>
 </html>

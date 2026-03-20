@@ -67,33 +67,59 @@ public class DoctorTreatmentService {
         LocalDate today = LocalDate.now();
         List<ReservationStatus> activeStatuses = List.of(ReservationStatus.RECEIVED, ReservationStatus.IN_TREATMENT);
         return doctorReservationRepository
-                .findTodayByDoctorAndStatusesPage(username, today, activeStatuses, PageRequest.of(page, 9))
+                .findTodayByDoctorAndStatusesPage(username, today, activeStatuses, PageRequest.of(page, 10))
                 .map(r -> {
                     long count = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
                     return new DoctorReservationDto(r, count == 0);
                 });
     }
 
-    public List<DoctorReservationDto> getCompletedList(String username) {
-        LocalDate today = LocalDate.now();
+    public List<DoctorReservationDto> getCompletedList(String username, LocalDate date) {
+        LocalDate searchDate = (date != null) ? date : LocalDate.now();
         return doctorReservationRepository
-                .findTodayByDoctorAndStatus(username, today, ReservationStatus.COMPLETED)
+                .findTodayByDoctorAndStatus(username, searchDate, ReservationStatus.COMPLETED)
                 .stream()
                 .map(r -> {
                     long count = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
-                    return new DoctorReservationDto(r, count == 0);
+                    // 확정된 진단명 가져오기
+                    String diagnosis = treatmentRecordRepository.findByReservation_Id(r.getId())
+                            .map(com.smartclinic.hms.domain.TreatmentRecord::getDiagnosis)
+                            .orElse("기록 없음");
+                    return new DoctorReservationDto(r, count == 0, diagnosis);
                 })
                 .toList();
     }
 
-    public Page<DoctorReservationDto> getCompletedPage(String username, int page) {
-        LocalDate today = LocalDate.now();
-        return doctorReservationRepository
-                .findTodayByDoctorAndStatusPage(username, today, ReservationStatus.COMPLETED, PageRequest.of(page, 9))
-                .map(r -> {
-                    long count = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
-                    return new DoctorReservationDto(r, count == 0);
-                });
+    public Page<DoctorReservationDto> getCompletedPage(String username, LocalDate date, String query, int page) {
+        LocalDate searchDate = (date != null) ? date : LocalDate.now();
+        Page<Reservation> result;
+        
+        if (query != null && !query.isBlank()) {
+            // 이름 검색어가 있는 경우
+            result = doctorReservationRepository.findTodayByDoctorAndStatusAndPatientNamePage(
+                    username, searchDate, ReservationStatus.COMPLETED, query, PageRequest.of(page, 10));
+        } else {
+            // 검색어가 없는 경우 (기존 방식)
+            result = doctorReservationRepository.findTodayByDoctorAndStatusPage(
+                    username, searchDate, ReservationStatus.COMPLETED, PageRequest.of(page, 10));
+        }
+
+        return result.map(r -> {
+            long count = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
+            // 확정된 진단명 가져오기
+            String diagnosis = treatmentRecordRepository.findByReservation_Id(r.getId())
+                    .map(com.smartclinic.hms.domain.TreatmentRecord::getDiagnosis)
+                    .orElse("기록 없음");
+            return new DoctorReservationDto(r, count == 0, diagnosis);
+        });
+    }
+
+    /**
+     * 특정 날짜의 전체 완료 환자 수를 조회합니다. (검색 필터 무시용)
+     */
+    public long getCompletedCountForDate(String username, LocalDate date) {
+        LocalDate searchDate = (date != null) ? date : LocalDate.now();
+        return doctorReservationRepository.findTodayByDoctorAndStatus(username, searchDate, ReservationStatus.COMPLETED).size();
     }
 
     // [W3-1] 폴링용: 오늘 날짜 RECEIVED + IN_TREATMENT 상태 조회

@@ -1,6 +1,7 @@
 package com.smartclinic.hms.doctor.treatment.dto;
 
 import com.smartclinic.hms.domain.Reservation;
+import com.smartclinic.hms.domain.ReservationStatus;
 import lombok.Getter;
 
 @Getter
@@ -8,6 +9,7 @@ public class DoctorReservationDto {
 
     private final Long id;
     private final String patientName;
+    private final String patientPhone;
     private final String timeSlot;
     private final String note;
     private final String statusText;
@@ -23,16 +25,27 @@ public class DoctorReservationDto {
      */
     private final boolean isFirstVisit;
 
+    /**
+     * 확정된 진단명 (진료 완료 목록용)
+     */
+    private final String diagnosis;
+
     public DoctorReservationDto(Reservation r) {
-        this(r, false); // 기본값 설정
+        this(r, false, null); // 기본값 설정
     }
 
     public DoctorReservationDto(Reservation r, boolean isFirstVisit) {
+        this(r, isFirstVisit, null);
+    }
+
+    public DoctorReservationDto(Reservation r, boolean isFirstVisit, String diagnosis) {
         this.id = r.getId();
         this.patientName = r.getPatient().getName();
+        this.patientPhone = r.getPatient().getPhone();
         this.timeSlot = r.getTimeSlot();
         this.note = r.getPatient().getNote() != null ? r.getPatient().getNote() : "증상 없음";
         this.isFirstVisit = isFirstVisit;
+        this.diagnosis = diagnosis;
 
         switch (r.getStatus()) {
             case RECEIVED -> {
