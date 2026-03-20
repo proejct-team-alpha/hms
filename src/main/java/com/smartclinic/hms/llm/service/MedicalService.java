@@ -77,7 +77,7 @@ public class MedicalService {
         MedicalHistory history = new MedicalHistory(query, "PENDING");
 
         if (staffId != null) {
-            staffRepository.findById(staffId).ifPresent(history::setStaff);
+            staffRepository.findById(staffId).ifPresent(history::assignStaff);
         }
 
         MedicalHistory saved = medicalHistoryRepository.save(history);
@@ -88,9 +88,7 @@ public class MedicalService {
     @Transactional
     public void updateMedicalCompleted(Long historyId, String answer, long latencyMs) {
         medicalHistoryRepository.findById(historyId).ifPresent(history -> {
-            history.setAnswer(answer);
-            history.setStatus("COMPLETED");
-            history.setMetadata(buildMetadata(latencyMs));
+            history.complete(answer, buildMetadata(latencyMs));
             medicalHistoryRepository.save(history);
             log.debug("MedicalHistory COMPLETED 업데이트 - id: {}, latency: {}ms", historyId, latencyMs);
         });
@@ -99,8 +97,7 @@ public class MedicalService {
     @Transactional
     public void updateMedicalFailed(Long historyId, String errorMessage) {
         medicalHistoryRepository.findById(historyId).ifPresent(history -> {
-            history.setStatus("FAILED");
-            history.setMetadata(buildErrorMetadata(errorMessage));
+            history.fail(buildErrorMetadata(errorMessage));
             medicalHistoryRepository.save(history);
             log.warn("MedicalHistory FAILED 업데이트 - id: {}, error: {}", historyId, errorMessage);
         });

@@ -3,14 +3,12 @@ package com.smartclinic.hms.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "medical_content")
 @Getter
-@Setter
 @NoArgsConstructor
 public class MedicalContent {
 

@@ -3,7 +3,6 @@ package com.smartclinic.hms.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
@@ -14,7 +13,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "medical_history")
 @Getter
-@Setter
 @NoArgsConstructor
 public class MedicalHistory {
 
@@ -51,5 +49,20 @@ public class MedicalHistory {
 
     public Long getStaffId() {
         return staff != null ? staff.getId() : null;
+    }
+
+    public void assignStaff(Staff staff) {
+        this.staff = staff;
+    }
+
+    public void complete(String answer, String metadata) {
+        this.answer = answer;
+        this.status = "COMPLETED";
+        this.metadata = metadata;
+    }
+
+    public void fail(String metadata) {
+        this.status = "FAILED";
+        this.metadata = metadata;
     }
 }

@@ -134,11 +134,25 @@ public class Reservation {
         if (this.status == ReservationStatus.RECEIVED) {
             // 진료 대기 상태에서 취소하면 접수 대기 상태로 되돌림
             this.status = ReservationStatus.RESERVED;
-            // 필요하다면 이때는 사유를 저장하지 않거나 별도 로그를 남길 수 있음
         } else if (this.status == ReservationStatus.RESERVED) {
             // 접수 대기 상태에서 취소하면 최종 취소 상태로 변경
             this.status = ReservationStatus.CANCELLED;
             this.cancellationReason = reason;
         }
+    }
+
+    /**
+     * 현재 상태와 무관하게 예약을 즉시 CANCELLED로 전이한다.
+     * 비회원 취소, 예약 변경(구 예약 폐기) 등 상태 단계와 무관하게 최종 취소가 필요한 경우에 사용한다.
+     */
+    public void cancelFully(String reason) {
+        if (this.status == ReservationStatus.COMPLETED) {
+            throw new IllegalStateException("진료 완료된 예약은 취소 불가");
+        }
+        if (this.status == ReservationStatus.CANCELLED) {
+            throw new IllegalStateException("이미 취소된 예약");
+        }
+        this.status = ReservationStatus.CANCELLED;
+        this.cancellationReason = reason;
     }
 }

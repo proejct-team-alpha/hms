@@ -15,6 +15,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -34,6 +36,14 @@ public class LlmReservationService {
 
         List<LlmReservationResponse.Slot> slots = new ArrayList<>();
         LocalDate today = LocalDate.now();
+        LocalDate fromDate = today.plusDays(1);
+        LocalDate toDate = today.plusDays(7);
+
+        // 날짜 범위 전체를 한 번에 조회해 인메모리 Set으로 변환 — 루프 내 N+1 방지
+        Set<String> bookedKeys = reservationRepository.findBookedSlotsBetween(doctorId, fromDate, toDate)
+                .stream()
+                .map(row -> row[0] + ":" + row[1])
+                .collect(Collectors.toSet());
 
         for (int dayOffset = 1; dayOffset <= 7; dayOffset++) {
             LocalDate date = today.plusDays(dayOffset);
@@ -48,9 +58,8 @@ public class LlmReservationService {
                             LocalTime slotEnd = slotTime.plusMinutes(30);
                             if (slotEnd.isAfter(schedule.getEndTime())) break;
 
-                            long count = reservationRepository
-                                    .countByDoctor_IdAndReservationDateAndStartTime(doctorId, date, slotTime);
-                            slots.add(new LlmReservationResponse.Slot(date, slotTime, slotEnd, count == 0));
+                            boolean available = !bookedKeys.contains(date + ":" + slotTime);
+                            slots.add(new LlmReservationResponse.Slot(date, slotTime, slotEnd, available));
                             slotTime = slotEnd;
                         }
                     });
