@@ -19,7 +19,7 @@ class Settings(BaseSettings):
 
     # LLM
     llm_backend: str = Field(default="vllm", description="LLM 백엔드 (huggingface | ollama | vllm)")
-    llm_model: str = Field(default="Qwen/Qwen2.5-7B-Instruct", description="Hugging Face 모델명")
+    llm_model: str = Field(default="Qwen/Qwen2.5-3B-Instruct", description="Hugging Face 모델명")
     llm_fallback_mock: bool = Field(default=False, description="torch 미지원 시 mock 사용")
 
     @field_validator("llm_fallback_mock", mode="before")
@@ -36,12 +36,12 @@ class Settings(BaseSettings):
 
     # Ollama (폴백 + 임베딩용)
     ollama_base_url: str = Field(default="http://localhost:11434", description="Ollama 서버 URL")
-    ollama_model: str = Field(default="qwen2.5:7b", description="Ollama 모델명")
+    ollama_model: str = Field(default="qwen2.5:3b", description="Ollama 모델명")
     ollama_embed_model: str = Field(default="nomic-embed-text", description="Ollama 임베딩 모델명")
 
     # vLLM (OpenAI 호환 API)
     vllm_base_url: str = Field(default="http://localhost:9000", description="vLLM 서버 URL")
-    vllm_model: str = Field(default="qwen2.5-7b", description="vLLM 모델명")
+    vllm_model: str = Field(default="qwen2.5-3b", description="vLLM 모델명")
 
     # ChromaDB (벡터 검색 - Docker HttpClient)
     chroma_host: str = Field(default="localhost", description="ChromaDB 서버 호스트")
