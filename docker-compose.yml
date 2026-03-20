@@ -19,6 +19,19 @@ services:
       retries: 15
       start_period: 90s
 
+  redis:
+    image: redis:7-alpine
+    container_name: hms-redis
+    ports:
+      - "0.0.0.0:6379:6379"
+    volumes:
+      - hms_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   chromadb:
     image: chromadb/chroma:1.5.4
     container_name: hms-chromadb
@@ -82,8 +95,12 @@ services:
       - SPRING_DATASOURCE_USERNAME=hms_admin
       - SPRING_DATASOURCE_PASSWORD=hms_password
       - LLM_SERVICE_URL=http://python-llm:8000
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
     depends_on:
       mysql:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       python-llm:
         condition: service_started
@@ -91,3 +108,4 @@ services:
 volumes:
   hms_mysql_data:
   hms_chroma_data:
+  hms_redis_data:
