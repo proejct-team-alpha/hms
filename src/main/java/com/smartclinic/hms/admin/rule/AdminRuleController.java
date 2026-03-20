@@ -20,11 +20,11 @@ public class AdminRuleController {
 
     @GetMapping("/list")
     public String list(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "ALL") String category,
-            @RequestParam(defaultValue = "ALL") String active,
-            @RequestParam(required = false) String keyword,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "category", defaultValue = "ALL") String category,
+            @RequestParam(name = "active", defaultValue = "ALL") String active,
+            @RequestParam(name = "keyword", required = false) String keyword,
             Model model) {
         AdminRuleListResponse result = adminRuleService.getRuleList(page, size, category, active, keyword);
         model.addAttribute("model", result);
