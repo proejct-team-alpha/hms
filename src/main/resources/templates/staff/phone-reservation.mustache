@@ -45,8 +45,22 @@
                 <label class="block text-sm font-medium text-slate-700 mb-2">연락처</label>
                 <div class="relative">
                   <i data-feather="phone" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input type="tel" name="phone" pattern="\d{3}-\d{4}-\d{4}" maxlength="13" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="010-1234-5678" value="{{#form}}{{phone}}{{/form}}" />
+                  <input 
+                    type="tel" 
+                    id="phoneInput"
+                    name="phone" 
+                    pattern="\d{3}-\d{4}-\d{4}" 
+                    maxlength="13" 
+                    required 
+                    class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" 
+                    placeholder="010-1234-5678" 
+                    value="{{#form}}{{phone}}{{/form}}" 
+                  />
                 </div>
+                <p class="mt-2 text-xs text-slate-500 flex items-center gap-1.5 ml-1">
+                  <i data-feather="info" class="w-3.5 h-3.5"></i>
+                  숫자만 입력하시면 하이픈(-)이 자동으로 추가됩니다.
+                </p>
               </div>
             </div>
 
@@ -168,26 +182,65 @@
 
       // booked-slots API 호출 → 예약 불가 시간 비활성화
       async function refreshTimeSlots() {
-        const doctorId = docSelect.value;
-        const date     = dateInput.value;
-        const opts     = Array.from(timeSelect.querySelectorAll('option[value]'));
-        opts.forEach(function(opt) {
-          opt.disabled = false;
-          opt.textContent = opt.value;
-        });
-        if (!doctorId || !date) return;
-        try {
-          const res    = await fetch('/api/reservation/booked-slots?doctorId=' + doctorId + '&date=' + date);
-          const booked = await res.json();
-          opts.forEach(function(opt) {
-            if (booked.includes(opt.value)) {
-              opt.disabled = true;
-              opt.textContent = opt.value + ' (예약불가)';
-              if (timeSelect.value === opt.value) timeSelect.value = '';
-            }
-          });
-        } catch (e) {}
+  const doctorId = docSelect.value;
+  const date     = dateInput.value;
+  const opts     = Array.from(timeSelect.querySelectorAll('option[value]'));
+
+  // 1. 초기화
+  opts.forEach(function(opt) {
+    opt.disabled = false;
+    opt.textContent = opt.value;
+  });
+
+  if (!doctorId || !date) return;
+
+  try {
+    const res = await fetch('/api/reservation/booked-slots?doctorId=' + doctorId + '&date=' + date);
+    if (!res.ok) throw new Error();
+
+    const booked = await res.json();
+
+    // 2. 예약 불가 처리
+    opts.forEach(function(opt) {
+      if (booked.includes(opt.value)) {
+        opt.disabled = true;
+        opt.textContent = opt.value + ' (예약불가)';
       }
+    });
+
+    // 3. 오늘 기준 마감 처리
+    const today = new Date().toISOString().slice(0, 10);
+
+    if (date === today) {
+      const now = new Date();
+      const currentTime = now.getHours() * 60 + now.getMinutes();
+
+      opts.forEach(function(opt) {
+        const [hour, minute] = opt.value.split(':').map(Number);
+        const optionTime = hour * 60 + minute;
+
+        if (optionTime <= currentTime) {
+          opt.disabled = true;
+          opt.textContent = opt.value + ' (마감)';
+        }
+      });
+    }
+
+    
+
+    // 5. 자동 추천 (가장 빠른 시간 선택)
+    timeSelect.value = ''; // 기존 선택 초기화
+
+const firstAvailable = opts.find(opt => !opt.disabled && opt.value);
+
+if (firstAvailable) {
+  timeSelect.value = firstAvailable.value;
+}
+
+  } catch (e) {
+    console.error('슬롯 조회 실패');
+  }
+}
 
       // Flatpickr 초기화 (의사 선택 전: 전체 날짜 비활성)
       const datePicker = flatpickr(dateInput, {
@@ -199,23 +252,64 @@
       });
 
       // 의사 availableDays → Flatpickr 갱신
-      function applyDoctorAvailableDays() {
+      async function applyDoctorAvailableDays(autoSelect = false) {
         const selectedOption   = docSelect.options[docSelect.selectedIndex];
-        const availableDaysStr = (selectedOption && selectedOption.dataset.availableDays) || '';
+        
+        if (!selectedOption || !selectedOption.value) {
+          datePicker.set('disable', [function() { return true; }]);
+          datePicker.clear();
+          Array.from(timeSelect.querySelectorAll('option[value]')).forEach(function(opt) {
+            opt.disabled = false;
+            opt.textContent = opt.value;
+          });
+          timeSelect.value = '';
+          return;
+        }
+
+        const availableDaysStr = selectedOption.dataset.availableDays || '';
         const availableDayNums = availableDaysStr
           .split(',')
           .map(function(d) { return DAY_MAP[d.trim()]; })
           .filter(function(n) { return n !== undefined; });
 
-        datePicker.clear();
         if (availableDayNums.length > 0) {
           datePicker.set('disable', [
             function(date) { return !availableDayNums.includes(date.getDay()); }
           ]);
+
+          if (autoSelect) {
+            // 가장 빠른 예약 가능 날짜 찾기
+            let d = new Date();
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const lastSlotMinutes = 17 * 60 + 30; // 마지막 슬롯 17:30
+
+            let foundDate = null;
+            for (let i = 0; i < 30; i++) {
+              if (availableDayNums.includes(d.getDay())) {
+                if (i === 0 && currentMinutes >= lastSlotMinutes) {
+                  // 오늘 마감 시간 지남
+                } else {
+                  foundDate = new Date(d);
+                  break;
+                }
+              }
+              d.setDate(d.getDate() + 1);
+            }
+
+            if (foundDate) {
+              datePicker.setDate(foundDate, true); // onChange 트리거 -> refreshTimeSlots 호출됨
+              return;
+            } else {
+              datePicker.clear();
+            }
+          }
         } else {
           datePicker.set('disable', [function() { return true; }]);
+          datePicker.clear();
         }
-        // 시간 슬롯 초기화
+
+        // 시간 슬롯 초기화 (수동 선택 시)
         Array.from(timeSelect.querySelectorAll('option[value]')).forEach(function(opt) {
           opt.disabled = false;
           opt.textContent = opt.value;
@@ -223,8 +317,8 @@
         timeSelect.value = '';
       }
 
-      deptSelect.addEventListener('change', function() { filterDoctorsOnly(); applyDoctorAvailableDays(); });
-      docSelect.addEventListener('change', function() { applyDoctorAvailableDays(); refreshTimeSlots(); });
+      deptSelect.addEventListener('change', function() { filterDoctorsOnly(); applyDoctorAvailableDays(true); });
+      docSelect.addEventListener('change', function() { applyDoctorAvailableDays(true); });
 
       // 폼 오류 복원
       const restoreDeptId = '{{#form}}{{departmentId}}{{/form}}';
@@ -240,6 +334,29 @@
       await refreshTimeSlots();
       if (restoreTime) timeSelect.value = restoreTime;
     })();
+
+    
   </script>
+
+
+<script>
+const phoneInput = document.getElementById('phoneInput');
+
+// 하이픈 자동 삽입
+phoneInput.addEventListener('input', function (e) {
+  let value = e.target.value.replace(/\D/g, '');
+
+  if (value.length <= 3) {
+    value = value;
+  } else if (value.length <= 7) {
+    value = value.slice(0, 3) + '-' + value.slice(3);
+  } else {
+    value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+  }
+
+  e.target.value = value;
+});
+</script>
+
 </body>
 </html>

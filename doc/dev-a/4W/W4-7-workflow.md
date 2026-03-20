@@ -5,11 +5,13 @@
 `LlmPageController`(SSR)를 추가한다. `docker-compose.yml`도 HMS 기준으로 신규 작성한다.
 
 ## 작업 목록
-<!-- TODO 1. templates/llm/medical.mustache 신규 (medical.html 변환, header-public 포함, API URL 수정) -->
-<!-- TODO 2. templates/llm/chatbot.mustache 신규 (chat.html 변환, header-staff + sidebar-doctor/nurse 포함, STAFF_ID 제거) -->
-<!-- TODO 3. llm/controller/LlmPageController.java 신규 (GET /llm/medical, GET /llm/chatbot) -->
-<!-- TODO 4. docker-compose.yml 신규 작성 (mysql, chromadb, python-llm, spring-app) -->
-<!-- TODO 5. 빌드 확인 -->
+
+1. `templates/llm/medical.mustache` 신규 — `medical.html` Mustache 변환, `{{> common/header-public}}` 포함, API URL `/llm/medical/*` 로 수정
+2. `templates/llm/chatbot.mustache` 신규 — `chat.html` Mustache 변환, `{{> common/header-staff}}` 포함, `STAFF_ID` 하드코딩 제거
+3. `llm/controller/LlmPageController.java` 신규 — `GET /llm/medical`, `GET /llm/chatbot` SSR 컨트롤러
+4. `docker-compose.yml` 신규 작성 — `mysql`, `chromadb`, `python-llm`, `spring-app` 4개 서비스, HMS 포트 8080
+5. `./gradlew build` — 템플릿 렌더링 및 빌드 오류 없음 검증
+6. `python-llm/` 수동 복사 안내 — `spring-python-llm-exam-mng/python-llm/` → `hms/python-llm/`
 
 ## 진행 현황
 - [x] 1. medical.mustache 신규

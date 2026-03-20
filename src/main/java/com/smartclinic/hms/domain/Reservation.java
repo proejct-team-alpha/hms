@@ -67,6 +67,9 @@ public class Reservation {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "cancellation_reason", length = 500)
+    private String cancellationReason;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -91,6 +94,7 @@ public class Reservation {
         r.reservationDate = reservationDate;
         r.timeSlot = timeSlot;
         r.source = source;
+        r.status = ReservationStatus.RESERVED; // 기본 상태 명시적 초기화
         return r;
     }
 
@@ -116,12 +120,25 @@ public class Reservation {
     }
 
     public void cancel() {
+        this.cancel(null);
+    }
+
+    public void cancel(String reason) {
         if (this.status == ReservationStatus.COMPLETED) {
             throw new IllegalStateException("진료 완료된 예약은 취소 불가");
         }
         if (this.status == ReservationStatus.CANCELLED) {
             throw new IllegalStateException("이미 취소된 예약");
         }
-        this.status = ReservationStatus.CANCELLED;
+
+        if (this.status == ReservationStatus.RECEIVED) {
+            // 진료 대기 상태에서 취소하면 접수 대기 상태로 되돌림
+            this.status = ReservationStatus.RESERVED;
+            // 필요하다면 이때는 사유를 저장하지 않거나 별도 로그를 남길 수 있음
+        } else if (this.status == ReservationStatus.RESERVED) {
+            // 접수 대기 상태에서 취소하면 최종 취소 상태로 변경
+            this.status = ReservationStatus.CANCELLED;
+            this.cancellationReason = reason;
+        }
     }
 }

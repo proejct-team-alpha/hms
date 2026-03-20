@@ -1,6 +1,7 @@
 package com.smartclinic.hms.admin.reservation;
 
 import com.smartclinic.hms.admin.reservation.dto.AdminReservationListResponse;
+import com.smartclinic.hms.admin.reservation.dto.AdminReservationItemResponse;
 import com.smartclinic.hms.admin.reservation.dto.AdminReservationPageLinkResponse;
 import com.smartclinic.hms.admin.reservation.dto.AdminReservationStatusOptionResponse;
 import com.smartclinic.hms.common.exception.CustomException;
@@ -24,6 +25,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -40,7 +42,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(AdminControllerTestSecurityConfig.class)
 class AdminReservationControllerTest {
 
-    private static final String CANCEL_SUCCESS_MESSAGE = "예약이 취소되었습니다.";
+    private static final String RESERVATION_CANCELLED_MESSAGE = "예약이 취소되었습니다.";
+    private static final String RECEPTION_CANCELLED_MESSAGE = "접수가 취소되었습니다.";
     private static final String INVALID_STATUS_MESSAGE = "취소할 수 없는 상태입니다.";
 
     @Autowired
@@ -77,7 +80,10 @@ class AdminReservationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/reservation-list"))
                 .andExpect(request().attribute("model", viewModel))
-                .andExpect(request().attribute("pageTitle", "예약 목록"));
+                .andExpect(request().attribute("pageTitle", "예약 목록"))
+                .andExpect(content().string(containsString("예약과 접수 현황을 상태별로 확인하고 관리합니다.")))
+                .andExpect(content().string(containsString("상태 필터")))
+                .andExpect(content().string(containsString("조회된 내역이 없습니다.")));
 
         then(adminReservationService).should().getReservationList(1, 10, null);
     }
@@ -119,8 +125,156 @@ class AdminReservationControllerTest {
     }
 
     @Test
-    @DisplayName("예약 취소 성공 시 목록으로 리다이렉트하고 성공 메시지를 남긴다")
-    void cancel_success_redirectsWithSuccessMessage() throws Exception {
+    @DisplayName("예약 목록은 RECEIVED 상태를 접수 라벨로 렌더링한다")
+    void list_rendersReceivedFilterAsReceptionLabel() throws Exception {
+        // given
+        AdminReservationListResponse viewModel = new AdminReservationListResponse(
+                List.of(),
+                List.of(
+                        new AdminReservationStatusOptionResponse("ALL", "전체", "/admin/reservation/list?page=1&size=10&status=ALL", false),
+                        new AdminReservationStatusOptionResponse("RECEIVED", "접수", "/admin/reservation/list?page=1&size=10&status=RECEIVED", true)
+                ),
+                List.of(new AdminReservationPageLinkResponse(1, "/admin/reservation/list?page=1&size=10&status=RECEIVED", true)),
+                "RECEIVED",
+                0,
+                1,
+                10,
+                1,
+                false,
+                false,
+                "",
+                ""
+        );
+        given(adminReservationService.getReservationList(1, 10, "RECEIVED")).willReturn(viewModel);
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/reservation/list")
+                        .param("status", "RECEIVED")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(">접수</a>")));
+
+        then(adminReservationService).should().getReservationList(1, 10, "RECEIVED");
+    }
+
+    @Test
+    @DisplayName("예약 목록은 접수 상태 예약 row를 접수 배지로 렌더링한다")
+    void list_rendersReceivedReservationRowWithReceptionBadge() throws Exception {
+        // given
+        AdminReservationItemResponse receivedItem = new AdminReservationItemResponse(
+                12L,
+                "RES-20260319-012",
+                "2026-03-19",
+                "10:30",
+                "홍길동",
+                "010-1234-5678",
+                "내과",
+                "김의사",
+                "RECEIVED",
+                "접수",
+                true,
+                false,
+                true,
+                false,
+                false
+        );
+        AdminReservationListResponse viewModel = new AdminReservationListResponse(
+                List.of(receivedItem),
+                List.of(
+                        new AdminReservationStatusOptionResponse("RECEIVED", "접수", "/admin/reservation/list?page=1&size=10&status=RECEIVED", true)
+                ),
+                List.of(new AdminReservationPageLinkResponse(1, "/admin/reservation/list?page=1&size=10&status=RECEIVED", true)),
+                "RECEIVED",
+                1,
+                1,
+                10,
+                1,
+                false,
+                false,
+                "",
+                ""
+        );
+        given(adminReservationService.getReservationList(1, 10, "RECEIVED")).willReturn(viewModel);
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/reservation/list")
+                        .param("status", "RECEIVED")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("RES-20260319-012")))
+                .andExpect(content().string(containsString("홍길동")))
+                .andExpect(content().string(containsString(">접수</span>")))
+                .andExpect(content().string(containsString(">취소</button>")))
+                .andExpect(content().string(containsString("접수를 취소하시겠습니까?")));
+
+        then(adminReservationService).should().getReservationList(1, 10, "RECEIVED");
+    }
+
+    @Test
+    @DisplayName("예약 목록은 예약 상태 row를 예약 취소 버튼과 확인 문구로 렌더링한다")
+    void list_rendersReservedReservationRowWithReservationCancelCopy() throws Exception {
+        // given
+        AdminReservationItemResponse reservedItem = new AdminReservationItemResponse(
+                13L,
+                "RES-20260319-013",
+                "2026-03-19",
+                "11:00",
+                "김예약",
+                "010-9876-5432",
+                "외과",
+                "박의사",
+                "RESERVED",
+                "예약",
+                true,
+                true,
+                false,
+                false,
+                false
+        );
+        AdminReservationListResponse viewModel = new AdminReservationListResponse(
+                List.of(reservedItem),
+                List.of(
+                        new AdminReservationStatusOptionResponse("RESERVED", "예약", "/admin/reservation/list?page=1&size=10&status=RESERVED", true)
+                ),
+                List.of(new AdminReservationPageLinkResponse(1, "/admin/reservation/list?page=1&size=10&status=RESERVED", true)),
+                "RESERVED",
+                1,
+                1,
+                10,
+                1,
+                false,
+                false,
+                "",
+                ""
+        );
+        given(adminReservationService.getReservationList(1, 10, "RESERVED")).willReturn(viewModel);
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/reservation/list")
+                        .param("status", "RESERVED")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("RES-20260319-013")))
+                .andExpect(content().string(containsString("김예약")))
+                .andExpect(content().string(containsString(">예약</span>")))
+                .andExpect(content().string(containsString(">취소</button>")))
+                .andExpect(content().string(containsString("예약을 취소하시겠습니까?")));
+
+        then(adminReservationService).should().getReservationList(1, 10, "RESERVED");
+    }
+
+    @Test
+    @DisplayName("접수 취소 성공 시 서비스가 반환한 성공 메시지로 목록에 복귀한다")
+    void cancel_success_redirectsWithReturnedSuccessMessage() throws Exception {
+        // given
+        given(adminReservationService.cancelReservation(100L)).willReturn(RECEPTION_CANCELLED_MESSAGE);
+
         // when
         // then
         mockMvc.perform(post("/admin/reservation/cancel")
@@ -132,7 +286,7 @@ class AdminReservationControllerTest {
                         .with(csrf()))
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", containsString("/admin/reservation/list?page=2&size=10&status=RECEIVED")))
-                .andExpect(flash().attribute("successMessage", CANCEL_SUCCESS_MESSAGE));
+                .andExpect(flash().attribute("successMessage", RECEPTION_CANCELLED_MESSAGE));
 
         then(adminReservationService).should().cancelReservation(100L);
     }
@@ -156,6 +310,50 @@ class AdminReservationControllerTest {
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", containsString("/admin/reservation/list?page=2&size=10&status=COMPLETED")))
                 .andExpect(flash().attribute("errorMessage", INVALID_STATUS_MESSAGE));
+
+        then(adminReservationService).should().cancelReservation(100L);
+    }
+
+    @Test
+    @DisplayName("예약 취소 후 잘못된 status 파라미터는 ALL로 정규화된다")
+    void cancel_invalidStatus_redirectsWithAllFallback() throws Exception {
+        // given
+        given(adminReservationService.cancelReservation(100L)).willReturn(RESERVATION_CANCELLED_MESSAGE);
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/reservation/cancel")
+                        .param("reservationId", "100")
+                        .param("page", "3")
+                        .param("size", "5")
+                        .param("status", "INVALID")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", containsString("/admin/reservation/list?page=3&size=5&status=ALL")))
+                .andExpect(flash().attribute("successMessage", RESERVATION_CANCELLED_MESSAGE));
+
+        then(adminReservationService).should().cancelReservation(100L);
+    }
+
+    @Test
+    @DisplayName("예약 취소 후 소문자 status 파라미터도 정상적으로 복귀한다")
+    void cancel_lowercaseReceived_redirectsWithNormalizedStatus() throws Exception {
+        // given
+        given(adminReservationService.cancelReservation(100L)).willReturn(RECEPTION_CANCELLED_MESSAGE);
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/reservation/cancel")
+                        .param("reservationId", "100")
+                        .param("page", "1")
+                        .param("size", "10")
+                        .param("status", "received")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", containsString("/admin/reservation/list?page=1&size=10&status=RECEIVED")))
+                .andExpect(flash().attribute("successMessage", RECEPTION_CANCELLED_MESSAGE));
 
         then(adminReservationService).should().cancelReservation(100L);
     }

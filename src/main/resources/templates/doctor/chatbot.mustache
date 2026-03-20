@@ -86,20 +86,20 @@
       setLoading(true);
       document.getElementById('error-msg').classList.add('hidden');
 
-      fetch('/llm/chatbot/ask', {
+      fetch('/llm/chatbot/query', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           [csrfHeader]: csrfToken
         },
-        body: JSON.stringify({ message: message })
+        body: JSON.stringify({ query: message })
       })
       .then(res => {
         if (!res.ok) throw new Error('서버 오류가 발생했습니다.');
-        return res.json();
+        return res.text();
       })
       .then(data => {
-        appendMessage('bot', data.answer || data.message || '응답을 받지 못했습니다.');
+        appendMessage('bot', data || '응답을 받지 못했습니다.');
       })
       .catch(err => {
         const errEl = document.getElementById('error-msg');

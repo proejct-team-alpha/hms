@@ -5,10 +5,11 @@
 SSE 스트리밍은 제외, WebClient 용도만 추가한다.
 
 ## 작업 목록
-<!-- TODO 1. build.gradle — spring-boot-starter-webflux 의존성 추가 -->
-<!-- TODO 2. application-dev.properties — LLM 서비스 설정값 추가 -->
-<!-- TODO 3. WebClientConfig.java — config/ 패키지에 이식 (패키지명 변경) -->
-<!-- TODO 4. 빌드 확인 — ./gradlew build 오류 없음 검증 -->
+
+1. `build.gradle` — `spring-boot-starter-webflux` 의존성 추가
+2. `application-dev.properties` — LLM 서비스 설정값 추가 (`llm.service.url`, timeout)
+3. `WebClientConfig.java` — `config/` 패키지에 이식 (패키지명만 변경)
+4. `./gradlew build` — 오류 없음 검증
 
 ## 진행 현황
 - [x] 1. build.gradle 의존성 추가
