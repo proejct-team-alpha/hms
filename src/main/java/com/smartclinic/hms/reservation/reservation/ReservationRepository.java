@@ -85,6 +85,16 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         long countByDoctor_IdAndReservationDateAndStartTime(
                 Long doctorId, java.time.LocalDate date, java.time.LocalTime startTime);
 
+        // LLM 슬롯 조회용 — 날짜 범위 내 예약된 (date, startTime) 배치 조회 (N+1 방지)
+        @Query("SELECT r.reservationDate, r.startTime FROM Reservation r " +
+               "WHERE r.doctor.id = :doctorId " +
+               "AND r.reservationDate BETWEEN :fromDate AND :toDate " +
+               "AND r.status <> com.smartclinic.hms.domain.ReservationStatus.CANCELLED")
+        List<Object[]> findBookedSlotsBetween(
+                @Param("doctorId") Long doctorId,
+                @Param("fromDate") LocalDate fromDate,
+                @Param("toDate") LocalDate toDate);
+
         // 예약 변경 페이지용 — 현재 수정 중인 예약 제외
         @Query("SELECT r.timeSlot FROM Reservation r " +
                "WHERE r.doctor.id = :doctorId " +

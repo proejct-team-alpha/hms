@@ -1,6 +1,7 @@
 package com.smartclinic.hms.llm;
 
 import com.smartclinic.hms.auth.StaffRepository;
+import com.smartclinic.hms.common.util.SecurityUtils;
 import com.smartclinic.hms.domain.MedicalHistory;
 import com.smartclinic.hms.domain.MedicalHistoryRepository;
 import com.smartclinic.hms.llm.controller.MedicalController;
@@ -60,6 +61,9 @@ class MedicalControllerTest {
     @MockitoBean
     StaffRepository staffRepository;
 
+    @MockitoBean
+    SecurityUtils securityUtils;
+
     @Test
     @DisplayName("POST /llm/medical/query - 비인증 200 (permitAll)")
     void query_비인증_200() throws Exception {
@@ -100,14 +104,27 @@ class MedicalControllerTest {
     }
 
     @Test
-    @DisplayName("GET /llm/medical/history/{staffId} - 인증 200")
+    @DisplayName("GET /llm/medical/history/{staffId} - 인증, 본인 staffId 일치 시 200")
     void history_인증_200() throws Exception {
+        // given - securityUtils가 인증된 staffId 1L 반환 (path variable과 일치)
+        given(securityUtils.resolveStaffId()).willReturn(1L);
         given(medicalHistoryRepository.findByStaff_IdOrderByCreatedAtDesc(any(), any()))
                 .willReturn(Page.empty());
 
         mockMvc.perform(get("/llm/medical/history/1")
                         .with(user("doctor").roles("DOCTOR")))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /llm/medical/history/{staffId} - 타인의 staffId 접근 시 403")
+    void history_타인staffId_403() throws Exception {
+        // given - 인증된 사용자 staffId가 2L이지만 path variable은 1L
+        given(securityUtils.resolveStaffId()).willReturn(2L);
+
+        mockMvc.perform(get("/llm/medical/history/1")
+                        .with(user("doctor").roles("DOCTOR")))
+                .andExpect(status().isForbidden());
     }
 
     @TestConfiguration

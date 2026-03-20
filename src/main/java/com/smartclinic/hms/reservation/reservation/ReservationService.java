@@ -133,7 +133,7 @@ public class ReservationService {
                                 reservation.getReservationDate().toString(),
                                 reservation.getTimeSlot());
 
-                reservation.cancel();
+                reservation.cancelFully(null);
                 return info;
         }
 
@@ -157,7 +157,7 @@ public class ReservationService {
                 }
 
                 Patient patient = old.getPatient();
-                old.cancel();
+                old.cancelFully(null);
 
                 Doctor doctor = doctorRepository.findById(form.doctorId())
                                 .orElseThrow(() -> CustomException.notFound("의사를 찾을 수 없습니다."));
