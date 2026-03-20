@@ -1,129 +1,91 @@
-# W4-7 UI 이식 및 docker-compose 작성
+# W4-7 Workflow — UI 이식 및 docker-compose 작성
 
-## 작업 목표
-`spring-python-llm-exam-mng`의 `medical.html`, `chat.html`을 HMS Mustache 템플릿으로 변환하고,
-`LlmPageController`(SSR)를 추가한다. `docker-compose.yml`도 HMS 기준으로 신규 작성한다.
-
-## 작업 목록
-
-1. `templates/llm/medical.mustache` 신규 — `medical.html` Mustache 변환, `{{> common/header-public}}` 포함, API URL `/llm/medical/*` 로 수정
-2. `templates/llm/chatbot.mustache` 신규 — `chat.html` Mustache 변환, `{{> common/header-staff}}` 포함, `STAFF_ID` 하드코딩 제거
-3. `llm/controller/LlmPageController.java` 신규 — `GET /llm/medical`, `GET /llm/chatbot` SSR 컨트롤러
-4. `docker-compose.yml` 신규 작성 — `mysql`, `chromadb`, `python-llm`, `spring-app` 4개 서비스, HMS 포트 8080
-5. `./gradlew build` — 템플릿 렌더링 및 빌드 오류 없음 검증
-6. `python-llm/` 수동 복사 안내 — `spring-python-llm-exam-mng/python-llm/` → `hms/python-llm/`
-
-## 진행 현황
-- [x] 1. medical.mustache 신규
-- [x] 2. chatbot.mustache 신규
-- [x] 3. LlmPageController 신규
-- [x] 4. docker-compose.yml 신규
-- [x] 5. 빌드 확인 — BUILD SUCCESSFUL
-
-## 수정/추가 파일
-
-**신규 템플릿**
-- `templates/llm/medical.mustache`
-- `templates/llm/chatbot.mustache`
-
-**신규 Controller**
-- `llm/controller/LlmPageController.java`
-
-**신규 설정**
-- `docker-compose.yml` (프로젝트 루트)
-
-**수동 작업 안내** (workflow 실행 대상 아님)
-- `python-llm/` 디렉토리: `spring-python-llm-exam-mng/python-llm/`에서 수동 복사
+> **작성일**: 4W
+> **브랜치**: `feature/Llm`
+> **목표**: medical.html, chat.html을 HMS Mustache 템플릿으로 변환 + docker-compose.yml 작성
 
 ---
 
-## 상세 내용
+## 전체 흐름
 
-### 1. medical.mustache
-
-원본: `spring-python-llm-exam-mng/src/main/resources/static/medical.html`
-
-**변경 사항**
-
-| 항목 | 원본 | HMS |
-|---|---|---|
-| 레이아웃 | 독립 HTML | `{{> common/header-public}}` 포함, `style.css` + `feather.min.js` 로드 |
-| body 구조 | `height:100vh; flex-column` | `min-h-screen flex flex-col` (HMS 공통) |
-| STREAM_URL | `/api/medical/query/stream` | `/llm/medical/query/stream` |
-| CONSULT_URL | `/api/medical/query/consult` | `/llm/medical/query/consult` |
-| SLOTS_URL | `/api/reservation/slots` | `/llm/reservation/slots` |
-| RESERVATION_URL | `/api/reservation` (POST) | 제거 — 예약 생성 미이식, 슬롯 조회까지만 |
-| 예약 버튼 | confirmBooking() 호출 | 버튼 제거 (선택만 가능, 실제 예약은 /reservation 플로우로 안내) |
-
-**레이아웃 구조**
-```html
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" ...>
-  <title>AI 증상 상담 - MediCare+</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <script src="/js/feather.min.js"></script>
-  <style> /* medical.html의 CSS 변수 및 스타일 유지 */ </style>
-</head>
-<body class="min-h-screen flex flex-col" style="background: var(--bg);">
-  {{> common/header-public}}
-  <!-- chat-messages, quick-chips, chat-input-area -->
-  <script>
-    var STREAM_URL = "/llm/medical/query/stream";
-    var CONSULT_URL = "/llm/medical/query/consult";
-    var SLOTS_URL = "/llm/reservation/slots";
-    /* confirmBooking 제거, loadSlots에서 예약 버튼 제거 */
-  </script>
-</body>
-</html>
+```
+spring-llm HTML → HMS Mustache 변환
+  → LlmPageController SSR 추가
+  → docker-compose.yml HMS 기준 작성
+  → python-llm/ 수동 복사 안내
 ```
 
-### 2. chatbot.mustache
+---
 
-원본: `spring-python-llm-exam-mng/src/main/resources/static/chat.html`
+## 인터뷰 결과
 
-`/llm/chatbot/**`는 `authenticated` 정책이므로 staff 레이아웃 사용.
-어떤 역할이든 접근 가능하도록 sidebar는 포함하지 않고 `header-staff`만 포함.
+| 항목 | 내용 |
+|------|------|
+| medical.html | → medical.mustache, header-public 포함, API URL /llm/medical/* |
+| chat.html | → chatbot.mustache, header-staff 포함, STAFF_ID 하드코딩 제거 |
+| docker-compose | mysql, chromadb, python-llm, spring-app 4개 서비스 |
+| python-llm/ | 수동 복사 필요 (workflow 실행 대상 아님) |
 
-**변경 사항**
+---
 
-| 항목 | 원본 | HMS |
-|---|---|---|
-| 레이아웃 | 독립 HTML | `{{> common/header-staff}}` 포함, HMS 공통 CSS/JS |
-| STAFF_ID | `var STAFF_ID = 1;` 하드코딩 | 제거 — 서버 측 `resolveStaffId()` 처리 |
-| X-Staff-Id 헤더 | fetch 요청에 포함 | 제거 (세션 인증으로 서버 처리) |
-| STREAM_URL | `/api/chat/query/stream` | `/llm/chatbot/query/stream` |
-| FALLBACK_URL | `/api/chat/query` | `/llm/chatbot/query` |
-| CSRF | X-Staff-Id 헤더 사용 | CSRF ignore 설정이므로 불필요, 제거 유지 |
+## 실행 흐름
 
-**레이아웃 구조**
-```html
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" ...>
-  <title>병원규칙 Q&A - MediCare+</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <script src="/js/feather.min.js"></script>
-  <style> /* chat.html의 CSS 변수 및 스타일 유지 */ </style>
-</head>
-<body class="min-h-screen flex flex-col" style="background: var(--bg);">
-  {{> common/header-staff}}
-  <!-- chat-messages, quick-chips, chat-input-area -->
-  <script>
-    feather.replace();
-    var STREAM_URL = "/llm/chatbot/query/stream";
-    var FALLBACK_URL = "/llm/chatbot/query";
-    /* STAFF_ID 제거, X-Staff-Id 헤더 제거 */
-  </script>
-</body>
-</html>
+```
+[1] templates/llm/medical.mustache 신규 — medical.html 변환
+[2] templates/llm/chatbot.mustache 신규 — chat.html 변환
+[3] LlmPageController.java 신규 — GET /llm/medical, GET /llm/chatbot
+[4] docker-compose.yml 신규 — HMS 기준 4개 서비스
+[5] ./gradlew build 검증
 ```
 
-### 3. LlmPageController
+---
+
+## UI Mockup
+
+```
+[AI 증상 상담 - /llm/medical]
+┌─────────────────────────────────┐
+│  HMS Header (비인증 접근 가능)   │
+├─────────────────────────────────┤
+│  chat-messages 영역              │
+│  quick-chips                    │
+│  [입력창] [전송]                 │
+└─────────────────────────────────┘
+
+[병원규칙 Q&A - /llm/chatbot]
+┌─────────────────────────────────┐
+│  HMS Staff Header (인증 필요)   │
+├─────────────────────────────────┤
+│  chat-messages 영역              │
+│  [입력창] [전송]                 │
+└─────────────────────────────────┘
+```
+
+---
+
+## 작업 목록
+
+1. `templates/llm/medical.mustache` 신규 — `{{> common/header-public}}`, API URL `/llm/medical/*` 수정
+2. `templates/llm/chatbot.mustache` 신규 — `{{> common/header-staff}}`, `STAFF_ID` 하드코딩 제거
+3. `LlmPageController.java` 신규 — `GET /llm/medical`, `GET /llm/chatbot`
+4. `docker-compose.yml` 신규 — mysql, chromadb, python-llm, spring-app (포트 8080)
+5. `./gradlew build` 검증
+
+---
+
+## 작업 진행내용
+
+- [x] medical.mustache 신규
+- [x] chatbot.mustache 신규
+- [x] LlmPageController 신규
+- [x] docker-compose.yml 신규
+- [x] 빌드 확인 — BUILD SUCCESSFUL
+
+---
+
+## 실행 흐름에 대한 코드
+
+### LlmPageController
 
 ```java
 @Controller
@@ -142,86 +104,52 @@ public class LlmPageController {
 }
 ```
 
-- `/llm/medical` — `permitAll` (SecurityConfig 기존 설정)
-- `/llm/chatbot` — `authenticated` (SecurityConfig 기존 설정)
+### medical.mustache — API URL 변경
 
-### 4. docker-compose.yml
+```javascript
+var STREAM_URL  = "/llm/medical/query/stream";   // /api/medical/query/stream → 변경
+var CONSULT_URL = "/llm/medical/query/consult";  // /api/medical/query/consult → 변경
+var SLOTS_URL   = "/llm/reservation/slots";       // /api/reservation/slots → 변경
+// confirmBooking() 제거 — 예약은 /reservation 플로우로 안내
+```
 
-원본: `spring-python-llm-exam-mng/docker-compose.yml` 참조, HMS 기준으로 수정.
+### chatbot.mustache — STAFF_ID 제거
 
-**변경 사항**
+```javascript
+// 제거: var STAFF_ID = 1;
+// 제거: X-Staff-Id 헤더
+var STREAM_URL   = "/llm/chatbot/query/stream";  // /api/chat/query/stream → 변경
+var FALLBACK_URL = "/llm/chatbot/query";          // /api/chat/query → 변경
+```
 
-| 항목 | spring-llm | HMS |
-|---|---|---|
-| DB 이름 | `llm_db` | `hms_db` |
-| DB 사용자 | `llm_admin` / `llm_password` | `hms_admin` / `hms_password` |
-| spring-app 포트 | `8081:8081` | `8080:8080` |
-| python-llm context | `./python-llm` | `./python-llm` (수동 복사 필요) |
-| LLM_SERVICE_URL | `http://python-llm:8000` | `http://python-llm:8000` (동일) |
+### docker-compose.yml (주요 변경사항)
 
 ```yaml
-services:
-  mysql:
-    image: mysql:8.0
-    container_name: hms-db
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: hms_db
-      MYSQL_USER: hms_admin
-      MYSQL_PASSWORD: hms_password
-    ports:
-      - "0.0.0.0:3306:3306"
-    volumes:
-      - hms_mysql_data:/var/lib/mysql
-    command: --default-authentication-plugin=mysql_native_password
-    healthcheck: ...
-
-  chromadb:
-    image: chromadb/chroma:1.5.4
-    container_name: hms-chromadb
-    ports:
-      - "0.0.0.0:8100:8000"
-    volumes:
-      - hms_chroma_data:/chroma/chroma
-
-  python-llm:
-    build:
-      context: ./python-llm   # spring-python-llm-exam-mng/python-llm/ 수동 복사 필요
-      dockerfile: Dockerfile
-    container_name: hms-python
-    ports:
-      - "0.0.0.0:8000:8000"
-    environment:
-      - MYSQL_DB=hms_db
-      - CHROMA_HOST=chromadb
-      ... (나머지 spring-llm과 동일)
-
-  spring-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: hms-spring
-    ports:
-      - "0.0.0.0:8080:8080"
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/hms_db
-      - SPRING_DATASOURCE_USERNAME=hms_admin
-      - SPRING_DATASOURCE_PASSWORD=hms_password
-      - LLM_SERVICE_URL=http://python-llm:8000
-
-volumes:
-  hms_mysql_data:
-  hms_chroma_data:
+# DB: llm_db → hms_db, 포트 8081 → 8080
+spring-app:
+  ports:
+    - "0.0.0.0:8080:8080"
+  environment:
+    - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/hms_db
+    - LLM_SERVICE_URL=http://python-llm:8000
 ```
 
-**수동 작업 안내 (실행 전 준비)**
-```
-# spring-python-llm-exam-mng/python-llm/ → hms/python-llm/ 복사
-cp -r ../spring-python-llm-exam-mng/python-llm ./python-llm
-```
+---
 
-## 수용 기준
-- [ ] `./gradlew build` 오류 없음
-- [ ] GET /llm/medical → medical.mustache 렌더링
-- [ ] GET /llm/chatbot → chatbot.mustache 렌더링 (미인증 시 /login 리다이렉트)
-- [ ] docker-compose.yml 문법 오류 없음 (`docker compose config` 확인)
+## 테스트 진행
+
+| 케이스 | 조건 | 기대 결과 |
+|--------|------|-----------|
+| GET /llm/medical | 비인증 | 200 OK, medical.mustache 렌더링 |
+| GET /llm/chatbot | 비인증 | 3xx → /login |
+| GET /llm/chatbot | 인증 후 | 200 OK, chatbot.mustache 렌더링 |
+| docker-compose | `docker compose config` | 문법 오류 없음 |
+
+---
+
+## 완료 기준
+
+- [x] `./gradlew build` 오류 없음
+- [x] GET /llm/medical 비인증 200
+- [x] GET /llm/chatbot 비인증 리다이렉트 / 인증 200
+- [x] docker-compose.yml 문법 오류 없음

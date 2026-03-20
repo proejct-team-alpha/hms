@@ -1,45 +1,86 @@
-# W2-#3 Workflow: 의사 진료 가능 요일 기반 날짜 제한
+# W2-3 Workflow — 의사 진료 가능 요일 기반 날짜 제한 (Flatpickr)
 
-## 개요
+> **작성일**: 2W
+> **목표**: 의사 선택 시 `available_days` 기반으로 Flatpickr 캘린더에서 불가 요일 비활성화
 
-의사 선택 시 해당 의사의 `available_days`(MON,WED,FRI 형식)를 API 응답에 포함시키고,
-Flatpickr 캘린더 라이브러리를 통해 가능 요일이 아닌 날은 회색 처리 + 클릭 자체를 막는다.
+---
+
+## 전체 흐름
+
+```
+DoctorDto에 availableDays 추가
+  → 의사 선택 이벤트 → availableDays 파싱
+  → Flatpickr 재초기화 (불가 요일 회색 + 클릭 불가)
+```
+
+---
+
+## 인터뷰 결과
+
+| 항목 | 내용 |
+|------|------|
+| 요청 | 의사 진료 가능 요일 외 날짜 선택 불가 |
+| 캘린더 라이브러리 | Flatpickr 적용 |
+| availableDays 형식 | `MON,WED,FRI` (쉼표 구분) |
+| 불가 날짜 처리 | 회색 표시 + 클릭 불가 |
+| 애니메이션 | 비활성화 |
 
 ---
 
 ## 실행 흐름
 
 ```
-[1] DoctorDto.java 수정
-    └─ availableDays 필드 추가 (Doctor 엔티티의 availableDays 그대로 반환)
+[1] DoctorDto.java — availableDays 필드 추가
+    └─ Doctor 엔티티의 availableDays 그대로 반환
 
 [2] direct-reservation.mustache 수정
-    └─ <head>에 Flatpickr CDN 추가 (CSS + JS)
-    └─ <input type="date"> → <input type="text" readonly> 로 변경 (Flatpickr가 제어)
-    └─ 의사 선택 이벤트 → availableDays 파싱 → Flatpickr 재초기화
-       (불가 요일: 회색 + 클릭 불가, 애니메이션 비활성화)
+    ├─ <head>에 Flatpickr CSS/JS 로드
+    ├─ <input type="date"> → <input type="text" readonly> 교체
+    └─ 의사 change 이벤트 → availableDays 파싱 → Flatpickr 재설정
 ```
+
+---
+
+## UI Mockup
+
+```
+[의사 선택 후 캘린더]
+
+     2026년 03월
+Mo Tu We Th Fr Sa Su
+                 1
+ 2  3  4  5  6  7  8   ← MON,WED,FRI만 활성 시
+ 9 10 11 12 13 14 15      (화,목,토,일 = 회색 클릭불가)
+16 17 18 19 20 21 22
+23 24 25 26 27 28 29
+30 31
+```
+
+---
+
+## 작업 목록
+
+1. `DoctorDto.java` — `availableDays` 필드 추가
+2. `direct-reservation.mustache` — `<head>` Flatpickr CDN 추가
+3. `direct-reservation.mustache` — `<input type="date">` → Flatpickr용 `<input type="text" readonly>` 교체
+4. `direct-reservation.mustache` — JS 요일 매핑 + Flatpickr 초기화 + 의사 change 이벤트 추가
+
+---
+
+## 작업 진행내용
+
+- [x] DoctorDto availableDays 필드 추가
+- [x] Flatpickr CDN 추가
+- [x] input 교체
+- [x] JS 요일 매핑 + 이벤트 추가
 
 ---
 
 ## 실행 흐름에 대한 코드
 
-### [1] DoctorDto.java — availableDays 필드 추가
+### DoctorDto — availableDays 추가
 
 ```java
-// 기존
-@Getter
-public class DoctorDto {
-    private final Long id;
-    private final String name;
-
-    public DoctorDto(Doctor doctor) {
-        this.id = doctor.getId();
-        this.name = doctor.getStaff().getName();
-    }
-}
-
-// 변경 후
 @Getter
 public class DoctorDto {
     private final Long id;
@@ -54,80 +95,69 @@ public class DoctorDto {
 }
 ```
 
----
-
-### [2] direct-reservation.mustache 수정
-
-#### HEAD — Flatpickr CDN 추가
+### direct-reservation.mustache — Flatpickr CDN
 
 ```html
-<!-- Flatpickr CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<!-- Flatpickr JS -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 ```
 
-#### BODY — input type="date" → Flatpickr용 input으로 교체
+### direct-reservation.mustache — input 교체
 
 ```html
-<!-- 기존 -->
-<input type="date" id="date" name="reservationDate" required ... />
+<!-- 변경 전 -->
+<input type="date" id="date" name="reservationDate" required />
 
-<!-- 변경 후: readonly로 직접 입력 막고 Flatpickr가 제어 -->
+<!-- 변경 후 -->
 <input type="text" id="date" name="reservationDate" required readonly
-  class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl
-         focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
   placeholder="날짜를 선택해주세요" />
 ```
 
-#### JS — 요일 매핑 + Flatpickr 초기화 + 의사 change 이벤트
+### direct-reservation.mustache — JS
 
 ```javascript
-// 요일 매핑: Flatpickr disable 함수는 JS getDay() 기준 (0=일, 1=월 ... 6=토)
+// 요일 매핑: JS getDay() 기준 (0=일 ~ 6=토)
 const DAY_MAP = { SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6 };
 
-let datePicker = null; // Flatpickr 인스턴스
+let datePicker = null;
 
-// Flatpickr 초기화 함수
 function initDatePicker(availableDayNums) {
-  if (datePicker) datePicker.destroy(); // 기존 인스턴스 제거
-
-  datePicker = flatpickr('#date', {
-    dateFormat: 'Y-m-d',
-    animate: false, // 애니메이션 비활성화
-    disable: [
-      function (date) {
-        // 가능 요일 목록에 없으면 비활성화 (회색 + 클릭 불가)
-        return !availableDayNums.includes(date.getDay());
-      }
-    ]
-  });
+    if (datePicker) datePicker.destroy();
+    datePicker = flatpickr('#date', {
+        dateFormat: 'Y-m-d',
+        animate: false,
+        disable: [date => !availableDayNums.includes(date.getDay())]
+    });
 }
 
-// 의사 change 이벤트: availableDays 파싱 → Flatpickr 재초기화
+// 의사 선택 시 availableDays 파싱 → Flatpickr 재초기화
 document.getElementById('doctor').addEventListener('change', function () {
-  const selectedOption = this.options[this.selectedIndex];
-  const availableDaysStr = selectedOption.dataset.availableDays || '';
-
-  const availableDayNums = availableDaysStr
-    .split(',')
-    .map(d => DAY_MAP[d.trim()])
-    .filter(n => n !== undefined);
-
-  // 날짜 초기화 후 Flatpickr 재설정
-  document.getElementById('date').value = '';
-  initDatePicker(availableDayNums);
+    const availableDaysStr = this.options[this.selectedIndex].dataset.availableDays || '';
+    const availableDayNums = availableDaysStr
+        .split(',').map(d => DAY_MAP[d.trim()]).filter(n => n !== undefined);
+    document.getElementById('date').value = '';
+    initDatePicker(availableDayNums);
 });
 
-// 의사 선택 이전에는 Flatpickr 비활성 상태로 초기화 (전체 비활성)
+// 의사 선택 전: 전체 비활성
 initDatePicker([]);
 ```
 
 ---
 
-## 작업 파일
+## 테스트 진행
 
-| 파일 | 작업 |
-|------|------|
-| `src/main/java/com/smartclinic/hms/doctor/DoctorDto.java` | `availableDays` 필드 추가 |
-| `src/main/resources/templates/reservation/direct-reservation.mustache` | Flatpickr CDN 추가, input 교체, JS 로직 교체 |
+| 케이스 | 조건 | 기대 결과 |
+|--------|------|-----------|
+| 의사 선택 전 | 캘린더 열기 | 모든 날짜 비활성 |
+| MON,WED,FRI 의사 선택 | 캘린더 확인 | 월/수/금만 활성 |
+| 의사 변경 | 다른 의사 선택 | 날짜 초기화 + Flatpickr 재설정 |
+
+---
+
+## 완료 기준
+
+- [x] DoctorDto에 availableDays 포함
+- [x] 의사 선택 시 해당 진료 가능 요일만 캘린더에서 선택 가능
+- [x] 불가 요일 회색 표시 + 클릭 불가
+- [x] 의사 변경 시 날짜 초기화
