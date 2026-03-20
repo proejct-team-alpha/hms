@@ -85,6 +85,19 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         long countByDoctor_IdAndReservationDateAndStartTime(
                 Long doctorId, java.time.LocalDate date, java.time.LocalTime startTime);
 
+        // LLM 예약 — 날짜 범위 내 예약된 슬롯 벌크 조회 (N+1 방지)
+        @Query("""
+            SELECT r.reservationDate, r.startTime
+            FROM Reservation r
+            WHERE r.doctor.id = :doctorId
+              AND r.reservationDate BETWEEN :startDate AND :endDate
+              AND r.status <> 'CANCELLED'
+            """)
+        List<Object[]> findBookedSlots(
+                @Param("doctorId") Long doctorId,
+                @Param("startDate") LocalDate startDate,
+                @Param("endDate") LocalDate endDate);
+
         // 예약 변경 페이지용 — 현재 수정 중인 예약 제외
         @Query("SELECT r.timeSlot FROM Reservation r " +
                "WHERE r.doctor.id = :doctorId " +
