@@ -38,10 +38,10 @@ public class AdminReservationController {
 
     @PostMapping("/cancel")
     public String cancel(
-            @RequestParam Long reservationId,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "ALL") String status,
+            @RequestParam(name = "reservationId") Long reservationId,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "status", defaultValue = "ALL") String status,
             RedirectAttributes redirectAttributes) {
 
         try {
