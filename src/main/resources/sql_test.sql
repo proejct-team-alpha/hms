@@ -38,54 +38,31 @@ INSERT INTO patient (id, name, phone, email, created_at) VALUES
 (2, '이서연', '010-3333-4444', 'seoyeon@test.com', CURRENT_TIMESTAMP),
 (3, '박지호', '010-5555-6666', 'jiho@test.com', CURRENT_TIMESTAMP);
 
--- [기본 예약 샘플] (시간대가 겹치지 않게 주의)
+-- 예약 샘플 (RES-YYYYMMDD-XXX 형식)
+-- doctor01(내과/이영희): [오늘] 08:00 COMPLETED, 09:00 RECEIVED(온라인) / [과거] 2026-03-14 COMPLETED 등
+-- doctor02(외과/김민준): 10:00 RECEIVED(전화)
+-- doctor04(소아과/최지우): 14:00 CANCELLED
 INSERT INTO reservation (reservation_number, patient_id, doctor_id, department_id, reservation_date, time_slot, status, source, created_at, updated_at) VALUES
-('RES-BASE-001', 1, 1, 1, CURRENT_DATE, '14:00', 'RESERVED',  'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('RES-BASE-002', 2, 2, 2, CURRENT_DATE, '10:00', 'RECEIVED',  'PHONE',  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('RES-BASE-003', 3, 4, 3, CURRENT_DATE, '14:30', 'CANCELLED', 'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('RES-BASE-004', 1, 5, 4, CURRENT_DATE, '11:00', 'RESERVED',  'WALKIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('RES-BASE-005', 1, 1, 1, CURRENT_DATE + 1, '09:00', 'RESERVED',  'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+('RES-20260314-001', 1, 1, 1, CURRENT_DATE, '09:00', 'RESERVED',  'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('RES-20260314-002', 2, 2, 2, CURRENT_DATE, '10:00', 'RECEIVED',  'PHONE',  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('RES-20260314-003', 3, 4, 3, CURRENT_DATE, '14:00', 'CANCELLED', 'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('RES-20260314-004', 1, 5, 4, CURRENT_DATE, '11:00', 'RESERVED',  'WALKIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('RES-20260317-001', 1, 1, 1, CURRENT_DATE + 1, '09:00', 'RESERVED',  'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('RES-20260318-001', 2, 2, 2, CURRENT_DATE + 2, '10:00', 'RESERVED',  'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('RES-20260319-001', 3, 4, 3, CURRENT_DATE + 2, '14:00', 'RESERVED',  'PHONE',  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- [오늘 완료 데이터] 의사 이영희 (시간: 18:00, 18:30, 19:00 - 다른 데이터와 절대 안겹침)
-INSERT INTO reservation (reservation_number, patient_id, doctor_id, department_id, reservation_date, time_slot, status, source, created_at, updated_at) VALUES
-('RES-DONE-001', 1, 1, 1, CURRENT_DATE, '18:00', 'COMPLETED', 'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('RES-DONE-002', 2, 1, 1, CURRENT_DATE, '18:30', 'COMPLETED', 'PHONE',  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('RES-DONE-003', 3, 1, 1, CURRENT_DATE, '19:00', 'COMPLETED', 'WALKIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-
--- [과거 완료 데이터] 히스토리 확인용 (김명준 환자)
-INSERT INTO reservation (reservation_number, patient_id, doctor_id, department_id, reservation_date, time_slot, status, source, created_at, updated_at) VALUES
-('RES-PAST-001', 1, 1, 1, '2026-03-10', '10:30', 'COMPLETED', 'PHONE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('RES-PAST-002', 1, 5, 4, '2026-03-12', '15:00', 'COMPLETED', 'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('RES-PAST-003', 1, 2, 2, '2026-03-05', '11:00', 'COMPLETED', 'WALKIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('RES-PAST-004', 1, 1, 1, '2026-03-08', '09:30', 'COMPLETED', 'PHONE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('RES-PAST-005', 1, 1, 1, '2026-01-15', '10:00', 'COMPLETED', 'PHONE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('RES-PAST-006', 1, 2, 2, '2026-02-20', '14:00', 'CANCELLED', 'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('RES-PAST-007', 1, 5, 4, '2026-03-01', '16:30', 'CANCELLED', 'WALKIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-
--- 진료 기록 (Treatment Record)
+-- 진료 기록 (RES-20260314-000: 과거 완료 / RES-20260317-000: 오늘 완료 — 진료완료 목록 테스트)
 INSERT INTO treatment_record (reservation_id, doctor_id, diagnosis, prescription, remark, created_at)
-SELECT r.id, 1, '급성 위염', '큐란 1정, 가스모틴 1정', '안정 필요', CURRENT_TIMESTAMP FROM reservation r WHERE r.reservation_number = 'RES-DONE-001';
-INSERT INTO treatment_record (reservation_id, doctor_id, diagnosis, prescription, remark, created_at)
-SELECT r.id, 1, '결막염', '레보플록사신 점안액', '렌즈 금지', CURRENT_TIMESTAMP FROM reservation r WHERE r.reservation_number = 'RES-DONE-002';
-INSERT INTO treatment_record (reservation_id, doctor_id, diagnosis, prescription, remark, created_at)
-SELECT r.id, 1, '피부염', '베포리진 1정', '긁지 말 것', CURRENT_TIMESTAMP FROM reservation r WHERE r.reservation_number = 'RES-DONE-003';
+SELECT r.id, 1, '상기도염', '해열제 3일치, 항생제 5일치 처방', '3일 후 재진 권고', CURRENT_TIMESTAMP
+FROM reservation r WHERE r.reservation_number = 'RES-20260314-000';
 
 INSERT INTO treatment_record (reservation_id, doctor_id, diagnosis, prescription, remark, created_at)
-SELECT r.id, 1, '만성 위염', '알마겔 1포', '식후 복용', CURRENT_TIMESTAMP FROM reservation r WHERE r.reservation_number = 'RES-PAST-001';
-INSERT INTO treatment_record (reservation_id, doctor_id, diagnosis, prescription, remark, created_at)
-SELECT r.id, 5, '비염', '씨잘정 1정', '환기 자주', CURRENT_TIMESTAMP FROM reservation r WHERE r.reservation_number = 'RES-PAST-002';
-INSERT INTO treatment_record (reservation_id, doctor_id, diagnosis, prescription, remark, created_at)
-SELECT r.id, 2, '장염', '스멕타 1포', '수분 섭취', CURRENT_TIMESTAMP FROM reservation r WHERE r.reservation_number = 'RES-PAST-003';
-INSERT INTO treatment_record (reservation_id, doctor_id, diagnosis, prescription, remark, created_at)
-SELECT r.id, 1, '몸살', '타이레놀 ER', '휴식', CURRENT_TIMESTAMP FROM reservation r WHERE r.reservation_number = 'RES-PAST-004';
-INSERT INTO treatment_record (reservation_id, doctor_id, diagnosis, prescription, remark, created_at)
-SELECT r.id, 1, '식도염', '넥시움정', '금식', CURRENT_TIMESTAMP FROM reservation r WHERE r.reservation_number = 'RES-PAST-005';
+SELECT r.id, 1, '급성 위염', '제산제 7일치 처방', '', CURRENT_TIMESTAMP
+FROM reservation r WHERE r.reservation_number = 'RES-20260317-000';
 
--- 취소 사유
-UPDATE reservation SET cancellation_reason = '개인 사정' WHERE reservation_number = 'RES-PAST-006';
-UPDATE reservation SET cancellation_reason = '단순 변심' WHERE reservation_number = 'RES-PAST-007';
-
--- 물품 샘플
+-- 물품 샘플 (item01 물품 담당자 기능 테스트용)
+-- 재고 부족(quantity < min_quantity): 주사기, 알코올솜, 혈압계
+-- 정상 재고: 나머지
 INSERT INTO item (name, category, quantity, min_quantity, created_at, updated_at) VALUES
 ('주사기 (5ml)',       'MEDICAL_SUPPLIES',  8,  50, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('알코올솜',           'MEDICAL_SUPPLIES',  20, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
@@ -97,3 +74,15 @@ INSERT INTO item (name, category, quantity, min_quantity, created_at, updated_at
 ('A4 용지 (박스)',     'GENERAL_SUPPLIES',  5,  2,  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('볼펜',               'GENERAL_SUPPLIES',  30, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('마스크 (KF94)',      'MEDICAL_SUPPLIES',  3,  50, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- ==============================================================================
+-- 테스트 로그인 정보
+-- ==============================================================================
+-- | 아이디   | 비밀번호    | 역할        |
+-- |----------|-------------|-------------|
+-- | admin01  | password123 | ADMIN       |
+-- | staff01  | password123 | STAFF       |
+-- | doctor01 | password123 | DOCTOR      |
+-- | nurse01  | password123 | NURSE       |
+-- | item01   | password123 | ITEM_MANAGER|
+--
