@@ -15,6 +15,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -32,8 +34,18 @@ public class LlmReservationService {
 
         var schedules = doctorScheduleRepository.findByDoctor_IdAndIsAvailableTrue(doctorId);
 
-        List<LlmReservationResponse.Slot> slots = new ArrayList<>();
         LocalDate today = LocalDate.now();
+        LocalDate startDate = today.plusDays(1);
+        LocalDate endDate = today.plusDays(7);
+
+        // 1회 벌크 쿼리로 예약된 슬롯 전체 조회 (N+1 제거)
+        Set<String> bookedSlots = reservationRepository
+                .findBookedSlots(doctorId, startDate, endDate)
+                .stream()
+                .map(row -> row[0].toString() + "_" + row[1].toString())
+                .collect(Collectors.toSet());
+
+        List<LlmReservationResponse.Slot> slots = new ArrayList<>();
 
         for (int dayOffset = 1; dayOffset <= 7; dayOffset++) {
             LocalDate date = today.plusDays(dayOffset);
@@ -48,9 +60,8 @@ public class LlmReservationService {
                             LocalTime slotEnd = slotTime.plusMinutes(30);
                             if (slotEnd.isAfter(schedule.getEndTime())) break;
 
-                            long count = reservationRepository
-                                    .countByDoctor_IdAndReservationDateAndStartTime(doctorId, date, slotTime);
-                            slots.add(new LlmReservationResponse.Slot(date, slotTime, slotEnd, count == 0));
+                            boolean available = !bookedSlots.contains(date + "_" + slotTime);
+                            slots.add(new LlmReservationResponse.Slot(date, slotTime, slotEnd, available));
                             slotTime = slotEnd;
                         }
                     });
