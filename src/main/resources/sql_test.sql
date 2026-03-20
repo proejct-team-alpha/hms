@@ -85,4 +85,4 @@ INSERT INTO item (name, category, quantity, min_quantity, created_at, updated_at
 -- | doctor01 | password123 | DOCTOR      |
 -- | nurse01  | password123 | NURSE       |
 -- | item01   | password123 | ITEM_MANAGER|
--- ==============================================================================
+--
