@@ -169,10 +169,28 @@ public class DoctorTreatmentController {
 
     @GetMapping("/completed-list")
     public String completedList(Authentication auth,
+                                @RequestParam(name = "date", required = false) String date,
+                                @RequestParam(name = "query", required = false) String query,
                                 @RequestParam(name = "page", defaultValue = "0") int page,
                                 Model model) {
-        Page<DoctorReservationDto> resultPage = treatmentService.getCompletedPage(auth.getName(), page);
-        addPaginationAttributes(model, resultPage, page, "/doctor/completed-list?page=");
+        java.time.LocalDate searchDate = (date != null && !date.isBlank()) 
+                ? java.time.LocalDate.parse(date) 
+                : java.time.LocalDate.now();
+        
+        Page<DoctorReservationDto> resultPage = treatmentService.getCompletedPage(auth.getName(), searchDate, query, page);
+        long totalForDate = treatmentService.getCompletedCountForDate(auth.getName(), searchDate);
+        
+        StringBuilder baseUrl = new StringBuilder("/doctor/completed-list?date=").append(searchDate.toString());
+        if (query != null && !query.isBlank()) {
+            baseUrl.append("&query=").append(query);
+        }
+        baseUrl.append("&page=");
+        
+        addPaginationAttributes(model, resultPage, page, baseUrl.toString());
+        
+        model.addAttribute("searchDate", searchDate.toString());
+        model.addAttribute("query", query);
+        model.addAttribute("totalForDate", totalForDate);
         model.addAttribute("pageTitle", "진료 완료 목록");
         return "doctor/completed-list";
     }

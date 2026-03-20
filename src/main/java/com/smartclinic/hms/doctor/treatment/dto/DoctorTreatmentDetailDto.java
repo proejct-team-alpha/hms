@@ -20,12 +20,28 @@ public class DoctorTreatmentDetailDto {
     private final String prescription;
     private final String remark;
 
+    /**
+     * 초진 여부 (true: 초진, false: 재진)
+     */
+    private final boolean isFirstVisit;
+
+    /**
+     * 과거 진료 이력 목록 (최신순)
+     */
+    private final java.util.List<com.smartclinic.hms.domain.PatientHistoryDto> history;
+
     public DoctorTreatmentDetailDto(Reservation r, TreatmentRecord record) {
+        this(r, record, false, new java.util.ArrayList<>());
+    }
+
+    public DoctorTreatmentDetailDto(Reservation r, TreatmentRecord record, boolean isFirstVisit, java.util.List<com.smartclinic.hms.domain.PatientHistoryDto> history) {
         this.reservationId = r.getId();
         this.patientName = r.getPatient().getName();
         this.patientPhone = r.getPatient().getPhone();
         this.note = r.getPatient().getNote() != null ? r.getPatient().getNote() : "증상 없음";
         this.timeSlot = r.getTimeSlot();
+        this.isFirstVisit = isFirstVisit;
+        this.history = history;
         this.canStartTreatment = r.getStatus() == ReservationStatus.RECEIVED;
         this.canComplete = r.getStatus() == ReservationStatus.RECEIVED
                         || r.getStatus() == ReservationStatus.IN_TREATMENT;

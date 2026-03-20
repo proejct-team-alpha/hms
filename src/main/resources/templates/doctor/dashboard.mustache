@@ -77,7 +77,15 @@
                   <span class="text-sm font-bold text-slate-500">{{timeSlot}}</span>
                   <span class="text-xs font-bold px-2 py-1 rounded-lg {{statusBadgeClass}}">{{statusText}}</span>
                 </div>
-                <div class="font-bold text-slate-800 mb-1">{{patientName}}</div>
+                <div class="flex items-center gap-2 mb-1">
+                  {{#isFirstVisit}}
+                  <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 shrink-0">초</span>
+                  {{/isFirstVisit}}
+                  {{^isFirstVisit}}
+                  <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 shrink-0">재</span>
+                  {{/isFirstVisit}}
+                  <div class="font-bold text-slate-800">{{patientName}}</div>
+                </div>
                 <div class="text-xs text-slate-500 truncate">{{note}}</div>
               </a>
             {{/dashboard.schedulePreview}}

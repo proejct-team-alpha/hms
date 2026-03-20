@@ -39,6 +39,7 @@ public class ReceptionService {
     private final DoctorRepository doctorRepository;
     private final DepartmentRepository departmentRepository;
     private final PatientRepository patientRepository;
+    private final com.smartclinic.hms.doctor.treatment.DoctorTreatmentRecordRepository treatmentRecordRepository;
     private final ReservationNumberGenerator reservationNumberGenerator;
 
     // 전화 예약 생성
@@ -120,7 +121,9 @@ public class ReceptionService {
         patient.updateAddressAndNote(request.getAddress(), request.getNote());
     }
 
-    // 날짜별 예약 목록 (date=null이면 오늘 이후 전체, 취소 제외 or 특정 상태)
+    /**
+     * 날짜별 예약 목록 조회
+     */
     public List<StaffReservationDto> getReservations(LocalDate date, String status, String query, Long deptId, Long doctorId, String source) {
         List<Reservation> reservations;
         if (date == null) {
@@ -158,7 +161,11 @@ public class ReceptionService {
                     
                     return true;
                 })
-                .map(StaffReservationDto::new)
+                .map(r -> {
+                    // 환자의 진료 완료 건수를 조회하여 초재진 여부를 판별합니다.
+                    long completedCount = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
+                    return new StaffReservationDto(r, completedCount);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -173,11 +180,32 @@ public class ReceptionService {
                 new StaffStatusFilter("취소", "CANCELLED", s, date, query, deptId, doctorId, source));
     }
 
-    // 예약 상세 조회
+    /**
+     * 예약 상세 조회
+     */
     public StaffReservationDto getDetail(Long id) {
         Reservation r = reservationRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
-        return new StaffReservationDto(r);
+        
+        // 1. 초재진 판별을 위한 진료 완료 건수 조회
+        long completedCount = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
+        
+        // 2. 환자의 전체 예약 히스토리 조회 (최신순, 모든 상태 포함)
+        List<com.smartclinic.hms.domain.PatientHistoryDto> history = reservationRepository
+                .findByPatient_IdOrderByReservationDateDesc(r.getPatient().getId())
+                .stream()
+                .filter(res -> !res.getId().equals(id)) // 현재 예약은 히스토리에서 제외
+                .map(res -> {
+                    // 진료 완료된 경우에만 진료 기록을 조회하여 DTO 생성
+                    com.smartclinic.hms.domain.TreatmentRecord tr = null;
+                    if (res.getStatus() == ReservationStatus.COMPLETED) {
+                        tr = treatmentRecordRepository.findByReservation_Id(res.getId()).orElse(null);
+                    }
+                    return new com.smartclinic.hms.domain.PatientHistoryDto(res, tr);
+                })
+                .toList();
+
+        return new StaffReservationDto(r, completedCount, history);
     }
 
     // 예약 취소
@@ -189,7 +217,9 @@ public class ReceptionService {
         return r;
     }
 
-    // 대시보드 통계
+    /**
+     * 대시보드 통계 및 최근 예약 목록
+     */
     public StaffDashboardDto getDashboard() {
         LocalDate today = LocalDate.now();
         List<Reservation> all = reservationRepository.findTodayExcludingStatus(today, ReservationStatus.CANCELLED);
@@ -198,7 +228,11 @@ public class ReceptionService {
         int received = (int) all.stream().filter(r -> r.getStatus() == ReservationStatus.RECEIVED).count();
         List<StaffReservationDto> recent = all.stream()
                 .limit(5)
-                .map(StaffReservationDto::new)
+                .map(r -> {
+                    // 환자의 초재진 판별을 위해 진료 완료 건수를 조회합니다.
+                    long completedCount = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
+                    return new StaffReservationDto(r, completedCount);
+                })
                 .collect(Collectors.toList());
 
         // 시간대별 통계 생성 (09시 ~ 18시)

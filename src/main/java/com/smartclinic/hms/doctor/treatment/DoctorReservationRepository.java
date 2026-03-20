@@ -34,12 +34,27 @@ public interface DoctorReservationRepository extends JpaRepository<Reservation, 
             @Param("excluded") ReservationStatus excluded,
             Pageable pageable);
 
-    @Query(value = "SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status = :status ORDER BY r.timeSlot DESC",
-           countQuery = "SELECT count(r) FROM Reservation r WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status = :status")
+    @Query("SELECT r FROM Reservation r WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status = :status ORDER BY r.timeSlot ASC")
     Page<Reservation> findTodayByDoctorAndStatusPage(
             @Param("username") String username,
             @Param("date") LocalDate date,
             @Param("status") ReservationStatus status,
+            Pageable pageable);
+
+    /**
+     * 특정 날짜의 완료된 환자 중 이름으로 검색합니다.
+     */
+    @Query("SELECT r FROM Reservation r " +
+           "WHERE r.doctor.staff.username = :username " +
+           "AND r.reservationDate = :date " +
+           "AND r.status = :status " +
+           "AND r.patient.name LIKE %:query% " +
+           "ORDER BY r.timeSlot ASC")
+    Page<Reservation> findTodayByDoctorAndStatusAndPatientNamePage(
+            @Param("username") String username,
+            @Param("date") LocalDate date,
+            @Param("status") ReservationStatus status,
+            @Param("query") String query,
             Pageable pageable);
 
     @Query(value = "SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status IN :statuses ORDER BY r.timeSlot DESC",
