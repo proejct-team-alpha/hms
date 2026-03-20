@@ -1,7 +1,6 @@
 package com.smartclinic.hms.admin.rule;
 
-import java.util.List;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,34 +8,43 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import lombok.RequiredArgsConstructor;
-
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/admin/rule")
 public class AdminRuleController {
 
+    private static final String RULE_LIST_TITLE = "병원 규칙 관리";
+    private static final String RULE_FORM_TITLE = "규칙 등록";
+
     private final AdminRuleService adminRuleService;
 
     @GetMapping("/list")
-    public String list(Model model) {
-        List<AdminRuleDto> rules = adminRuleService.getRuleList();
-        model.addAttribute("rules", rules);
-        model.addAttribute("hasRules", !rules.isEmpty());
-        model.addAttribute("pageTitle", "병원 규칙 관리");
+    public String list(
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "category", defaultValue = "ALL") String category,
+            @RequestParam(name = "active", defaultValue = "ALL") String active,
+            @RequestParam(name = "keyword", required = false) String keyword,
+            Model model) {
+        AdminRuleListResponse result = adminRuleService.getRuleList(page, size, category, active, keyword);
+        model.addAttribute("model", result);
+        model.addAttribute("rules", result.rules());
+        model.addAttribute("hasRules", !result.rules().isEmpty());
+        model.addAttribute("pageTitle", RULE_LIST_TITLE);
         return "admin/rule-list";
     }
 
     @GetMapping("/form")
     public String form(Model model) {
-        model.addAttribute("pageTitle", "규칙 등록");
+        model.addAttribute("pageTitle", RULE_FORM_TITLE);
         return "admin/rule-form";
     }
 
     @PostMapping("/form")
-    public String create(@RequestParam("title") String title,
-                         @RequestParam("content") String content,
-                         @RequestParam("category") String category) {
+    public String create(
+            @RequestParam("title") String title,
+            @RequestParam("content") String content,
+            @RequestParam("category") String category) {
         adminRuleService.createRule(title, content, category);
         return "redirect:/admin/rule/list";
     }

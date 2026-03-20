@@ -5,13 +5,14 @@ LLM 병합 결과물(Task 2~7)의 JUnit 슬라이스 테스트 작성 및 기존
 python-llm 서버(IP:8000)를 활용한 수동 시나리오 체크리스트로 최종 검증.
 
 ## 작업 목록
-<!-- TODO 1. LlmPageControllerTest 작성 (GET /llm/medical permitAll, GET /llm/chatbot authenticated) -->
-<!-- TODO 2. ChatControllerTest 작성 (POST /llm/chatbot/query, GET /llm/chatbot/history/{staffId}) -->
-<!-- TODO 3. MedicalControllerTest 작성 (POST /llm/medical/query/consult, GET /llm/medical/history/{staffId}) -->
-<!-- TODO 4. LlmReservationControllerTest 작성 (GET /llm/reservation/slots/{doctorId}) -->
-<!-- TODO 5. ./gradlew test 전체 통과 확인 -->
-<!-- TODO 6. LLM_SERVICE_URL 환경변수 설정 확인 (IP:8000) -->
-<!-- TODO 7. 수동 시나리오 체크리스트 검증 -->
+
+1. `LlmPageControllerTest` 작성 — `GET /llm/medical` permitAll 200, `GET /llm/chatbot` 비인증 리다이렉트 / 인증 200
+2. `ChatControllerTest` 작성 — `POST /llm/chatbot/query` 비인증 리다이렉트 / 인증 200, `GET /llm/chatbot/history/{staffId}` 인증 200
+3. `MedicalControllerTest` 작성 — `POST /llm/medical/query` 비인증 200, `POST /llm/medical/query/consult` 비인증 200, `GET /llm/medical/history/{staffId}` 인증 200
+4. `LlmReservationControllerTest` 작성 — `GET /llm/reservation/slots/{doctorId}` 비인증 200, 응답 구조(`doctorName`, `slots`) 확인
+5. `./gradlew test` — 전체 통과 확인 (기존 테스트 회귀 없음)
+6. `LLM_SERVICE_URL` 환경변수 설정 확인 — `application-dev.properties` 기본값 `localhost:8000`, 실제 서버 `192.168.0.73:8000`으로 교체
+7. 수동 시나리오 체크리스트 검증 — 서버 기동 후 주요 API 직접 확인
 
 ## 진행 현황
 - [x] 1. LlmPageControllerTest

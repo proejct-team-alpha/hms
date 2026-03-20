@@ -5,11 +5,12 @@
 direct-reservation에서 시간 select를 자동 선택하도록 연결한다.
 
 ## 작업 목록
-<!-- DONE 1. symptom-reservation: proceedToDirect()에 time 파라미터 추가 -->
-<!-- DONE 2. direct-reservation: DEPT_ID_MAP으로 진료과 이름→ID 변환 후 자동 선택 -->
-<!-- DONE 3. direct-reservation: 의사 fetch 후 이름 매칭으로 doctor select 자동 선택 -->
-<!-- DONE 4. direct-reservation: time select 자동 선택 -->
-<!-- DONE 5. symptom-reservation: SYMPTOM_MAP 의사명을 실제 DB 데이터로 수정 -->
+
+1. symptom-reservation: proceedToDirect()에 time 파라미터 추가
+2. direct-reservation: DEPT_ID_MAP으로 진료과 이름→ID 변환 후 자동 선택
+3. direct-reservation: 의사 fetch 후 이름 매칭으로 doctor select 자동 선택
+4. direct-reservation: time select 자동 선택
+5. symptom-reservation: SYMPTOM_MAP 의사명을 실제 DB 데이터로 수정
 
 ## 수정 파일
 - `src/main/resources/templates/reservation/symptom-reservation.mustache`

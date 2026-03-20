@@ -26,8 +26,8 @@ public class AdminDepartmentController {
 
     @GetMapping("/list")
     public String list(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
             HttpServletRequest req) {
         return renderListPage(req, adminDepartmentService.getDepartmentList(page, size));
     }
@@ -88,7 +88,7 @@ public class AdminDepartmentController {
 
     @PostMapping("/deactivate")
     public RedirectView deactivate(
-            @RequestParam Long departmentId,
+            @RequestParam(name = "departmentId") Long departmentId,
             RedirectAttributes redirectAttributes) {
         try {
             String successMessage = adminDepartmentService.deactivateDepartment(departmentId);
@@ -105,7 +105,7 @@ public class AdminDepartmentController {
 
     @PostMapping("/activate")
     public RedirectView activate(
-            @RequestParam Long departmentId,
+            @RequestParam(name = "departmentId") Long departmentId,
             RedirectAttributes redirectAttributes) {
         try {
             String successMessage = adminDepartmentService.activateDepartment(departmentId);

@@ -39,6 +39,10 @@
       <i data-feather="package" class="w-5 h-5"></i>
       물품 출고
     </a>
+    <a href="/staff/chatbot" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isStaffChatbot}}bg-indigo-50 text-indigo-700{{/isStaffChatbot}}{{^isStaffChatbot}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isStaffChatbot}}">
+      <i data-feather="message-circle" class="w-5 h-5"></i>
+      AI 챗봇
+    </a>
     <a href="/staff/mypage" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isStaffMypage}}bg-indigo-50 text-indigo-700{{/isStaffMypage}}{{^isStaffMypage}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isStaffMypage}}">
       <i data-feather="settings" class="w-5 h-5"></i>
       내 정보 관리

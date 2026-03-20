@@ -27,14 +27,23 @@ public class NurseReceptionController {
 
     @GetMapping("/reception-list")
     public String receptionList(@RequestParam(name = "status", required = false) String status,
+                                @RequestParam(name = "query", required = false) String query,
+                                @RequestParam(name = "deptId", required = false) Long deptId,
+                                @RequestParam(name = "doctorId", required = false) Long doctorId,
+                                @RequestParam(name = "source", required = false) String source,
                                 @RequestParam(name = "page", defaultValue = "0") int page,
                                 Model model) {
         Page<com.smartclinic.hms.nurse.dto.NurseReservationDto> resultPage =
-                nurseService.getReceptionPage(status, page);
+                nurseService.getReceptionPage(status, query, deptId, doctorId, source, page);
 
-        String baseUrl = (status != null && !status.isBlank())
-                ? "/nurse/reception-list?status=" + status + "&page="
-                : "/nurse/reception-list?page=";
+        StringBuilder baseUrlBuilder = new StringBuilder("/nurse/reception-list?");
+        if (status != null && !status.isBlank()) baseUrlBuilder.append("status=").append(status).append("&");
+        if (query != null && !query.isBlank()) baseUrlBuilder.append("query=").append(query).append("&");
+        if (deptId != null) baseUrlBuilder.append("deptId=").append(deptId).append("&");
+        if (doctorId != null) baseUrlBuilder.append("doctorId=").append(doctorId).append("&");
+        if (source != null && !source.isBlank()) baseUrlBuilder.append("source=").append(source).append("&");
+        baseUrlBuilder.append("page=");
+        String baseUrl = baseUrlBuilder.toString();
 
         int totalPages = resultPage.getTotalPages();
         List<NursePageLinkDto> pageLinks = new ArrayList<>();
@@ -43,7 +52,25 @@ public class NurseReceptionController {
         }
 
         model.addAttribute("reservations", resultPage.getContent());
-        model.addAttribute("statusFilters", nurseService.getStatusFilters(status));
+        model.addAttribute("statusFilters", nurseService.getStatusFilters(status, query, deptId, doctorId, source));
+        model.addAttribute("currentStatus", status);
+        model.addAttribute("query", query);
+        model.addAttribute("deptId", deptId);
+        model.addAttribute("doctorId", doctorId);
+        model.addAttribute("source", source);
+        
+        // 필터 데이터
+        model.addAttribute("departments", nurseService.getAllDepartments().stream()
+                .map(d -> Map.of("id", d.getId(), "name", d.getName(), "selected", d.getId().equals(deptId)))
+                .toList());
+        model.addAttribute("doctors", nurseService.getAllDoctors().stream()
+                .map(d -> Map.of("id", d.getId(), "name", d.getDisplayName(), "selected", d.getId().equals(doctorId)))
+                .toList());
+        model.addAttribute("sources", List.of(
+            Map.of("value", "ONLINE", "label", "온라인", "selected", "ONLINE".equals(source)),
+            Map.of("value", "PHONE", "label", "전화", "selected", "PHONE".equals(source)),
+            Map.of("value", "WALKIN", "label", "방문", "selected", "WALKIN".equals(source))
+        ));
         model.addAttribute("hasPrev", page > 0);
         model.addAttribute("prevUrl", baseUrl + (page - 1));
         model.addAttribute("hasNext", page < totalPages - 1);

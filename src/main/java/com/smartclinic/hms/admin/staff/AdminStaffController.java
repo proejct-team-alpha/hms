@@ -27,11 +27,11 @@ public class AdminStaffController {
 
     @GetMapping("/list")
     public String list(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String role,
-            @RequestParam(required = false) String employmentStatus,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "role", required = false) String role,
+            @RequestParam(name = "employmentStatus", required = false) String employmentStatus,
             Authentication authentication,
             HttpServletRequest req) {
         AdminStaffListResponse result = adminStaffService.getStaffList(

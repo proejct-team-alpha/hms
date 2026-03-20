@@ -31,6 +31,10 @@
       <i data-feather="calendar" class="w-5 h-5"></i>
       전체 예약 목록
     </a>
+    <a href="/admin/patient/list" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isAdminPatient}}bg-indigo-50 text-indigo-700{{/isAdminPatient}}{{^isAdminPatient}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isAdminPatient}}">
+      <i data-feather="user" class="w-5 h-5"></i>
+      환자 관리
+    </a>
     <a href="/admin/rule/list" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isAdminRule}}bg-indigo-50 text-indigo-700{{/isAdminRule}}{{^isAdminRule}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isAdminRule}}">
       <i data-feather="file-text" class="w-5 h-5"></i>
       병원 규칙 관리
@@ -54,6 +58,10 @@
     <a href="/admin/item/history" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isAdminItemHistory}}bg-indigo-50 text-indigo-700{{/isAdminItemHistory}}{{^isAdminItemHistory}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isAdminItemHistory}}">
       <i data-feather="list" class="w-5 h-5"></i>
       입출고 내역
+    </a>
+    <a href="/admin/chatbot" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isAdminChatbot}}bg-indigo-50 text-indigo-700{{/isAdminChatbot}}{{^isAdminChatbot}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isAdminChatbot}}">
+      <i data-feather="message-circle" class="w-5 h-5"></i>
+      AI 챗봇
     </a>
     <a href="/admin/mypage" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isAdminMypage}}bg-indigo-50 text-indigo-700{{/isAdminMypage}}{{^isAdminMypage}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isAdminMypage}}">
       <i data-feather="settings" class="w-5 h-5"></i>
