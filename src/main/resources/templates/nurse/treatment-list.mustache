@@ -7,30 +7,67 @@
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
   <style>
-    /* 의사 화면 스타일과 완벽 일치 */
-    .calendar-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-    .calendar-day-header { text-align: center; font-size: 11px; font-weight: 700; padding: 8px 0; color: #64748b; }
+    /* 환자 현황 화면의 예쁜 미니 달력 스타일만 이식 */
+    .sidebar-fixed {
+      width: 220px;
+      flex-shrink: 0;
+    }
+    .calendar-card {
+      background: white;
+      border-radius: 1.25rem;
+      border: 1px solid #e2e8f0;
+      padding: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .calendar-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
+    .calendar-day-header { text-align: center; font-size: 10px; font-weight: 700; padding: 5px 0; color: #64748b; }
     .calendar-day-header.sun { color: #ef4444; }
     .calendar-day { 
       aspect-ratio: 1 / 1; 
       display: flex; 
       align-items: center; 
       justify-content: center; 
-      font-size: 12px; 
+      font-size: 11px; 
       cursor: pointer; 
       border-radius: 8px; 
       transition: all 0.15s;
       color: #334155;
+      font-weight: 600;
     }
-    .calendar-day:hover { background-color: #f1f5f9; }
+    .calendar-day:hover:not(.active) { background-color: #f1f5f9; }
     .calendar-day.sun { color: #ef4444; }
     .calendar-day.active { background-color: #4f46e5 !important; color: white !important; font-weight: 700; }
     .calendar-day.today { color: #4f46e5; font-weight: 800; background-color: #eef2ff; }
     .calendar-empty { aspect-ratio: 1 / 1; }
 
+    #currentMonthYear { font-size: 0.85rem; font-weight: 800; color: #1e293b; }
+
+    /* TODAY 버튼 커스텀 */
+    .btn-today {
+      width: 100%;
+      padding: 0.6rem;
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+    .btn-today:hover {
+      background-color: #4f46e5;
+      color: white;
+      border-color: #4f46e5;
+    }
+
+    /* 완벽 복구: EMR 리스트 전용 스타일 (열 순서 변경 및 최적화) */
     .emr-row {
       display: grid;
-      grid-template-columns: 50px 120px 100px 150px 150px 1fr 120px;
+      grid-template-columns: 50px 140px 120px 1fr 110px 110px 100px;
       align-items: center;
       padding: 1.1rem 1.5rem;
       border-bottom: 1px solid #f1f5f9;
@@ -46,17 +83,17 @@
     .tab-btn:hover:not(.active) { color: #334155; background-color: #f8fafc; }
   </style>
 </head>
-<body class="min-h-screen flex text-slate-900 bg-[#f8fafc]">
+<body class="min-h-screen flex bg-[#f8fafc] text-slate-900">
   {{> common/sidebar-nurse}}
 
   <div class="main-content flex-1 flex flex-col ml-64">
     {{> common/header-staff}}
 
     <main class="content-wrapper flex-1 p-8">
-      <div class="max-w-6xl mx-auto">
+      <div class="max-w-7xl mx-auto space-y-8">
         
-        <!-- 상단 헤더 섹션 (의사 화면 스타일) -->
-        <div class="flex items-center justify-between mb-8">
+        <!-- 완벽 복구: 상단 헤더 섹션 -->
+        <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
               <i data-feather="plus-square" class="w-6 h-6"></i>
@@ -69,13 +106,13 @@
               </p>
             </div>
           </div>
+
           <div class="flex items-center gap-6">
             <!-- 검색 및 다중 필터 -->
             <form action="/nurse/treatment-list" method="get" class="flex flex-wrap items-center gap-2">
               <input type="hidden" name="date" value="{{searchDate}}">
               <input type="hidden" name="tab" value="{{currentTab}}">
               
-              <!-- 진료과 다중 선택 드롭다운 -->
               <div class="relative group" id="dept-dropdown">
                 <button type="button" onclick="toggleDropdown('dept-options')" 
                         class="px-4 py-2.5 w-56 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:border-indigo-500 transition-all shadow-sm flex items-center justify-between">
@@ -96,7 +133,6 @@
                 </div>
               </div>
 
-              <!-- 의사 다중 선택 드롭다운 -->
               <div class="relative group" id="doctor-dropdown">
                 <button type="button" onclick="toggleDropdown('doctor-options')" 
                         class="px-4 py-2.5 w-56 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:border-indigo-500 transition-all shadow-sm flex items-center justify-between">
@@ -118,17 +154,16 @@
                 </div>
               </div>
 
-              <div class="relative group">
+              <div class="relative group w-64">
                 <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors"></i>
                 <input type="text" name="query" value="{{#query}}{{query}}{{/query}}" placeholder="환자 이름 검색" 
-                       style="padding-left: 3.5rem !important;"
-                       class="pr-4 py-2.5 w-64 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm">
+                       style="padding-left: 3rem !important;"
+                       class="pr-4 py-2.5 w-full bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm">
               </div>
-              <button type="submit" class="px-5 py-2.5 bg-slate-800 text-white text-sm font-bold rounded-2xl hover:bg-slate-900 transition-all shadow-sm flex items-center gap-2">
+              <button type="submit" class="px-5 py-2.5 bg-slate-800 text-white text-sm font-bold rounded-xl hover:bg-slate-900 transition-all shadow-sm flex items-center gap-2">
                 검색
               </button>
               
-              <!-- 전체 환자 수 표시 -->
               <div class="ml-2 flex flex-col items-end">
                 <div class="px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 shadow-sm flex items-center gap-2 h-[42px]">
                   <i data-feather="users" class="w-4 h-4 text-slate-400"></i>
@@ -136,34 +171,38 @@
                 </div>
               </div>
             </form>
+
+            <button onclick="location.reload()" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2">
+              <i data-feather="refresh-cw" class="w-4 h-4 text-indigo-600"></i>
+              새로고침
+            </button>
           </div>
         </div>
 
         {{#message}}
-          <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm flex items-center gap-2">
-            <i data-feather="check-circle" class="w-4 h-4"></i>
-            {{message}}
+          <div class="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm flex items-center gap-2">
+            <i data-feather="check-circle" class="w-4 h-4"></i> {{message}}
           </div>
         {{/message}}
         {{#errorMessage}}
-          <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center gap-2">
-            <i data-feather="alert-circle" class="w-4 h-4"></i>
-            {{errorMessage}}
+          <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center gap-2">
+            <i data-feather="alert-circle" class="w-4 h-4"></i> {{errorMessage}}
           </div>
         {{/errorMessage}}
 
         <div class="flex gap-8 items-start">
-          <!-- 왼쪽: 캘린더 사이드바 -->
-          <div class="w-72 shrink-0 space-y-4">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
-              <div class="flex items-center justify-between mb-5">
-                <span id="calendar-header" class="text-sm font-bold text-slate-800"></span>
-                <div class="flex gap-1">
-                  <button type="button" id="prevMonth" class="p-1 hover:bg-slate-100 rounded-md transition-colors"><i data-feather="chevron-left" class="w-4 h-4 text-slate-400"></i></button>
-                  <button type="button" id="nextMonth" class="p-1 hover:bg-slate-100 rounded-md transition-colors"><i data-feather="chevron-right" class="w-4 h-4 text-slate-400"></i></button>
-                </div>
+          <!-- 좌측: 고정폭 예쁜 미니 달력 영역 -->
+          <div class="sidebar-fixed space-y-6">
+            <div class="calendar-card">
+              <div class="flex items-center justify-between mb-4 px-1">
+                <button id="prevMonth" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
+                  <i data-feather="chevron-left" class="w-4 h-4"></i>
+                </button>
+                <h3 id="currentMonthYear" class="text-slate-700">2026.03</h3>
+                <button id="nextMonth" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
+                  <i data-feather="chevron-right" class="w-4 h-4"></i>
+                </button>
               </div>
-              
               <div class="calendar-container">
                 <div class="calendar-day-header sun">일</div>
                 <div class="calendar-day-header">월</div>
@@ -171,24 +210,22 @@
                 <div class="calendar-day-header">수</div>
                 <div class="calendar-day-header">목</div>
                 <div class="calendar-day-header">금</div>
-                <div class="calendar-day-header text-blue-400">토</div>
+                <div class="calendar-day-header">토</div>
               </div>
-              
-              <div id="calendar-body" class="calendar-container">
-                <!-- JS 생성 -->
+              <div id="calendarDays" class="calendar-container">
+                <!-- JS 렌더링 -->
+              </div>
+              <div class="mt-4 pt-3 border-t border-slate-100">
+                <button onclick="location.href='/nurse/treatment-list?tab={{currentTab}}&query={{query}}{{#departments}}{{#selected}}&deptIds={{id}}{{/selected}}{{/departments}}{{#doctors}}{{#selected}}&doctorIds={{id}}{{/selected}}{{/doctors}}'" class="btn-today">
+                  <i data-feather="calendar" class="w-3.5 h-3.5 text-indigo-500"></i>
+                  오늘로 이동
+                </button>
               </div>
             </div>
-
-            <button type="button" onclick="location.href='/nurse/treatment-list'" 
-                    class="w-full py-3 bg-white border border-slate-200 text-slate-600 text-sm font-bold rounded-2xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm">
-              <i data-feather="refresh-cw" class="w-4 h-4"></i>
-              오늘 날짜로 돌아가기
-            </button>
           </div>
 
-          <!-- 오른쪽: 리스트 메인 -->
-          <div class="flex-1 space-y-4">
-            <!-- 탭 영역 -->
+          <!-- 우측: 완벽 복구 리스트 메인 -->
+          <div class="flex-1 space-y-4 min-w-0">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex">
               <a href="/nurse/treatment-list?date={{searchDate}}&tab=pending{{#query}}&query={{query}}{{/query}}" 
                  class="tab-btn flex-1 {{#isPendingTab}}active{{/isPendingTab}}">
@@ -204,38 +241,25 @@
               </a>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-              <!-- 리스트 헤더 -->
-              <div class="emr-row bg-slate-50 border-b border-slate-200 text-[11px] font-black text-slate-400 uppercase tracking-wider">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+              <!-- 완벽 복구: 리스트 헤더 (의사 화면 스타일 통일 + 순서 보존) -->
+              <div class="emr-row bg-slate-50 border-b border-slate-100 text-[11px] font-black text-slate-400 uppercase tracking-widest">
                 <div>순번</div>
+                <div>이름</div>
+                <div>성별 / 나이</div>
+                <div>담당 의료진</div>
                 <div>상태</div>
                 <div>방문 시간</div>
-                <div>이름</div>
-                <div>담당 의료진</div>
-                <div>성별 / 나이</div>
                 <div class="text-right pr-4">처치</div>
               </div>
 
               <div id="treatment-list-body" class="divide-y divide-slate-100">
                 {{#patients}}
-                  <div class="emr-row clickable group" onclick="location.href='/nurse/patient-detail?id={{id}}'">
-                    <!-- 순번 (1부터 시작) -->
+                  <div class="emr-row clickable group" onclick="location.href='/nurse/patient-detail?id={{id}}{{keepParams}}'">
+                    <!-- 1. 순번 -->
                     <div class="text-xs font-bold text-slate-400">{{sequence}}</div>
 
-                    <!-- 상태 배지 -->
-                    <div>
-                      <span class="px-2.5 py-1 rounded-full text-[10px] font-bold {{statusBadgeClass}}">
-                        {{statusText}}
-                      </span>
-                    </div>
-
-                    <!-- 방문 시간 -->
-                    <div class="flex items-center gap-2 text-sm font-bold text-slate-500">
-                      <i data-feather="clock" class="w-3.5 h-3.5 text-slate-300"></i>
-                      {{timeSlot}}
-                    </div>
-                    
-                    <!-- 이름 -->
+                    <!-- 2. 이름 -->
                     <div class="flex items-center gap-2">
                       {{#isFirstVisit}}
                       <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[9px] font-bold">초</span>
@@ -248,19 +272,32 @@
                       </span>
                     </div>
 
-                    <!-- 담당 의료진 -->
-                    <div class="text-sm font-medium text-slate-600">
-                      {{doctorName}} ({{departmentName}})
-                    </div>
-
-                    <!-- 성별 / 나이 (차트번호 대신 표시) -->
+                    <!-- 3. 성별 / 나이 -->
                     <div class="text-sm font-semibold text-slate-600">
                       {{genderAge}}
                     </div>
 
-                    <!-- 관리 버튼 -->
+                    <!-- 4. 담당 의료진 -->
+                    <div class="text-sm font-medium text-slate-600">
+                      {{doctorName}} ({{departmentName}})
+                    </div>
+
+                    <!-- 5. 상태 (의사 화면 배지 스타일 - 테두리 제거) -->
+                    <div>
+                      <span class="px-2.5 py-1 rounded-full text-[10px] font-bold {{statusBadgeClass}}">
+                        {{statusText}}
+                      </span>
+                    </div>
+
+                    <!-- 6. 방문 시간 -->
+                    <div class="flex items-center gap-2 text-sm font-bold text-slate-500">
+                      <i data-feather="clock" class="w-3.5 h-3.5 text-slate-300"></i>
+                      {{timeSlot}}
+                    </div>
+
+                    <!-- 7. 처치 버튼 -->
                     <div class="text-right pr-4">
-                      <a href="/nurse/patient-detail?id={{id}}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-[11px] font-bold text-slate-600 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm">
+                      <a href="/nurse/patient-detail?id={{id}}{{keepParams}}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-[11px] font-bold text-slate-600 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm">
                         처치
                         <i data-feather="chevron-right" class="w-3 h-3"></i>
                       </a>
@@ -271,15 +308,12 @@
                 {{^patients}}
                   <div class="py-32 flex flex-col items-center justify-center text-slate-400">
                     <i data-feather="folder-minus" class="w-12 h-12 mb-4 opacity-10"></i>
-                    <p class="text-sm font-medium">
-                      {{#query}}"{{query}}"에 대한 검색 결과가 없습니다.{{/query}}
-                      {{^query}}처치 대상 환자가 없습니다.{{/query}}
-                    </p>
+                    <p class="text-sm font-medium">대상 환자가 없습니다.</p>
                   </div>
                 {{/patients}}
               </div>
               
-              <!-- 페이징 바 (reception-list 스타일로 통일) -->
+              <!-- 완벽 복구: 페이징 바 -->
               {{#pageLinks.0}}
               <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-center gap-2">
                 {{#hasPrev}}
@@ -311,121 +345,101 @@
   <script>
     feather.replace();
 
-    /**
-     * 드롭다운 토글 함수
-     */
     function toggleDropdown(id) {
       const el = document.getElementById(id);
       const isHidden = el.classList.contains('hidden');
-      
-      // 다른 드롭다운 닫기
       document.querySelectorAll('[id$="-options"]').forEach(opt => opt.classList.add('hidden'));
-      
-      if (isHidden) {
-        el.classList.remove('hidden');
-      }
+      if (isHidden) el.classList.remove('hidden');
     }
 
-    /**
-     * 드롭다운 외부 클릭 시 닫기
-     */
     window.addEventListener('click', function(e) {
       if (!e.target.closest('#dept-dropdown') && !e.target.closest('#doctor-dropdown')) {
         document.querySelectorAll('[id$="-options"]').forEach(opt => opt.classList.add('hidden'));
       }
     });
 
-    /**
-     * 필터 상태 동기화 (버튼 텍스트 업데이트 및 의사 목록 필터링)
-     */
     function syncFilters() {
-      // 1. 진료과 선택 상태 확인
       const selectedDepts = Array.from(document.querySelectorAll('input[name="deptIds"]:checked'));
       const deptIds = selectedDepts.map(el => el.value);
       const deptNames = selectedDepts.map(el => el.getAttribute('data-name'));
-      
-      // 2. 진료과 버튼 텍스트 업데이트
       const deptBtnText = document.getElementById('dept-btn-text');
-      if (deptNames.length === 0) {
-        deptBtnText.textContent = '진료과 선택';
-      } else if (deptNames.length === 1) {
-        deptBtnText.textContent = '진료과: ' + deptNames[0];
-      } else {
-        deptBtnText.textContent = '진료과: ' + deptNames[0] + ' 외 ' + (deptNames.length - 1) + '건';
-      }
+      
+      if (deptNames.length === 0) deptBtnText.textContent = '진료과 선택';
+      else if (deptNames.length === 1) deptBtnText.textContent = '진료과: ' + deptNames[0];
+      else deptBtnText.textContent = '진료과: ' + deptNames[0] + ' 외 ' + (deptNames.length - 1) + '건';
 
-      // 3. 의사 목록 필터링 (선택된 진료과가 있으면 해당 과 의사만 표시, 없으면 전체 표시)
       const doctorItems = document.querySelectorAll('.doctor-item');
       doctorItems.forEach(item => {
         const itemDeptId = item.getAttribute('data-dept-id');
-        if (deptIds.length === 0 || deptIds.includes(itemDeptId)) {
-          item.classList.remove('hidden');
-        } else {
+        if (deptIds.length === 0 || deptIds.includes(itemDeptId)) item.classList.remove('hidden');
+        else {
           item.classList.add('hidden');
-          // 숨겨지는 의사의 체크박스는 해제 (선택 정합성 유지)
           const cb = item.querySelector('input[name="doctorIds"]');
           if (cb) cb.checked = false;
         }
       });
 
-      // 4. 의사 버튼 텍스트 업데이트
       const selectedDoctors = Array.from(document.querySelectorAll('input[name="doctorIds"]:checked'));
       const doctorNames = selectedDoctors.map(el => el.getAttribute('data-name'));
       const doctorBtnText = document.getElementById('doctor-btn-text');
       
-      if (doctorNames.length === 0) {
-        doctorBtnText.textContent = '의사 선택';
-      } else if (doctorNames.length === 1) {
-        doctorBtnText.textContent = '의사: ' + doctorNames[0];
-      } else {
-        doctorBtnText.textContent = '의사: ' + doctorNames[0] + ' 외 ' + (doctorNames.length - 1) + '건';
-      }
+      if (doctorNames.length === 0) doctorBtnText.textContent = '의사 선택';
+      else if (doctorNames.length === 1) doctorBtnText.textContent = '의사: ' + doctorNames[0];
+      else doctorBtnText.textContent = '의사: ' + doctorNames[0] + ' 외 ' + (doctorNames.length - 1) + '건';
     }
 
-    // 페이지 로드 시 초기 상태 반영
     document.addEventListener('DOMContentLoaded', syncFilters);
 
-    // 의사 화면과 동일한 캘린더 로직
     (function() {
-      var currentSearchDate = "{{searchDate}}";
-      var currentTab = "{{currentTab}}";
-      var [sYear, sMonth, sDay] = currentSearchDate.split('-').map(Number);
-      var displayDate = new Date(sYear, sMonth - 1, 1);
+      const calendarDays = document.getElementById('calendarDays');
+      const monthYearTitle = document.getElementById('currentMonthYear');
+      const selectedDateStr = "{{searchDate}}";
+      const currentTab = "{{currentTab}}";
       
+      let displayDate = new Date(selectedDateStr);
+      if (isNaN(displayDate)) displayDate = new Date();
+
       function renderCalendar() {
-        var year = displayDate.getFullYear();
-        var month = displayDate.getMonth();
-        document.getElementById('calendar-header').textContent = year + "년 " + (month + 1) + "월";
-        var firstDay = new Date(year, month, 1).getDay();
-        var lastDate = new Date(year, month + 1, 0).getDate();
-        var body = document.getElementById('calendar-body');
-        body.innerHTML = '';
-        
-        for (var i = 0; i < firstDay; i++) body.appendChild(document.createElement('div'));
-        
-        for (var d = 1; d <= lastDate; d++) {
-          var div = document.createElement('div');
+        calendarDays.innerHTML = '';
+        const year = displayDate.getFullYear();
+        const month = displayDate.getMonth();
+        monthYearTitle.textContent = `${year}년 ${String(month + 1).padStart(2, '0')}월`;
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+
+        for (let i = 0; i < firstDay; i++) {
+          const div = document.createElement('div');
+          div.className = 'calendar-empty';
+          calendarDays.appendChild(div);
+        }
+
+        for (let d = 1; d <= lastDate; d++) {
+          const div = document.createElement('div');
+          const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          const dayOfWeek = new Date(year, month, d).getDay();
+          
           div.className = 'calendar-day';
-          
-          var dayOfWeek = (firstDay + d - 1) % 7;
           if (dayOfWeek === 0) div.classList.add('sun');
-          
+          if (dStr === selectedDateStr) div.classList.add('active');
+          if (dStr === todayStr) div.classList.add('today');
           div.textContent = d;
-          var f = year + "-" + String(month + 1).padStart(2, '0') + "-" + String(d).padStart(2, '0');
-          if (f === currentSearchDate) div.classList.add('active');
-          var todayDate = new Date();
-          if (year === todayDate.getFullYear() && month === todayDate.getMonth() && d === todayDate.getDate()) div.classList.add('today');
           
-          var searchQuery = "{{#query}}{{query}}{{/query}}";
-          var targetUrl = "/nurse/treatment-list?date=" + f + "&tab=" + currentTab;
-          if (searchQuery) targetUrl += "&query=" + encodeURIComponent(searchQuery);
-          
-          div.onclick = (function(url) { return function() { location.href = url; }; })(targetUrl);
-          body.appendChild(div);
+          div.onclick = () => {
+            const url = new URL(window.location.href);
+            url.searchParams.set('date', dStr);
+            url.searchParams.set('tab', currentTab);
+            url.searchParams.set('page', '0'); 
+            window.location.href = url.toString();
+          };
+          calendarDays.appendChild(div);
         }
       }
-      document.getElementById('prevMonth').onclick = function() { displayDate.setMonth(displayDate.getMonth() - 1); renderCalendar(); feather.replace(); };
-      document.getElementById('nextMonth').onclick = function() { displayDate.setMonth(displayDate.getMonth() + 1); renderCalendar(); feather.replace(); };
+
+      document.getElementById('prevMonth').onclick = () => { displayDate.setMonth(displayDate.getMonth() - 1); renderCalendar(); feather.replace(); };
+      document.getElementById('nextMonth').onclick = () => { displayDate.setMonth(displayDate.getMonth() + 1); renderCalendar(); feather.replace(); };
       renderCalendar();
     })();
   </script>

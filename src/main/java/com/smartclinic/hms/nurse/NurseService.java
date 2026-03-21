@@ -93,18 +93,18 @@ public class NurseService {
     }
 
     public Page<NursePatientStatusDto> getReceptionPage(String status, String query, Long deptId, Long doctorId,
-            String source, int page) {
+            String source, int page, LocalDate date) {
         List<Long> deptIds = deptId != null ? List.of(deptId) : null;
         List<Long> doctorIds = doctorId != null ? List.of(doctorId) : null;
-        return getReceptionPageWithMultiFilters(status, query, deptIds, doctorIds, source, page);
+        return getReceptionPageWithMultiFilters(status, query, deptIds, doctorIds, source, page, date);
     }
 
     /**
-     * 다중 선택 필터를 지원하는 환자 현황 페이지 조회
+     * 다중 선택 필터와 특정 날짜를 지원하는 환자 현황 페이지 조회
      */
     public Page<NursePatientStatusDto> getReceptionPageWithMultiFilters(String status, String query, 
-            List<Long> deptIds, List<Long> doctorIds, String source, int page) {
-        LocalDate today = LocalDate.now();
+            List<Long> deptIds, List<Long> doctorIds, String source, int page, LocalDate date) {
+        LocalDate targetDate = (date != null) ? date : LocalDate.now();
         PageRequest pageable = PageRequest.of(page, 10);
 
         // 빈 리스트인 경우 쿼리 조건(IS NULL)이 정상 동작하도록 null 처리
@@ -122,16 +122,16 @@ public class NurseService {
         Page<Reservation> reservationPage;
         if (status == null || status.isBlank()) {
             reservationPage = nursePatientStatusRepository
-                    .findTodayNonCancelledWithMultiFiltersPage(today, ReservationStatus.CANCELLED, query, effectiveDeptIds, effectiveDoctorIds,
+                    .findTodayNonCancelledWithMultiFiltersPage(targetDate, ReservationStatus.CANCELLED, query, effectiveDeptIds, effectiveDoctorIds,
                             src, pageable);
         } else {
             try {
                 ReservationStatus st = ReservationStatus.valueOf(status);
                 reservationPage = nursePatientStatusRepository
-                        .findTodayByStatusWithMultiFiltersPage(today, st, query, effectiveDeptIds, effectiveDoctorIds, src, pageable);
+                        .findTodayByStatusWithMultiFiltersPage(targetDate, st, query, effectiveDeptIds, effectiveDoctorIds, src, pageable);
             } catch (IllegalArgumentException e) {
                 reservationPage = nursePatientStatusRepository
-                        .findTodayNonCancelledWithMultiFiltersPage(today, ReservationStatus.CANCELLED, query, effectiveDeptIds, effectiveDoctorIds,
+                        .findTodayNonCancelledWithMultiFiltersPage(targetDate, ReservationStatus.CANCELLED, query, effectiveDeptIds, effectiveDoctorIds,
                                 src, pageable);
             }
         }

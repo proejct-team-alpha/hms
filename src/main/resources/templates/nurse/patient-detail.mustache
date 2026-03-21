@@ -24,7 +24,9 @@
             </div>
             <h1 class="text-2xl font-bold text-slate-800">처치실</h1>
           </div>
-          <a href="/nurse/treatment-list" class="text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center gap-1">
+          <!-- 필터 상태 보존하며 목록으로 돌아가기 -->
+          <a href="/nurse/treatment-list?date={{keepDate}}&tab={{keepTab}}&query={{keepQuery}}{{#keepDeptIds}}&deptIds={{.}}{{/keepDeptIds}}{{#keepDoctorIds}}&doctorIds={{.}}{{/keepDoctorIds}}" 
+             class="text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center gap-1">
             <i data-feather="arrow-left" class="w-4 h-4"></i>
             목록으로 돌아가기
           </a>
@@ -42,7 +44,7 @@
         {{/message}}
 
         <div class="grid grid-cols-3 gap-6">
-          <!-- 좌측: 환자 정보 (의사 화면과 동일) -->
+          <!-- 좌측: 환자 정보 -->
           <div class="col-span-1 space-y-6">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
               <div class="flex items-center gap-4 mb-6">
@@ -133,6 +135,13 @@
               <form id="nurse-note-form" action="/nurse/treatment/save-note" method="post" class="flex-1 flex flex-col">
                 <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
                 <input type="hidden" name="id" value="{{detail.reservationId}}">
+                <!-- 필터 상태 보존용 hidden 필드 -->
+                <input type="hidden" name="date" value="{{keepDate}}">
+                <input type="hidden" name="tab" value="{{keepTab}}">
+                <input type="hidden" name="query" value="{{keepQuery}}">
+                {{#keepDeptIds}}<input type="hidden" name="deptIds" value="{{.}}">{{/keepDeptIds}}
+                {{#keepDoctorIds}}<input type="hidden" name="doctorIds" value="{{.}}">{{/keepDoctorIds}}
+
                 <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">간호 처치 메모</label>
                 <textarea
                   name="nurseNote"
@@ -149,6 +158,13 @@
               <form action="/nurse/treatment/complete" method="post">
                 <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
                 <input type="hidden" name="id" value="{{detail.reservationId}}">
+                <!-- 필터 상태 보존용 hidden 필드 -->
+                <input type="hidden" name="date" value="{{keepDate}}">
+                <input type="hidden" name="tab" value="{{keepTab}}">
+                <input type="hidden" name="query" value="{{keepQuery}}">
+                {{#keepDeptIds}}<input type="hidden" name="deptIds" value="{{.}}">{{/keepDeptIds}}
+                {{#keepDoctorIds}}<input type="hidden" name="doctorIds" value="{{.}}">{{/keepDoctorIds}}
+
                 <button type="submit" class="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2">
                   <i data-feather="check-circle" class="w-5 h-5"></i>
                   처치 완료
@@ -165,7 +181,7 @@
           </div>
         </div>
 
-        <!-- 물품 사용 섹션 (의사 화면 고도화 스타일 적용) -->
+        <!-- 물품 사용 섹션 -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
@@ -219,7 +235,7 @@
                 </tr>
                 {{/usageLogs}}
                 <tr id="usage-log-empty" style="{{#usageLogs.size}}display:none{{/usageLogs.size}}">
-                  <td colspan="5" class="px-3 py-2 text-xs text-slate-400 text-center text-center">사용된 물품이 없습니다.</td>
+                  <td colspan="5" class="px-3 py-2 text-xs text-slate-400 text-center">사용된 물품이 없습니다.</td>
                 </tr>
               </tbody>
             </table>
@@ -255,7 +271,7 @@
           </div>
         </div>
 
-        <!-- 과거 진료 이력 (의사 화면 타임라인 스타일 완벽 이식) -->
+        <!-- 과거 진료 이력 -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div class="p-6 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
             <div class="flex items-center gap-2">
@@ -263,7 +279,6 @@
               <h2 class="text-lg font-bold text-slate-800">과거 진료 이력</h2>
             </div>
             
-            <!-- 진료과/의사 검색 필터 -->
             <div class="flex items-center gap-2">
               <select id="filter-dept" class="text-xs border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
                 <option value="">전체 진료과</option>
@@ -277,7 +292,6 @@
                 <option value="{{id}}" data-dept-id="{{departmentId}}">{{displayName}}</option>
                 {{/filterDoctors}}
               </select>
-              <!-- 페이징 컨트롤 -->
               <div id="history-pagination" class="flex items-center gap-3 ml-2" style="display: none;">
                 <button type="button" id="history-prev" class="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
                   <i data-feather="chevron-left" class="w-4 h-4"></i>
@@ -308,7 +322,6 @@
                         </div>
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700">진료 완료</span>
                       </div>
-                      
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="space-y-1">
                           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">진단 및 소견</span>
@@ -345,42 +358,7 @@
     feather.replace();
 
     (function() {
-      // 1. 카테고리 필터링 및 검색 로직 (의사 화면 완벽 이식)
-      const itemSearchInput = document.getElementById('item-search');
-      const itemCards = document.querySelectorAll('.item-card');
-      const categoryBtns = document.querySelectorAll('.item-cat-btn');
-      let currentCategory = "";
-
-      function filterItems() {
-        if (!itemSearchInput) return;
-        const query = itemSearchInput.value.toLowerCase();
-        itemCards.forEach(card => {
-          const name = card.getAttribute('data-name') ? card.getAttribute('data-name').toLowerCase() : card.querySelector('.item-name').textContent.toLowerCase();
-          const category = card.getAttribute('data-category');
-          const matchesCategory = !currentCategory || category === currentCategory;
-          const matchesSearch = !query || itemMatches(name, query);
-          card.style.display = (matchesCategory && matchesSearch) ? 'block' : 'none';
-        });
-      }
-
-      if (categoryBtns) {
-        categoryBtns.forEach(btn => {
-          btn.addEventListener('click', () => {
-            categoryBtns.forEach(b => {
-              b.classList.replace('bg-indigo-600', 'bg-slate-100');
-              b.classList.replace('text-white', 'text-slate-600');
-            });
-            btn.classList.replace('bg-slate-100', 'bg-indigo-600');
-            btn.classList.replace('text-slate-600', 'text-white');
-            currentCategory = btn.getAttribute('data-cat');
-            filterItems();
-          });
-        });
-      }
-
-      if (itemSearchInput) itemSearchInput.addEventListener('input', filterItems);
-
-      // 2. 개별 물품 사용 (AJAX)
+      // 물품 AJAX 로직
       document.querySelectorAll('.item-use-form').forEach(form => {
         form.addEventListener('submit', function(e) {
           e.preventDefault();
@@ -412,7 +390,7 @@
         });
       });
 
-      // 3. 물품 일괄 사용 (의사 화면 완벽 이식)
+      // 일괄 사용
       const batchUseBtn = document.getElementById('item-batch-use-btn');
       if (batchUseBtn) {
         batchUseBtn.addEventListener('click', function() {
@@ -436,37 +414,14 @@
             body: JSON.stringify({ reservationId: resId, requests: requests })
           }).then(res => res.json()).then(data => {
             if (data.successes && data.successes.length > 0) {
-              if (data.errors && data.errors.length > 0) {
-                alert('일부 물품의 재고가 부족하여 처리되지 않았습니다.\n\n' + data.errors.join('\n'));
-              }
+              if (data.errors && data.errors.length > 0) alert('일부 물품의 재고가 부족합니다.\n\n' + data.errors.join('\n'));
               location.reload(); 
-            } else if (data.errors && data.errors.length > 0) {
-              alert('재고가 부족하여 처리에 실패했습니다:\n' + data.errors.join('\n'));
-            } else if (data.error) {
-              alert('오류: ' + data.error);
-            }
+            } else if (data.errors && data.errors.length > 0) alert('처리에 실패했습니다:\n' + data.errors.join('\n'));
+            else if (data.error) alert('오류: ' + data.error);
           });
         });
       }
 
-      // ── 초성 검색 지원 ──
-      var CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
-      function getChosung(str) {
-        return str.split('').map(function(ch) {
-          var code = ch.charCodeAt(0);
-          if (code >= 0xAC00 && code <= 0xD7A3) return CHOSUNG[Math.floor((code - 0xAC00) / 588)];
-          return ch;
-        }).join('');
-      }
-      function isChosungOnly(str) { return /^[ㄱ-ㅎ]+$/.test(str); }
-      function itemMatches(name, query) {
-        if (!query) return true;
-        var q = query.toLowerCase();
-        if (isChosungOnly(q)) return getChosung(name).includes(q);
-        return name.toLowerCase().includes(q);
-      }
-
-      // ── 사용 내역 취소 (추가) ──
       window.cancelUsage = function(logId) {
         if(!confirm('정말 취소하시겠습니까?')) return;
         const resId = "{{detail.reservationId}}";
@@ -481,14 +436,11 @@
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: params.toString()
         }).then(res => res.json()).then(data => {
-          if (data.logs) {
-            refreshUsageLogs(data.logs);
-            location.reload(); // 재고 갱신을 위해 새로고침
-          } else if (data.error) alert(data.error);
+          if (data.logs) { location.reload(); }
+          else if (data.error) alert(data.error);
         });
       };
 
-      // ── 사용 내역 갱신 ──
       window.refreshUsageLogs = function(logs) {
         const tbody = document.getElementById('usage-log-tbody');
         if (!tbody) return;
@@ -508,98 +460,47 @@
         }
       };
 
-      // ── 히스토리 페이징 및 필터링 (의사 화면 완벽 이식) ──
+      // 히스토리 필터링 로직
       (function() {
         var HISTORY_PAGE_SIZE = 3;
         var historyPage = 1;
-        
         const filterDept = document.getElementById('filter-dept');
         const filterDoctor = document.getElementById('filter-doctor');
-        
         if (!filterDept || !filterDoctor) return;
-        
         const doctorOptions = Array.from(filterDoctor.querySelectorAll('option')).filter(opt => opt.value !== "");
 
-        function clean(val) {
-          if (val === undefined || val === null) return "";
-          return String(val).replace(/[^0-9]/g, '').trim();
-        }
+        function clean(val) { return String(val || "").replace(/[^0-9]/g, '').trim(); }
 
         function updateUI() {
           const allItems = Array.from(document.querySelectorAll('.history-item'));
           const selectedDeptId = clean(filterDept.value);
           const selectedDoctorId = clean(filterDoctor.value);
-
           const filtered = allItems.filter(item => {
-            const itemDeptId = clean(item.getAttribute('data-dept-id'));
-            const itemDoctorId = clean(item.getAttribute('data-doctor-id'));
-            const matchesDept = !selectedDeptId || itemDeptId === selectedDeptId;
-            const matchesDoctor = !selectedDoctorId || itemDoctorId === selectedDoctorId;
-            return matchesDept && matchesDoctor;
+            const d = clean(item.getAttribute('data-dept-id'));
+            const dr = clean(item.getAttribute('data-doctor-id'));
+            return (!selectedDeptId || d === selectedDeptId) && (!selectedDoctorId || dr === selectedDoctorId);
           });
-
           allItems.forEach(item => item.style.display = 'none');
-          const total = filtered.length;
-          const totalPages = Math.ceil(total / HISTORY_PAGE_SIZE) || 1;
+          const totalPages = Math.ceil(filtered.length / HISTORY_PAGE_SIZE) || 1;
           if (historyPage > totalPages) historyPage = totalPages;
           const start = (historyPage - 1) * HISTORY_PAGE_SIZE;
-          const end = start + HISTORY_PAGE_SIZE;
-
-          filtered.slice(start, end).forEach(item => { item.style.display = 'block'; });
-
-          const paginationBar = document.getElementById('history-pagination');
-          if (paginationBar) {
-            paginationBar.style.display = total > 0 ? 'flex' : 'none';
-          }
-          
-          const curEl = document.getElementById('history-current-page');
-          const totEl = document.getElementById('history-total-pages');
-          if (curEl) curEl.textContent = historyPage;
-          if (totEl) totEl.textContent = totalPages;
-          
-          const prevBtn = document.getElementById('history-prev');
-          const nextBtn = document.getElementById('history-next');
-          if (prevBtn) prevBtn.disabled = (historyPage <= 1);
-          if (nextBtn) nextBtn.disabled = (historyPage >= totalPages);
+          filtered.slice(start, start + HISTORY_PAGE_SIZE).forEach(item => item.style.display = 'block');
+          document.getElementById('history-pagination').style.display = filtered.length > 0 ? 'flex' : 'none';
+          document.getElementById('history-current-page').textContent = historyPage;
+          document.getElementById('history-total-pages').textContent = totalPages;
+          document.getElementById('history-prev').disabled = (historyPage <= 1);
+          document.getElementById('history-next').disabled = (historyPage >= totalPages);
         }
 
         filterDept.addEventListener('change', function() {
-          const selectedDeptId = clean(this.value);
+          const sid = clean(this.value);
           filterDoctor.innerHTML = '<option value="">전체 의사</option>';
-          filterDoctor.value = "";
-          doctorOptions.forEach(opt => {
-            const optDeptId = clean(opt.getAttribute('data-dept-id'));
-            if (!selectedDeptId || optDeptId === selectedDeptId) {
-              filterDoctor.appendChild(opt);
-            }
-          });
-          historyPage = 1;
-          updateUI();
+          doctorOptions.forEach(opt => { if(!sid || clean(opt.getAttribute('data-dept-id')) === sid) filterDoctor.appendChild(opt); });
+          historyPage = 1; updateUI();
         });
-
-        filterDoctor.addEventListener('change', function() {
-          historyPage = 1;
-          updateUI();
-        });
-
-        const btnPrev = document.getElementById('history-prev');
-        const btnNext = document.getElementById('history-next');
-        if (btnPrev) {
-          btnPrev.addEventListener('click', () => { if (historyPage > 1) { historyPage--; updateUI(); } });
-        }
-        if (btnNext) {
-          btnNext.addEventListener('click', () => { 
-            const selDeptId = clean(filterDept.value);
-            const selDocId = clean(filterDoctor.value);
-            const items = Array.from(document.querySelectorAll('.history-item'));
-            const count = items.filter(item => {
-              const d = clean(item.getAttribute('data-dept-id'));
-              const dr = clean(item.getAttribute('data-doctor-id'));
-              return (!selDeptId || d === selDeptId) && (!selDocId || dr === selDocId);
-            }).length;
-            if (historyPage < Math.ceil(count / HISTORY_PAGE_SIZE)) { historyPage++; updateUI(); } 
-          });
-        }
+        filterDoctor.addEventListener('change', () => { historyPage = 1; updateUI(); });
+        document.getElementById('history-prev').onclick = () => { if(historyPage > 1) { historyPage--; updateUI(); } };
+        document.getElementById('history-next').onclick = () => { if(historyPage < Math.ceil(document.querySelectorAll('.history-item').length / HISTORY_PAGE_SIZE)) { historyPage++; updateUI(); } };
         updateUI();
       })();
     })();
