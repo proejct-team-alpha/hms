@@ -109,8 +109,8 @@ INSERT INTO reservation (reservation_number, patient_id, doctor_id, department_i
 ('RES-LEE-004', 204, 1, 1, CURRENT_DATE, '10:30', 'RESERVED',  'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- [이영희 의사 전용 대규모 테스트 데이터]
--- 환자 데이터 보강 (주민번호, 내원 사유 포함)
-INSERT INTO patient (id, name, phone, email, resident_number, visit_reason, created_at) VALUES
+-- 환자 데이터 보강 (birth_info 필드명 변경 적용)
+INSERT INTO patient (id, name, phone, email, birth_info, visit_reason, created_at) VALUES
 (301, '박노인', '010-3333-0001', 'park@test.com', '600101-1', '만성 고혈압 정기 검진', CURRENT_TIMESTAMP),
 (302, '이지혜', '010-3333-0002', 'lee@test.com',  '880808-2', '심한 편두통 및 어지럼증', CURRENT_TIMESTAMP),
 (303, '최청년', '010-3333-0003', 'choi@test.com', '050505-3', '축구 중 발목 염좌', CURRENT_TIMESTAMP),

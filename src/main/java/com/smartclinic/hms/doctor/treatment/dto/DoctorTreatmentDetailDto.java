@@ -64,13 +64,13 @@ public class DoctorTreatmentDetailDto {
         this.filterDepartments = filterDepartments;
         this.filterDoctors = filterDoctors;
 
-        // 주민번호 기반 성별 및 만 나이 계산
-        String rn = r.getPatient().getResidentNumber();
+        // 환자의 생년월일 및 성별 정보(birthInfo)를 기반으로 성별 및 만 나이 계산
+        String birthInfo = r.getPatient().getBirthInfo();
         String gender = null;
         Integer age = null;
-        if (rn != null && rn.contains("-")) {
+        if (birthInfo != null && birthInfo.contains("-")) {
             try {
-                String[] parts = rn.split("-");
+                String[] parts = birthInfo.split("-");
                 String birthPart = parts[0];
                 String genderPart = parts[1];
                 if ("1".equals(genderPart) || "3".equals(genderPart)) gender = "M";
