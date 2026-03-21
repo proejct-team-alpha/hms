@@ -1,5 +1,9 @@
 package com.smartclinic.hms.admin.department;
 
+import com.smartclinic.hms.admin.department.dto.AdminDepartmentDetailResponse;
+import com.smartclinic.hms.admin.department.dto.AdminDepartmentItemResponse;
+import com.smartclinic.hms.admin.department.dto.AdminDepartmentListResponse;
+import com.smartclinic.hms.admin.department.dto.AdminDepartmentPageLinkResponse;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.Department;
 import java.util.List;
@@ -38,8 +42,8 @@ public class AdminDepartmentService {
         Pageable pageable = PageRequest.of(safePage - 1, safeSize);
         Page<Department> pageResult = adminDepartmentRepository.findAllByOrderByIdDesc(pageable);
 
-        List<AdminDepartmentDto> departments = pageResult.getContent().stream()
-                .map(AdminDepartmentDto::new)
+        List<AdminDepartmentItemResponse> departments = pageResult.getContent().stream()
+                .map(AdminDepartmentItemResponse::new)
                 .collect(Collectors.toList());
 
         int currentPage = pageResult.getNumber() + 1;

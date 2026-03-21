@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.smartclinic.hms.admin.item.dto.AdminItemListItemResponse;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.Item;
 import com.smartclinic.hms.domain.ItemCategory;
@@ -21,18 +22,18 @@ public class AdminItemService {
 
     private final ItemRepository itemRepository;
 
-    public List<AdminItemDto> getItemList(String category) {
+    public List<AdminItemListItemResponse> getItemList(String category) {
         if (category == null || category.isBlank()) {
             return itemRepository.findAllByOrderByNameAsc().stream()
-                    .map(AdminItemDto::new).collect(Collectors.toList());
+                    .map(AdminItemListItemResponse::new).collect(Collectors.toList());
         }
         try {
             ItemCategory cat = ItemCategory.valueOf(category);
             return itemRepository.findByCategoryOrderByNameAsc(cat).stream()
-                    .map(AdminItemDto::new).collect(Collectors.toList());
+                    .map(AdminItemListItemResponse::new).collect(Collectors.toList());
         } catch (IllegalArgumentException e) {
             return itemRepository.findAllByOrderByNameAsc().stream()
-                    .map(AdminItemDto::new).collect(Collectors.toList());
+                    .map(AdminItemListItemResponse::new).collect(Collectors.toList());
         }
     }
 

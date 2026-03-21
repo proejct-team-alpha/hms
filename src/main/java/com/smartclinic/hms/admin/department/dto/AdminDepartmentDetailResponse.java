@@ -1,4 +1,4 @@
-package com.smartclinic.hms.admin.department;
+package com.smartclinic.hms.admin.department.dto;
 
 import com.smartclinic.hms.domain.Department;
 

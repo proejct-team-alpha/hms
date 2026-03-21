@@ -1,4 +1,4 @@
-package com.smartclinic.hms.admin.rule;
+package com.smartclinic.hms.admin.rule.dto;
 
 public record AdminRulePageLinkResponse(
         int page,

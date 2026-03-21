@@ -1,5 +1,9 @@
 package com.smartclinic.hms.admin.department;
 
+import com.smartclinic.hms.admin.department.dto.AdminDepartmentDetailResponse;
+import com.smartclinic.hms.admin.department.dto.AdminDepartmentListResponse;
+import com.smartclinic.hms.admin.department.dto.CreateAdminDepartmentRequest;
+import com.smartclinic.hms.admin.department.dto.UpdateAdminDepartmentRequest;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.common.util.SsrValidationViewSupport;
 import jakarta.servlet.http.HttpServletRequest;
