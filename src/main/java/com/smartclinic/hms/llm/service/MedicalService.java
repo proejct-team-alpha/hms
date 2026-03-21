@@ -6,10 +6,13 @@ import com.smartclinic.hms.common.exception.LlmTimeoutException;
 import com.smartclinic.hms.domain.MedicalHistory;
 import com.smartclinic.hms.domain.MedicalHistoryRepository;
 import com.smartclinic.hms.llm.dto.LlmResponse;
+import com.smartclinic.hms.llm.dto.MedicalHistoryResponse;
 import io.netty.channel.ConnectTimeoutException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -103,6 +106,14 @@ public class MedicalService {
         });
     }
 
+    /**
+     * 의료 LLM 상담 히스토리 페이징 조회 (Controller는 Repository를 직접 호출하지 않는다).
+     */
+    public Page<MedicalHistoryResponse> getMedicalHistory(Long staffId, Pageable pageable) {
+        return medicalHistoryRepository.findByStaff_IdOrderByCreatedAtDesc(staffId, pageable)
+                .map(MedicalHistoryResponse::from);
+    }
+
     private String buildMetadata(long latencyMs) {
         Map<String, Object> meta = new LinkedHashMap<>();
         meta.put("model", "qwen2.5:7b");
@@ -121,7 +132,7 @@ public class MedicalService {
             return objectMapper.writeValueAsString(map);
         } catch (JacksonException e) {
             log.error("metadata JSON 변환 실패", e);
-            return "{}";
+            throw new IllegalStateException("메타데이터 JSON 직렬화에 실패했습니다.", e);
         }
     }
 }

@@ -6,11 +6,14 @@ import com.smartclinic.hms.common.exception.LlmTimeoutException;
 import com.smartclinic.hms.domain.ChatbotHistory;
 import com.smartclinic.hms.domain.ChatbotHistoryRepository;
 import com.smartclinic.hms.domain.Staff;
+import com.smartclinic.hms.llm.dto.ChatbotHistoryResponse;
 import com.smartclinic.hms.llm.dto.LlmResponse;
 import io.netty.channel.ConnectTimeoutException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -78,5 +81,13 @@ public class ChatService {
         ChatbotHistory saved = chatbotHistoryRepository.save(history);
         log.debug("ChatbotHistory 저장 - id: {}, staffId: {}", saved.getId(), staffId);
         return saved;
+    }
+
+    /**
+     * 규칙 챗봇 대화 히스토리 페이징 조회 (Controller는 Repository를 직접 호출하지 않는다).
+     */
+    public Page<ChatbotHistoryResponse> getRuleHistory(Long staffId, Pageable pageable) {
+        return chatbotHistoryRepository.findByStaff_IdOrderByCreatedAtDesc(staffId, pageable)
+                .map(ChatbotHistoryResponse::from);
     }
 }
