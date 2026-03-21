@@ -29,7 +29,7 @@
           </a>
           {{/detail.canComplete}}
           {{^detail.canComplete}}
-          <a href="/doctor/completed-list" class="text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center gap-1">
+          <a href="/doctor/treatment-list?date={{detail.reservationDate}}&tab=completed" class="text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center gap-1">
             <i data-feather="arrow-left" class="w-4 h-4"></i>
             목록으로 돌아가기
           </a>
@@ -59,7 +59,10 @@
                     {{^detail.isFirstVisit}}
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 shrink-0">재</span>
                     {{/detail.isFirstVisit}}
-                    <h2 class="text-xl font-bold text-slate-800">{{detail.patientName}}</h2>
+                    <h2 class="text-xl font-bold text-slate-800">
+                      {{detail.patientName}}
+                      <span class="text-base font-medium text-slate-400 ml-1">(F / 30세)</span>
+                    </h2>
                   </div>
                   <div class="text-sm text-slate-500">{{detail.patientPhone}}</div>
                   <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 mt-1 inline-block">
@@ -71,12 +74,19 @@
               <div class="space-y-4">
                 <div>
                   <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">예약 시간</h3>
-                  <div class="bg-slate-50 text-slate-700 p-3 rounded-xl text-sm border border-slate-100">
+                  <div class="bg-slate-50 text-slate-700 p-3 rounded-xl text-sm border border-slate-100 mb-4">
                     {{detail.timeSlot}}
                   </div>
                 </div>
                 <div>
-                  <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">환자 메모</h3>
+                  <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">접수 경로</h3>
+                  <div class="p-3 rounded-xl text-sm border font-bold flex items-center gap-2 {{detail.sourceBadgeClass}}">
+                    <i data-feather="external-link" class="w-4 h-4"></i>
+                    {{detail.sourceText}}
+                  </div>
+                </div>
+                <div>
+                  <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">내원 사유</h3>
                   <div class="bg-orange-50 text-orange-900 p-3 rounded-xl text-sm border border-orange-100 leading-relaxed">
                     {{detail.note}}
                   </div>
@@ -181,7 +191,7 @@
                       <div class="bg-slate-50 text-slate-700 p-4 rounded-xl text-sm border border-slate-100 leading-relaxed whitespace-pre-wrap font-semibold">{{detail.diagnosis}}</div>
                     </div>
                     <div>
-                      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">진료 소견</h3>
+                      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">진료 소견 (SOAP)</h3>
                       <div class="bg-slate-50 text-slate-700 p-4 rounded-xl text-sm border border-slate-100 leading-relaxed whitespace-pre-wrap">{{detail.remark}}</div>
                     </div>
                     <div>
@@ -232,7 +242,7 @@
                   <i data-feather="check-circle" class="w-4 h-4"></i>
                   진료 완료됨
                 </span>
-                <a href="/doctor/completed-list" class="text-sm font-bold text-indigo-600 hover:text-indigo-800">
+                <a href="/doctor/treatment-list?date={{detail.reservationDate}}&tab=completed" class="text-sm font-bold text-indigo-600 hover:text-indigo-800">
                   목록으로 돌아가기
                 </a>
               </div>
@@ -411,163 +421,251 @@
   </div>
 
   <script>
-    // 스크립트 부분 생략 (동일 유지)
-    var CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
-    function getChosung(str) {
-      return str.split('').map(function(ch) {
-        var code = ch.charCodeAt(0);
-        if (code >= 0xAC00 && code <= 0xD7A3) return CHOSUNG[Math.floor((code - 0xAC00) / 588)];
-        return ch;
-      }).join('');
-    }
-    function isChosungOnly(str) { return /^[ㄱ-ㅎ]+$/.test(str); }
-    function itemMatches(name, query) {
-      if (!query) return true;
-      var q = query.toLowerCase();
-      if (isChosungOnly(q)) return getChosung(name).includes(q);
-      return name.toLowerCase().includes(q);
-    }
+    (function() {
+      // 1. 카테고리 필터링 및 검색 로직
+      const itemSearchInput = document.getElementById('item-search');
+      const itemCards = document.querySelectorAll('.item-card');
+      const categoryBtns = document.querySelectorAll('.item-cat-btn');
+      let currentCategory = "";
 
-    var USAGE_LOG_PAGE_SIZE = 10;
-    var usageLogPage = 1;
-
-    function buildUsageLogPageNumbers(current, total) {
-      var container = document.getElementById('usage-log-page-numbers');
-      if(!container) return;
-      container.innerHTML = '';
-      if (total <= 1) return;
-      var start = Math.max(1, current - 2);
-      var end   = Math.min(total, start + 4);
-      if (end - start < 4) start = Math.max(1, end - 4);
-      function makeBtn(n) {
-        var b = document.createElement('button');
-        b.type = 'button'; b.textContent = n;
-        b.className = 'px-2 py-1 text-xs rounded-lg border transition-colors ' +
-          (n === current ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 text-slate-600 hover:bg-slate-100');
-        b.addEventListener('click', function() { usageLogPage = n; renderUsageLog(); });
-        return b;
+      function filterItems() {
+        const query = itemSearchInput.value.toLowerCase();
+        itemCards.forEach(card => {
+          const name = card.querySelector('.item-name').textContent.toLowerCase();
+          const category = card.getAttribute('data-category');
+          const matchesCategory = !currentCategory || category === currentCategory;
+          const matchesSearch = !query || itemMatches(name, query);
+          
+          card.style.display = (matchesCategory && matchesSearch) ? 'block' : 'none';
+        });
       }
-      if (start > 1) { container.appendChild(makeBtn(1)); }
-      for (var i = start; i <= end; i++) container.appendChild(makeBtn(i));
-      if (end < total) { container.appendChild(makeBtn(total)); }
-    }
 
-    function renderUsageLog() {
-      var rows = Array.from(document.querySelectorAll('#usage-log-tbody tr:not(#usage-log-empty)'));
-      var total = rows.length;
-      var totalPages = Math.max(1, Math.ceil(total / USAGE_LOG_PAGE_SIZE));
-      if (usageLogPage > totalPages) usageLogPage = totalPages;
-      var start = (usageLogPage - 1) * USAGE_LOG_PAGE_SIZE;
-      rows.forEach(function(r, i) { r.style.display = (i >= start && i < start + USAGE_LOG_PAGE_SIZE) ? '' : 'none'; });
-      var bar = document.getElementById('usage-log-pagination');
-      if (bar) bar.style.display = (total === 0 || totalPages <= 1) ? 'none' : 'flex';
-      buildUsageLogPageNumbers(usageLogPage, totalPages);
-    }
+      categoryBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          categoryBtns.forEach(b => b.classList.replace('bg-indigo-600', 'bg-slate-100'));
+          categoryBtns.forEach(b => b.classList.replace('text-white', 'text-slate-600'));
+          btn.classList.replace('bg-slate-100', 'bg-indigo-600');
+          btn.classList.replace('text-slate-600', 'text-white');
+          currentCategory = btn.getAttribute('data-cat');
+          filterItems();
+        });
+      });
 
-    // (기타 AJAX 및 이벤트 리스너 로직은 기존과 동일하게 유지)
-    document.querySelectorAll('form[action$="/doctor/item/use"]').forEach(function(form) {
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        var input = form.querySelector('input[name="amount"]');
-        var value = input.value.trim();
-        var id = form.querySelector('input[name="id"]').value;
-        var resId = form.querySelector('input[name="reservationId"]').value;
-        var csrfInput = form.querySelector('input[type="hidden"]:not([name="id"]):not([name="reservationId"])');
-        
-        var params = new URLSearchParams();
-        params.append('id', id);
-        params.append('amount', value);
+      itemSearchInput.addEventListener('input', filterItems);
+
+      // 2. 개별 물품 사용 (AJAX)
+      document.querySelectorAll('form[action$="/doctor/item/use"]').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const input = form.querySelector('input[name="amount"]');
+          const amount = input.value.trim();
+          if (!amount || amount <= 0) return alert('수량을 입력해주세요.');
+
+          const id = form.querySelector('input[name="id"]').value;
+          const resId = form.querySelector('input[name="reservationId"]').value;
+          const csrfToken = document.querySelector('input[name="_csrf"]').value;
+          
+          const params = new URLSearchParams();
+          params.append('id', id);
+          params.append('amount', amount);
+          params.append('reservationId', resId);
+          params.append('_csrf', csrfToken);
+
+          fetch('/doctor/item/use', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+          }).then(res => res.json()).then(data => {
+            if (data.quantity !== undefined) {
+              form.closest('.item-card').querySelector('.quantity-span').textContent = data.quantity;
+              input.value = '';
+              refreshUsageLogs(data.logs || []);
+            } else if (data.error) alert(data.error);
+          });
+        });
+      });
+
+      // 3. 선택 물품 일괄 사용
+      const batchUseBtn = document.getElementById('item-batch-use-btn');
+      if (batchUseBtn) {
+        batchUseBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const requests = [];
+          const resId = "{{detail.reservationId}}";
+          const csrfToken = document.querySelector('input[name="_csrf"]').value;
+
+          document.querySelectorAll('.item-card').forEach(card => {
+            const amountInput = card.querySelector('input[name="amount"]');
+            const amount = amountInput.value.trim();
+            if (amount && parseInt(amount) > 0) {
+              requests.push({
+                id: card.getAttribute('data-id'),
+                amount: parseInt(amount)
+              });
+            }
+          });
+
+          if (requests.length === 0) {
+            alert('사용할 물품의 수량을 하나 이상 입력해주세요.');
+            return;
+          }
+
+          fetch('/doctor/item/use-batch', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrfToken 
+            },
+            body: JSON.stringify({
+              reservationId: resId,
+              requests: requests
+            })
+          }).then(res => {
+            if (!res.ok) throw new Error('일괄 처리에 실패했습니다.');
+            return res.json();
+          }).then(data => {
+            if (data.successes && data.successes.length > 0) {
+              if (data.errors && data.errors.length > 0) {
+                alert('일부 물품의 재고가 부족하여 처리되지 않았습니다.\n\n' + data.errors.join('\n'));
+              }
+              location.reload(); 
+            } else if (data.errors && data.errors.length > 0) {
+              alert('재고가 부족하여 처리에 실패했습니다:\n' + data.errors.join('\n'));
+            } else if (data.error) {
+              alert('오류: ' + data.error);
+            }
+          }).catch(err => {
+            console.error(err);
+            alert('서버 통신 중 오류가 발생했습니다.');
+          });
+        });
+      }
+
+      // ── 초성 검색 지원 로직 ──
+      var CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+      function getChosung(str) {
+        return str.split('').map(function(ch) {
+          var code = ch.charCodeAt(0);
+          if (code >= 0xAC00 && code <= 0xD7A3) return CHOSUNG[Math.floor((code - 0xAC00) / 588)];
+          return ch;
+        }).join('');
+      }
+      function isChosungOnly(str) { return /^[ㄱ-ㅎ]+$/.test(str); }
+      function itemMatches(name, query) {
+        if (!query) return true;
+        var q = query.toLowerCase();
+        if (isChosungOnly(q)) return getChosung(name).includes(q);
+        return name.toLowerCase().includes(q);
+      }
+
+      // (이하 사용 취소 및 페이징 로직 동일 유지)
+      window.cancelUsage = function(logId) {
+        if(!confirm('정말 취소하시겠습니까?')) return;
+        const resId = "{{detail.reservationId}}";
+        const csrfToken = document.querySelector('input[name="_csrf"]').value;
+        const params = new URLSearchParams();
+        params.append('logId', logId);
         params.append('reservationId', resId);
-        params.append(csrfInput.name, csrfInput.value);
+        params.append('_csrf', csrfToken);
 
-        fetch('/doctor/item/use', {
+        fetch('/doctor/item/cancel', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: params.toString()
         }).then(res => res.json()).then(data => {
-          if (data.quantity !== undefined) {
-            form.closest('.item-card').querySelector('.quantity-span').textContent = data.quantity;
-            input.value = '';
-            refreshUsageLogs(data.logs || []);
+          if (data.logs) {
+            refreshUsageLogs(data.logs);
+            // 재고 업데이트 (화면상의 해당 카드 재고 갱신)
+            const card = document.querySelector(`.item-card[data-id="${data.itemId}"]`);
+            if(card) card.querySelector('.quantity-span').textContent = data.quantity;
           } else if (data.error) alert(data.error);
         });
-      });
-    });
+      };
 
-    function refreshUsageLogs(logs) {
-      var tbody = document.getElementById('usage-log-tbody');
-      if (!tbody) return;
-      Array.from(tbody.querySelectorAll('tr:not(#usage-log-empty)')).forEach(r => r.remove());
-      var emptyRow = document.getElementById('usage-log-empty');
-      if (logs && logs.length > 0) {
-        if (emptyRow) emptyRow.style.display = 'none';
-        logs.forEach(log => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td class="px-3 py-2 text-slate-700 font-medium">${log.itemName}</td>
-                          <td class="px-3 py-2 text-slate-500">${log.usedBy}</td>
-                          <td class="px-3 py-2 text-right text-slate-600">${log.amount}개</td>
-                          <td class="px-3 py-2 text-right text-slate-400">${log.usedAt}</td>
-                          <td class="px-3 py-2 text-center">
-                            <button type="button" onclick="cancelUsage(${log.id})" class="p-1 text-red-500 hover:bg-red-50 rounded"><i data-feather="x-circle" class="w-4 h-4"></i></button>
-                          </td>`;
-          tbody.appendChild(tr);
-        });
-        if (window.feather) feather.replace();
-      } else {
-        if (emptyRow) emptyRow.style.display = '';
+      var USAGE_LOG_PAGE_SIZE = 10;
+      var usageLogPage = 1;
+
+      function renderUsageLog() {
+        var rows = Array.from(document.querySelectorAll('#usage-log-tbody tr:not(#usage-log-empty)'));
+        var total = rows.length;
+        var totalPages = Math.max(1, Math.ceil(total / USAGE_LOG_PAGE_SIZE));
+        if (usageLogPage > totalPages) usageLogPage = totalPages;
+        var start = (usageLogPage - 1) * USAGE_LOG_PAGE_SIZE;
+        rows.forEach(function(r, i) { r.style.display = (i >= start && i < start + USAGE_LOG_PAGE_SIZE) ? '' : 'none'; });
+        var bar = document.getElementById('usage-log-pagination');
+        if (bar) bar.style.display = (total === 0 || totalPages <= 1) ? 'none' : 'flex';
+        buildUsageLogPageNumbers(usageLogPage, totalPages);
       }
+
+      function buildUsageLogPageNumbers(current, total) {
+        var container = document.getElementById('usage-log-page-numbers');
+        if(!container) return;
+        container.innerHTML = '';
+        if (total <= 1) return;
+        for (var i = 1; i <= total; i++) {
+          (function(n) {
+            var b = document.createElement('button');
+            b.type = 'button'; b.textContent = n;
+            b.className = 'px-2 py-1 text-xs rounded-lg border transition-colors ' +
+              (n === current ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 text-slate-600 hover:bg-slate-100');
+            b.addEventListener('click', function() { usageLogPage = n; renderUsageLog(); });
+            container.appendChild(b);
+          })(i);
+        }
+      }
+
+      function refreshUsageLogs(logs) {
+        var tbody = document.getElementById('usage-log-tbody');
+        if (!tbody) return;
+        Array.from(tbody.querySelectorAll('tr:not(#usage-log-empty)')).forEach(r => r.remove());
+        var emptyRow = document.getElementById('usage-log-empty');
+        if (logs && logs.length > 0) {
+          if (emptyRow) emptyRow.style.display = 'none';
+          logs.forEach(log => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td class="px-3 py-2 text-slate-700 font-medium">${log.itemName}</td>
+                            <td class="px-3 py-2 text-slate-500">${log.usedBy}</td>
+                            <td class="px-3 py-2 text-right text-slate-600">${log.amount}개</td>
+                            <td class="px-3 py-2 text-right text-slate-400">${log.usedAt}</td>
+                            <td class="px-3 py-2 text-center">
+                              <button type="button" onclick="cancelUsage(${log.id})" class="p-1 text-red-500 hover:bg-red-50 rounded"><i data-feather="x-circle" class="w-4 h-4"></i></button>
+                            </td>`;
+            tbody.appendChild(tr);
+          });
+          if (window.feather) feather.replace();
+        } else {
+          if (emptyRow) emptyRow.style.display = '';
+        }
+        renderUsageLog();
+      }
+
       renderUsageLog();
-    }
 
-    renderUsageLog();
-
-    // ── 과거 진료 이력 페이징 (3개씩) ──
-    (function() {
-      var HISTORY_PAGE_SIZE = 3;
-      var historyPage = 1;
-      var items = document.querySelectorAll('.history-item');
-      var total = items.length;
-      var totalPages = Math.ceil(total / HISTORY_PAGE_SIZE);
-
-      if (total > HISTORY_PAGE_SIZE) {
-        document.getElementById('history-pagination').style.display = 'flex';
-        document.getElementById('history-total-pages').textContent = totalPages;
-      }
-
-      function renderHistory() {
-        var start = (historyPage - 1) * HISTORY_PAGE_SIZE;
-        var end = start + HISTORY_PAGE_SIZE;
-
-        items.forEach(function(item, index) {
-          if (index >= start && index < end) {
-            item.style.display = 'block';
-            setTimeout(function() { item.style.opacity = '1'; }, 10);
-          } else {
-            item.style.display = 'none';
-            item.style.opacity = '0';
-          }
-        });
-
-        document.getElementById('history-current-page').textContent = historyPage;
-        document.getElementById('history-prev').disabled = (historyPage <= 1);
-        document.getElementById('history-next').disabled = (historyPage >= totalPages);
-      }
-
-      document.getElementById('history-prev').addEventListener('click', function() {
-        if (historyPage > 1) {
-          historyPage--;
-          renderHistory();
+      // ── 과거 진료 이력 페이징 ──
+      (function() {
+        var HISTORY_PAGE_SIZE = 3;
+        var historyPage = 1;
+        var items = document.querySelectorAll('.history-item');
+        var total = items.length;
+        var totalPages = Math.ceil(total / HISTORY_PAGE_SIZE);
+        if (total > HISTORY_PAGE_SIZE) {
+          document.getElementById('history-pagination').style.display = 'flex';
+          document.getElementById('history-total-pages').textContent = totalPages;
         }
-      });
-
-      document.getElementById('history-next').addEventListener('click', function() {
-        if (historyPage < totalPages) {
-          historyPage++;
-          renderHistory();
+        function renderHistory() {
+          var start = (historyPage - 1) * HISTORY_PAGE_SIZE;
+          var end = start + HISTORY_PAGE_SIZE;
+          items.forEach(function(item, index) {
+            item.style.display = (index >= start && index < end) ? 'block' : 'none';
+          });
+          document.getElementById('history-current-page').textContent = historyPage;
+          document.getElementById('history-prev').disabled = (historyPage <= 1);
+          document.getElementById('history-next').disabled = (historyPage >= totalPages);
         }
-      });
-
-      if (total > 0) renderHistory();
+        document.getElementById('history-prev').addEventListener('click', () => { if (historyPage > 1) { historyPage--; renderHistory(); } });
+        document.getElementById('history-next').addEventListener('click', () => { if (historyPage < totalPages) { historyPage++; renderHistory(); } });
+        if (total > 0) renderHistory();
+      })();
     })();
   </script>
   <script>feather.replace();</script>

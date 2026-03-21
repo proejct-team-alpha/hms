@@ -8,6 +8,7 @@ import lombok.Getter;
 public class DoctorReservationDto {
 
     private final Long id;
+    private Integer sequence; // 리스트 순번
     private final String patientName;
     private final String patientPhone;
     private final String timeSlot;
@@ -30,6 +31,10 @@ public class DoctorReservationDto {
      */
     private final String diagnosis;
 
+    public void setSequence(Integer sequence) {
+        this.sequence = sequence;
+    }
+
     public DoctorReservationDto(Reservation r) {
         this(r, false, null); // 기본값 설정
     }
@@ -50,28 +55,28 @@ public class DoctorReservationDto {
         switch (r.getStatus()) {
             case RECEIVED -> {
                 this.statusText = "진료 대기";
-                this.statusBadgeClass = "bg-orange-100 text-orange-600";
+                this.statusBadgeClass = "bg-blue-50 text-blue-600";
                 this.cardClass = "border-slate-200 hover:border-indigo-300";
                 this.canComplete = true;
                 this.canStartTreatment = true;
             }
             case IN_TREATMENT -> {
                 this.statusText = "진료중";
-                this.statusBadgeClass = "bg-indigo-100 text-indigo-700";
+                this.statusBadgeClass = "bg-green-50 text-green-600";
                 this.cardClass = "border-indigo-300 hover:border-indigo-400";
                 this.canComplete = true;
                 this.canStartTreatment = false;
             }
             case COMPLETED -> {
                 this.statusText = "진료 완료";
-                this.statusBadgeClass = "bg-green-600 text-white";
+                this.statusBadgeClass = "bg-slate-100 text-slate-500";
                 this.cardClass = "border-slate-200 opacity-60";
                 this.canComplete = false;
                 this.canStartTreatment = false;
             }
             default -> {
                 this.statusText = "예약";
-                this.statusBadgeClass = "bg-slate-100 text-slate-600";
+                this.statusBadgeClass = "bg-slate-50 text-slate-400";
                 this.cardClass = "border-slate-200 hover:border-indigo-300";
                 this.canComplete = false;
                 this.canStartTreatment = false;

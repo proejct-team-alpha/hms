@@ -71,6 +71,22 @@ public interface DoctorReservationRepository extends JpaRepository<Reservation, 
             @Param("date") LocalDate date,
             @Param("statuses") List<ReservationStatus> statuses);
 
+    @Query(value = "SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status IN :statuses AND r.patient.name LIKE %:query% ORDER BY r.timeSlot DESC",
+           countQuery = "SELECT count(r) FROM Reservation r WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status IN :statuses AND r.patient.name LIKE %:query%")
+    Page<Reservation> findTodayByDoctorAndStatusesAndPatientNamePage(
+            @Param("username") String username,
+            @Param("date") LocalDate date,
+            @Param("statuses") List<ReservationStatus> statuses,
+            @Param("query") String query,
+            Pageable pageable);
+
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status IN :statuses AND r.patient.name LIKE %:query% ORDER BY r.timeSlot DESC")
+    List<Reservation> findTodayByDoctorAndStatusesAndPatientName(
+            @Param("username") String username,
+            @Param("date") LocalDate date,
+            @Param("statuses") List<ReservationStatus> statuses,
+            @Param("query") String query);
+
     @Query("SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.id = :id AND r.doctor.staff.username = :username")
     Optional<Reservation> findByIdAndDoctor(
             @Param("id") Long id,

@@ -13,12 +13,15 @@ public class DoctorTreatmentDetailDto {
     private final String patientPhone;
     private final String note;
     private final String timeSlot;
+    private final String reservationDate;
     private final String statusText;
     private final boolean canComplete;
     private final boolean canStartTreatment;
     private final String diagnosis;
     private final String prescription;
     private final String remark;
+    private final String sourceText;
+    private final String sourceBadgeClass;
 
     /**
      * 초진 여부 (true: 초진, false: 재진)
@@ -40,6 +43,7 @@ public class DoctorTreatmentDetailDto {
         this.patientPhone = r.getPatient().getPhone();
         this.note = r.getPatient().getNote() != null ? r.getPatient().getNote() : "증상 없음";
         this.timeSlot = r.getTimeSlot();
+        this.reservationDate = r.getReservationDate().toString();
         this.isFirstVisit = isFirstVisit;
         this.history = history;
         this.canStartTreatment = r.getStatus() == ReservationStatus.RECEIVED;
@@ -50,6 +54,17 @@ public class DoctorTreatmentDetailDto {
             case IN_TREATMENT -> "진료중";
             case COMPLETED -> "진료 완료";
             default -> "예약";
+        };
+
+        this.sourceText = switch (r.getSource()) {
+            case ONLINE -> "온라인";
+            case PHONE -> "전화";
+            default -> "방문";
+        };
+        this.sourceBadgeClass = switch (r.getSource()) {
+            case ONLINE -> "bg-blue-50 text-blue-600";
+            case PHONE -> "bg-purple-50 text-purple-600";
+            default -> "bg-orange-50 text-orange-600";
         };
 
         if (record != null) {

@@ -63,14 +63,45 @@ public class DoctorTreatmentService {
                 .toList();
     }
 
-    public Page<DoctorReservationDto> getTreatmentPage(String username, int page) {
+    public Page<DoctorReservationDto> getTreatmentPage(String username, LocalDate date, String tab, String query, int page) {
         LocalDate today = LocalDate.now();
-        List<ReservationStatus> activeStatuses = List.of(ReservationStatus.RECEIVED, ReservationStatus.IN_TREATMENT);
-        return doctorReservationRepository
-                .findTodayByDoctorAndStatusesPage(username, today, activeStatuses, PageRequest.of(page, 10))
-                .map(r -> {
+        List<ReservationStatus> statuses;
+
+        // 과거 날짜인 경우 모든 상태 조회, 오늘인 경우 탭에 따라 필터링
+        if (date.isBefore(today)) {
+            statuses = List.of(ReservationStatus.RECEIVED, ReservationStatus.IN_TREATMENT, ReservationStatus.COMPLETED);
+        } else {
+            if ("completed".equals(tab)) {
+                statuses = List.of(ReservationStatus.COMPLETED);
+            } else if ("all".equals(tab)) {
+                statuses = List.of(ReservationStatus.RECEIVED, ReservationStatus.IN_TREATMENT, ReservationStatus.COMPLETED);
+            } else {
+                statuses = List.of(ReservationStatus.RECEIVED, ReservationStatus.IN_TREATMENT);
+            }
+        }
+        
+        Page<Reservation> resultPage;
+        if (query != null && !query.isBlank()) {
+            resultPage = doctorReservationRepository.findTodayByDoctorAndStatusesAndPatientNamePage(
+                    username, date, statuses, query, PageRequest.of(page, 10));
+        } else {
+            resultPage = doctorReservationRepository.findTodayByDoctorAndStatusesPage(
+                    username, date, statuses, PageRequest.of(page, 10));
+        }
+        
+        java.util.concurrent.atomic.AtomicInteger index = new java.util.concurrent.atomic.AtomicInteger(page * 10 + 1);
+        return resultPage.map(r -> {
                     long count = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
-                    return new DoctorReservationDto(r, count == 0);
+                    // 확정된 진단명 가져오기 (진료 완료된 경우)
+                    String diagnosis = null;
+                    if (r.getStatus() == ReservationStatus.COMPLETED) {
+                        diagnosis = treatmentRecordRepository.findByReservation_Id(r.getId())
+                                .map(com.smartclinic.hms.domain.TreatmentRecord::getDiagnosis)
+                                .orElse("기록 없음");
+                    }
+                    DoctorReservationDto dto = new DoctorReservationDto(r, count == 0, diagnosis);
+                    dto.setSequence(index.getAndIncrement());
+                    return dto;
                 });
     }
 
@@ -115,6 +146,18 @@ public class DoctorTreatmentService {
     }
 
     /**
+     * 특정 날짜의 전체 환자 수(대기 + 진료중 + 완료)를 조회합니다.
+     */
+    public long getDailyTotalCount(String username, LocalDate date) {
+        List<ReservationStatus> activeStatuses = List.of(
+                ReservationStatus.RECEIVED, 
+                ReservationStatus.IN_TREATMENT, 
+                ReservationStatus.COMPLETED
+        );
+        return doctorReservationRepository.findTodayByDoctorAndStatuses(username, date, activeStatuses).size();
+    }
+
+    /**
      * 특정 날짜의 전체 완료 환자 수를 조회합니다. (검색 필터 무시용)
      */
     public long getCompletedCountForDate(String username, LocalDate date) {
@@ -122,13 +165,19 @@ public class DoctorTreatmentService {
         return doctorReservationRepository.findTodayByDoctorAndStatus(username, searchDate, ReservationStatus.COMPLETED).size();
     }
 
-    // [W3-1] 폴링용: 오늘 날짜 RECEIVED + IN_TREATMENT 상태 조회
-    public List<DoctorReservationDto> getTodayReceivedList(String username) {
+    // [W3-1] 폴링용: 오늘 날짜 RECEIVED + IN_TREATMENT 상태 조회 (검색 지원)
+    public List<DoctorReservationDto> getTodayReceivedList(String username, String query) {
         LocalDate today = LocalDate.now();
         List<ReservationStatus> activeStatuses = List.of(ReservationStatus.RECEIVED, ReservationStatus.IN_TREATMENT);
-        return doctorReservationRepository
-                .findTodayByDoctorAndStatuses(username, today, activeStatuses)
-                .stream()
+        
+        List<Reservation> list;
+        if (query != null && !query.isBlank()) {
+            list = doctorReservationRepository.findTodayByDoctorAndStatusesAndPatientName(username, today, activeStatuses, query);
+        } else {
+            list = doctorReservationRepository.findTodayByDoctorAndStatuses(username, today, activeStatuses);
+        }
+
+        return list.stream()
                 .map(r -> {
                     long count = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
                     return new DoctorReservationDto(r, count == 0);
