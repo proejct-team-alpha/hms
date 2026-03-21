@@ -17,6 +17,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 간호사 접수 및 처치 관리 컨트롤러
@@ -65,18 +66,18 @@ public class NurseReceptionController {
 
         model.addAttribute("reservations", resultPage.getContent());
         model.addAttribute("statusFilters", nurseService.getStatusFilters(status, query, deptId, doctorId, source));
-        model.addAttribute("currentStatus", status);
-        model.addAttribute("query", query);
+        model.addAttribute("currentStatus", status != null ? status : "");
+        model.addAttribute("query", query != null ? query : "");
         model.addAttribute("deptId", deptId);
         model.addAttribute("doctorId", doctorId);
-        model.addAttribute("source", source);
+        model.addAttribute("source", source != null ? source : "");
 
-        // 필터 데이터
+        // 필터 데이터 (null 안전한 비교를 위해 Objects.equals 사용)
         model.addAttribute("departments", nurseService.getAllDepartments().stream()
-                .map(d -> Map.of("id", d.getId(), "name", d.getName(), "selected", d.getId().equals(deptId)))
+                .map(d -> Map.of("id", d.getId(), "name", d.getName(), "selected", Objects.equals(d.getId(), deptId)))
                 .toList());
         model.addAttribute("doctors", nurseService.getAllDoctors().stream()
-                .map(d -> Map.of("id", d.getId(), "name", d.getDisplayName(), "selected", d.getId().equals(doctorId)))
+                .map(d -> Map.of("id", d.getId(), "name", d.getDisplayName(), "selected", Objects.equals(d.getId(), doctorId)))
                 .toList());
         model.addAttribute("sources", List.of(
                 Map.of("value", "ONLINE", "label", "온라인", "selected", "ONLINE".equals(source)),
@@ -163,22 +164,51 @@ public class NurseReceptionController {
     }
 
     /**
-     * 처치 관리 목록 화면 (날짜별 스케줄 기반)
+     * 처치 관리 목록 화면 (의사 진료 현황 스타일의 달력 + 리스트)
      */
     @GetMapping("/treatment-list")
     public String treatmentList(@RequestParam(name = "date", required = false) String dateStr,
-                               Model model) {
+                                @RequestParam(name = "tab", defaultValue = "pending") String tab,
+                                @RequestParam(name = "query", required = false) String query,
+                                Model model) {
         java.time.LocalDate date = (dateStr == null || dateStr.isBlank()) 
             ? java.time.LocalDate.now() 
             : java.time.LocalDate.parse(dateStr);
 
-        // 진료 완료(COMPLETED)된 환자들 위주로 조회
-        Page<NursePatientStatusDto> resultPage = nurseService.getReceptionPage("COMPLETED", null, null, null, null, 0);
+        java.time.LocalDate today = java.time.LocalDate.now();
+        boolean isToday = date.equals(today);
+        boolean isPastDate = date.isBefore(today);
 
-        model.addAttribute("patients", resultPage.getContent());
-        model.addAttribute("items", itemManagerService.getItemList(null)); // 재고 목록 추가
-        model.addAttribute("currentDate", date.toString());
+        // 검색 및 탭 필터링 로직
+        List<NursePatientStatusDto> allPatients = nurseService.getReceptionPage("COMPLETED", query, null, null, null, 0).getContent();
+
+        List<NursePatientStatusDto> filteredPatients = allPatients.stream()
+            .filter(p -> {
+                if ("pending".equals(tab)) return !p.isTreatmentCompleted();
+                if ("completed".equals(tab)) return p.isTreatmentCompleted();
+                return true;
+            })
+            .toList();
+
+        // 1부터 시작하는 순번 부여
+        for (int i = 0; i < filteredPatients.size(); i++) {
+            filteredPatients.get(i).setSequence(i + 1);
+        }
+
+        model.addAttribute("patients", filteredPatients);
+        model.addAttribute("dailyTotalPatients", allPatients.size());
+        model.addAttribute("totalPatients", filteredPatients.size());
+        model.addAttribute("searchDate", date.toString());
+        model.addAttribute("isToday", isToday);
+        model.addAttribute("isPastDate", isPastDate);
+        model.addAttribute("currentTab", tab);
+        model.addAttribute("isPendingTab", "pending".equals(tab));
+        model.addAttribute("isCompletedTab", "completed".equals(tab));
+        model.addAttribute("isAllTab", "all".equals(tab));
+        model.addAttribute("query", query != null ? query : "");
+        model.addAttribute("items", itemManagerService.getItemList(null));
         model.addAttribute("pageTitle", "처치 관리");
+
         return "nurse/treatment-list";
     }
 

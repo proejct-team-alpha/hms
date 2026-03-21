@@ -15,22 +15,27 @@
 
     <main class="content-wrapper flex-1 p-6">
       <div class="space-y-6 max-w-[1500px] mx-auto">
-        <!-- 타이틀 섹션 -->
-        <div class="flex justify-between items-end mb-8">
-          <div class="space-y-1">
-            <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-              <i data-feather="layout" class="text-indigo-600"></i>
-              대시보드
-            </h1>
-            <p class="text-xs text-slate-400 ml-8 italic">실시간 의료진 진료 현황 동기화 중</p>
+        <!-- 타이틀 섹션 (내 정보 관리 UI 스타일 적용) -->
+        <div class="flex justify-between items-center mb-8">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+              <i data-feather="layout" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h1 class="text-2xl font-bold text-slate-800">대시보드</h1>
+              <div class="flex items-center gap-1.5 text-slate-500 mt-1">
+                <i data-feather="refresh-cw" class="w-3.5 h-3.5"></i>
+                <p class="text-sm">실시간 의료진 진료 현황 동기화 중</p>
+              </div>
+            </div>
           </div>
           
           <div class="flex items-center gap-2">
-            <div class="bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm text-sm font-medium text-slate-600 flex items-center gap-2">
+            <div class="bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm text-sm font-medium text-slate-600 flex items-center gap-2 h-11">
               <i data-feather="calendar" class="w-4 h-4 text-indigo-500"></i>
               <span id="today-date"></span>
             </div>
-            <button onclick="location.reload()" class="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors shadow-sm">
+            <button onclick="location.reload()" class="w-11 h-11 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors shadow-sm flex items-center justify-center">
               <i data-feather="refresh-cw" class="w-4 h-4"></i>
             </button>
           </div>
@@ -111,7 +116,7 @@
       </div>
     </main>
 
-    {{> common/footer-staff}}
+    {{> common/header-staff}}
   </div>
 
   <script>
