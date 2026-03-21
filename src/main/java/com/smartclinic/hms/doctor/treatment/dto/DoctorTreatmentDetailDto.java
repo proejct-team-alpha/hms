@@ -34,11 +34,24 @@ public class DoctorTreatmentDetailDto {
      */
     private final java.util.List<com.smartclinic.hms.domain.PatientHistoryDto> history;
 
+    /**
+     * 필터링용 진료과 목록 (과거 이력 기반)
+     */
+    private final java.util.List<com.smartclinic.hms.staff.dto.StaffDepartmentOptionDto> filterDepartments;
+
+    /**
+     * 필터링용 의사 목록 (과거 이력 기반)
+     */
+    private final java.util.List<com.smartclinic.hms.staff.dto.StaffDoctorOptionDto> filterDoctors;
+
     public DoctorTreatmentDetailDto(Reservation r, TreatmentRecord record) {
-        this(r, record, false, new java.util.ArrayList<>());
+        this(r, record, false, new java.util.ArrayList<>(), new java.util.ArrayList<>(), new java.util.ArrayList<>());
     }
 
-    public DoctorTreatmentDetailDto(Reservation r, TreatmentRecord record, boolean isFirstVisit, java.util.List<com.smartclinic.hms.domain.PatientHistoryDto> history) {
+    public DoctorTreatmentDetailDto(Reservation r, TreatmentRecord record, boolean isFirstVisit, 
+                                   java.util.List<com.smartclinic.hms.domain.PatientHistoryDto> history,
+                                   java.util.List<com.smartclinic.hms.staff.dto.StaffDepartmentOptionDto> filterDepartments,
+                                   java.util.List<com.smartclinic.hms.staff.dto.StaffDoctorOptionDto> filterDoctors) {
         this.reservationId = r.getId();
         this.patientName = r.getPatient().getName();
         this.patientPhone = r.getPatient().getPhone();
@@ -48,6 +61,8 @@ public class DoctorTreatmentDetailDto {
         this.reservationDate = r.getReservationDate().toString();
         this.isFirstVisit = isFirstVisit;
         this.history = history;
+        this.filterDepartments = filterDepartments;
+        this.filterDoctors = filterDoctors;
 
         // 주민번호 기반 성별 및 만 나이 계산
         String rn = r.getPatient().getResidentNumber();

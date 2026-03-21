@@ -252,19 +252,35 @@ public class DoctorTreatmentService {
         long count = reservationRepository.countByPatient_IdAndStatus(reservation.getPatient().getId(), ReservationStatus.COMPLETED);
         
         // 2. 과거 진료 히스토리 조회 (상태가 COMPLETED인 것만 필터링)
-        List<PatientHistoryDto> history = reservationRepository
+        List<Reservation> pastReservations = reservationRepository
                 .findByPatient_IdOrderByReservationDateDesc(reservation.getPatient().getId())
                 .stream()
                 .filter(r -> r.getStatus() == ReservationStatus.COMPLETED) // 진료 완료된 것만
                 .filter(r -> !r.getId().equals(id)) // 현재 보고 있는 예약은 제외
+                .toList();
+
+        List<com.smartclinic.hms.domain.PatientHistoryDto> history = pastReservations.stream()
                 .map(r -> {
                     // 각 예약에 해당하는 진료 기록을 찾아서 DTO 생성
                     TreatmentRecord hRecord = treatmentRecordRepository.findByReservation_Id(r.getId()).orElse(null);
-                    return new PatientHistoryDto(r, hRecord);
+                    return new com.smartclinic.hms.domain.PatientHistoryDto(r, hRecord);
                 })
                 .toList();
 
-        return new DoctorTreatmentDetailDto(reservation, record, count == 0, history);
+        // [추가] 3. 필터링을 위한 고유 진료과 및 의사 목록 생성 (과거 이력 기반)
+        List<com.smartclinic.hms.staff.dto.StaffDepartmentOptionDto> filterDepartments = pastReservations.stream()
+                .map(Reservation::getDepartment)
+                .distinct()
+                .map(com.smartclinic.hms.staff.dto.StaffDepartmentOptionDto::new)
+                .toList();
+
+        List<com.smartclinic.hms.staff.dto.StaffDoctorOptionDto> filterDoctors = pastReservations.stream()
+                .map(Reservation::getDoctor)
+                .distinct()
+                .map(com.smartclinic.hms.staff.dto.StaffDoctorOptionDto::new)
+                .toList();
+
+        return new DoctorTreatmentDetailDto(reservation, record, count == 0, history, filterDepartments, filterDoctors);
     }
 
     @Transactional
