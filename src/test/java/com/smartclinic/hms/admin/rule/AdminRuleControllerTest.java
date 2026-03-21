@@ -260,8 +260,8 @@ class AdminRuleControllerTest {
                 .andExpect(view().name("admin/rule-new"))
                 .andExpect(request().attribute("model", invalidRequest))
                 .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
-                .andExpect(request().attribute("titleError", "\uC81C\uBAA9\uC740 \uD544\uC218\uC785\uB2C8\uB2E4."))
-                .andExpect(request().attribute("contentError", "\uB0B4\uC6A9\uC740 \uD544\uC218\uC785\uB2C8\uB2E4."))
+                .andExpect(request().attribute("titleError", "\uC81C\uBAA9\uC744 \uC785\uB825\uD574 \uC8FC\uC138\uC694."))
+                .andExpect(request().attribute("contentError", "\uB0B4\uC6A9\uC744 \uC785\uB825\uD574 \uC8FC\uC138\uC694."))
                 .andExpect(request().attribute("categoryError", "\uCE74\uD14C\uACE0\uB9AC\uB97C \uC120\uD0DD\uD574 \uC8FC\uC138\uC694."))
                 .andExpect(request().attribute("activeChecked", false));
 
@@ -299,6 +299,103 @@ class AdminRuleControllerTest {
     }
 
     @Test
+    @DisplayName("new rule title too long rerenders form and preserves selected category")
+    void createRule_withTitleTooLong_rerendersFormAndPreservesSelectedCategory() throws Exception {
+        // given
+        String longTitle = "a".repeat(201);
+        CreateAdminRuleRequest invalidRequest = new CreateAdminRuleRequest(
+                longTitle,
+                "응급실 우선 대응 안내",
+                HospitalRuleCategory.SUPPLY,
+                Boolean.TRUE
+        );
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/rule/new")
+                        .param("title", longTitle)
+                        .param("content", "응급실 우선 대응 안내")
+                        .param("category", "SUPPLY")
+                        .param("active", "true")
+                        .with(user("admin01").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/rule-new"))
+                .andExpect(request().attribute("model", invalidRequest))
+                .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
+                .andExpect(request().attribute("titleError", "제목은 200자 이하로 입력해 주세요."))
+                .andExpect(request().attribute("activeChecked", true))
+                .andExpect(content().string(containsString("value=\"SUPPLY\" selected")));
+
+        then(adminRuleService).should(never()).createRule(any(CreateAdminRuleRequest.class));
+    }
+
+    @Test
+    @DisplayName("new rule content too long rerenders form and preserves inputs")
+    void createRule_withContentTooLong_rerendersFormAndPreservesInputs() throws Exception {
+        // given
+        String longContent = "content-".repeat(376);
+        CreateAdminRuleRequest invalidRequest = new CreateAdminRuleRequest(
+                "supply-rule",
+                longContent,
+                HospitalRuleCategory.SUPPLY,
+                Boolean.TRUE
+        );
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/rule/new")
+                        .param("title", "supply-rule")
+                        .param("content", longContent)
+                        .param("category", "SUPPLY")
+                        .param("active", "true")
+                        .with(user("admin01").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/rule-new"))
+                .andExpect(request().attribute("model", invalidRequest))
+                .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
+                .andExpect(request().attribute("contentError", "내용은 3000자 이하로 입력해 주세요."))
+                .andExpect(request().attribute("activeChecked", true))
+                .andExpect(content().string(containsString("value=\"supply-rule\"")))
+                .andExpect(content().string(containsString("value=\"SUPPLY\" selected")))
+                .andExpect(content().string(containsString(longContent.substring(0, 40))));
+
+        then(adminRuleService).should(never()).createRule(any(CreateAdminRuleRequest.class));
+    }
+
+    @Test
+    @DisplayName("new rule missing category rerenders form with required category message")
+    void createRule_withMissingCategory_rerendersFormWithRequiredCategoryMessage() throws Exception {
+        // given
+        CreateAdminRuleRequest invalidRequest = new CreateAdminRuleRequest(
+                "응급 지침",
+                "응급실 우선 대응 안내",
+                null,
+                Boolean.TRUE
+        );
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/rule/new")
+                        .param("title", "응급 지침")
+                        .param("content", "응급실 우선 대응 안내")
+                        .param("active", "true")
+                        .with(user("admin01").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/rule-new"))
+                .andExpect(request().attribute("model", invalidRequest))
+                .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
+                .andExpect(request().attribute("categoryError", "카테고리를 선택해 주세요."))
+                .andExpect(request().attribute("activeChecked", true))
+                .andExpect(content().string(containsString("value=\"응급 지침\"")))
+                .andExpect(content().string(containsString(">응급실 우선 대응 안내</textarea>")));
+
+        then(adminRuleService).should(never()).createRule(any(CreateAdminRuleRequest.class));
+    }
+
+    @Test
     @DisplayName("legacy form post validation failure rerenders new form and does not call service")
     void createRule_withLegacyPathValidationFailure_rerendersNewForm() throws Exception {
         // given
@@ -315,8 +412,8 @@ class AdminRuleControllerTest {
                 .andExpect(view().name("admin/rule-new"))
                 .andExpect(request().attribute("model", invalidRequest))
                 .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
-                .andExpect(request().attribute("titleError", "\uC81C\uBAA9\uC740 \uD544\uC218\uC785\uB2C8\uB2E4."))
-                .andExpect(request().attribute("contentError", "\uB0B4\uC6A9\uC740 \uD544\uC218\uC785\uB2C8\uB2E4."))
+                .andExpect(request().attribute("titleError", "\uC81C\uBAA9\uC744 \uC785\uB825\uD574 \uC8FC\uC138\uC694."))
+                .andExpect(request().attribute("contentError", "\uB0B4\uC6A9\uC744 \uC785\uB825\uD574 \uC8FC\uC138\uC694."))
                 .andExpect(request().attribute("categoryError", "\uCE74\uD14C\uACE0\uB9AC\uB97C \uC120\uD0DD\uD574 \uC8FC\uC138\uC694."))
                 .andExpect(request().attribute("activeChecked", false));
 
@@ -431,8 +528,8 @@ class AdminRuleControllerTest {
                 .andExpect(request().attribute("rule", detail))
                 .andExpect(request().attribute("model", invalidRequest))
                 .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
-                .andExpect(request().attribute("titleError", "제목은 필수입니다."))
-                .andExpect(request().attribute("contentError", "내용은 필수입니다."))
+                .andExpect(request().attribute("titleError", "제목을 입력해 주세요."))
+                .andExpect(request().attribute("contentError", "내용을 입력해 주세요."))
                 .andExpect(request().attribute("categoryError", "카테고리를 선택해 주세요."))
                 .andExpect(request().attribute("activeChecked", false));
 
@@ -471,6 +568,123 @@ class AdminRuleControllerTest {
                 .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
                 .andExpect(request().attribute("categoryError", "올바른 카테고리를 선택해 주세요."))
                 .andExpect(request().attribute("activeChecked", true));
+
+        then(adminRuleService).should().getRuleDetail(5L);
+        then(adminRuleService).should(never()).updateRule(any(UpdateAdminRuleRequest.class));
+    }
+
+    @Test
+    @DisplayName("update title too long rerenders detail view and preserves selected category")
+    void updateRule_withTitleTooLong_rerendersDetailViewAndPreservesSelectedCategory() throws Exception {
+        // given
+        AdminRuleDetailResponse detail = createRuleDetailResponse(5L);
+        String longTitle = "a".repeat(201);
+        UpdateAdminRuleRequest invalidRequest = new UpdateAdminRuleRequest(
+                5L,
+                longTitle,
+                "변경된 물품 지침",
+                HospitalRuleCategory.SUPPLY,
+                Boolean.TRUE
+        );
+        given(adminRuleService.getRuleDetail(5L)).willReturn(detail);
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/rule/update")
+                        .param("ruleId", "5")
+                        .param("title", longTitle)
+                        .param("content", "변경된 물품 지침")
+                        .param("category", "SUPPLY")
+                        .param("active", "true")
+                        .with(user("admin01").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/rule-detail"))
+                .andExpect(request().attribute("rule", detail))
+                .andExpect(request().attribute("model", invalidRequest))
+                .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
+                .andExpect(request().attribute("titleError", "제목은 200자 이하로 입력해 주세요."))
+                .andExpect(request().attribute("activeChecked", true))
+                .andExpect(content().string(containsString(detail.title())))
+                .andExpect(content().string(containsString("value=\"SUPPLY\" selected")));
+
+        then(adminRuleService).should().getRuleDetail(5L);
+        then(adminRuleService).should(never()).updateRule(any(UpdateAdminRuleRequest.class));
+    }
+
+    @Test
+    @DisplayName("update content too long rerenders detail view and preserves edited inputs")
+    void updateRule_withContentTooLong_rerendersDetailViewAndPreservesEditedInputs() throws Exception {
+        // given
+        AdminRuleDetailResponse detail = createRuleDetailResponse(5L);
+        String longContent = "content-".repeat(376);
+        UpdateAdminRuleRequest invalidRequest = new UpdateAdminRuleRequest(
+                5L,
+                "supply-rule",
+                longContent,
+                HospitalRuleCategory.SUPPLY,
+                Boolean.TRUE
+        );
+        given(adminRuleService.getRuleDetail(5L)).willReturn(detail);
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/rule/update")
+                        .param("ruleId", "5")
+                        .param("title", "supply-rule")
+                        .param("content", longContent)
+                        .param("category", "SUPPLY")
+                        .param("active", "true")
+                        .with(user("admin01").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/rule-detail"))
+                .andExpect(request().attribute("rule", detail))
+                .andExpect(request().attribute("model", invalidRequest))
+                .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
+                .andExpect(request().attribute("contentError", "내용은 3000자 이하로 입력해 주세요."))
+                .andExpect(request().attribute("activeChecked", true))
+                .andExpect(content().string(containsString(detail.title())))
+                .andExpect(content().string(containsString("value=\"supply-rule\"")))
+                .andExpect(content().string(containsString("value=\"SUPPLY\" selected")))
+                .andExpect(content().string(containsString(longContent.substring(0, 40))));
+
+        then(adminRuleService).should().getRuleDetail(5L);
+        then(adminRuleService).should(never()).updateRule(any(UpdateAdminRuleRequest.class));
+    }
+
+    @Test
+    @DisplayName("update missing category rerenders detail view and preserves edited inputs")
+    void updateRule_withMissingCategory_rerendersDetailViewAndPreservesEditedInputs() throws Exception {
+        // given
+        AdminRuleDetailResponse detail = createRuleDetailResponse(5L);
+        UpdateAdminRuleRequest invalidRequest = new UpdateAdminRuleRequest(
+                5L,
+                "야간 물품 점검",
+                "교대 전 수량을 다시 확인합니다.",
+                null,
+                null
+        );
+        given(adminRuleService.getRuleDetail(5L)).willReturn(detail);
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/rule/update")
+                        .param("ruleId", "5")
+                        .param("title", "야간 물품 점검")
+                        .param("content", "교대 전 수량을 다시 확인합니다.")
+                        .with(user("admin01").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/rule-detail"))
+                .andExpect(request().attribute("rule", detail))
+                .andExpect(request().attribute("model", invalidRequest))
+                .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
+                .andExpect(request().attribute("categoryError", "카테고리를 선택해 주세요."))
+                .andExpect(request().attribute("activeChecked", false))
+                .andExpect(content().string(containsString(detail.title())))
+                .andExpect(content().string(containsString("value=\"야간 물품 점검\"")))
+                .andExpect(content().string(containsString(">교대 전 수량을 다시 확인합니다.</textarea>")));
 
         then(adminRuleService).should().getRuleDetail(5L);
         then(adminRuleService).should(never()).updateRule(any(UpdateAdminRuleRequest.class));
