@@ -7,10 +7,13 @@ import com.smartclinic.hms.llm.dto.DoctorScheduleDto;
 import com.smartclinic.hms.llm.dto.DoctorWithScheduleDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +24,7 @@ public class DoctorService {
     private final DoctorRepository doctorRepository;
     private final DoctorScheduleRepository doctorScheduleRepository;
 
+    @Cacheable(value = "doctors-by-department", key = "#department")
     public List<DoctorDto> findDoctorsByDepartment(String department) {
         String normalized = normalizeDepartment(department);
         List<com.smartclinic.hms.domain.Doctor> doctors =
@@ -35,6 +39,7 @@ public class DoctorService {
                 .toList();
     }
 
+    @Cacheable(value = "doctors-with-schedule", key = "#department")
     public List<DoctorWithScheduleDto> findDoctorsWithSchedule(String department) {
         String normalized = normalizeDepartment(department);
         List<com.smartclinic.hms.domain.Doctor> doctors =
@@ -50,6 +55,11 @@ public class DoctorService {
                     return DoctorWithScheduleDto.from(doctor, schedules);
                 })
                 .toList();
+    }
+
+    @Async("llmExecutor")
+    public CompletableFuture<List<DoctorWithScheduleDto>> findDoctorsWithScheduleAsync(String department) {
+        return CompletableFuture.completedFuture(findDoctorsWithSchedule(department));
     }
 
     private String normalizeDepartment(String department) {

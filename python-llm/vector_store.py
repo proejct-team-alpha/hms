@@ -37,7 +37,13 @@ def get_collection() -> chromadb.Collection:
         client = get_chroma_client()
         _collection = client.get_or_create_collection(
             name=settings.chroma_collection,
-            metadata={"hnsw:space": "cosine"},
+            metadata={
+                "hnsw:space": "cosine",
+                "hnsw:M": 16,
+                "hnsw:construction_ef": 200,
+                "hnsw:search_ef": 50,
+                "hnsw:num_threads": 4,
+            },
         )
         logger.info(
             "ChromaDB collection '%s': %d documents",
@@ -55,7 +61,13 @@ def get_rule_collection() -> chromadb.Collection:
         client = get_chroma_client()
         _rule_collection = client.get_or_create_collection(
             name=settings.chroma_rule_collection,
-            metadata={"hnsw:space": "cosine"},
+            metadata={
+                "hnsw:space": "cosine",
+                "hnsw:M": 16,
+                "hnsw:construction_ef": 200,
+                "hnsw:search_ef": 50,
+                "hnsw:num_threads": 4,
+            },
         )
         logger.info(
             "ChromaDB rule collection '%s': %d documents",
@@ -93,6 +105,7 @@ def add_documents(
 def search_similar(
     query_embedding: list[float],
     top_k: int = 3,
+    min_similarity: float = 0.65,
 ) -> list[dict]:
     """
     쿼리 임베딩과 유사한 문서 검색
@@ -100,6 +113,7 @@ def search_similar(
     Args:
         query_embedding: 쿼리 임베딩 벡터
         top_k: 반환할 상위 결과 수
+        min_similarity: 최소 유사도 임계값 (cosine similarity)
 
     Returns:
         검색 결과 리스트 [{document, metadata, distance}, ...]
@@ -113,15 +127,20 @@ def search_similar(
     results = collection.query(
         query_embeddings=[query_embedding],
         n_results=min(top_k, collection.count()),
+        include=["documents", "metadatas", "distances"],
     )
 
     items = []
     if results and results["documents"]:
         for i, doc in enumerate(results["documents"][0]):
+            distance = results["distances"][0][i] if results["distances"] else 0
+            similarity = 1 - distance
+            if similarity < min_similarity:
+                continue
             item = {
                 "document": doc,
                 "metadata": results["metadatas"][0][i] if results["metadatas"] else {},
-                "distance": results["distances"][0][i] if results["distances"] else 0,
+                "distance": distance,
             }
             items.append(item)
 

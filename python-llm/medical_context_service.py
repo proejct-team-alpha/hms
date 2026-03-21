@@ -165,7 +165,7 @@ async def search_vector_store(query: str, top_k: int = 3) -> list[dict]:
             return []
 
         query_embedding = await get_embedding(query)
-        results = search_similar(query_embedding, top_k=top_k)
+        results = await asyncio.to_thread(search_similar, query_embedding, top_k)
         logger.info("Vector search: %d results from %d docs (query: %s...)", len(results), doc_count, query[:30])
         return results
     except ImportError as exc:

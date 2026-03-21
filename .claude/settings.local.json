@@ -69,7 +69,17 @@
       "Bash(ls *.cmd *.bat mvnw* gradlew*)",
       "Bash(./gradlew.bat compileJava -q)",
       "Bash(./gradlew.bat compileJava)",
-      "Bash(./gradlew.bat build:*)"
+      "Bash(./gradlew.bat build:*)",
+      "mcp__plugin_oh-my-claudecode_t__ast_grep_search",
+      "Bash(git add:*)",
+      "Bash(find:*)",
+      "Bash(git push:*)",
+      "Bash(grep:*)",
+      "Bash(docker ps:*)",
+      "Bash(curl -s -o /dev/null -w \"HTTP_CODE: %{http_code}\\\\nTIME_TOTAL: %{time_total}s\\\\nTIME_CONNECT: %{time_connect}s\\\\nTIME_STARTTRANSFER: %{time_starttransfer}s\\\\n\" http://localhost:8000/docs)",
+      "Bash(curl -s http://localhost:8000/)",
+      "Bash(curl -s -w \"\\\\n---TIMING---\\\\nHTTP_CODE: %{http_code}\\\\nTIME_CONNECT: %{time_connect}s\\\\nTIME_STARTTRANSFER\\(TTFB\\): %{time_starttransfer}s\\\\nTIME_TOTAL: %{time_total}s\\\\nSIZE_DOWNLOAD: %{size_download} bytes\\\\n\" -X POST http://localhost:8000/infer/medical -H \"Content-Type: application/json\" -d '{\"\"query\"\": \"\"두통이 심하고 어지러워요\"\", \"\"max_length\"\": 512, \"\"temperature\"\": 0.3}')",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []
