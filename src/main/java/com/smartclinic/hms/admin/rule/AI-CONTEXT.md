@@ -10,12 +10,18 @@
 
 | 파일명 | 설명 |
 |--------|------|
-| AdminRuleController.java | 병원 규칙 등록, 목록, 수정 컨트롤러 (`/admin/rule`) |
-| (HospitalRuleRepository.java) | 실제 위치 확인 필요 (보통 admin 패키지 내부에 있음) |
+| AdminRuleController.java | 병원 규칙 목록, 등록, 상세, 수정 컨트롤러 (`/admin/rule`) |
+| AdminRuleService.java | 병원 규칙 목록/등록/상세/수정 서비스 |
+| HospitalRuleRepository.java | `HospitalRule` 조회 및 검색 저장소 |
+| dto/CreateAdminRuleRequest.java | 규칙 등록 요청 DTO |
+| dto/UpdateAdminRuleRequest.java | 규칙 수정 요청 DTO |
+| dto/AdminRuleDetailResponse.java | 규칙 상세 화면 응답 DTO |
 
 ## AI 작업 지침
 
 - 병원 규칙은 카테고리별로 관리될 수 있다.
+- 수정 화면은 `GET /admin/rule/detail?ruleId={id}` 상세 화면 안에서 폼을 함께 보여주는 SSR 구조를 사용한다.
+- 등록/수정 폼은 `admin/_rule-form.mustache` partial 기준으로 재사용한다.
 
 ## 의존성
 

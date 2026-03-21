@@ -1,10 +1,13 @@
 package com.smartclinic.hms.admin.rule;
 
 import com.smartclinic.hms.admin.rule.dto.AdminRuleFilterOptionResponse;
+import com.smartclinic.hms.admin.rule.dto.AdminRuleDetailResponse;
 import com.smartclinic.hms.admin.rule.dto.AdminRuleItemResponse;
 import com.smartclinic.hms.admin.rule.dto.AdminRuleListResponse;
 import com.smartclinic.hms.admin.rule.dto.AdminRulePageLinkResponse;
 import com.smartclinic.hms.admin.rule.dto.CreateAdminRuleRequest;
+import com.smartclinic.hms.admin.rule.dto.UpdateAdminRuleRequest;
+import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.common.AdminControllerTestSecurityConfig;
 import com.smartclinic.hms.common.util.SsrValidationViewSupport;
 import com.smartclinic.hms.domain.HospitalRule;
@@ -16,7 +19,9 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
@@ -93,6 +98,7 @@ class AdminRuleControllerTest {
                 .andExpect(view().name("admin/rule-list"))
                 .andExpect(request().attribute("model", response))
                 .andExpect(content().string(containsString("night-duty-rule")))
+                .andExpect(content().string(containsString("/admin/rule/detail?ruleId=7")))
                 .andExpect(content().string(containsString("value=\"DUTY\" selected")))
                 .andExpect(content().string(containsString("value=\"ACTIVE\" selected")))
                 .andExpect(content().string(containsString("value=\"night\"")))
@@ -144,6 +150,50 @@ class AdminRuleControllerTest {
                 .andExpect(content().string(containsString("action=\"/admin/rule/new\"")))
                 .andExpect(content().string(containsString("name=\"active\"")))
                 .andExpect(content().string(containsString("checked")));
+    }
+
+    @Test
+    @DisplayName("admin can open rule detail with edit form")
+    void detail_withAdminRole_returnsOk() throws Exception {
+        // given
+        AdminRuleDetailResponse detail = createRuleDetailResponse(5L);
+        UpdateAdminRuleRequest form = UpdateAdminRuleRequest.from(detail);
+        given(adminRuleService.getRuleDetail(5L)).willReturn(detail);
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/rule/detail")
+                        .param("ruleId", "5")
+                        .with(user("admin01").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/rule-detail"))
+                .andExpect(request().attribute("rule", detail))
+                .andExpect(request().attribute("model", form))
+                .andExpect(request().attribute("activeChecked", true))
+                .andExpect(content().string(containsString("/admin/rule/update")))
+                .andExpect(content().string(containsString("name=\"ruleId\" value=\"5\"")))
+                .andExpect(content().string(containsString("규칙 수정")));
+
+        then(adminRuleService).should().getRuleDetail(5L);
+    }
+
+    @Test
+    @DisplayName("detail returns 404 when target rule is missing")
+    void detail_withMissingRule_returns404() throws Exception {
+        // given
+        given(adminRuleService.getRuleDetail(99L))
+                .willThrow(CustomException.notFound("규칙을 찾을 수 없습니다."));
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/rule/detail")
+                        .param("ruleId", "99")
+                        .with(user("admin01").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isNotFound())
+                .andExpect(view().name("error/404"))
+                .andExpect(request().attribute("errorMessage", "규칙을 찾을 수 없습니다."));
     }
 
     @Test
@@ -326,6 +376,123 @@ class AdminRuleControllerTest {
         then(adminRuleService).should().createRule(request);
     }
 
+    @Test
+    @DisplayName("update rule redirects to detail with success message")
+    void updateRule_redirectsToDetailWithSuccessMessage() throws Exception {
+        // given
+        UpdateAdminRuleRequest request = new UpdateAdminRuleRequest(
+                5L,
+                "수정된 응급 지침",
+                "변경된 응급 대응 절차",
+                HospitalRuleCategory.EMERGENCY,
+                null
+        );
+        given(adminRuleService.updateRule(any(UpdateAdminRuleRequest.class))).willReturn("규칙이 수정되었습니다.");
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/rule/update")
+                        .param("ruleId", "5")
+                        .param("title", "수정된 응급 지침")
+                        .param("content", "변경된 응급 대응 절차")
+                        .param("category", "EMERGENCY")
+                        .with(user("admin01").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/admin/rule/detail?ruleId=5"))
+                .andExpect(flash().attribute("successMessage", "규칙이 수정되었습니다."));
+
+        then(adminRuleService).should().updateRule(request);
+    }
+
+    @Test
+    @DisplayName("update validation failure rerenders detail view and does not call service")
+    void updateRule_withValidationFailure_rerendersDetailView() throws Exception {
+        // given
+        AdminRuleDetailResponse detail = createRuleDetailResponse(5L);
+        UpdateAdminRuleRequest invalidRequest = new UpdateAdminRuleRequest(5L, " ", "", null, null);
+        given(adminRuleService.getRuleDetail(5L)).willReturn(detail);
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/rule/update")
+                        .param("ruleId", "5")
+                        .param("title", " ")
+                        .param("content", "")
+                        .with(user("admin01").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/rule-detail"))
+                .andExpect(request().attribute("rule", detail))
+                .andExpect(request().attribute("model", invalidRequest))
+                .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
+                .andExpect(request().attribute("titleError", "제목은 필수입니다."))
+                .andExpect(request().attribute("contentError", "내용은 필수입니다."))
+                .andExpect(request().attribute("categoryError", "카테고리를 선택해 주세요."))
+                .andExpect(request().attribute("activeChecked", false));
+
+        then(adminRuleService).should().getRuleDetail(5L);
+        then(adminRuleService).should(never()).updateRule(any(UpdateAdminRuleRequest.class));
+    }
+
+    @Test
+    @DisplayName("update invalid category rerenders detail view with friendly message")
+    void updateRule_withInvalidCategory_rerendersDetailViewWithFriendlyMessage() throws Exception {
+        // given
+        AdminRuleDetailResponse detail = createRuleDetailResponse(5L);
+        UpdateAdminRuleRequest invalidRequest = new UpdateAdminRuleRequest(
+                5L,
+                "수정된 규칙",
+                "수정된 내용",
+                null,
+                Boolean.TRUE
+        );
+        given(adminRuleService.getRuleDetail(5L)).willReturn(detail);
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/rule/update")
+                        .param("ruleId", "5")
+                        .param("title", "수정된 규칙")
+                        .param("content", "수정된 내용")
+                        .param("category", "WRONG")
+                        .param("active", "true")
+                        .with(user("admin01").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/rule-detail"))
+                .andExpect(request().attribute("rule", detail))
+                .andExpect(request().attribute("model", invalidRequest))
+                .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
+                .andExpect(request().attribute("categoryError", "올바른 카테고리를 선택해 주세요."))
+                .andExpect(request().attribute("activeChecked", true));
+
+        then(adminRuleService).should().getRuleDetail(5L);
+        then(adminRuleService).should(never()).updateRule(any(UpdateAdminRuleRequest.class));
+    }
+
+    @Test
+    @DisplayName("update redirects to list when target rule is missing")
+    void updateRule_withMissingRule_redirectsToList() throws Exception {
+        // given
+        given(adminRuleService.updateRule(any(UpdateAdminRuleRequest.class)))
+                .willThrow(CustomException.notFound("규칙을 찾을 수 없습니다."));
+
+        // when
+        // then
+        mockMvc.perform(post("/admin/rule/update")
+                        .param("ruleId", "99")
+                        .param("title", "수정")
+                        .param("content", "수정 내용")
+                        .param("category", "OTHER")
+                        .param("active", "true")
+                        .with(user("admin01").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/admin/rule/list"))
+                .andExpect(flash().attribute("errorMessage", "규칙을 찾을 수 없습니다."));
+    }
+
     private AdminRuleListResponse createEmptyResponse() {
         return new AdminRuleListResponse(
                 List.of(),
@@ -349,6 +516,7 @@ class AdminRuleControllerTest {
 
     private AdminRuleListResponse createFilteredResponse() {
         HospitalRule rule = HospitalRule.create("night-duty-rule", "night shift handoff guideline", HospitalRuleCategory.DUTY, true);
+        ReflectionTestUtils.setField(rule, "id", 7L);
         AdminRuleItemResponse dto = new AdminRuleItemResponse(rule);
 
         return new AdminRuleListResponse(
@@ -378,5 +546,13 @@ class AdminRuleControllerTest {
                 "/admin/rule/list?page=1&size=5&category=DUTY&active=ACTIVE&keyword=night",
                 ""
         );
+    }
+
+    private AdminRuleDetailResponse createRuleDetailResponse(Long id) {
+        HospitalRule rule = HospitalRule.create("응급 대응 지침", "응급실 우선 대응 규칙", HospitalRuleCategory.EMERGENCY, true);
+        ReflectionTestUtils.setField(rule, "id", id);
+        ReflectionTestUtils.setField(rule, "createdAt", LocalDateTime.of(2026, 3, 21, 9, 0));
+        ReflectionTestUtils.setField(rule, "updatedAt", LocalDateTime.of(2026, 3, 21, 10, 30));
+        return AdminRuleDetailResponse.from(rule);
     }
 }

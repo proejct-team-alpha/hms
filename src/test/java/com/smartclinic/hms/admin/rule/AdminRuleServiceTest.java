@@ -1,10 +1,13 @@
 package com.smartclinic.hms.admin.rule;
 
 import com.smartclinic.hms.admin.rule.dto.AdminRuleFilterOptionResponse;
+import com.smartclinic.hms.admin.rule.dto.AdminRuleDetailResponse;
 import com.smartclinic.hms.admin.rule.dto.AdminRuleItemResponse;
 import com.smartclinic.hms.admin.rule.dto.AdminRuleListResponse;
 import com.smartclinic.hms.admin.rule.dto.AdminRulePageLinkResponse;
 import com.smartclinic.hms.admin.rule.dto.CreateAdminRuleRequest;
+import com.smartclinic.hms.admin.rule.dto.UpdateAdminRuleRequest;
+import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.HospitalRule;
 import com.smartclinic.hms.domain.HospitalRuleCategory;
 import org.junit.jupiter.api.DisplayName;
@@ -16,10 +19,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -240,6 +247,115 @@ class AdminRuleServiceTest {
         // then
         then(hospitalRuleRepository).should().save(captor.capture());
         assertThat(captor.getValue().isActive()).isFalse();
+    }
+
+    @Test
+    @DisplayName("getRuleDetail returns mapped detail response")
+    void getRuleDetail_returnsMappedDetailResponse() {
+        // given
+        HospitalRule rule = HospitalRule.create("emergency-rule", "emergency first response", HospitalRuleCategory.EMERGENCY, true);
+        ReflectionTestUtils.setField(rule, "id", 3L);
+        ReflectionTestUtils.setField(rule, "createdAt", LocalDateTime.of(2026, 3, 21, 9, 0));
+        ReflectionTestUtils.setField(rule, "updatedAt", LocalDateTime.of(2026, 3, 21, 10, 0));
+        given(hospitalRuleRepository.findById(3L)).willReturn(Optional.of(rule));
+
+        // when
+        AdminRuleDetailResponse result = adminRuleService.getRuleDetail(3L);
+
+        // then
+        assertThat(result.id()).isEqualTo(3L);
+        assertThat(result.title()).isEqualTo("emergency-rule");
+        assertThat(result.category()).isEqualTo(HospitalRuleCategory.EMERGENCY);
+        assertThat(result.categoryText()).isEqualTo("응급");
+        assertThat(result.active()).isTrue();
+        assertThat(result.updateAction()).isEqualTo("/admin/rule/update");
+        assertThat(result.createdAtText()).isEqualTo("2026-03-21 09:00");
+        assertThat(result.updatedAtText()).isEqualTo("2026-03-21 10:00");
+    }
+
+    @Test
+    @DisplayName("getRuleDetail throws not found when rule does not exist")
+    void getRuleDetail_withMissingRule_throwsNotFound() {
+        // given
+        given(hospitalRuleRepository.findById(99L)).willReturn(Optional.empty());
+
+        // when
+        // then
+        assertThatThrownBy(() -> adminRuleService.getRuleDetail(99L))
+                .isInstanceOf(CustomException.class)
+                .hasMessage("규칙을 찾을 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("updateRule updates all editable fields and saves rule")
+    void updateRule_updatesAllEditableFields() {
+        // given
+        HospitalRule rule = HospitalRule.create("old title", "old content", HospitalRuleCategory.DUTY, true);
+        ReflectionTestUtils.setField(rule, "id", 5L);
+        given(hospitalRuleRepository.findById(5L)).willReturn(Optional.of(rule));
+
+        UpdateAdminRuleRequest request = new UpdateAdminRuleRequest(
+                5L,
+                "  new title  ",
+                "  new content  ",
+                HospitalRuleCategory.SUPPLY,
+                Boolean.FALSE
+        );
+
+        // when
+        String result = adminRuleService.updateRule(request);
+
+        // then
+        assertThat(result).isEqualTo("규칙이 수정되었습니다.");
+        assertThat(rule.getTitle()).isEqualTo("new title");
+        assertThat(rule.getContent()).isEqualTo("new content");
+        assertThat(rule.getCategory()).isEqualTo(HospitalRuleCategory.SUPPLY);
+        assertThat(rule.isActive()).isFalse();
+        then(hospitalRuleRepository).should().save(rule);
+    }
+
+    @Test
+    @DisplayName("updateRule saves inactive when active is null")
+    void updateRule_withMissingActive_savesInactiveRule() {
+        // given
+        HospitalRule rule = HospitalRule.create("old title", "old content", HospitalRuleCategory.DUTY, true);
+        ReflectionTestUtils.setField(rule, "id", 8L);
+        given(hospitalRuleRepository.findById(8L)).willReturn(Optional.of(rule));
+
+        UpdateAdminRuleRequest request = new UpdateAdminRuleRequest(
+                8L,
+                "new title",
+                "new content",
+                HospitalRuleCategory.HYGIENE,
+                null
+        );
+
+        // when
+        adminRuleService.updateRule(request);
+
+        // then
+        assertThat(rule.isActive()).isFalse();
+        then(hospitalRuleRepository).should().save(rule);
+    }
+
+    @Test
+    @DisplayName("updateRule throws not found when target rule does not exist")
+    void updateRule_withMissingRule_throwsNotFound() {
+        // given
+        given(hospitalRuleRepository.findById(77L)).willReturn(Optional.empty());
+        UpdateAdminRuleRequest request = new UpdateAdminRuleRequest(
+                77L,
+                "new title",
+                "new content",
+                HospitalRuleCategory.OTHER,
+                Boolean.TRUE
+        );
+
+        // when
+        // then
+        assertThatThrownBy(() -> adminRuleService.updateRule(request))
+                .isInstanceOf(CustomException.class)
+                .hasMessage("규칙을 찾을 수 없습니다.");
     }
 
     @Test
