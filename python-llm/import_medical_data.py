@@ -22,11 +22,11 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger(__name__)
 
 DB_CONFIG = {
-    "host": os.getenv("MYSQL_HOST", "localhost"),
-    "port": int(os.getenv("MYSQL_PORT", "3307")),
-    "user": os.getenv("MYSQL_USER", "root"),
-    "password": os.getenv("MYSQL_PASSWORD", ""),
-    "db": os.getenv("MYSQL_DB", "llm_db"),
+    "host": os.getenv("MYSQL_HOST", "192.168.0.22"),
+    "port": int(os.getenv("MYSQL_PORT", "3306")),
+    "user": os.getenv("MYSQL_USER", "hms_admin"),
+    "password": os.getenv("MYSQL_PASSWORD", "hms_password"),
+    "db": os.getenv("MYSQL_DB", "hms_db"),
     "charset": "utf8mb4",
 }
 
