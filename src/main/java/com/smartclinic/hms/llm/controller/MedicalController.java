@@ -1,10 +1,8 @@
 package com.smartclinic.hms.llm.controller;
 
-import com.smartclinic.hms.auth.StaffRepository;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.common.util.SecurityUtils;
 import com.smartclinic.hms.domain.MedicalHistory;
-import com.smartclinic.hms.domain.MedicalHistoryRepository;
 import com.smartclinic.hms.llm.dto.*;
 import com.smartclinic.hms.llm.service.DoctorService;
 import com.smartclinic.hms.llm.service.LlmResponseParser;
@@ -28,10 +26,8 @@ import java.util.List;
 public class MedicalController {
 
     private final MedicalService medicalService;
-    private final MedicalHistoryRepository medicalHistoryRepository;
     private final DoctorService doctorService;
     private final LlmResponseParser llmResponseParser;
-    private final StaffRepository staffRepository;
     private final SecurityUtils securityUtils;
 
     @PostMapping("/query")
@@ -99,8 +95,7 @@ public class MedicalController {
         }
 
         log.debug("의학 히스토리 조회 - staffId: {}, page: {}", staffId, pageable.getPageNumber());
-        return medicalHistoryRepository.findByStaff_IdOrderByCreatedAtDesc(staffId, pageable)
-                .map(MedicalHistoryResponse::from);
+        return medicalService.getMedicalHistory(staffId, pageable);
     }
 
 }

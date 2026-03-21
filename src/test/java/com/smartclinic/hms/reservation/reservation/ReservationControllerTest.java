@@ -13,6 +13,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -79,7 +81,10 @@ class ReservationControllerTest {
                         .param("timeSlot", "09:00"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("reservation/direct-reservation"))
-                .andExpect(request().attribute("errorMessage", "연락처를 입력해주세요."));
+                // phone: @NotBlank + @Pattern 가 동시에 걸릴 수 있어 메시지 결합 순서는 구현·버전에 따라 달라짐
+                .andExpect(request().attribute("errorMessage", anyOf(
+                        containsString("연락처를 입력해주세요."),
+                        containsString("연락처 형식이 올바르지 않습니다."))));
     }
 
     @TestConfiguration
