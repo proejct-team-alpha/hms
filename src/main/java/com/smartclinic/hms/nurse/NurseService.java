@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class NurseService {
 
-    private final NurseReservationRepository nurseReservationRepository;
+    private final NursePatientStatusRepository nursePatientStatusRepository;
     private final ReservationRepository reservationRepository; // 초재진 확인용
     private final NursePatientRepository patientRepository;
     private final DepartmentRepository departmentRepository;
@@ -31,24 +31,65 @@ public class NurseService {
 
     public NurseDashboardDto getDashboard() {
         LocalDate today = LocalDate.now();
-        List<Reservation> all = nurseReservationRepository.findTodayNonCancelled(today, ReservationStatus.CANCELLED);
+        String todayDayOfWeek = toKoreanDayOfWeek(today.getDayOfWeek().getValue());
 
-        List<NurseReservationDto> waitingList = all.stream()
-                .filter(r -> r.getStatus() == ReservationStatus.RECEIVED)
-                .map(r -> {
-                    long count = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
-                    return new NurseReservationDto(r, count == 0);
+        // 1. 모든 의사 조회
+        List<Doctor> allDoctors = doctorRepository.findAllWithDetails();
+        
+        // 2. 오늘 모든 예약(취소 제외) 조회
+        List<Reservation> todayReservations = nursePatientStatusRepository.findTodayNonCancelled(today, ReservationStatus.CANCELLED);
+
+        // 3. 의사별로 데이터 가공
+        List<NurseDoctorStatusDto> doctorStatuses = allDoctors.stream()
+                .map(doctor -> {
+                    // 해당 의사의 오늘 예약들 필터링
+                    List<Reservation> drRes = todayReservations.stream()
+                            .filter(r -> r.getDoctor().getId().equals(doctor.getId()))
+                            .toList();
+
+                    // 오늘 진료 여부 확인 (예: "월,화,수"에 오늘 요일이 포함되는지)
+                    boolean isAvailableToday = doctor.getAvailableDays() != null && doctor.getAvailableDays().contains(todayDayOfWeek);
+
+                    // 상태별 집계
+                    long totalToday = drRes.size();
+                    long waitingCount = drRes.stream().filter(r -> r.getStatus() == ReservationStatus.RECEIVED).count();
+                    long treatingCount = drRes.stream().filter(r -> r.getStatus() == ReservationStatus.IN_TREATMENT).count();
+                    long pendingTreatmentCount = drRes.stream().filter(r -> r.getStatus() == ReservationStatus.COMPLETED && !r.isTreatmentCompleted()).count();
+                    long paidCount = drRes.stream().filter(r -> r.isPaid()).count();
+
+                    return new NurseDoctorStatusDto(
+                            doctor.getStaff().getName(),
+                            doctor.getDepartment().getName(),
+                            isAvailableToday,
+                            totalToday,
+                            waitingCount,
+                            treatingCount,
+                            pendingTreatmentCount,
+                            paidCount
+                    );
                 })
                 .toList();
 
-        long specialCount = all.stream()
-                .filter(r -> r.getPatient().getNote() != null && !r.getPatient().getNote().isBlank())
-                .count();
-
-        return new NurseDashboardDto(all.size(), waitingList.size(), specialCount, waitingList);
+        return new NurseDashboardDto(doctorStatuses);
     }
 
-    public Page<NurseReservationDto> getReceptionPage(String status, String query, Long deptId, Long doctorId,
+    /**
+     * Java 요일 숫자(1:월 ~ 7:일)를 한글 요일명("월", "화" 등)으로 변환
+     */
+    private String toKoreanDayOfWeek(int dayValue) {
+        return switch (dayValue) {
+            case 1 -> "월";
+            case 2 -> "화";
+            case 3 -> "수";
+            case 4 -> "목";
+            case 5 -> "금";
+            case 6 -> "토";
+            case 7 -> "일";
+            default -> "";
+        };
+    }
+
+    public Page<NursePatientStatusDto> getReceptionPage(String status, String query, Long deptId, Long doctorId,
             String source, int page) {
         LocalDate today = LocalDate.now();
         PageRequest pageable = PageRequest.of(page, 10);
@@ -63,16 +104,16 @@ public class NurseService {
 
         Page<Reservation> reservationPage;
         if (status == null || status.isBlank()) {
-            reservationPage = nurseReservationRepository
+            reservationPage = nursePatientStatusRepository
                     .findTodayNonCancelledWithFiltersPage(today, ReservationStatus.CANCELLED, query, deptId, doctorId,
                             src, pageable);
         } else {
             try {
                 ReservationStatus st = ReservationStatus.valueOf(status);
-                reservationPage = nurseReservationRepository
+                reservationPage = nursePatientStatusRepository
                         .findTodayByStatusWithFiltersPage(today, st, query, deptId, doctorId, src, pageable);
             } catch (IllegalArgumentException e) {
-                reservationPage = nurseReservationRepository
+                reservationPage = nursePatientStatusRepository
                         .findTodayNonCancelledWithFiltersPage(today, ReservationStatus.CANCELLED, query, deptId, doctorId,
                                 src, pageable);
             }
@@ -80,7 +121,7 @@ public class NurseService {
 
         return reservationPage.map(r -> {
             long count = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
-            return new NurseReservationDto(r, count == 0);
+            return new NursePatientStatusDto(r, count == 0);
         });
     }
 
@@ -125,17 +166,27 @@ public class NurseService {
     }
 
     public NursePatientDto getPatientDetail(Long reservationId) {
-        Reservation r = nurseReservationRepository.findByIdWithDetails(reservationId)
-                .orElseThrow(() -> CustomException.notFound("예약 정보를 찾을 수 없습니다."));
+        Reservation r = nursePatientStatusRepository.findByIdWithDetails(reservationId)
+                .orElseThrow(() -> CustomException.notFound("환자 상세 정보를 찾을 수 없습니다."));
         long count = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
         return new NursePatientDto(r, count == 0);
     }
 
     @Transactional
     public void receiveReservation(Long reservationId) {
-        Reservation r = nurseReservationRepository.findById(reservationId)
-                .orElseThrow(() -> CustomException.notFound("예약 정보를 찾을 수 없습니다."));
+        Reservation r = nursePatientStatusRepository.findById(reservationId)
+                .orElseThrow(() -> CustomException.notFound("환자 현황 정보를 찾을 수 없습니다."));
         r.receive();
+    }
+
+    /**
+     * 간호사 처치 완료 처리
+     */
+    @Transactional
+    public void completeTreatment(Long reservationId) {
+        Reservation r = nursePatientStatusRepository.findById(reservationId)
+                .orElseThrow(() -> CustomException.notFound("환자 정보를 찾을 수 없습니다."));
+        r.completeTreatment();
     }
 
     @Transactional

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>처치 관리 - MediCare+</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/feather.min.js"></script>
+</head>
+<body class="min-h-screen flex bg-slate-50">
+  {{> common/sidebar-nurse}}
+
+  <div class="main-content flex-1 flex flex-col ml-64">
+    {{> common/header-staff}}
+
+    <main class="content-wrapper flex-1 flex overflow-hidden">
+      <!-- (1) 좌측: 환자 목록 리스트 (60%) -->
+      <div class="flex-1 p-6 overflow-y-auto border-r border-slate-200">
+        <div class="max-w-4xl mx-auto space-y-6">
+          <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-slate-800">처치 관리 스케줄</h1>
+            <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-sm">
+              <i data-feather="calendar" class="w-4 h-4 text-slate-400"></i>
+              <input type="date" value="{{currentDate}}" class="text-sm font-medium text-slate-700 outline-none border-none">
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200">
+                  <th class="px-6 py-4 text-sm font-bold text-slate-600">환자명</th>
+                  <th class="px-6 py-4 text-sm font-bold text-slate-600">시간/의사</th>
+                  <th class="px-6 py-4 text-sm font-bold text-slate-600">상태</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                {{#patients}}
+                <tr class="hover:bg-indigo-50/50 transition-colors cursor-pointer group patient-row" 
+                    data-id="{{id}}" 
+                    data-name="{{patientName}}" 
+                    data-doctor="{{doctorName}}" 
+                    data-dept="{{departmentName}}"
+                    data-completed="{{treatmentCompleted}}">
+                  <td class="px-6 py-4">
+                    <div class="font-bold text-slate-800">{{patientName}}</div>
+                    <div class="text-xs text-slate-400">{{reservationNumber}}</div>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-slate-600">
+                    <div>{{timeSlot}}</div>
+                    <div class="text-xs text-slate-400">{{doctorName}} ({{departmentName}})</div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{statusBadgeClass}}">
+                      {{statusText}}
+                    </span>
+                  </td>
+                </tr>
+                {{/patients}}
+                {{^patients}}
+                <tr>
+                  <td colspan="3" class="px-6 py-12 text-center text-slate-400">오늘 처치 대상 환자가 없습니다.</td>
+                </tr>
+                {{/patients}}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- (2) 우측: 상세 정보 사이드 패널 (40%) -->
+      <div id="side-panel" class="w-[450px] bg-white shadow-xl flex flex-col border-l border-slate-200">
+        <!-- 초기 상태 -->
+        <div id="empty-state" class="flex-1 flex flex-col items-center justify-center p-10 text-center">
+          <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+            <i data-feather="user" class="w-10 h-10 text-slate-200"></i>
+          </div>
+          <h3 class="text-lg font-bold text-slate-800">환자를 선택해주세요</h3>
+          <p class="text-sm text-slate-500">목록에서 환자를 선택하면 처치 기록과 재고 관리를 시작할 수 있습니다.</p>
+        </div>
+
+        <!-- 상세 내용 (평소엔 숨김) -->
+        <div id="panel-content" class="hidden flex-1 flex flex-col overflow-hidden">
+          <div class="p-6 border-b border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <h2 id="p-name" class="text-xl font-bold text-slate-800">환자이름</h2>
+                <p id="p-info" class="text-sm text-slate-500 font-medium">내과 / 김의사</p>
+              </div>
+              <button onclick="closePanel()" class="p-1 hover:bg-slate-200 rounded-lg text-slate-400 transition-colors">
+                <i data-feather="x" class="w-5 h-5"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex-1 overflow-y-auto p-6 space-y-8">
+            <!-- 재고 사용 섹션 -->
+            <section class="space-y-4">
+              <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <i data-feather="package" class="w-4 h-4 text-indigo-500"></i>
+                물품 사용 기록
+              </h3>
+              <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                <p class="text-xs text-slate-500">처치에 사용된 물품과 수량을 입력하세요.</p>
+                <div class="flex gap-2">
+                  <select id="item-select" class="flex-1 text-sm rounded-lg border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">물품 선택...</option>
+                    {{#items}}
+                    <option value="{{id}}">{{name}} (남음: {{quantity}})</option>
+                    {{/items}}
+                  </select>
+                  <input type="number" id="item-amount" value="1" min="1" class="w-20 text-sm rounded-lg border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500">
+                  <button onclick="useItem()" class="px-4 py-2 bg-slate-800 text-white text-sm font-bold rounded-lg hover:bg-slate-900 transition-colors">사용</button>
+                </div>
+                <!-- 사용 로그 (가상) -->
+                <div id="usage-log" class="text-xs text-slate-400 italic">사용된 물품이 여기에 표시됩니다.</div>
+              </div>
+            </section>
+
+            <!-- 처치 기록 섹션 -->
+            <section class="space-y-4">
+              <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <i data-feather="edit-3" class="w-4 h-4 text-indigo-500"></i>
+                처치 메모
+              </h3>
+              <textarea placeholder="환자에게 시행한 처치 내용을 간단히 적어주세요." 
+                        class="w-full h-32 text-sm p-3 rounded-xl border-slate-200 bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+            </section>
+          </div>
+
+          <!-- 하단 버튼 -->
+          <div class="p-6 border-t border-slate-200 bg-white">
+            <form id="complete-form" action="/nurse/treatment/complete" method="post">
+              <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+              <input type="hidden" name="id" id="p-id">
+              <button type="submit" id="btn-complete" class="w-full py-4 bg-indigo-600 text-white text-lg font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all flex items-center justify-center gap-2">
+                <i data-feather="check-circle" class="w-5 h-5"></i>
+                처치 완료
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    {{> common/footer-staff}}
+  </div>
+
+  <script>
+    feather.replace();
+
+    const emptyState = document.getElementById('empty-state');
+    const panelContent = document.getElementById('panel-content');
+    const pName = document.getElementById('p-name');
+    const pInfo = document.getElementById('p-info');
+    const pIdInput = document.getElementById('p-id');
+    const btnComplete = document.getElementById('btn-complete');
+
+    // 환자 행 클릭 이벤트
+    document.querySelectorAll('.patient-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const id = row.dataset.id;
+        const name = row.dataset.name;
+        const doctor = row.dataset.doctor;
+        const dept = row.dataset.dept;
+        const isCompleted = row.dataset.completed === 'true';
+
+        // 패널 데이터 교체
+        pName.innerText = name;
+        pInfo.innerText = `${dept} / ${doctor}`;
+        pIdInput.value = id;
+
+        // 이미 완료된 경우 버튼 비활성화
+        if (isCompleted) {
+          btnComplete.disabled = true;
+          btnComplete.innerText = '이미 완료된 처치입니다';
+          btnComplete.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+          btnComplete.classList.add('bg-slate-300', 'cursor-not-allowed');
+        } else {
+          btnComplete.disabled = false;
+          btnComplete.innerHTML = '<i data-feather="check-circle" class="w-5 h-5"></i> 처치 완료';
+          btnComplete.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+          btnComplete.classList.remove('bg-slate-300', 'cursor-not-allowed');
+          feather.replace();
+        }
+
+        // 패널 보이기
+        emptyState.classList.add('hidden');
+        panelContent.classList.remove('hidden');
+        
+        // 목록에서 선택된 효과
+        document.querySelectorAll('.patient-row').forEach(r => r.classList.remove('bg-indigo-50', 'border-indigo-200'));
+        row.classList.add('bg-indigo-50', 'border-indigo-200');
+      });
+    });
+
+    function closePanel() {
+      emptyState.classList.remove('hidden');
+      panelContent.classList.add('hidden');
+      document.querySelectorAll('.patient-row').forEach(r => r.classList.remove('bg-indigo-50', 'border-indigo-200'));
+    }
+
+    // 가상의 아이템 사용 함수 (공부용)
+    function useItem() {
+      const select = document.getElementById('item-select');
+      const amount = document.getElementById('item-amount').value;
+      const log = document.getElementById('usage-log');
+      
+      if (!select.value) {
+        alert('물품을 선택해주세요.');
+        return;
+      }
+      
+      const itemName = select.options[select.selectedIndex].text;
+      log.innerText = `${itemName} ${amount}개 사용됨 (실제 DB 차감은 API 연동 필요)`;
+      log.classList.remove('text-slate-400');
+      log.classList.add('text-indigo-600', 'font-bold');
+    }
+  </script>
+</body>
+</html>

@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public interface NurseReservationRepository extends JpaRepository<Reservation, Long> {
+public interface NursePatientStatusRepository extends JpaRepository<Reservation, Long> {
 
        @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date AND r.status <> :excluded ORDER BY r.timeSlot")
        List<Reservation> findTodayNonCancelled(@Param("date") LocalDate date,

@@ -6,7 +6,7 @@ import com.smartclinic.hms.domain.ReservationStatus;
 import lombok.Getter;
 
 @Getter
-public class NurseReservationDto {
+public class NursePatientStatusDto {
 
     private final Long id;
     private final String reservationNumber;
@@ -22,15 +22,30 @@ public class NurseReservationDto {
     private final boolean canReceive;
 
     /**
+     * 처치 완료 여부
+     */
+    private final boolean treatmentCompleted;
+
+    /**
+     * 수납 완료 여부
+     */
+    private final boolean isPaid;
+
+    /**
+     * 처치 완료 처리가 가능한 상태인지 (진료 완료 후 아직 처치 미완료)
+     */
+    private final boolean canCompleteTreatment;
+
+    /**
      * 초진 여부 (true: 초진, false: 재진)
      */
     private final boolean isFirstVisit;
 
-    public NurseReservationDto(Reservation r) {
+    public NursePatientStatusDto(Reservation r) {
         this(r, false);
     }
 
-    public NurseReservationDto(Reservation r, boolean isFirstVisit) {
+    public NursePatientStatusDto(Reservation r, boolean isFirstVisit) {
         this.id = r.getId();
         this.reservationNumber = r.getReservationNumber();
         this.patientId = r.getPatient().getId();
@@ -39,15 +54,21 @@ public class NurseReservationDto {
         this.timeSlot = r.getTimeSlot();
         this.doctorName = r.getDoctor().getStaff().getName();
         this.departmentName = r.getDepartment().getName();
-        this.statusText = toStatusText(r.getStatus());
-        this.statusBadgeClass = toStatusBadgeClass(r.getStatus());
+        this.treatmentCompleted = r.isTreatmentCompleted();
+        this.isPaid = r.isPaid();
+        this.statusText = toStatusText(r);
+        this.statusBadgeClass = toStatusBadgeClass(r);
         this.sourceText = toSourceText(r.getSource());
-        this.canReceive = r.getStatus() == ReservationStatus.RESERVED;
+        this.canReceive = r.getStatus() == ReservationStatus.RESERVED && !r.isPaid();
+        this.canCompleteTreatment = r.getStatus() == ReservationStatus.COMPLETED && !r.isTreatmentCompleted() && !r.isPaid();
         this.isFirstVisit = isFirstVisit;
     }
 
-    private static String toStatusText(ReservationStatus s) {
-        return switch (s) {
+    private static String toStatusText(Reservation r) {
+        if (r.isPaid()) return "수납 완료";
+        if (r.isTreatmentCompleted()) return "처치 완료";
+        
+        return switch (r.getStatus()) {
             case RESERVED -> "예약됨";
             case RECEIVED -> "진료 대기";
             case IN_TREATMENT -> "진료중";
@@ -56,13 +77,16 @@ public class NurseReservationDto {
         };
     }
 
-    private static String toStatusBadgeClass(ReservationStatus s) {
-        return switch (s) {
-            case RESERVED -> "bg-blue-100 text-blue-800";
+    private static String toStatusBadgeClass(Reservation r) {
+        if (r.isPaid()) return "bg-purple-100 text-purple-800";
+        if (r.isTreatmentCompleted()) return "bg-blue-100 text-blue-800";
+
+        return switch (r.getStatus()) {
+            case RESERVED -> "bg-slate-100 text-slate-600";
             case RECEIVED -> "bg-yellow-100 text-yellow-800";
             case IN_TREATMENT -> "bg-indigo-100 text-indigo-800";
             case COMPLETED -> "bg-green-100 text-green-800";
-            case CANCELLED -> "bg-slate-100 text-slate-600";
+            case CANCELLED -> "bg-red-100 text-red-600";
         };
     }
 
