@@ -1,4 +1,4 @@
-package com.smartclinic.hms.admin.department;
+package com.smartclinic.hms.admin.department.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -10,7 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class CreateAdminDepartmentRequest {
 
-    @NotBlank(message = "\uC9C4\uB8CC\uACFC\uBA85\uC740 \uD544\uC218\uC785\uB2C8\uB2E4.")
+    @NotBlank(message = "진료과명은 필수입니다.")
     private String name;
 
     private boolean active;

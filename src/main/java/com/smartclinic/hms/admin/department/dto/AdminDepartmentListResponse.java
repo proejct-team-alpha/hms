@@ -1,9 +1,9 @@
-package com.smartclinic.hms.admin.department;
+package com.smartclinic.hms.admin.department.dto;
 
 import java.util.List;
 
 public record AdminDepartmentListResponse(
-        List<AdminDepartmentDto> departments,
+        List<AdminDepartmentItemResponse> departments,
         List<AdminDepartmentPageLinkResponse> pageLinks,
         long totalCount,
         int currentPage,

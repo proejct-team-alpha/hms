@@ -1,10 +1,10 @@
-package com.smartclinic.hms.admin.department;
+package com.smartclinic.hms.admin.department.dto;
 
 import com.smartclinic.hms.domain.Department;
 import lombok.Getter;
 
 @Getter
-public class AdminDepartmentDto {
+public class AdminDepartmentItemResponse {
 
     private final Long id;
     private final String name;
@@ -12,7 +12,7 @@ public class AdminDepartmentDto {
     private final String activeText;
     private final String activeBadgeClass;
 
-    public AdminDepartmentDto(Department department) {
+    public AdminDepartmentItemResponse(Department department) {
         this.id = department.getId();
         this.name = department.getName();
         this.active = department.isActive();

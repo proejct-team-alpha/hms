@@ -1,11 +1,11 @@
-package com.smartclinic.hms.admin.rule;
+package com.smartclinic.hms.admin.rule.dto;
 
 import com.smartclinic.hms.domain.HospitalRule;
 import com.smartclinic.hms.domain.HospitalRuleCategory;
 import lombok.Getter;
 
 @Getter
-public class AdminRuleDto {
+public class AdminRuleItemResponse {
 
     private final Long id;
     private final String title;
@@ -15,7 +15,7 @@ public class AdminRuleDto {
     private final String activeText;
     private final String activeBadgeClass;
 
-    public AdminRuleDto(HospitalRule rule) {
+    public AdminRuleItemResponse(HospitalRule rule) {
         this.id = rule.getId();
         this.title = rule.getTitle();
         this.content = rule.getContent();

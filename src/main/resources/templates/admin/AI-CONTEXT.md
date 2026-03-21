@@ -17,7 +17,7 @@
 | staff-list.mustache | 직원 목록 조회 및 관리 |
 | staff-form.mustache | 직원 등록/수정 폼 |
 | rule-list.mustache | 운영 규칙 목록 및 관리 |
-| rule-form.mustache | 운영 규칙 등록/수정 폼 |
+| rule-new.mustache | 운영 규칙 등록/수정 폼 |
 | reservation-list.mustache | 예약 목록 및 취소 관리 |
 
 ## AI 작업 지침

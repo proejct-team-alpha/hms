@@ -1,11 +1,11 @@
-package com.smartclinic.hms.admin.item;
+package com.smartclinic.hms.admin.item.dto;
 
 import com.smartclinic.hms.domain.Item;
 import com.smartclinic.hms.domain.ItemCategory;
 import lombok.Getter;
 
 @Getter
-public class AdminItemDto {
+public class AdminItemListItemResponse {
 
     private final Long id;
     private final String name;
@@ -15,7 +15,7 @@ public class AdminItemDto {
     private final boolean lowStock;
     private final String stockBadgeClass;
 
-    public AdminItemDto(Item item) {
+    public AdminItemListItemResponse(Item item) {
         this.id = item.getId();
         this.name = item.getName();
         this.categoryText = toCategoryText(item.getCategory());

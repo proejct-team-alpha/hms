@@ -1,9 +1,9 @@
-package com.smartclinic.hms.admin.rule;
+package com.smartclinic.hms.admin.rule.dto;
 
 import java.util.List;
 
 public record AdminRuleListResponse(
-        List<AdminRuleDto> rules,
+        List<AdminRuleItemResponse> rules,
         List<AdminRulePageLinkResponse> pageLinks,
         List<AdminRuleFilterOptionResponse> categoryOptions,
         List<AdminRuleFilterOptionResponse> activeOptions,

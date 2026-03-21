@@ -1,6 +1,7 @@
 package com.smartclinic.hms.admin.mypage;
 
 import com.smartclinic.hms.auth.StaffRepository;
+import com.smartclinic.hms.admin.mypage.dto.AdminMypageResponse;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.Staff;
 import lombok.RequiredArgsConstructor;
@@ -16,9 +17,9 @@ public class AdminMypageService {
     private final StaffRepository staffRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public AdminMypageDto getMypage(String username) {
+    public AdminMypageResponse getMypage(String username) {
         return staffRepository.findByUsernameAndActiveTrue(username)
-                .map(AdminMypageDto::new)
+                .map(AdminMypageResponse::new)
                 .orElseThrow(() -> CustomException.notFound("관리자 정보를 찾을 수 없습니다."));
     }
 

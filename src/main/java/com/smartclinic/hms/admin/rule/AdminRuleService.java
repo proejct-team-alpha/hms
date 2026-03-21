@@ -1,5 +1,10 @@
 package com.smartclinic.hms.admin.rule;
 
+import com.smartclinic.hms.admin.rule.dto.AdminRuleFilterOptionResponse;
+import com.smartclinic.hms.admin.rule.dto.AdminRuleItemResponse;
+import com.smartclinic.hms.admin.rule.dto.AdminRuleListResponse;
+import com.smartclinic.hms.admin.rule.dto.AdminRulePageLinkResponse;
+import com.smartclinic.hms.admin.rule.dto.CreateAdminRuleRequest;
 import com.smartclinic.hms.domain.HospitalRule;
 import com.smartclinic.hms.domain.HospitalRuleCategory;
 import lombok.RequiredArgsConstructor;
@@ -28,10 +33,10 @@ public class AdminRuleService {
 
     private final HospitalRuleRepository hospitalRuleRepository;
 
-    public List<AdminRuleDto> getRuleList() {
+    public List<AdminRuleItemResponse> getRuleList() {
         return hospitalRuleRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
-                .map(AdminRuleDto::new)
+                .map(AdminRuleItemResponse::new)
                 .collect(Collectors.toList());
     }
 
@@ -56,7 +61,7 @@ public class AdminRuleService {
         boolean hasNext = pageResult.hasNext();
 
         return new AdminRuleListResponse(
-                pageResult.getContent().stream().map(AdminRuleDto::new).toList(),
+                pageResult.getContent().stream().map(AdminRuleItemResponse::new).toList(),
                 buildPageLinks(totalPages, currentPage, safeSize, normalizedCategory, normalizedActive, normalizedKeyword),
                 buildCategoryOptions(normalizedCategory),
                 buildActiveOptions(normalizedActive),
@@ -76,8 +81,16 @@ public class AdminRuleService {
     }
 
     @Transactional
-    public void createRule(String title, String content, String category) {
-        hospitalRuleRepository.save(HospitalRule.create(title, content, HospitalRuleCategory.valueOf(category)));
+    public String createRule(CreateAdminRuleRequest request) {
+        HospitalRule rule = HospitalRule.create(
+                request.normalizedTitle(),
+                request.normalizedContent(),
+                request.normalizedCategory(),
+                request.isActiveChecked()
+        );
+
+        hospitalRuleRepository.save(rule);
+        return "규칙이 등록되었습니다.";
     }
 
     private String normalizeCategory(String category) {
