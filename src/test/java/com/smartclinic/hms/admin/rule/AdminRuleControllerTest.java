@@ -68,6 +68,7 @@ class AdminRuleControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/rule-list"))
                 .andExpect(request().attribute("model", response))
+                .andExpect(content().string(containsString("data-rule-list-page")))
                 .andExpect(content().string(containsString("\uC81C\uBAA9 \uAC80\uC0C9")))
                 .andExpect(content().string(containsString("\uCE74\uD14C\uACE0\uB9AC")))
                 .andExpect(content().string(containsString("\uD65C\uC131 \uC5EC\uBD80")))
@@ -98,7 +99,9 @@ class AdminRuleControllerTest {
                 .andExpect(view().name("admin/rule-list"))
                 .andExpect(request().attribute("model", response))
                 .andExpect(content().string(containsString("night-duty-rule")))
-                .andExpect(content().string(containsString("/admin/rule/detail?ruleId=7")))
+                .andExpect(content().string(containsString("data-rule-detail-url=\"/admin/rule/detail?ruleId=7\"")))
+                .andExpect(content().string(containsString("data-rule-delete-url=\"/admin/api/rules/7\"")))
+                .andExpect(content().string(containsString("data-rule-delete-button")))
                 .andExpect(content().string(containsString("value=\"DUTY\" selected")))
                 .andExpect(content().string(containsString("value=\"ACTIVE\" selected")))
                 .andExpect(content().string(containsString("value=\"night\"")))
@@ -172,6 +175,8 @@ class AdminRuleControllerTest {
                 .andExpect(request().attribute("model", form))
                 .andExpect(request().attribute("activeChecked", true))
                 .andExpect(content().string(containsString("/admin/rule/update")))
+                .andExpect(content().string(containsString("data-rule-delete-url=\"/admin/api/rules/5\"")))
+                .andExpect(content().string(containsString("data-rule-delete-button")))
                 .andExpect(content().string(containsString("name=\"ruleId\" value=\"5\"")))
                 .andExpect(content().string(containsString("규칙 수정")));
 

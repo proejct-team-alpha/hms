@@ -1,6 +1,7 @@
 package com.smartclinic.hms.admin.rule;
 
 import com.smartclinic.hms.admin.rule.dto.AdminRuleFilterOptionResponse;
+import com.smartclinic.hms.admin.rule.dto.AdminRuleDeleteResponse;
 import com.smartclinic.hms.admin.rule.dto.AdminRuleDetailResponse;
 import com.smartclinic.hms.admin.rule.dto.AdminRuleItemResponse;
 import com.smartclinic.hms.admin.rule.dto.AdminRuleListResponse;
@@ -113,6 +114,13 @@ public class AdminRuleService {
         );
         hospitalRuleRepository.save(rule);
         return RULE_UPDATED_MESSAGE;
+    }
+
+    @Transactional
+    public AdminRuleDeleteResponse deleteRule(Long ruleId) {
+        HospitalRule rule = findRule(ruleId);
+        hospitalRuleRepository.delete(rule);
+        return AdminRuleDeleteResponse.success(ruleId);
     }
 
     private String normalizeCategory(String category) {

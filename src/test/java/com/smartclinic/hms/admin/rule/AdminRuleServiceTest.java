@@ -1,5 +1,6 @@
 package com.smartclinic.hms.admin.rule;
 
+import com.smartclinic.hms.admin.rule.dto.AdminRuleDeleteResponse;
 import com.smartclinic.hms.admin.rule.dto.AdminRuleFilterOptionResponse;
 import com.smartclinic.hms.admin.rule.dto.AdminRuleDetailResponse;
 import com.smartclinic.hms.admin.rule.dto.AdminRuleItemResponse;
@@ -31,6 +32,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 class AdminRuleServiceTest {
@@ -356,6 +358,37 @@ class AdminRuleServiceTest {
         assertThatThrownBy(() -> adminRuleService.updateRule(request))
                 .isInstanceOf(CustomException.class)
                 .hasMessage("규칙을 찾을 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("deleteRule removes rule physically and returns delete response")
+    void deleteRule_removesRulePhysicallyAndReturnsResponse() {
+        // given
+        HospitalRule rule = HospitalRule.create("old title", "old content", HospitalRuleCategory.DUTY, true);
+        ReflectionTestUtils.setField(rule, "id", 12L);
+        given(hospitalRuleRepository.findById(12L)).willReturn(Optional.of(rule));
+
+        // when
+        AdminRuleDeleteResponse result = adminRuleService.deleteRule(12L);
+
+        // then
+        assertThat(result.ruleId()).isEqualTo(12L);
+        assertThat(result.message()).isEqualTo("규칙이 삭제되었습니다.");
+        then(hospitalRuleRepository).should().delete(rule);
+    }
+
+    @Test
+    @DisplayName("deleteRule throws not found when target rule does not exist")
+    void deleteRule_withMissingRule_throwsNotFound() {
+        // given
+        given(hospitalRuleRepository.findById(88L)).willReturn(Optional.empty());
+
+        // when
+        // then
+        assertThatThrownBy(() -> adminRuleService.deleteRule(88L))
+                .isInstanceOf(CustomException.class)
+                .hasMessage("규칙을 찾을 수 없습니다.");
+        then(hospitalRuleRepository).should(never()).delete(any(HospitalRule.class));
     }
 
     @Test

@@ -14,7 +14,12 @@
     {{> common/header-staff}}
 
     <main class="content-wrapper flex-1 p-6">
-      <div class="max-w-6xl mx-auto space-y-6">
+      <div
+        class="max-w-6xl mx-auto space-y-6"
+        data-rule-detail-page
+        data-rule-delete-url="/admin/api/rules/{{rule.id}}"
+        data-rule-list-url="/admin/rule/list"
+      >
 
         <div class="flex items-center gap-3">
           <a href="/admin/rule/list" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
@@ -39,16 +44,34 @@
 
         <div class="grid grid-cols-1 xl:grid-cols-[1.1fr_0.9fr] gap-6">
           <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-6">
-            <div class="space-y-3">
-              <div class="flex flex-wrap items-center gap-3">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700">
-                  {{rule.categoryText}}
-                </span>
-                <span class="inline-flex items-center {{rule.activeBadgeClass}}">
-                  {{rule.activeText}}
-                </span>
+            <div class="space-y-4">
+              <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div class="space-y-3">
+                  <div class="flex flex-wrap items-center gap-3">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700">
+                      {{rule.categoryText}}
+                    </span>
+                    <span class="inline-flex items-center {{rule.activeBadgeClass}}">
+                      {{rule.activeText}}
+                    </span>
+                  </div>
+                  <h2 class="text-2xl font-bold text-slate-800">{{rule.title}}</h2>
+                </div>
+
+                <button
+                  type="button"
+                  data-rule-delete-button
+                  class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-red-200 bg-red-50 text-sm font-semibold text-red-600 hover:bg-red-100 transition-colors"
+                >
+                  <i data-feather="trash-2" class="w-4 h-4"></i>
+                  삭제
+                </button>
               </div>
-              <h2 class="text-2xl font-bold text-slate-800">{{rule.title}}</h2>
+
+              <div
+                data-rule-delete-feedback
+                class="hidden rounded-xl border px-4 py-3 text-sm font-medium"
+              ></div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -88,6 +111,117 @@
     {{> common/footer-staff}}
   </div>
 
-  <script>feather.replace();</script>
+  <script>
+    feather.replace();
+
+    (function () {
+      const detailPage = document.querySelector('[data-rule-detail-page]');
+
+      if (!detailPage) {
+        return;
+      }
+
+      const deleteButton = detailPage.querySelector('[data-rule-delete-button]');
+      const feedback = detailPage.querySelector('[data-rule-delete-feedback]');
+      const deleteUrl = detailPage.dataset.ruleDeleteUrl;
+      const listUrl = detailPage.dataset.ruleListUrl;
+      const csrfToken = '{{_csrf.token}}';
+
+      if (!deleteButton || !deleteUrl || !csrfToken) {
+        return;
+      }
+
+      function hideFeedback() {
+        feedback.textContent = '';
+        feedback.classList.add('hidden');
+      }
+
+      function showFeedback(type, message) {
+        feedback.className = 'rounded-xl border px-4 py-3 text-sm font-medium';
+
+        if (type === 'success') {
+          feedback.classList.add('border-green-200', 'bg-green-50', 'text-green-700');
+        } else {
+          feedback.classList.add('border-red-200', 'bg-red-50', 'text-red-700');
+        }
+
+        feedback.textContent = message;
+        feedback.classList.remove('hidden');
+      }
+
+      function setDeleteLoading(isLoading) {
+        deleteButton.disabled = isLoading;
+
+        if (isLoading) {
+          deleteButton.classList.add('opacity-60', 'cursor-not-allowed');
+        } else {
+          deleteButton.classList.remove('opacity-60', 'cursor-not-allowed');
+        }
+      }
+
+      function resolveErrorMessage(payload) {
+        const message = payload && payload.msg ? payload.msg : '';
+
+        if (message.indexOf('RESOURCE_NOT_FOUND') !== -1) {
+          return '이미 삭제되었거나 존재하지 않는 규칙입니다.';
+        }
+
+        if (message.indexOf('ACCESS_DENIED') !== -1) {
+          return '규칙 삭제 권한이 없습니다.';
+        }
+
+        return '규칙 삭제에 실패했습니다. 잠시 후 다시 시도해 주세요.';
+      }
+
+      deleteButton.addEventListener('click', async function () {
+        hideFeedback();
+
+        if (!window.confirm('정말 삭제하시겠습니까?')) {
+          return;
+        }
+
+        setDeleteLoading(true);
+
+        try {
+          const response = await fetch(deleteUrl, {
+            method: 'POST',
+            headers: {
+              'X-CSRF-TOKEN': csrfToken
+            }
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            const errorMessage = resolveErrorMessage(result);
+            showFeedback('error', errorMessage);
+
+            if (result && result.msg && result.msg.indexOf('RESOURCE_NOT_FOUND') !== -1) {
+              window.setTimeout(function () {
+                window.location.href = listUrl;
+              }, 1200);
+            }
+
+            return;
+          }
+
+          const successMessage = result && result.body && result.body.message
+            ? result.body.message
+            : '규칙이 삭제되었습니다.';
+
+          showFeedback('success', successMessage);
+
+          window.setTimeout(function () {
+            window.location.href = listUrl;
+          }, 600);
+        } catch (error) {
+          console.error(error);
+          showFeedback('error', '규칙 삭제 중 오류가 발생했습니다. 다시 시도해 주세요.');
+        } finally {
+          setDeleteLoading(false);
+        }
+      });
+    }());
+  </script>
 </body>
 </html>
