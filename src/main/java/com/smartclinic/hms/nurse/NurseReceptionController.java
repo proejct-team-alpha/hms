@@ -27,32 +27,49 @@ public class NurseReceptionController {
     private final ItemManagerService itemManagerService;
 
     /**
-     * 환자 현황 목록 (전체 상태 확인)
+     * 환자 현황 목록 (6단계 탭 필터링 적용)
      */
     @GetMapping("/reception-list")
     public String receptionList(@RequestParam(name = "date", required = false) String dateStr,
-            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "tab", defaultValue = "all") String tab, // status 대신 tab 사용
             @RequestParam(name = "query", required = false) String query,
             @RequestParam(name = "deptIds", required = false) List<Long> deptIds,
             @RequestParam(name = "doctorIds", required = false) List<Long> doctorIds,
-            @RequestParam(name = "source", required = false) String source,
             @RequestParam(name = "page", defaultValue = "0") int page,
             Model model) {
-        
+
         java.time.LocalDate date = (dateStr == null || dateStr.isBlank()) 
             ? java.time.LocalDate.now() 
             : java.time.LocalDate.parse(dateStr);
 
+        // 탭에 따른 실제 DB 상태값 매핑
+        String dbStatus = switch (tab) {
+            case "reserved" -> "RESERVED";
+            case "received" -> "RECEIVED";
+            case "in_treatment" -> "IN_TREATMENT";
+            case "completed", "treatment_done" -> "COMPLETED";
+            default -> null; // 전체보기
+        };
+
         Page<NursePatientStatusDto> resultPage = nurseService.getReceptionPageWithMultiFilters(
-                status, query, deptIds, doctorIds, source, page, date);
+                dbStatus, query, deptIds, doctorIds, null, page, date);
+
+        // 메모리 필터링 (처치완료/수납완료 등 정교한 필터)
+        List<NursePatientStatusDto> content = resultPage.getContent().stream()
+            .filter(p -> {
+                if ("completed".equals(tab)) return !p.isTreatmentCompleted(); // 진료완료 (처치 전)
+                if ("treatment_done".equals(tab)) return p.isTreatmentCompleted(); // 처치완료
+                // 수납완료(paid) 로직은 DTO에 추가 필요할 수 있음 (일단 COMPLETED 기준)
+                return true;
+            })
+            .toList();
 
         StringBuilder baseUrlBuilder = new StringBuilder("/nurse/reception-list?");
-        if (dateStr != null && !dateStr.isBlank()) baseUrlBuilder.append("date=").append(dateStr).append("&");
-        if (status != null && !status.isBlank()) baseUrlBuilder.append("status=").append(status).append("&");
-        if (query != null && !query.isBlank()) baseUrlBuilder.append("query=").append(query).append("&");
+        if (dateStr != null) baseUrlBuilder.append("date=").append(dateStr).append("&");
+        baseUrlBuilder.append("tab=").append(tab).append("&");
+        if (query != null) baseUrlBuilder.append("query=").append(query).append("&");
         if (deptIds != null) deptIds.forEach(id -> baseUrlBuilder.append("deptIds=").append(id).append("&"));
         if (doctorIds != null) doctorIds.forEach(id -> baseUrlBuilder.append("doctorIds=").append(id).append("&"));
-        if (source != null && !source.isBlank()) baseUrlBuilder.append("source=").append(source).append("&");
         baseUrlBuilder.append("page=");
         String baseUrl = baseUrlBuilder.toString();
 
@@ -62,18 +79,24 @@ public class NurseReceptionController {
             pageLinks.add(new NursePageLinkDto(i + 1, i == page, baseUrl + i));
         }
 
-        model.addAttribute("reservations", resultPage.getContent());
-        model.addAttribute("statusFilters", nurseService.getStatusFilters(status, query, null, null, source));
+        model.addAttribute("reservations", content);
         model.addAttribute("searchDate", date.toString());
         model.addAttribute("isToday", date.equals(java.time.LocalDate.now()));
-        model.addAttribute("currentStatus", status != null ? status : "");
-        model.addAttribute("query", query != null ? query : "");
-        model.addAttribute("source", source != null ? source : "");
+        model.addAttribute("currentTab", tab);
+        model.addAttribute("query", Objects.toString(query, ""));
 
-        // 상세 이동 시 유지를 위한 파라미터 조합
+        // 탭 활성화 상태 전달
+        model.addAttribute("isAllTab", "all".equals(tab));
+        model.addAttribute("isReservedTab", "reserved".equals(tab));
+        model.addAttribute("isReceivedTab", "received".equals(tab));
+        model.addAttribute("isInTreatmentTab", "in_treatment".equals(tab));
+        model.addAttribute("isCompletedTab", "completed".equals(tab));
+        model.addAttribute("isTreatmentDoneTab", "treatment_done".equals(tab));
+        model.addAttribute("isPaidTab", "paid".equals(tab));
+
         StringBuilder keepParams = new StringBuilder();
-        if (dateStr != null) keepParams.append("&date=").append(dateStr);
-        if (status != null) keepParams.append("&status=").append(status);
+        keepParams.append("&date=").append(date.toString());
+        keepParams.append("&tab=").append(tab);
         if (query != null) keepParams.append("&query=").append(query);
         if (deptIds != null) deptIds.forEach(id -> keepParams.append("&deptIds=").append(id));
         if (doctorIds != null) doctorIds.forEach(id -> keepParams.append("&doctorIds=").append(id));
@@ -85,7 +108,7 @@ public class NurseReceptionController {
         model.addAttribute("doctors", nurseService.getAllDoctors().stream()
                 .map(d -> Map.of("id", d.getId(), "name", d.getDisplayName(), "deptId", d.getDepartmentId(), "selected", doctorIds != null && doctorIds.contains(d.getId())))
                 .toList());
-        
+
         model.addAttribute("hasPrev", page > 0);
         model.addAttribute("prevUrl", baseUrl + (page - 1));
         model.addAttribute("hasNext", page < totalPages - 1);
