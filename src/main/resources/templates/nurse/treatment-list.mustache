@@ -70,10 +70,54 @@
             </div>
           </div>
           <div class="flex items-center gap-6">
-            <!-- 검색창 -->
-            <form action="/nurse/treatment-list" method="get" class="flex items-center gap-2">
+            <!-- 검색 및 다중 필터 -->
+            <form action="/nurse/treatment-list" method="get" class="flex flex-wrap items-center gap-2">
               <input type="hidden" name="date" value="{{searchDate}}">
               <input type="hidden" name="tab" value="{{currentTab}}">
+              
+              <!-- 진료과 다중 선택 드롭다운 -->
+              <div class="relative group" id="dept-dropdown">
+                <button type="button" onclick="toggleDropdown('dept-options')" 
+                        class="px-4 py-2.5 w-56 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:border-indigo-500 transition-all shadow-sm flex items-center justify-between">
+                  <span id="dept-btn-text">진료과 선택</span>
+                  <i data-feather="chevron-down" class="w-4 h-4 text-slate-400"></i>
+                </button>
+                <div id="dept-options" class="hidden absolute top-full left-0 mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 p-3 max-h-64 overflow-y-auto">
+                  <div class="space-y-2">
+                    {{#departments}}
+                    <label class="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                      <input type="checkbox" name="deptIds" value="{{id}}" data-name="{{name}}" {{#selected}}checked{{/selected}} 
+                             onchange="syncFilters()"
+                             class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                      <span class="text-sm font-medium text-slate-600">{{name}}</span>
+                    </label>
+                    {{/departments}}
+                  </div>
+                </div>
+              </div>
+
+              <!-- 의사 다중 선택 드롭다운 -->
+              <div class="relative group" id="doctor-dropdown">
+                <button type="button" onclick="toggleDropdown('doctor-options')" 
+                        class="px-4 py-2.5 w-56 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:border-indigo-500 transition-all shadow-sm flex items-center justify-between">
+                  <span id="doctor-btn-text">의사 선택</span>
+                  <i data-feather="chevron-down" class="w-4 h-4 text-slate-400"></i>
+                </button>
+                <div id="doctor-options" class="hidden absolute top-full left-0 mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 p-3 max-h-64 overflow-y-auto">
+                  <div class="space-y-2" id="doctor-list-container">
+                    {{#doctors}}
+                    <label class="doctor-item flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors" 
+                           data-dept-id="{{deptId}}">
+                      <input type="checkbox" name="doctorIds" value="{{id}}" data-name="{{name}}" {{#selected}}checked{{/selected}} 
+                             onchange="syncFilters()"
+                             class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                      <span class="text-sm font-medium text-slate-600">{{name}}</span>
+                    </label>
+                    {{/doctors}}
+                  </div>
+                </div>
+              </div>
+
               <div class="relative group">
                 <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors"></i>
                 <input type="text" name="query" value="{{#query}}{{query}}{{/query}}" placeholder="환자 이름 검색" 
@@ -88,7 +132,7 @@
               <div class="ml-2 flex flex-col items-end">
                 <div class="px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 shadow-sm flex items-center gap-2 h-[42px]">
                   <i data-feather="users" class="w-4 h-4 text-slate-400"></i>
-                  <span>전체 <span class="text-indigo-600">{{dailyTotalPatients}}</span>명</span>
+                  <span>검색 결과 <span class="text-indigo-600">{{totalPatients}}</span>명</span>
                 </div>
               </div>
             </form>
@@ -169,7 +213,7 @@
                 <div>이름</div>
                 <div>담당 의료진</div>
                 <div>성별 / 나이</div>
-                <div class="text-right pr-4">관리</div>
+                <div class="text-right pr-4">처치</div>
               </div>
 
               <div id="treatment-list-body" class="divide-y divide-slate-100">
@@ -217,7 +261,7 @@
                     <!-- 관리 버튼 -->
                     <div class="text-right pr-4">
                       <a href="/nurse/patient-detail?id={{id}}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-[11px] font-bold text-slate-600 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm">
-                        처치하기
+                        처치
                         <i data-feather="chevron-right" class="w-3 h-3"></i>
                       </a>
                     </div>
@@ -234,6 +278,27 @@
                   </div>
                 {{/patients}}
               </div>
+              
+              <!-- 페이징 바 (reception-list 스타일로 통일) -->
+              {{#pageLinks.0}}
+              <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-center gap-2">
+                {{#hasPrev}}
+                <a href="{{prevUrl}}" class="px-3 py-1.5 rounded-lg text-sm text-slate-600 border border-slate-300 hover:bg-slate-100 transition-colors">이전</a>
+                {{/hasPrev}}
+                
+                <div class="flex items-center gap-1">
+                  {{#pageLinks}}
+                  <a href="{{url}}" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors {{#current}}bg-indigo-600 text-white{{/current}}{{^current}}text-slate-600 border border-slate-300 hover:bg-slate-100{{/current}}">
+                    {{num}}
+                  </a>
+                  {{/pageLinks}}
+                </div>
+
+                {{#hasNext}}
+                <a href="{{nextUrl}}" class="px-3 py-1.5 rounded-lg text-sm text-slate-600 border border-slate-300 hover:bg-slate-100 transition-colors">다음</a>
+                {{/hasNext}}
+              </div>
+              {{/pageLinks.0}}
             </div>
           </div>
         </div>
@@ -245,6 +310,80 @@
 
   <script>
     feather.replace();
+
+    /**
+     * 드롭다운 토글 함수
+     */
+    function toggleDropdown(id) {
+      const el = document.getElementById(id);
+      const isHidden = el.classList.contains('hidden');
+      
+      // 다른 드롭다운 닫기
+      document.querySelectorAll('[id$="-options"]').forEach(opt => opt.classList.add('hidden'));
+      
+      if (isHidden) {
+        el.classList.remove('hidden');
+      }
+    }
+
+    /**
+     * 드롭다운 외부 클릭 시 닫기
+     */
+    window.addEventListener('click', function(e) {
+      if (!e.target.closest('#dept-dropdown') && !e.target.closest('#doctor-dropdown')) {
+        document.querySelectorAll('[id$="-options"]').forEach(opt => opt.classList.add('hidden'));
+      }
+    });
+
+    /**
+     * 필터 상태 동기화 (버튼 텍스트 업데이트 및 의사 목록 필터링)
+     */
+    function syncFilters() {
+      // 1. 진료과 선택 상태 확인
+      const selectedDepts = Array.from(document.querySelectorAll('input[name="deptIds"]:checked'));
+      const deptIds = selectedDepts.map(el => el.value);
+      const deptNames = selectedDepts.map(el => el.getAttribute('data-name'));
+      
+      // 2. 진료과 버튼 텍스트 업데이트
+      const deptBtnText = document.getElementById('dept-btn-text');
+      if (deptNames.length === 0) {
+        deptBtnText.textContent = '진료과 선택';
+      } else if (deptNames.length === 1) {
+        deptBtnText.textContent = '진료과: ' + deptNames[0];
+      } else {
+        deptBtnText.textContent = '진료과: ' + deptNames[0] + ' 외 ' + (deptNames.length - 1) + '건';
+      }
+
+      // 3. 의사 목록 필터링 (선택된 진료과가 있으면 해당 과 의사만 표시, 없으면 전체 표시)
+      const doctorItems = document.querySelectorAll('.doctor-item');
+      doctorItems.forEach(item => {
+        const itemDeptId = item.getAttribute('data-dept-id');
+        if (deptIds.length === 0 || deptIds.includes(itemDeptId)) {
+          item.classList.remove('hidden');
+        } else {
+          item.classList.add('hidden');
+          // 숨겨지는 의사의 체크박스는 해제 (선택 정합성 유지)
+          const cb = item.querySelector('input[name="doctorIds"]');
+          if (cb) cb.checked = false;
+        }
+      });
+
+      // 4. 의사 버튼 텍스트 업데이트
+      const selectedDoctors = Array.from(document.querySelectorAll('input[name="doctorIds"]:checked'));
+      const doctorNames = selectedDoctors.map(el => el.getAttribute('data-name'));
+      const doctorBtnText = document.getElementById('doctor-btn-text');
+      
+      if (doctorNames.length === 0) {
+        doctorBtnText.textContent = '의사 선택';
+      } else if (doctorNames.length === 1) {
+        doctorBtnText.textContent = '의사: ' + doctorNames[0];
+      } else {
+        doctorBtnText.textContent = '의사: ' + doctorNames[0] + ' 외 ' + (doctorNames.length - 1) + '건';
+      }
+    }
+
+    // 페이지 로드 시 초기 상태 반영
+    document.addEventListener('DOMContentLoaded', syncFilters);
 
     // 의사 화면과 동일한 캘린더 로직
     (function() {

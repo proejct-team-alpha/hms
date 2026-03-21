@@ -18,6 +18,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.smartclinic.hms.doctor.treatment.DoctorTreatmentRecordRepository;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -28,6 +30,7 @@ public class NurseService {
     private final NursePatientRepository patientRepository;
     private final DepartmentRepository departmentRepository;
     private final DoctorRepository doctorRepository;
+    private final DoctorTreatmentRecordRepository treatmentRecordRepository;
 
     public NurseDashboardDto getDashboard() {
         LocalDate today = LocalDate.now();
@@ -91,8 +94,22 @@ public class NurseService {
 
     public Page<NursePatientStatusDto> getReceptionPage(String status, String query, Long deptId, Long doctorId,
             String source, int page) {
+        List<Long> deptIds = deptId != null ? List.of(deptId) : null;
+        List<Long> doctorIds = doctorId != null ? List.of(doctorId) : null;
+        return getReceptionPageWithMultiFilters(status, query, deptIds, doctorIds, source, page);
+    }
+
+    /**
+     * 다중 선택 필터를 지원하는 환자 현황 페이지 조회
+     */
+    public Page<NursePatientStatusDto> getReceptionPageWithMultiFilters(String status, String query, 
+            List<Long> deptIds, List<Long> doctorIds, String source, int page) {
         LocalDate today = LocalDate.now();
         PageRequest pageable = PageRequest.of(page, 10);
+
+        // 빈 리스트인 경우 쿼리 조건(IS NULL)이 정상 동작하도록 null 처리
+        List<Long> effectiveDeptIds = (deptIds == null || deptIds.isEmpty()) ? null : deptIds;
+        List<Long> effectiveDoctorIds = (doctorIds == null || doctorIds.isEmpty()) ? null : doctorIds;
 
         ReservationSource src = null;
         if (source != null && !source.isBlank()) {
@@ -105,16 +122,16 @@ public class NurseService {
         Page<Reservation> reservationPage;
         if (status == null || status.isBlank()) {
             reservationPage = nursePatientStatusRepository
-                    .findTodayNonCancelledWithFiltersPage(today, ReservationStatus.CANCELLED, query, deptId, doctorId,
+                    .findTodayNonCancelledWithMultiFiltersPage(today, ReservationStatus.CANCELLED, query, effectiveDeptIds, effectiveDoctorIds,
                             src, pageable);
         } else {
             try {
                 ReservationStatus st = ReservationStatus.valueOf(status);
                 reservationPage = nursePatientStatusRepository
-                        .findTodayByStatusWithFiltersPage(today, st, query, deptId, doctorId, src, pageable);
+                        .findTodayByStatusWithMultiFiltersPage(today, st, query, effectiveDeptIds, effectiveDoctorIds, src, pageable);
             } catch (IllegalArgumentException e) {
                 reservationPage = nursePatientStatusRepository
-                        .findTodayNonCancelledWithFiltersPage(today, ReservationStatus.CANCELLED, query, deptId, doctorId,
+                        .findTodayNonCancelledWithMultiFiltersPage(today, ReservationStatus.CANCELLED, query, effectiveDeptIds, effectiveDoctorIds,
                                 src, pageable);
             }
         }
@@ -168,8 +185,52 @@ public class NurseService {
     public NursePatientDto getPatientDetail(Long reservationId) {
         Reservation r = nursePatientStatusRepository.findByIdWithDetails(reservationId)
                 .orElseThrow(() -> CustomException.notFound("환자 상세 정보를 찾을 수 없습니다."));
-        long count = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
-        return new NursePatientDto(r, count == 0);
+        
+        long completedCount = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
+        NursePatientDto dto = new NursePatientDto(r, completedCount == 0);
+
+        // 1. 현재 진료 기록 조회
+        treatmentRecordRepository.findByReservation_Id(reservationId).ifPresent(tr -> {
+            dto.setDiagnosis(tr.getDiagnosis());
+            dto.setPrescription(tr.getPrescription());
+            dto.setRemark(tr.getRemark());
+            dto.setNurseNote(tr.getNurseNote());
+        });
+
+        // 2. 과거 히스토리 조회 (현재 건 제외 모든 완료된 예약)
+        List<Reservation> histories = reservationRepository.findByPatient_IdOrderByReservationDateDesc(
+                r.getPatient().getId());
+        
+        List<NursePatientDto.NurseTreatmentHistoryDto> historyDtos = histories.stream()
+            .filter(h -> !h.getId().equals(reservationId) && h.getStatus() == ReservationStatus.COMPLETED)
+            .map(h -> {
+                TreatmentRecord tr = treatmentRecordRepository.findByReservation_Id(h.getId()).orElse(null);
+                return new NursePatientDto.NurseTreatmentHistoryDto(
+                    h.getReservationDate().toString(),
+                    h.getDepartment().getId(),
+                    h.getDoctor().getId(),
+                    h.getDoctor().getStaff().getName(),
+                    h.getDepartment().getName(),
+                    tr != null ? tr.getDiagnosis() : "",
+                    tr != null ? tr.getPrescription() : "",
+                    tr != null ? tr.getRemark() : "",
+                    tr != null ? tr.getNurseNote() : ""
+                );
+            })
+            .toList();
+        
+        dto.setHistory(historyDtos);
+        return dto;
+    }
+
+    /**
+     * 간호 메모 저장
+     */
+    @Transactional
+    public void saveNurseNote(Long reservationId, String nurseNote) {
+        TreatmentRecord tr = treatmentRecordRepository.findByReservation_Id(reservationId)
+                .orElseThrow(() -> CustomException.notFound("진료 기록이 존재하지 않습니다. 의사 진료가 먼저 완료되어야 합니다."));
+        tr.updateNurseNote(nurseNote);
     }
 
     @Transactional

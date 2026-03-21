@@ -3,254 +3,337 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>환자 정보 관리 - MediCare+</title>
+  <title>처치실 - MediCare+</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
 </head>
-<body class="min-h-screen flex">
+<body class="min-h-screen flex bg-[#f8fafc] text-slate-900">
   {{> common/sidebar-nurse}}
 
   <div class="main-content flex-1 flex flex-col ml-64">
     {{> common/header-staff}}
 
     <main class="content-wrapper flex-1 p-6">
-      <div class="max-w-3xl mx-auto space-y-6">
+      <div class="max-w-4xl mx-auto space-y-6">
+        
+        <!-- 상단 타이틀 바 -->
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
-              <i data-feather="users" class="w-5 h-5"></i>
+              <i data-feather="plus-square" class="w-5 h-5"></i>
             </div>
-            <h1 class="text-2xl font-bold text-slate-800">환자 정보 관리</h1>
+            <h1 class="text-2xl font-bold text-slate-800">처치실</h1>
           </div>
-          <a href="/nurse/reception-list" class="text-sm font-medium text-slate-500 hover:text-slate-700">
+          <a href="/nurse/treatment-list" class="text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center gap-1">
+            <i data-feather="arrow-left" class="w-4 h-4"></i>
             목록으로 돌아가기
           </a>
         </div>
 
-        {{#message}}
-        <div class="p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl text-sm">{{message}}</div>
-        {{/message}}
         {{#errorMessage}}
-        <div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm">{{errorMessage}}</div>
+          <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center gap-2">
+            <i data-feather="alert-circle" class="w-4 h-4"></i> {{errorMessage}}
+          </div>
         {{/errorMessage}}
-
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <!-- 환자 헤더 -->
-          <div class="bg-indigo-50 border-b border-indigo-100 p-6 flex items-center gap-4">
-            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100">
-              <i data-feather="user" class="w-8 h-8"></i>
-            </div>
-            <div>
-              <div class="flex items-center gap-3 mb-1">
-                {{#detail.isFirstVisit}}
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-500 shrink-0">초</span>
-                {{/detail.isFirstVisit}}
-                {{^detail.isFirstVisit}}
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-500 shrink-0">재</span>
-                {{/detail.isFirstVisit}}
-                <h2 class="text-xl font-bold text-slate-800">{{detail.patientName}}</h2>
-              </div>
-              <div class="flex items-center gap-2 text-sm text-slate-600 mt-1">
-                <span class="flex items-center gap-1"><i data-feather="phone" class="w-3.5 h-3.5"></i> {{detail.patientPhone}}</span>
-                <span class="text-slate-300">|</span>
-                <span>{{detail.departmentName}} / {{detail.doctorName}}</span>
-                <span class="text-slate-300">|</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">{{detail.statusText}}</span>
-              </div>
-            </div>
+        {{#message}}
+          <div class="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm flex items-center gap-2">
+            <i data-feather="check-circle" class="w-4 h-4"></i> {{message}}
           </div>
+        {{/message}}
 
-          <!-- 접수 버튼 -->
-          {{#detail.canReceive}}
-          <div class="px-8 pt-6">
-            <form method="post" action="/nurse/reservation/receive">
-              <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
-              <input type="hidden" name="id" value="{{detail.reservationId}}">
-              <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center justify-center gap-2">
-                <i data-feather="check-circle" class="w-5 h-5"></i>
-                환자 접수 처리
-              </button>
-            </form>
-          </div>
-          {{/detail.canReceive}}
-
-          <!-- 환자 정보 폼 -->
-          <form method="post" action="/nurse/patient/update" class="p-8 space-y-8">
-            <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
-            <input type="hidden" name="patientId" value="{{detail.patientId}}">
-            <input type="hidden" name="reservationId" value="{{detail.reservationId}}">
-
-            <div class="grid grid-cols-2 gap-8">
-              <div class="space-y-6">
-                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">기본 정보</h3>
-
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">연락처</label>
-                  <div class="relative">
-                    <i data-feather="phone" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value="{{detail.patientPhone}}"
-                      class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                    />
-                  </div>
+        <div class="grid grid-cols-3 gap-6">
+          <!-- 좌측: 환자 정보 (의사 화면과 동일) -->
+          <div class="col-span-1 space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+              <div class="flex items-center gap-4 mb-6">
+                <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
+                  <i data-feather="user" class="w-8 h-8"></i>
                 </div>
-
                 <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">이메일</label>
-                  <div class="relative">
-                    <i data-feather="mail" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                    <input
-                      type="text"
-                      value="{{detail.patientEmail}}"
-                      readonly
-                      class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-500 outline-none"
-                    />
+                  <div class="flex items-center gap-2 mb-1">
+                    {{#detail.isFirstVisit}}
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 shrink-0">초</span>
+                    {{/detail.isFirstVisit}}
+                    {{^detail.isFirstVisit}}
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 shrink-0">재</span>
+                    {{/detail.isFirstVisit}}
+                    <h2 class="text-xl font-bold text-slate-800">
+                      {{detail.patientName}}
+                      <span class="text-base font-medium text-slate-400 ml-1">({{detail.genderAge}})</span>
+                    </h2>
                   </div>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">주소</label>
-                  <input
-                    type="text"
-                    name="address"
-                    value="{{detail.patientAddress}}"
-                    class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                  />
+                  <div class="text-sm text-slate-500">{{detail.patientPhone}}</div>
+                  <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-600 mt-1 inline-block">
+                    {{detail.statusText}}
+                  </span>
                 </div>
               </div>
 
-              <div class="space-y-6">
-                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">의료 정보 (특이사항)</h3>
-
+              <div class="space-y-4">
                 <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
-                    <i data-feather="file-text" class="w-4 h-4 text-indigo-500"></i>
-                    알레르기 및 기저질환
-                  </label>
-                  <textarea
-                    name="note"
-                    class="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none h-32 resize-none"
-                  >{{detail.patientNote}}</textarea>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">예약 시간</label>
-                  <div class="px-4 py-3 bg-slate-50 rounded-xl text-slate-600 text-sm border border-slate-200">
+                  <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">예약 시간</h3>
+                  <div class="bg-slate-50 text-slate-700 p-3 rounded-xl text-sm border border-slate-100 mb-4">
                     {{detail.timeSlot}}
                   </div>
                 </div>
+                <div>
+                  <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">접수 경로</h3>
+                  <div class="p-3 rounded-xl text-sm border font-bold flex items-center gap-2 {{detail.sourceBadgeClass}}">
+                    <i data-feather="external-link" class="w-4 h-4"></i>
+                    {{detail.sourceText}}
+                  </div>
+                </div>
+                <div>
+                  <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">내원 사유</h3>
+                  <div class="bg-orange-50 text-orange-900 p-3 rounded-xl text-sm border border-orange-100 leading-relaxed">
+                    {{detail.visitReason}}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 우측: 처치 기록 및 의사 소견 -->
+          <div class="col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col">
+            <div class="p-6 border-b border-slate-200 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i data-feather="edit-3" class="w-5 h-5 text-indigo-600"></i>
+                <h2 class="text-lg font-bold text-slate-800">처치 기록</h2>
+              </div>
+              <div class="flex items-center gap-2">
+                {{^detail.isTreatmentCompleted}}
+                <button type="submit" form="nurse-note-form" class="px-4 py-2 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-900 transition-colors shadow-sm flex items-center gap-1.5">
+                  <i data-feather="save" class="w-4 h-4"></i>
+                  메모 저장
+                </button>
+                {{/detail.isTreatmentCompleted}}
               </div>
             </div>
 
-            <div class="pt-8 border-t border-slate-200 flex justify-end gap-3">
-              <a href="/nurse/reception-list" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors">
-                취소
-              </a>
-              <button
-                type="submit"
-                class="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2"
-              >
-                <i data-feather="save" class="w-5 h-5"></i>
-                정보 저장
-              </button>
+            <!-- 의사 진료 기록 (조회 전용) -->
+            <div class="p-6 border-b border-slate-100 bg-slate-50/50 space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">진단명</h3>
+                  <div class="text-sm font-bold text-slate-700">{{#detail.diagnosis}}{{detail.diagnosis}}{{/detail.diagnosis}}{{^detail.diagnosis}}-{{/detail.diagnosis}}</div>
+                </div>
+                <div>
+                  <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">처방 내역</h3>
+                  <div class="text-sm text-indigo-600 font-medium">{{#detail.prescription}}{{detail.prescription}}{{/detail.prescription}}{{^detail.prescription}}-{{/detail.prescription}}</div>
+                </div>
+              </div>
+              <div>
+                <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">의사 소견</h3>
+                <div class="text-sm text-slate-600 leading-relaxed italic">{{#detail.remark}}"{{detail.remark}}"{{/detail.remark}}{{^detail.remark}}-{{/detail.remark}}</div>
+              </div>
             </div>
-          </form>
-        </div>
-      <!-- 사용 물품 내역 (항상 표시) -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-3">
-        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-          <i data-feather="list" class="w-5 h-5 text-indigo-600"></i>
-          사용 물품 내역
-        </h3>
-        <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
-          <table class="w-full text-xs">
-            <thead class="bg-slate-100 text-slate-500">
-              <tr>
-                <th class="px-3 py-2 text-left font-medium">물품명</th>
-                <th class="px-3 py-2 text-right font-medium">수량</th>
-                <th class="px-3 py-2 text-right font-medium">시간</th>
-              </tr>
-            </thead>
-            <tbody id="usage-log-tbody" class="divide-y divide-slate-100">
-              {{#usageLogs}}
-              <tr>
-                <td class="px-3 py-2 text-slate-700 font-medium">{{itemName}}</td>
-                <td class="px-3 py-2 text-right text-slate-600">{{amount}}개</td>
-                <td class="px-3 py-2 text-right text-slate-400">{{usedAt}}</td>
-              </tr>
-              {{/usageLogs}}
-              {{^usageLogs}}
-              <tr id="usage-log-empty"><td colspan="3" class="px-3 py-2 text-xs text-slate-400">사용된 물품이 없습니다.</td></tr>
-              {{/usageLogs}}
-            </tbody>
-          </table>
-        </div>
-        <div id="usage-log-pagination" class="flex items-center justify-between pt-1" style="display:none!important">
-          <span id="usage-log-page-info" class="text-xs text-slate-500"></span>
-          <div class="flex items-center gap-2">
-            <button id="usage-log-prev" type="button"
-                    class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">이전</button>
-            <div id="usage-log-page-numbers" class="flex items-center gap-1"></div>
-            <button id="usage-log-next" type="button"
-                    class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">다음</button>
-          </div>
-        </div>
-      </div>
 
-      {{#detail.canUseItem}}
-      <!-- 물품 사용 섹션 (RECEIVED 상태만) -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
-        <div class="flex items-center justify-between">
-          <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-            <i data-feather="package" class="w-5 h-5 text-indigo-600"></i>
-            물품 사용
-          </h3>
-          <div class="flex gap-1.5" id="item-category-btns">
-            <button type="button" data-cat="" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors">전체</button>
-            <button type="button" data-cat="MEDICAL_SUPPLIES" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">의료소모품</button>
-            <button type="button" data-cat="MEDICAL_EQUIPMENT" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">의료기기</button>
-            <button type="button" data-cat="GENERAL_SUPPLIES" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">사무/비품</button>
-          </div>
-        </div>
-        <div class="relative">
-          <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-          <input type="text" id="item-search" placeholder="물품명 검색 (초성·영문 가능)"
-                 class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300">
-        </div>
-        <div class="grid grid-cols-4 gap-3" id="item-use-grid">
-          {{#items}}
-          <div class="item-card border border-slate-200 rounded-xl p-3 space-y-2" data-category="{{category}}">
-            <div class="item-name text-sm font-bold text-slate-800 truncate">{{name}}</div>
-            <div class="text-xs text-slate-500">{{categoryText}}</div>
-            <div class="text-xs font-bold {{#lowStock}}text-red-600{{/lowStock}}{{^lowStock}}text-slate-600{{/lowStock}}">
-              재고: <span class="quantity-span">{{quantity}}</span>개
+            <!-- 간호 처치 메모 입력창 -->
+            <div class="p-6 flex-1 flex flex-col">
+              <form id="nurse-note-form" action="/nurse/treatment/save-note" method="post" class="flex-1 flex flex-col">
+                <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                <input type="hidden" name="id" value="{{detail.reservationId}}">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">간호 처치 메모</label>
+                <textarea
+                  name="nurseNote"
+                  class="flex-1 w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-slate-700 leading-relaxed shadow-sm min-h-[200px]"
+                  placeholder="환자 처치 내용 및 특이사항을 기록해주세요."
+                  {{#detail.isTreatmentCompleted}}readonly{{/detail.isTreatmentCompleted}}
+                >{{#detail.nurseNote}}{{detail.nurseNote}}{{/detail.nurseNote}}</textarea>
+              </form>
             </div>
-            <form action="/nurse/item/use" method="post" class="flex items-center gap-1">
-              <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
-              <input type="hidden" name="id" value="{{id}}">
-              <input type="hidden" name="reservationId" value="{{detail.reservationId}}">
-              <input type="number" name="amount" min="1" placeholder="수량"
-                     class="flex-1 w-0 px-2 py-1 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-1 focus:ring-indigo-400">
-              <button type="submit" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap">
-                사용
+
+            <!-- 푸터: 처치 완료 버튼 -->
+            <div class="p-6 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex justify-end items-center">
+              {{^detail.isTreatmentCompleted}}
+              <form action="/nurse/treatment/complete" method="post">
+                <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                <input type="hidden" name="id" value="{{detail.reservationId}}">
+                <button type="submit" class="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2">
+                  <i data-feather="check-circle" class="w-5 h-5"></i>
+                  처치 완료
+                </button>
+              </form>
+              {{/detail.isTreatmentCompleted}}
+              {{#detail.isTreatmentCompleted}}
+              <span class="text-sm font-medium text-green-600 flex items-center gap-1">
+                <i data-feather="check-circle" class="w-4 h-4"></i>
+                처치 완료됨
+              </span>
+              {{/detail.isTreatmentCompleted}}
+            </div>
+          </div>
+        </div>
+
+        <!-- 물품 사용 섹션 (의사 화면 고도화 스타일 적용) -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                <i data-feather="package" class="w-5 h-5 text-indigo-600"></i>
+                물품 사용
+              </h3>
+              {{^detail.isTreatmentCompleted}}
+              <button type="button" id="item-batch-use-btn"
+                      class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-1.5">
+                <i data-feather="plus-square" class="w-4 h-4"></i>
+                선택 물품 일괄 사용
               </button>
-            </form>
+              {{/detail.isTreatmentCompleted}}
+            </div>
+            <div class="flex gap-1.5" id="item-category-btns">
+              <button type="button" data-cat="" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors">전체</button>
+              <button type="button" data-cat="MEDICAL_SUPPLIES" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">의료소모품</button>
+              <button type="button" data-cat="MEDICAL_EQUIPMENT" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">의료기기</button>
+              <button type="button" data-cat="GENERAL_SUPPLIES" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">사무/비품</button>
+            </div>
           </div>
-          {{/items}}
-        </div>
-        <div id="card-grid-pagination" class="flex items-center justify-center pt-2" style="display:none!important">
-          <div class="flex items-center gap-2">
-            <button id="card-grid-prev" type="button"
-                    class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">이전</button>
-            <div id="card-grid-page-numbers" class="flex items-center gap-1"></div>
-            <button id="card-grid-next" type="button"
-                    class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">다음</button>
+
+          <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+            <table class="w-full text-xs">
+              <thead class="bg-slate-100 text-slate-500">
+                <tr>
+                  <th class="px-3 py-2 text-left font-medium">물품명</th>
+                  <th class="px-3 py-2 text-left font-medium">사용자</th>
+                  <th class="px-3 py-2 text-right font-medium">수량</th>
+                  <th class="px-3 py-2 text-right font-medium">시간</th>
+                  <th class="px-3 py-2 text-center font-medium">관리</th>
+                </tr>
+              </thead>
+              <tbody id="usage-log-tbody" class="divide-y divide-slate-100">
+                {{#usageLogs}}
+                <tr>
+                  <td class="px-3 py-2 text-slate-700 font-medium">{{itemName}}</td>
+                  <td class="px-3 py-2 text-slate-500">{{usedBy}}</td>
+                  <td class="px-3 py-2 text-right text-slate-600">{{amount}}개</td>
+                  <td class="px-3 py-2 text-right text-slate-400">{{usedAt}}</td>
+                  <td class="px-3 py-2 text-center">
+                    {{^detail.isTreatmentCompleted}}
+                    <button type="button" onclick="cancelUsage({{id}})"
+                            class="p-1 text-red-500 hover:bg-red-50 rounded transition-colors" title="사용 취소">
+                      <i data-feather="x-circle" class="w-4 h-4"></i>
+                    </button>
+                    {{/detail.isTreatmentCompleted}}
+                    {{#detail.isTreatmentCompleted}}-{{/detail.isTreatmentCompleted}}
+                  </td>
+                </tr>
+                {{/usageLogs}}
+                <tr id="usage-log-empty" style="{{#usageLogs.size}}display:none{{/usageLogs.size}}">
+                  <td colspan="5" class="px-3 py-2 text-xs text-slate-400 text-center text-center">사용된 물품이 없습니다.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="relative">
+            <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="item-search" placeholder="물품명 검색 (초성·영문 가능)"
+                   class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300">
+          </div>
+          <div class="grid grid-cols-4 gap-3" id="item-use-grid">
+            {{#items}}
+            <div class="item-card border border-slate-200 rounded-xl p-3 space-y-2" data-category="{{category}}" data-id="{{id}}">
+              <div class="item-name text-sm font-bold text-slate-800 truncate">{{name}}</div>
+              <div class="text-xs text-slate-500">{{categoryText}}</div>
+              <div class="text-xs font-bold {{#lowStock}}text-red-600{{/lowStock}}{{^lowStock}}text-slate-600{{/lowStock}}">
+                재고: <span class="quantity-span">{{quantity}}</span>개
+              </div>
+              {{^detail.isTreatmentCompleted}}
+              <form action="/nurse/item/use" method="post" class="flex items-center gap-1 item-use-form">
+                <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                <input type="hidden" name="id" value="{{id}}">
+                <input type="hidden" name="reservationId" value="{{detail.reservationId}}">
+                <input type="number" name="amount" min="1" placeholder="수량"
+                       class="flex-1 w-0 px-2 py-1 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                <button type="submit" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap">
+                  사용
+                </button>
+              </form>
+              {{/detail.isTreatmentCompleted}}
+            </div>
+            {{/items}}
           </div>
         </div>
-      </div>
-      {{/detail.canUseItem}}
+
+        <!-- 과거 진료 이력 (의사 화면 타임라인 스타일 완벽 이식) -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-6 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i data-feather="clock" class="w-5 h-5 text-indigo-600"></i>
+              <h2 class="text-lg font-bold text-slate-800">과거 진료 이력</h2>
+            </div>
+            
+            <!-- 진료과/의사 검색 필터 -->
+            <div class="flex items-center gap-2">
+              <select id="filter-dept" class="text-xs border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                <option value="">전체 진료과</option>
+                {{#filterDepartments}}
+                <option value="{{id}}">{{name}}</option>
+                {{/filterDepartments}}
+              </select>
+              <select id="filter-doctor" class="text-xs border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                <option value="">전체 의사</option>
+                {{#filterDoctors}}
+                <option value="{{id}}" data-dept-id="{{departmentId}}">{{displayName}}</option>
+                {{/filterDoctors}}
+              </select>
+              <!-- 페이징 컨트롤 -->
+              <div id="history-pagination" class="flex items-center gap-3 ml-2" style="display: none;">
+                <button type="button" id="history-prev" class="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                  <i data-feather="chevron-left" class="w-4 h-4"></i>
+                </button>
+                <span class="text-xs font-bold text-slate-500">
+                  <span id="history-current-page" class="text-indigo-600">1</span> / <span id="history-total-pages">1</span>
+                </span>
+                <button type="button" id="history-next" class="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                  <i data-feather="chevron-right" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="p-6">
+            {{#detail.history.size}}
+              <div id="history-list-container" class="space-y-8 relative before:absolute before:inset-0 before:left-4 before:w-0.5 before:bg-slate-100 before:content-['']">
+                {{#detail.history}}
+                  <div class="history-item relative pl-10 transition-all duration-300"
+                       data-dept-id="{{deptId}}" 
+                       data-doctor-id="{{doctorId}}">
+                    <div class="absolute left-2.5 top-1.5 w-3.5 h-3.5 rounded-full bg-white border-4 border-indigo-500 shadow-sm"></div>
+                    <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-4 transition-all hover:border-indigo-200 hover:bg-white hover:shadow-md">
+                      <div class="flex justify-between items-start">
+                        <div>
+                          <div class="text-sm font-bold text-slate-800 mb-0.5">{{date}}</div>
+                          <div class="text-xs font-medium text-slate-500">{{deptName}} · {{doctorName}} 의사</div>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700">진료 완료</span>
+                      </div>
+                      
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">진단 및 소견</span>
+                          <div class="text-sm text-slate-700 font-semibold">{{diagnosis}}</div>
+                          <div class="text-xs text-slate-500 italic">"{{remark}}"</div>
+                        </div>
+                        <div class="space-y-1">
+                          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">처방 및 간호메모</span>
+                          <div class="text-sm text-slate-600 bg-white p-2 rounded-lg border border-slate-100">{{prescription}}</div>
+                          <div class="text-xs text-indigo-600 font-medium mt-1">{{#nurseNote}}Nurse: {{nurseNote}}{{/nurseNote}}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {{/detail.history}}
+              </div>
+            {{/detail.history.size}}
+            {{^detail.history.size}}
+              <div class="py-12 flex flex-col items-center justify-center text-slate-400 gap-3">
+                <i data-feather="folder" class="w-8 h-8 opacity-20"></i>
+                <p class="text-sm font-medium">과거 진료 기록이 없습니다.</p>
+              </div>
+            {{/detail.history.size}}
+          </div>
+        </div>
 
       </div>
     </main>
@@ -259,232 +342,267 @@
   </div>
 
   <script>
-    var CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
-    function getChosung(str) {
-      return str.split('').map(function(ch) {
-        var code = ch.charCodeAt(0);
-        if (code >= 0xAC00 && code <= 0xD7A3) return CHOSUNG[Math.floor((code - 0xAC00) / 588)];
-        return ch;
-      }).join('');
-    }
-    function isChosungOnly(str) { return /^[ㄱ-ㅎ]+$/.test(str); }
-    function itemMatches(name, query) {
-      if (!query) return true;
-      var q = query.toLowerCase();
-      if (isChosungOnly(q)) return getChosung(name).includes(q);
-      return name.toLowerCase().includes(q);
-    }
+    feather.replace();
 
-    // ── usage-log 페이징 ──
-    var USAGE_LOG_PAGE_SIZE = 10;
-    var usageLogPage = 1;
+    (function() {
+      // 1. 카테고리 필터링 및 검색 로직 (의사 화면 완벽 이식)
+      const itemSearchInput = document.getElementById('item-search');
+      const itemCards = document.querySelectorAll('.item-card');
+      const categoryBtns = document.querySelectorAll('.item-cat-btn');
+      let currentCategory = "";
 
-    function buildUsageLogPageNumbers(current, total) {
-      var container = document.getElementById('usage-log-page-numbers');
-      container.innerHTML = '';
-      if (total <= 1) return;
-      var start = Math.max(1, current - 2);
-      var end   = Math.min(total, start + 4);
-      if (end - start < 4) start = Math.max(1, end - 4);
-      function makeBtn(n) {
-        var b = document.createElement('button');
-        b.type = 'button'; b.textContent = n;
-        b.className = 'px-2 py-1 text-xs rounded-lg border transition-colors ' +
-          (n === current ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 text-slate-600 hover:bg-slate-100');
-        b.addEventListener('click', function() { usageLogPage = n; renderUsageLog(); });
-        return b;
-      }
-      function makeDots() {
-        var s = document.createElement('span'); s.textContent = '...';
-        s.className = 'px-1 text-xs text-slate-400'; return s;
-      }
-      if (start > 1) { container.appendChild(makeBtn(1)); if (start > 2) container.appendChild(makeDots()); }
-      for (var i = start; i <= end; i++) container.appendChild(makeBtn(i));
-      if (end < total) { if (end < total - 1) container.appendChild(makeDots()); container.appendChild(makeBtn(total)); }
-    }
-
-    function renderUsageLog() {
-      var rows = Array.from(document.querySelectorAll('#usage-log-tbody tr:not(#usage-log-empty)'));
-      var total = rows.length;
-      var totalPages = Math.max(1, Math.ceil(total / USAGE_LOG_PAGE_SIZE));
-      if (usageLogPage > totalPages) usageLogPage = totalPages;
-      if (usageLogPage < 1) usageLogPage = 1;
-      var start = (usageLogPage - 1) * USAGE_LOG_PAGE_SIZE;
-      rows.forEach(function(r, i) { r.style.display = (i >= start && i < start + USAGE_LOG_PAGE_SIZE) ? '' : 'none'; });
-      var bar = document.getElementById('usage-log-pagination');
-      if (total === 0 || totalPages <= 1) { bar.style.removeProperty('display'); bar.style.display = 'none'; }
-      else { bar.style.removeProperty('display'); }
-      buildUsageLogPageNumbers(usageLogPage, totalPages);
-      document.getElementById('usage-log-prev').disabled = usageLogPage <= 1;
-      document.getElementById('usage-log-next').disabled = usageLogPage >= totalPages;
-    }
-
-    var usageLogPrevBtn = document.getElementById('usage-log-prev');
-    var usageLogNextBtn = document.getElementById('usage-log-next');
-    if (usageLogPrevBtn) {
-      usageLogPrevBtn.addEventListener('click', function() {
-        if (usageLogPage > 1) { usageLogPage--; renderUsageLog(); }
-      });
-      usageLogNextBtn.addEventListener('click', function() {
-        var rows = document.querySelectorAll('#usage-log-tbody tr:not(#usage-log-empty)');
-        var totalPages = Math.max(1, Math.ceil(rows.length / USAGE_LOG_PAGE_SIZE));
-        if (usageLogPage < totalPages) { usageLogPage++; renderUsageLog(); }
-      });
-      renderUsageLog();
-    }
-
-    // ── 카드 그리드 페이징 ──
-    var CARD_PAGE_SIZE = 10;
-    var cardPage = 1;
-    var currentCat = '';
-
-    function buildCardPageNumbers(current, total) {
-      var container = document.getElementById('card-grid-page-numbers');
-      if (!container) return;
-      container.innerHTML = '';
-      if (total <= 1) return;
-      var start = Math.max(1, current - 2);
-      var end   = Math.min(total, start + 4);
-      if (end - start < 4) start = Math.max(1, end - 4);
-      function makeBtn(n) {
-        var b = document.createElement('button');
-        b.type = 'button'; b.textContent = n;
-        b.className = 'px-2 py-1 text-xs rounded-lg border transition-colors ' +
-          (n === current ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 text-slate-600 hover:bg-slate-100');
-        b.addEventListener('click', function() { cardPage = n; applyFilter(); });
-        return b;
-      }
-      function makeDots() {
-        var s = document.createElement('span'); s.textContent = '...';
-        s.className = 'px-1 text-xs text-slate-400'; return s;
-      }
-      if (start > 1) { container.appendChild(makeBtn(1)); if (start > 2) container.appendChild(makeDots()); }
-      for (var i = start; i <= end; i++) container.appendChild(makeBtn(i));
-      if (end < total) { if (end < total - 1) container.appendChild(makeDots()); container.appendChild(makeBtn(total)); }
-    }
-
-    function applyFilter() {
-      var searchEl = document.getElementById('item-search');
-      var query = searchEl ? searchEl.value.trim() : '';
-      var allCards = Array.from(document.querySelectorAll('#item-use-grid .item-card'));
-      var filtered = allCards.filter(function(card) {
-        var catOk  = !currentCat || card.dataset.category === currentCat;
-        var nameOk = itemMatches(card.querySelector('.item-name').textContent, query);
-        return catOk && nameOk;
-      });
-      var totalPages = Math.max(1, Math.ceil(filtered.length / CARD_PAGE_SIZE));
-      if (cardPage > totalPages) cardPage = totalPages;
-      if (cardPage < 1) cardPage = 1;
-      var startIdx = (cardPage - 1) * CARD_PAGE_SIZE;
-      allCards.forEach(function(c) { c.style.display = 'none'; });
-      filtered.forEach(function(c, i) { c.style.display = (i >= startIdx && i < startIdx + CARD_PAGE_SIZE) ? '' : 'none'; });
-      var bar = document.getElementById('card-grid-pagination');
-      if (bar) {
-        if (filtered.length === 0 || totalPages <= 1) { bar.style.removeProperty('display'); bar.style.display = 'none'; }
-        else { bar.style.removeProperty('display'); }
-        buildCardPageNumbers(cardPage, totalPages);
-        var prevBtn = document.getElementById('card-grid-prev');
-        var nextBtn = document.getElementById('card-grid-next');
-        if (prevBtn) prevBtn.disabled = cardPage <= 1;
-        if (nextBtn) nextBtn.disabled = cardPage >= totalPages;
-      }
-    }
-
-    var searchInput = document.getElementById('item-search');
-    if (searchInput) searchInput.addEventListener('input', function() { cardPage = 1; applyFilter(); });
-
-    document.querySelectorAll('.item-cat-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        currentCat = this.dataset.cat;
-        document.querySelectorAll('.item-cat-btn').forEach(function(b) {
-          b.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors';
+      function filterItems() {
+        if (!itemSearchInput) return;
+        const query = itemSearchInput.value.toLowerCase();
+        itemCards.forEach(card => {
+          const name = card.getAttribute('data-name') ? card.getAttribute('data-name').toLowerCase() : card.querySelector('.item-name').textContent.toLowerCase();
+          const category = card.getAttribute('data-category');
+          const matchesCategory = !currentCategory || category === currentCategory;
+          const matchesSearch = !query || itemMatches(name, query);
+          card.style.display = (matchesCategory && matchesSearch) ? 'block' : 'none';
         });
-        this.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors';
-        cardPage = 1;
-        applyFilter();
-      });
-    });
-
-    var cardPrevBtn = document.getElementById('card-grid-prev');
-    var cardNextBtn = document.getElementById('card-grid-next');
-    if (cardPrevBtn) {
-      cardPrevBtn.addEventListener('click', function() {
-        if (cardPage > 1) { cardPage--; applyFilter(); }
-      });
-      cardNextBtn.addEventListener('click', function() {
-        var searchEl = document.getElementById('item-search');
-        var query = searchEl ? searchEl.value.trim() : '';
-        var filtered = Array.from(document.querySelectorAll('#item-use-grid .item-card')).filter(function(c) {
-          return (!currentCat || c.dataset.category === currentCat) && itemMatches(c.querySelector('.item-name').textContent, query);
-        });
-        var totalPages = Math.max(1, Math.ceil(filtered.length / CARD_PAGE_SIZE));
-        if (cardPage < totalPages) { cardPage++; applyFilter(); }
-      });
-    }
-
-    // 사용 물품 내역 실시간 갱신
-    function refreshUsageLogs(logs) {
-      var tbody = document.getElementById('usage-log-tbody');
-      if (!tbody) return;
-      Array.from(tbody.querySelectorAll('tr:not(#usage-log-empty)')).forEach(function(r) { r.remove(); });
-      var emptyRow = document.getElementById('usage-log-empty');
-      if (logs && logs.length > 0) {
-        if (emptyRow) emptyRow.style.display = 'none';
-        logs.forEach(function(log) {
-          const tr = document.createElement('tr');
-          const td1 = document.createElement('td'); td1.className = 'px-3 py-2 text-slate-700 font-medium'; td1.textContent = log.itemName;
-          const td2 = document.createElement('td'); td2.className = 'px-3 py-2 text-right text-slate-600'; td2.textContent = log.amount + '개';
-          const td3 = document.createElement('td'); td3.className = 'px-3 py-2 text-right text-slate-400'; td3.textContent = log.usedAt;
-          tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
-          tbody.appendChild(tr);
-        });
-      } else {
-        if (emptyRow) emptyRow.style.display = '';
       }
-      usageLogPage = 1;
-      renderUsageLog();
-    }
 
-    document.querySelectorAll('form[action$="/nurse/item/use"]').forEach(function(form) {
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        var input = form.querySelector('input[name="amount"]');
-        var value = input.value.trim();
-        var amount = Number(value);
-        if (value === '' || isNaN(amount) || !Number.isInteger(amount) || amount <= 0) {
-          alert('올바른 수량을 입력해주세요. (1 이상의 정수)');
-          return;
-        }
-        var id = form.querySelector('input[name="id"]').value;
-        var reservationId = form.querySelector('input[name="reservationId"]').value;
-        var csrfInput = form.querySelector('input[type="hidden"]:not([name="id"]):not([name="reservationId"])');
-        var params = new URLSearchParams();
-        params.append('id', id);
-        params.append('amount', value);
-        params.append('reservationId', reservationId);
-        params.append(csrfInput.name, csrfInput.value);
+      if (categoryBtns) {
+        categoryBtns.forEach(btn => {
+          btn.addEventListener('click', () => {
+            categoryBtns.forEach(b => {
+              b.classList.replace('bg-indigo-600', 'bg-slate-100');
+              b.classList.replace('text-white', 'text-slate-600');
+            });
+            btn.classList.replace('bg-slate-100', 'bg-indigo-600');
+            btn.classList.replace('text-slate-600', 'text-white');
+            currentCategory = btn.getAttribute('data-cat');
+            filterItems();
+          });
+        });
+      }
 
-        fetch('/nurse/item/use', {
+      if (itemSearchInput) itemSearchInput.addEventListener('input', filterItems);
+
+      // 2. 개별 물품 사용 (AJAX)
+      document.querySelectorAll('.item-use-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const input = form.querySelector('input[name="amount"]');
+          const amount = input.value || 1;
+          const id = form.querySelector('input[name="id"]').value;
+          const reservationId = form.querySelector('input[name="reservationId"]').value;
+          const csrfInput = form.querySelector('input[name="_csrf"]');
+
+          const params = new URLSearchParams();
+          params.append('id', id);
+          params.append('amount', amount);
+          params.append('reservationId', reservationId);
+          params.append('_csrf', csrfInput.value);
+
+          fetch('/nurse/item/use', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.quantity !== undefined) {
+              form.closest('.item-card').querySelector('.quantity-span').textContent = data.quantity;
+              input.value = '';
+              refreshUsageLogs(data.logs || []);
+            } else if (data.error) alert(data.error);
+          });
+        });
+      });
+
+      // 3. 물품 일괄 사용 (의사 화면 완벽 이식)
+      const batchUseBtn = document.getElementById('item-batch-use-btn');
+      if (batchUseBtn) {
+        batchUseBtn.addEventListener('click', function() {
+          const requests = [];
+          const resId = "{{detail.reservationId}}";
+          const csrfToken = document.querySelector('input[name="_csrf"]').value;
+
+          document.querySelectorAll('.item-card').forEach(card => {
+            const amountInput = card.querySelector('input[name="amount"]');
+            const amount = amountInput ? amountInput.value.trim() : "";
+            if (amount && parseInt(amount) > 0) {
+              requests.push({ id: card.getAttribute('data-id'), amount: parseInt(amount) });
+            }
+          });
+
+          if (requests.length === 0) return alert('사용할 물품의 수량을 입력해주세요.');
+
+          fetch('/nurse/item/use-batch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+            body: JSON.stringify({ reservationId: resId, requests: requests })
+          }).then(res => res.json()).then(data => {
+            if (data.successes && data.successes.length > 0) {
+              if (data.errors && data.errors.length > 0) {
+                alert('일부 물품의 재고가 부족하여 처리되지 않았습니다.\n\n' + data.errors.join('\n'));
+              }
+              location.reload(); 
+            } else if (data.errors && data.errors.length > 0) {
+              alert('재고가 부족하여 처리에 실패했습니다:\n' + data.errors.join('\n'));
+            } else if (data.error) {
+              alert('오류: ' + data.error);
+            }
+          });
+        });
+      }
+
+      // ── 초성 검색 지원 ──
+      var CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+      function getChosung(str) {
+        return str.split('').map(function(ch) {
+          var code = ch.charCodeAt(0);
+          if (code >= 0xAC00 && code <= 0xD7A3) return CHOSUNG[Math.floor((code - 0xAC00) / 588)];
+          return ch;
+        }).join('');
+      }
+      function isChosungOnly(str) { return /^[ㄱ-ㅎ]+$/.test(str); }
+      function itemMatches(name, query) {
+        if (!query) return true;
+        var q = query.toLowerCase();
+        if (isChosungOnly(q)) return getChosung(name).includes(q);
+        return name.toLowerCase().includes(q);
+      }
+
+      // ── 사용 내역 취소 (추가) ──
+      window.cancelUsage = function(logId) {
+        if(!confirm('정말 취소하시겠습니까?')) return;
+        const resId = "{{detail.reservationId}}";
+        const csrfToken = document.querySelector('input[name="_csrf"]').value;
+        const params = new URLSearchParams();
+        params.append('logId', logId);
+        params.append('reservationId', resId);
+        params.append('_csrf', csrfToken);
+
+        fetch('/nurse/item/cancel', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: params.toString()
-        })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-          if (data.quantity !== undefined) {
-            form.closest('.item-card').querySelector('.quantity-span').textContent = data.quantity;
-            input.value = '';
-            refreshUsageLogs(data.logs || []);
-          } else if (data.error) {
-            alert(data.error);
-          }
+        }).then(res => res.json()).then(data => {
+          if (data.logs) {
+            refreshUsageLogs(data.logs);
+            location.reload(); // 재고 갱신을 위해 새로고침
+          } else if (data.error) alert(data.error);
         });
-      });
-    });
+      };
 
-    // 초기 렌더
-    if (document.getElementById('item-use-grid')) applyFilter();
+      // ── 사용 내역 갱신 ──
+      window.refreshUsageLogs = function(logs) {
+        const tbody = document.getElementById('usage-log-tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        if (logs && logs.length > 0) {
+          logs.forEach(log => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td class="px-3 py-2 text-slate-700 font-medium">${log.itemName}</td>
+                            <td class="px-3 py-2 text-slate-500">${log.usedBy}</td>
+                            <td class="px-3 py-2 text-right text-slate-600">${log.amount}개</td>
+                            <td class="px-3 py-2 text-right text-slate-400">${log.usedAt}</td>
+                            <td class="px-3 py-2 text-center">-</td>`;
+            tbody.appendChild(tr);
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="5" class="px-3 py-2 text-xs text-slate-400 text-center">사용된 물품이 없습니다.</td></tr>';
+        }
+      };
+
+      // ── 히스토리 페이징 및 필터링 (의사 화면 완벽 이식) ──
+      (function() {
+        var HISTORY_PAGE_SIZE = 3;
+        var historyPage = 1;
+        
+        const filterDept = document.getElementById('filter-dept');
+        const filterDoctor = document.getElementById('filter-doctor');
+        
+        if (!filterDept || !filterDoctor) return;
+        
+        const doctorOptions = Array.from(filterDoctor.querySelectorAll('option')).filter(opt => opt.value !== "");
+
+        function clean(val) {
+          if (val === undefined || val === null) return "";
+          return String(val).replace(/[^0-9]/g, '').trim();
+        }
+
+        function updateUI() {
+          const allItems = Array.from(document.querySelectorAll('.history-item'));
+          const selectedDeptId = clean(filterDept.value);
+          const selectedDoctorId = clean(filterDoctor.value);
+
+          const filtered = allItems.filter(item => {
+            const itemDeptId = clean(item.getAttribute('data-dept-id'));
+            const itemDoctorId = clean(item.getAttribute('data-doctor-id'));
+            const matchesDept = !selectedDeptId || itemDeptId === selectedDeptId;
+            const matchesDoctor = !selectedDoctorId || itemDoctorId === selectedDoctorId;
+            return matchesDept && matchesDoctor;
+          });
+
+          allItems.forEach(item => item.style.display = 'none');
+          const total = filtered.length;
+          const totalPages = Math.ceil(total / HISTORY_PAGE_SIZE) || 1;
+          if (historyPage > totalPages) historyPage = totalPages;
+          const start = (historyPage - 1) * HISTORY_PAGE_SIZE;
+          const end = start + HISTORY_PAGE_SIZE;
+
+          filtered.slice(start, end).forEach(item => { item.style.display = 'block'; });
+
+          const paginationBar = document.getElementById('history-pagination');
+          if (paginationBar) {
+            paginationBar.style.display = total > 0 ? 'flex' : 'none';
+          }
+          
+          const curEl = document.getElementById('history-current-page');
+          const totEl = document.getElementById('history-total-pages');
+          if (curEl) curEl.textContent = historyPage;
+          if (totEl) totEl.textContent = totalPages;
+          
+          const prevBtn = document.getElementById('history-prev');
+          const nextBtn = document.getElementById('history-next');
+          if (prevBtn) prevBtn.disabled = (historyPage <= 1);
+          if (nextBtn) nextBtn.disabled = (historyPage >= totalPages);
+        }
+
+        filterDept.addEventListener('change', function() {
+          const selectedDeptId = clean(this.value);
+          filterDoctor.innerHTML = '<option value="">전체 의사</option>';
+          filterDoctor.value = "";
+          doctorOptions.forEach(opt => {
+            const optDeptId = clean(opt.getAttribute('data-dept-id'));
+            if (!selectedDeptId || optDeptId === selectedDeptId) {
+              filterDoctor.appendChild(opt);
+            }
+          });
+          historyPage = 1;
+          updateUI();
+        });
+
+        filterDoctor.addEventListener('change', function() {
+          historyPage = 1;
+          updateUI();
+        });
+
+        const btnPrev = document.getElementById('history-prev');
+        const btnNext = document.getElementById('history-next');
+        if (btnPrev) {
+          btnPrev.addEventListener('click', () => { if (historyPage > 1) { historyPage--; updateUI(); } });
+        }
+        if (btnNext) {
+          btnNext.addEventListener('click', () => { 
+            const selDeptId = clean(filterDept.value);
+            const selDocId = clean(filterDoctor.value);
+            const items = Array.from(document.querySelectorAll('.history-item'));
+            const count = items.filter(item => {
+              const d = clean(item.getAttribute('data-dept-id'));
+              const dr = clean(item.getAttribute('data-doctor-id'));
+              return (!selDeptId || d === selDeptId) && (!selDocId || dr === selDocId);
+            }).length;
+            if (historyPage < Math.ceil(count / HISTORY_PAGE_SIZE)) { historyPage++; updateUI(); } 
+          });
+        }
+        updateUI();
+      })();
+    })();
   </script>
-  <script>feather.replace();</script>
 </body>
 </html>

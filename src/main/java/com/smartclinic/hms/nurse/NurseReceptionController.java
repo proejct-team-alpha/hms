@@ -99,6 +99,11 @@ public class NurseReceptionController {
     public String patientDetail(@RequestParam("id") Long id, Model model) {
         NursePatientDto detail = nurseService.getPatientDetail(id);
         model.addAttribute("detail", detail);
+        
+        // 과거 이력 필터링용 데이터 추가
+        model.addAttribute("filterDepartments", nurseService.getAllDepartments());
+        model.addAttribute("filterDoctors", nurseService.getAllDoctors());
+        
         model.addAttribute("items", itemManagerService.getItemList(null));
         model.addAttribute("usageLogs", itemManagerService.getUsageLogs(id));
         model.addAttribute("pageTitle", "환자 상세 정보");
@@ -125,6 +130,44 @@ public class NurseReceptionController {
             return ResponseEntity.ok(Map.of("quantity", newQuantity, "logs", logs));
         } catch (NumberFormatException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * 물품 일괄 사용 처리 (AJAX)
+     */
+    @PostMapping("/item/use-batch")
+    @ResponseBody
+    public ResponseEntity<?> useItemBatch(@RequestBody Map<String, Object> body) {
+        try {
+            List<Map<String, Object>> requests = (List<Map<String, Object>>) body.get("requests");
+            Long reservationId = Long.valueOf(body.get("reservationId").toString());
+            Map<String, Object> result = itemManagerService.useItemsBatch(requests, reservationId);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * 물품 사용 취소 (AJAX)
+     */
+    @PostMapping("/item/cancel")
+    @ResponseBody
+    public ResponseEntity<?> cancelUsage(@RequestParam("logId") Long logId,
+                                         @RequestParam("reservationId") Long reservationId) {
+        try {
+            Map<String, Object> result = itemManagerService.cancelItemUsage(logId);
+            List<ItemUsageLogDto> logs = itemManagerService.getUsageLogs(reservationId);
+            
+            // 서비스에서 반환된 itemId와 quantity를 포함하여 응답
+            return ResponseEntity.ok(Map.of(
+                "itemId", result.get("itemId"),
+                "quantity", result.get("quantity"),
+                "logs", logs
+            ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -164,12 +207,15 @@ public class NurseReceptionController {
     }
 
     /**
-     * 처치 관리 목록 화면 (의사 진료 현황 스타일의 달력 + 리스트)
+     * 처치 관리 목록 화면 (진료과, 의사 다중 필터링 및 페이징 기능 포함)
      */
     @GetMapping("/treatment-list")
     public String treatmentList(@RequestParam(name = "date", required = false) String dateStr,
                                 @RequestParam(name = "tab", defaultValue = "pending") String tab,
                                 @RequestParam(name = "query", required = false) String query,
+                                @RequestParam(name = "deptIds", required = false) List<Long> deptIds,
+                                @RequestParam(name = "doctorIds", required = false) List<Long> doctorIds,
+                                @RequestParam(name = "page", defaultValue = "0") int page,
                                 Model model) {
         java.time.LocalDate date = (dateStr == null || dateStr.isBlank()) 
             ? java.time.LocalDate.now() 
@@ -179,10 +225,12 @@ public class NurseReceptionController {
         boolean isToday = date.equals(today);
         boolean isPastDate = date.isBefore(today);
 
-        // 검색 및 탭 필터링 로직
-        List<NursePatientStatusDto> allPatients = nurseService.getReceptionPage("COMPLETED", query, null, null, null, 0).getContent();
+        // 의사 진료 완료(COMPLETED) 상태인 환자들을 대상으로 필터링하여 페이징 조회
+        Page<NursePatientStatusDto> resultPage = nurseService.getReceptionPageWithMultiFilters(
+                "COMPLETED", query, deptIds, doctorIds, null, page);
 
-        List<NursePatientStatusDto> filteredPatients = allPatients.stream()
+        // 탭(진료대기/완료/전체) 필터링은 메모리에서 처리 (기존 로직 유지하되 페이징 결과 내에서 처리)
+        List<NursePatientStatusDto> filteredContent = resultPage.getContent().stream()
             .filter(p -> {
                 if ("pending".equals(tab)) return !p.isTreatmentCompleted();
                 if ("completed".equals(tab)) return p.isTreatmentCompleted();
@@ -190,14 +238,30 @@ public class NurseReceptionController {
             })
             .toList();
 
-        // 1부터 시작하는 순번 부여
-        for (int i = 0; i < filteredPatients.size(); i++) {
-            filteredPatients.get(i).setSequence(i + 1);
+        // 순번 부여 (페이지 시작 번호 고려)
+        int startSeq = page * 10 + 1;
+        for (int i = 0; i < filteredContent.size(); i++) {
+            filteredContent.get(i).setSequence(startSeq + i);
         }
 
-        model.addAttribute("patients", filteredPatients);
-        model.addAttribute("dailyTotalPatients", allPatients.size());
-        model.addAttribute("totalPatients", filteredPatients.size());
+        // 베이스 URL 생성 (페이징 링크용)
+        StringBuilder baseUrlBuilder = new StringBuilder("/nurse/treatment-list?");
+        if (dateStr != null && !dateStr.isBlank()) baseUrlBuilder.append("date=").append(dateStr).append("&");
+        if (tab != null) baseUrlBuilder.append("tab=").append(tab).append("&");
+        if (query != null && !query.isBlank()) baseUrlBuilder.append("query=").append(query).append("&");
+        if (deptIds != null) deptIds.forEach(id -> baseUrlBuilder.append("deptIds=").append(id).append("&"));
+        if (doctorIds != null) doctorIds.forEach(id -> baseUrlBuilder.append("doctorIds=").append(id).append("&"));
+        baseUrlBuilder.append("page=");
+        String baseUrl = baseUrlBuilder.toString();
+
+        int totalPages = resultPage.getTotalPages();
+        List<NursePageLinkDto> pageLinks = new ArrayList<>();
+        for (int i = 0; i < totalPages; i++) {
+            pageLinks.add(new NursePageLinkDto(i + 1, i == page, baseUrl + i));
+        }
+
+        model.addAttribute("patients", filteredContent);
+        model.addAttribute("totalPatients", resultPage.getTotalElements());
         model.addAttribute("searchDate", date.toString());
         model.addAttribute("isToday", isToday);
         model.addAttribute("isPastDate", isPastDate);
@@ -206,10 +270,44 @@ public class NurseReceptionController {
         model.addAttribute("isCompletedTab", "completed".equals(tab));
         model.addAttribute("isAllTab", "all".equals(tab));
         model.addAttribute("query", query != null ? query : "");
+        
+        // 필터 선택 데이터
+        model.addAttribute("departments", nurseService.getAllDepartments().stream()
+                .map(d -> Map.of("id", d.getId(), "name", d.getName(), 
+                                "selected", deptIds != null && deptIds.contains(d.getId())))
+                .toList());
+        model.addAttribute("doctors", nurseService.getAllDoctors().stream()
+                .map(d -> Map.of("id", d.getId(), "name", d.getDisplayName(), 
+                                "deptId", d.getDepartmentId(), // 부서 ID 추가
+                                "selected", doctorIds != null && doctorIds.contains(d.getId())))
+                .toList());
+
+        model.addAttribute("hasPrev", page > 0);
+        model.addAttribute("prevUrl", baseUrl + (page - 1));
+        model.addAttribute("hasNext", page < totalPages - 1);
+        model.addAttribute("nextUrl", baseUrl + (page + 1));
+        model.addAttribute("pageLinks", pageLinks);
+        
         model.addAttribute("items", itemManagerService.getItemList(null));
         model.addAttribute("pageTitle", "처치 관리");
 
         return "nurse/treatment-list";
+    }
+
+    /**
+     * 간호 처치 메모 저장
+     */
+    @PostMapping("/treatment/save-note")
+    public String saveNurseNote(@RequestParam("id") Long id,
+                                @RequestParam("nurseNote") String nurseNote,
+                                RedirectAttributes ra) {
+        try {
+            nurseService.saveNurseNote(id, nurseNote);
+            ra.addFlashAttribute("message", "간호 메모가 저장되었습니다.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/nurse/patient-detail?id=" + id;
     }
 
     /**

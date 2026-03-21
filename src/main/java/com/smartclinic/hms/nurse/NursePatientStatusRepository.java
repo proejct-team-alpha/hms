@@ -60,23 +60,48 @@ public interface NursePatientStatusRepository extends JpaRepository<Reservation,
                      "WHERE r.reservationDate = :date AND r.status = :status " +
                      "AND (:query IS NULL OR :query = '' OR p.name LIKE %:query% OR p.phone LIKE %:query% OR s.name LIKE %:query% OR dep.name LIKE %:query%) "
                      +
-                     "AND (:deptId IS NULL OR dep.id = :deptId) " +
-                     "AND (:doctorId IS NULL OR d.id = :doctorId) " +
+                     "AND (:deptIds IS NULL OR dep.id IN :deptIds) " +
+                     "AND (:doctorIds IS NULL OR d.id IN :doctorIds) " +
                      "AND (:source IS NULL OR r.source = :source) " +
                      "ORDER BY r.timeSlot", countQuery = "SELECT count(r) FROM Reservation r JOIN r.patient p JOIN r.doctor d JOIN d.staff s JOIN r.department dep "
                                    +
                                    "WHERE r.reservationDate = :date AND r.status = :status " +
                                    "AND (:query IS NULL OR :query = '' OR p.name LIKE %:query% OR p.phone LIKE %:query% OR s.name LIKE %:query% OR dep.name LIKE %:query%) "
                                    +
-                                   "AND (:deptId IS NULL OR dep.id = :deptId) " +
-                                   "AND (:doctorId IS NULL OR d.id = :doctorId) " +
+                                   "AND (:deptIds IS NULL OR dep.id IN :deptIds) " +
+                                   "AND (:doctorIds IS NULL OR d.id IN :doctorIds) " +
                                    "AND (:source IS NULL OR r.source = :source)")
-       Page<Reservation> findTodayByStatusWithFiltersPage(
+       Page<Reservation> findTodayByStatusWithMultiFiltersPage(
                      @Param("date") LocalDate date,
                      @Param("status") ReservationStatus status,
                      @Param("query") String query,
-                     @Param("deptId") Long deptId,
-                     @Param("doctorId") Long doctorId,
+                     @Param("deptIds") List<Long> deptIds,
+                     @Param("doctorIds") List<Long> doctorIds,
+                     @Param("source") ReservationSource source,
+                     Pageable pageable);
+
+       @Query(value = "SELECT r FROM Reservation r JOIN FETCH r.patient p JOIN FETCH r.doctor d JOIN FETCH d.staff s JOIN FETCH r.department dep "
+                     +
+                     "WHERE r.reservationDate = :date AND r.status <> :excluded " +
+                     "AND (:query IS NULL OR :query = '' OR p.name LIKE %:query% OR p.phone LIKE %:query% OR s.name LIKE %:query% OR dep.name LIKE %:query%) "
+                     +
+                     "AND (:deptIds IS NULL OR dep.id IN :deptIds) " +
+                     "AND (:doctorIds IS NULL OR d.id IN :doctorIds) " +
+                     "AND (:source IS NULL OR r.source = :source) " +
+                     "ORDER BY r.timeSlot", countQuery = "SELECT count(r) FROM Reservation r JOIN r.patient p JOIN r.doctor d JOIN d.staff s JOIN r.department dep "
+                                   +
+                                   "WHERE r.reservationDate = :date AND r.status <> :excluded " +
+                                   "AND (:query IS NULL OR :query = '' OR p.name LIKE %:query% OR p.phone LIKE %:query% OR s.name LIKE %:query% OR dep.name LIKE %:query%) "
+                                   +
+                                   "AND (:deptIds IS NULL OR dep.id IN :deptIds) " +
+                                   "AND (:doctorIds IS NULL OR d.id IN :doctorIds) " +
+                                   "AND (:source IS NULL OR r.source = :source)")
+       Page<Reservation> findTodayNonCancelledWithMultiFiltersPage(
+                     @Param("date") LocalDate date,
+                     @Param("excluded") ReservationStatus excluded,
+                     @Param("query") String query,
+                     @Param("deptIds") List<Long> deptIds,
+                     @Param("doctorIds") List<Long> doctorIds,
                      @Param("source") ReservationSource source,
                      Pageable pageable);
 
