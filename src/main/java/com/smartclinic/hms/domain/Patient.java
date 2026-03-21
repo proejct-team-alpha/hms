@@ -35,6 +35,12 @@ public class Patient {
     @Column(length = 500)
     private String note;
 
+    @Column(name = "resident_number", length = 8)
+    private String residentNumber; // 예: "940101-2"
+
+    @Column(name = "visit_reason", length = 500)
+    private String visitReason;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

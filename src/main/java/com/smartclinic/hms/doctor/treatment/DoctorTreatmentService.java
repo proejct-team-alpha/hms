@@ -32,23 +32,74 @@ public class DoctorTreatmentService {
 
     public DoctorDashboardDto getDashboardData(String username) {
         LocalDate today = LocalDate.now();
-        List<Reservation> active = doctorReservationRepository.findTodayActiveByDoctor(username, today, ReservationStatus.CANCELLED);
-        List<Reservation> completed = doctorReservationRepository.findTodayByDoctorAndStatus(username, today, ReservationStatus.COMPLETED);
+        // 1. 오늘 전체 데이터 조회 (CANCELLED 제외)
+        List<Reservation> allToday = doctorReservationRepository.findTodayActiveByDoctor(username, today, ReservationStatus.CANCELLED);
 
-        int totalPatients = active.size();
-        int completedCount = completed.size();
-        int waitingCount = (int) active.stream()
-                .filter(r -> r.getStatus() == ReservationStatus.RECEIVED)
+        // 2. 각 상태별 카운트 계산
+        int waitingCount = (int) allToday.stream()
+                .filter(r -> r.getStatus() == ReservationStatus.RECEIVED || r.getStatus() == ReservationStatus.IN_TREATMENT)
                 .count();
+        int completedCount = (int) allToday.stream()
+                .filter(r -> r.getStatus() == ReservationStatus.COMPLETED)
+                .count();
+        int reservedCount = (int) allToday.stream()
+                .filter(r -> r.getStatus() == ReservationStatus.RESERVED)
+                .count();
+        
+        // 의사님 정의: 오늘의 환자 수 = 대기 + 완료
+        int totalToday = waitingCount + completedCount;
 
-        List<DoctorReservationDto> schedulePreview = active.stream()
+        // [수정] 업무 부하 스타일 결정 로직 (명시적 클래스 할당)
+        String boxClass, iconClass, iconName, btnClass;
+        if (waitingCount >= 6) {
+            boxClass = "bg-red-50 border-red-500 text-red-900";
+            iconClass = "bg-red-100 text-red-600";
+            iconName = "alert-triangle";
+            btnClass = "bg-red-600 hover:bg-red-700";
+        } else if (waitingCount >= 3) {
+            boxClass = "bg-orange-50 border-orange-500 text-orange-900";
+            iconClass = "bg-orange-100 text-orange-600";
+            iconName = "zap";
+            btnClass = "bg-orange-600 hover:bg-orange-700";
+        } else if (waitingCount >= 1) {
+            boxClass = "bg-indigo-50 border-indigo-500 text-indigo-900";
+            iconClass = "bg-indigo-100 text-indigo-600";
+            iconName = "bell";
+            btnClass = "bg-indigo-600 hover:bg-indigo-700";
+        } else {
+            boxClass = "bg-slate-50 border-slate-400 text-slate-600";
+            iconClass = "bg-slate-200 text-slate-500";
+            iconName = "check";
+            btnClass = "bg-slate-600 hover:bg-slate-700";
+        }
+
+        // 3. 스케줄 미리보기 리스트 생성 및 정렬 (진료중 > 대기 > 예약 > 완료 순)
+        List<DoctorReservationDto> schedulePreview = allToday.stream()
+                .sorted((r1, r2) -> {
+                    int p1 = getStatusPriority(r1.getStatus());
+                    int p2 = getStatusPriority(r2.getStatus());
+                    if (p1 != p2) return p1 - p2;
+                    return r1.getTimeSlot().compareTo(r2.getTimeSlot());
+                })
+                .limit(12) // 대시보드 가독성을 위해 상위 12명으로 제한
                 .map(r -> {
                     long count = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
                     return new DoctorReservationDto(r, count == 0);
                 })
                 .toList();
 
-        return new DoctorDashboardDto(totalPatients, completedCount, waitingCount, schedulePreview);
+        return new DoctorDashboardDto(totalToday, waitingCount, completedCount, reservedCount, 
+                                     boxClass, iconClass, iconName, btnClass, schedulePreview);
+    }
+
+    private int getStatusPriority(ReservationStatus status) {
+        return switch (status) {
+            case IN_TREATMENT -> 1;
+            case RECEIVED -> 2;
+            case RESERVED -> 3;
+            case COMPLETED -> 4;
+            default -> 5;
+        };
     }
 
     public List<DoctorReservationDto> getTreatmentList(String username) {

@@ -61,7 +61,7 @@
                     {{/detail.isFirstVisit}}
                     <h2 class="text-xl font-bold text-slate-800">
                       {{detail.patientName}}
-                      <span class="text-base font-medium text-slate-400 ml-1">(F / 30세)</span>
+                      <span class="text-base font-medium text-slate-400 ml-1">({{detail.genderAge}})</span>
                     </h2>
                   </div>
                   <div class="text-sm text-slate-500">{{detail.patientPhone}}</div>
@@ -88,7 +88,7 @@
                 <div>
                   <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">내원 사유</h3>
                   <div class="bg-orange-50 text-orange-900 p-3 rounded-xl text-sm border border-orange-100 leading-relaxed">
-                    {{detail.note}}
+                    {{detail.visitReason}}
                   </div>
                 </div>
               </div>

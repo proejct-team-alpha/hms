@@ -83,7 +83,7 @@
                 검색
               </button>
               
-              <!-- 일일 전체 환자 수 표시 (탭/검색에 무관하게 고정) -->
+              <!-- 일일 전체 환자 수 표시 -->
               <div class="ml-2 flex flex-col items-end">
                 <div class="px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 shadow-sm flex items-center gap-2">
                   <i data-feather="users" class="w-4 h-4 text-slate-400"></i>
@@ -146,7 +146,7 @@
 
           <!-- 오른쪽: 리스트 메인 -->
           <div class="flex-1 space-y-4">
-            <!-- 탭 영역 (과거가 아닐 때 - 즉, 오늘과 미래에 노출) -->
+            <!-- 탭 영역 (오늘과 미래에 노출) -->
             {{^isPastDate}}
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex">
               <a href="/doctor/treatment-list?date={{searchDate}}&tab=waiting{{#query}}&query={{query}}{{/query}}" 
@@ -221,15 +221,15 @@
                       </span>
                     </div>
 
-                    <!-- 성별 / 나이 (더미) -->
+                    <!-- 성별 / 나이 (실제 데이터) -->
                     <div class="text-sm font-medium text-slate-600">
-                      F / 30세
+                      {{genderAge}}
                     </div>
 
-                    <!-- 진단명 (완료 시 진단명, 미완료 시 메모) -->
+                    <!-- 진단명 (완료 시 진단명, 미완료 시 내원 사유) -->
                     <div class="text-sm font-semibold text-slate-700 truncate pr-8">
                       {{#diagnosis}}{{diagnosis}}{{/diagnosis}}
-                      {{^diagnosis}}{{note}}{{/diagnosis}}
+                      {{^diagnosis}}{{visitReason}}{{/diagnosis}}
                     </div>
 
                     <!-- 접수 경로 -->
@@ -340,11 +340,7 @@
           ? `<span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[9px] font-bold">초</span>`
           : `<span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[9px] font-bold">재</span>`;
           
-        const isMale = Math.random() > 0.5;
-        const gender = isMale ? 'M' : 'F';
-        const age = Math.floor(Math.random() * (70 - 15 + 1)) + 15;
-
-        const diagnosisOrNote = r.diagnosis || r.note || '';
+        const diagnosisOrNote = r.diagnosis || r.visitReason || '';
         const seq = index + 1; 
 
         return `
@@ -361,7 +357,7 @@
               ${visitType}
               <span class="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">${r.patientName}</span>
             </div>
-            <div class="text-sm font-medium text-slate-600">${gender} / ${age}세</div>
+            <div class="text-sm font-medium text-slate-600">${r.genderAge}</div>
             <div class="text-sm font-semibold text-slate-700 truncate pr-8">${diagnosisOrNote}</div>
             <div class="text-right pr-4">
               <span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.sourceBadgeClass}">${r.sourceText}</span>

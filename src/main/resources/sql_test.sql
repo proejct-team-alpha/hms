@@ -106,7 +106,42 @@ INSERT INTO patient (id, name, phone, email, created_at) VALUES
 (204, '김구라', '010-4444-4444', 'gura@test.com', CURRENT_TIMESTAMP);
 
 INSERT INTO reservation (reservation_number, patient_id, doctor_id, department_id, reservation_date, time_slot, status, source, created_at, updated_at) VALUES
-('RES-LEE-001', 201, 1, 1, CURRENT_DATE, '09:00', 'RECEIVED',  'PHONE',  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('RES-LEE-002', 202, 1, 1, CURRENT_DATE, '09:30', 'IN_TREATMENT',  'WALKIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('RES-LEE-003', 203, 1, 1, CURRENT_DATE, '10:00', 'RECEIVED',  'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('RES-LEE-004', 204, 1, 1, CURRENT_DATE, '10:30', 'RESERVED',  'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- [이영희 의사 전용 대규모 테스트 데이터]
+-- 환자 데이터 보강 (주민번호, 내원 사유 포함)
+INSERT INTO patient (id, name, phone, email, resident_number, visit_reason, created_at) VALUES
+(301, '박노인', '010-3333-0001', 'park@test.com', '600101-1', '만성 고혈압 정기 검진', CURRENT_TIMESTAMP),
+(302, '이지혜', '010-3333-0002', 'lee@test.com',  '880808-2', '심한 편두통 및 어지럼증', CURRENT_TIMESTAMP),
+(303, '최청년', '010-3333-0003', 'choi@test.com', '050505-3', '축구 중 발목 염좌', CURRENT_TIMESTAMP),
+(304, '김학생', '010-3333-0004', 'kim@test.com',  '101010-4', '환절기 알레르기 비염', CURRENT_TIMESTAMP),
+(305, '정중년', '010-3333-0005', 'jung@test.com', '750505-1', '건강검진 결과 상담', CURRENT_TIMESTAMP),
+(306, '한미소', '010-3333-0006', 'han@test.com',  '991231-2', '갑작스러운 복통과 구토', CURRENT_TIMESTAMP),
+(307, '미래인', '010-3333-0007', 'future@test.com','910101-1', '내일 예정된 수술 상담', CURRENT_TIMESTAMP);
+
+-- 과거 데이터 (그저께 완료)
+INSERT INTO reservation (reservation_number, patient_id, doctor_id, department_id, reservation_date, time_slot, status, source, created_at, updated_at) VALUES
+('RES-DUMMY-001', 301, 1, 1, DATEADD('DAY', -2, CURRENT_DATE), '09:00', 'COMPLETED', 'PHONE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('RES-DUMMY-002', 302, 1, 1, DATEADD('DAY', -2, CURRENT_DATE), '10:00', 'COMPLETED', 'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+INSERT INTO treatment_record (reservation_id, doctor_id, diagnosis, prescription, remark, created_at) VALUES
+((SELECT id FROM reservation WHERE reservation_number='RES-DUMMY-001'), 1, '본태성 고혈압', '암로디핀 5mg 1일 1회', '혈압 안정적임, 지속 관찰 요망', CURRENT_TIMESTAMP),
+((SELECT id FROM reservation WHERE reservation_number='RES-DUMMY-002'), 1, '긴장성 두통', '타이레놀 ER 650mg', '스트레스 관리 및 충분한 휴식 권고', CURRENT_TIMESTAMP);
+
+-- 과거 데이터 (어제 완료)
+INSERT INTO reservation (reservation_number, patient_id, doctor_id, department_id, reservation_date, time_slot, status, source, created_at, updated_at) VALUES
+('RES-DUMMY-003', 303, 1, 1, DATEADD('DAY', -1, CURRENT_DATE), '14:00', 'COMPLETED', 'WALKIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('RES-DUMMY-004', 304, 1, 1, DATEADD('DAY', -1, CURRENT_DATE), '15:30', 'COMPLETED', 'PHONE',  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+INSERT INTO treatment_record (reservation_id, doctor_id, diagnosis, prescription, remark, created_at) VALUES
+((SELECT id FROM reservation WHERE reservation_number='RES-DUMMY-003'), 1, '발목 외측 인대 염좌', '소염진통제 및 물리치료', '반깁스 1주일 유지 권장', CURRENT_TIMESTAMP),
+((SELECT id FROM reservation WHERE reservation_number='RES-DUMMY-004'), 1, '알레르기성 비염', '항히스타민제 제제', '외출 시 마스크 착용 당부', CURRENT_TIMESTAMP);
+
+-- 오늘 데이터 추가 (진료 중 및 대기)
+INSERT INTO reservation (reservation_number, patient_id, doctor_id, department_id, reservation_date, time_slot, status, source, created_at, updated_at) VALUES
+('RES-NOW-001', 305, 1, 1, CURRENT_DATE, '11:00', 'IN_TREATMENT', 'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('RES-NOW-002', 306, 1, 1, CURRENT_DATE, '11:30', 'RECEIVED',     'WALKIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- 미래 데이터 (내일 예약)
+INSERT INTO reservation (reservation_number, patient_id, doctor_id, department_id, reservation_date, time_slot, status, source, created_at, updated_at) VALUES
+('RES-FUTURE-001', 307, 1, 1, DATEADD('DAY', 1, CURRENT_DATE), '09:30', 'RESERVED', 'ONLINE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
