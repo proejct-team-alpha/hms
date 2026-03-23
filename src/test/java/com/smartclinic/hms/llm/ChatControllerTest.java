@@ -1,24 +1,16 @@
 package com.smartclinic.hms.llm;
 
-import com.smartclinic.hms.auth.StaffRepository;
-import com.smartclinic.hms.domain.ChatbotHistoryRepository;
+import com.smartclinic.hms.common.LlmWebMvcTestSecurityConfig;
+import com.smartclinic.hms.common.util.SecurityUtils;
 import com.smartclinic.hms.llm.controller.ChatController;
 import com.smartclinic.hms.llm.service.ChatService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -35,7 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ChatController.class)
-@Import(ChatControllerTest.TestSecurityConfig.class)
+@Import(LlmWebMvcTestSecurityConfig.class)
 class ChatControllerTest {
 
     @Autowired
@@ -45,10 +37,7 @@ class ChatControllerTest {
     ChatService chatService;
 
     @MockitoBean
-    ChatbotHistoryRepository chatbotHistoryRepository;
-
-    @MockitoBean
-    StaffRepository staffRepository;
+    SecurityUtils securityUtils;
 
     @Test
     @DisplayName("POST /llm/chatbot/query - 비인증 접근 시 /login 리다이렉트")
@@ -63,7 +52,6 @@ class ChatControllerTest {
     @DisplayName("POST /llm/chatbot/query - DOCTOR 인증 200")
     void query_인증_200() throws Exception {
         given(chatService.callRuleLlmApi(anyString())).willReturn(Mono.just("당직 규정 응답"));
-        given(staffRepository.findByUsernameAndActiveTrue(any())).willReturn(java.util.Optional.empty());
 
         MvcResult result = mockMvc.perform(post("/llm/chatbot/query")
                         .with(user("doctor").roles("DOCTOR"))
@@ -93,9 +81,11 @@ class ChatControllerTest {
     }
 
     @Test
-    @DisplayName("GET /llm/chatbot/history/{staffId} - DOCTOR 인증 200")
+    @DisplayName("GET /llm/chatbot/history/{staffId} - DOCTOR 인증, 본인 staffId 일치 시 200")
     void history_인증_200() throws Exception {
-        given(chatbotHistoryRepository.findByStaff_IdOrderByCreatedAtDesc(any(), any()))
+        // given - securityUtils가 인증된 staffId 1L 반환 (path variable과 일치)
+        given(securityUtils.resolveStaffId()).willReturn(1L);
+        given(chatService.getRuleHistory(any(), any()))
                 .willReturn(Page.empty());
 
         mockMvc.perform(get("/llm/chatbot/history/1")
@@ -103,27 +93,14 @@ class ChatControllerTest {
                 .andExpect(status().isOk());
     }
 
-    @TestConfiguration
-    @EnableWebSecurity
-    static class TestSecurityConfig {
+    @Test
+    @DisplayName("GET /llm/chatbot/history/{staffId} - 타인의 staffId 접근 시 403")
+    void history_타인staffId_403() throws Exception {
+        // given - 인증된 사용자 staffId가 2L이지만 path variable은 1L
+        given(securityUtils.resolveStaffId()).willReturn(2L);
 
-        @Bean
-        SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            return http
-                    .authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/llm/medical/**", "/llm/reservation/**", "/llm/symptom/**").permitAll()
-                            .requestMatchers("/llm/chatbot/**").authenticated()
-                            .anyRequest().authenticated())
-                    .formLogin(form -> form.loginPage("/login").permitAll())
-                    .csrf(csrf -> csrf.ignoringRequestMatchers(
-                            "/llm/medical/**", "/llm/chatbot/**", "/llm/reservation/**", "/llm/symptom/**"))
-                    .build();
-        }
-
-        @Bean
-        UserDetailsService userDetailsService() {
-            return new InMemoryUserDetailsManager(
-                    User.withUsername("doctor").password("{noop}password").roles("DOCTOR").build());
-        }
+        mockMvc.perform(get("/llm/chatbot/history/1")
+                        .with(user("doctor").roles("DOCTOR")))
+                .andExpect(status().isForbidden());
     }
 }

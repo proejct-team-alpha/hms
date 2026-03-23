@@ -1,8 +1,8 @@
 package com.smartclinic.hms.llm;
 
-import com.smartclinic.hms.auth.StaffRepository;
+import com.smartclinic.hms.common.LlmWebMvcTestSecurityConfig;
+import com.smartclinic.hms.common.util.SecurityUtils;
 import com.smartclinic.hms.domain.MedicalHistory;
-import com.smartclinic.hms.domain.MedicalHistoryRepository;
 import com.smartclinic.hms.llm.controller.MedicalController;
 import com.smartclinic.hms.llm.service.DoctorService;
 import com.smartclinic.hms.llm.service.LlmResponseParser;
@@ -10,18 +10,10 @@ import com.smartclinic.hms.llm.service.MedicalService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -39,7 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(MedicalController.class)
-@Import(MedicalControllerTest.TestSecurityConfig.class)
+@Import(LlmWebMvcTestSecurityConfig.class)
 class MedicalControllerTest {
 
     @Autowired
@@ -49,16 +41,13 @@ class MedicalControllerTest {
     MedicalService medicalService;
 
     @MockitoBean
-    MedicalHistoryRepository medicalHistoryRepository;
-
-    @MockitoBean
     DoctorService doctorService;
 
     @MockitoBean
     LlmResponseParser llmResponseParser;
 
     @MockitoBean
-    StaffRepository staffRepository;
+    SecurityUtils securityUtils;
 
     @Test
     @DisplayName("POST /llm/medical/query - 비인증 200 (permitAll)")
@@ -66,8 +55,6 @@ class MedicalControllerTest {
         MedicalHistory fakeHistory = new MedicalHistory("두통", "PENDING");
         given(medicalService.saveMedicalPending(anyString(), any())).willReturn(fakeHistory);
         given(medicalService.callMedicalLlmApi(anyString())).willReturn(Mono.just("두통 관련 LLM 응답"));
-        given(staffRepository.findByUsernameAndActiveTrue(any())).willReturn(java.util.Optional.empty());
-
         MvcResult result = mockMvc.perform(post("/llm/medical/query")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"query\":\"두통이 심해요\"}"))
@@ -100,9 +87,11 @@ class MedicalControllerTest {
     }
 
     @Test
-    @DisplayName("GET /llm/medical/history/{staffId} - 인증 200")
+    @DisplayName("GET /llm/medical/history/{staffId} - 인증, 본인 staffId 일치 시 200")
     void history_인증_200() throws Exception {
-        given(medicalHistoryRepository.findByStaff_IdOrderByCreatedAtDesc(any(), any()))
+        // given - securityUtils가 인증된 staffId 1L 반환 (path variable과 일치)
+        given(securityUtils.resolveStaffId()).willReturn(1L);
+        given(medicalService.getMedicalHistory(any(), any()))
                 .willReturn(Page.empty());
 
         mockMvc.perform(get("/llm/medical/history/1")
@@ -110,27 +99,14 @@ class MedicalControllerTest {
                 .andExpect(status().isOk());
     }
 
-    @TestConfiguration
-    @EnableWebSecurity
-    static class TestSecurityConfig {
+    @Test
+    @DisplayName("GET /llm/medical/history/{staffId} - 타인의 staffId 접근 시 403")
+    void history_타인staffId_403() throws Exception {
+        // given - 인증된 사용자 staffId가 2L이지만 path variable은 1L
+        given(securityUtils.resolveStaffId()).willReturn(2L);
 
-        @Bean
-        SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            return http
-                    .authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/llm/medical/**", "/llm/reservation/**", "/llm/symptom/**").permitAll()
-                            .requestMatchers("/llm/chatbot/**").authenticated()
-                            .anyRequest().authenticated())
-                    .formLogin(form -> form.loginPage("/login").permitAll())
-                    .csrf(csrf -> csrf.ignoringRequestMatchers(
-                            "/llm/medical/**", "/llm/chatbot/**", "/llm/reservation/**", "/llm/symptom/**"))
-                    .build();
-        }
-
-        @Bean
-        UserDetailsService userDetailsService() {
-            return new InMemoryUserDetailsManager(
-                    User.withUsername("doctor").password("{noop}password").roles("DOCTOR").build());
-        }
+        mockMvc.perform(get("/llm/medical/history/1")
+                        .with(user("doctor").roles("DOCTOR")))
+                .andExpect(status().isForbidden());
     }
 }

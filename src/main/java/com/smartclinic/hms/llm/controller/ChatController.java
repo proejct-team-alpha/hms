@@ -1,8 +1,7 @@
 package com.smartclinic.hms.llm.controller;
 
-import com.smartclinic.hms.auth.StaffRepository;
-import com.smartclinic.hms.domain.ChatbotHistoryRepository;
-import com.smartclinic.hms.domain.Staff;
+import com.smartclinic.hms.common.exception.CustomException;
+import com.smartclinic.hms.common.util.SecurityUtils;
 import com.smartclinic.hms.llm.dto.ChatbotHistoryResponse;
 import com.smartclinic.hms.llm.dto.LlmRequest;
 import com.smartclinic.hms.llm.service.ChatService;
@@ -12,8 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -25,15 +22,14 @@ import reactor.core.publisher.Mono;
 public class ChatController {
 
     private final ChatService chatService;
-    private final ChatbotHistoryRepository chatbotHistoryRepository;
-    private final StaffRepository staffRepository;
+    private final SecurityUtils securityUtils;
 
     @PostMapping("/query")
     public Mono<String> handleRuleQuery(
             @RequestBody LlmRequest request,
             @RequestHeader(value = "X-Session-Id", required = false) String sessionId) {
 
-        Long staffId = resolveStaffId();
+        Long staffId = securityUtils.resolveStaffId();
         log.debug("Rule Q&A 쿼리 수신 - query: {}, staffId: {}", request.getQuery(), staffId);
 
         String effectiveSessionId = sessionId != null ? sessionId
@@ -63,17 +59,13 @@ public class ChatController {
             @PathVariable Long staffId,
             @PageableDefault(size = 20) Pageable pageable) {
 
+        Long authenticatedStaffId = securityUtils.resolveStaffId();
+        if (authenticatedStaffId == null || !authenticatedStaffId.equals(staffId)) {
+            throw CustomException.forbidden("본인의 히스토리만 조회할 수 있습니다.");
+        }
+
         log.debug("챗봇 히스토리 조회 - staffId: {}, page: {}", staffId, pageable.getPageNumber());
-        return chatbotHistoryRepository.findByStaff_IdOrderByCreatedAtDesc(staffId, pageable)
-                .map(ChatbotHistoryResponse::from);
+        return chatService.getRuleHistory(staffId, pageable);
     }
 
-    private Long resolveStaffId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-            return null;
-        }
-        return staffRepository.findByUsernameAndActiveTrue(auth.getName())
-                .map(Staff::getId).orElse(null);
-    }
 }

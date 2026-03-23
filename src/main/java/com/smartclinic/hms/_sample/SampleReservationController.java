@@ -13,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
@@ -52,6 +53,7 @@ import java.util.Map;
  *   - /admin/**        : ROLE_ADMIN 전용
  * ════════════════════════════════════════════════════════════════════════════
  */
+@Profile("dev")
 @Slf4j
 @Controller
 @Validated                              // Query Param·Path Param 검증 활성화

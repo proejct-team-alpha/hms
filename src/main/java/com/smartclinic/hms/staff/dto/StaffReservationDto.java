@@ -27,7 +27,41 @@ public class StaffReservationDto {
     private final boolean canReceive;
     private final boolean canCancel;
 
+    // ==========================================
+    // [신규 추가] 팀 프로젝트 - 환자 초재진 정보
+    // ==========================================
+    
+    /**
+     * 초진 여부 (true: 초진, false: 재진)
+     * 진료 완료된 이력이 0건이면 초진으로 표시됩니다.
+     */
+    private final boolean isFirstVisit;
+
+    /**
+     * 총 진료 완료 횟수
+     */
+    private final long visitCount;
+
+    /**
+     * 과거 진료 이력 목록 (최신순)
+     */
+    private final java.util.List<com.smartclinic.hms.domain.PatientHistoryDto> history;
+
     public StaffReservationDto(Reservation r) {
+        this(r, 0L, new java.util.ArrayList<>()); // 기본값 처리
+    }
+
+    public StaffReservationDto(Reservation r, long completedCount) {
+        this(r, completedCount, new java.util.ArrayList<>()); // 히스토리 없이 생성하는 경우
+    }
+
+    /**
+     * 초재진 정보를 포함한 상세 생성자
+     * @param r 예약 엔티티
+     * @param completedCount 해당 환자의 진료 완료된 예약 건수
+     * @param history 과거 전체 히스토리 목록
+     */
+    public StaffReservationDto(Reservation r, long completedCount, java.util.List<com.smartclinic.hms.domain.PatientHistoryDto> history) {
         this.id = r.getId();
         this.reservationNumber = r.getReservationNumber();
         this.patientName = r.getPatient().getName();
@@ -40,6 +74,7 @@ public class StaffReservationDto {
         this.departmentName = r.getDepartment().getName();
         this.doctorName = r.getDoctor().getStaff().getName();
         this.cancellationReason = r.getCancellationReason();
+        this.history = history;
 
         this.statusText = switch (r.getStatus()) {
             case RESERVED -> "접수 대기";
@@ -69,5 +104,8 @@ public class StaffReservationDto {
         this.canCancel = r.getStatus() == ReservationStatus.RESERVED
                 || r.getStatus() == ReservationStatus.RECEIVED;
 
+        // 초재진 판별 로직 적용
+        this.visitCount = completedCount;
+        this.isFirstVisit = (completedCount == 0);
     }
 }

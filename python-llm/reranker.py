@@ -44,8 +44,7 @@ async def rerank_results(
     try:
         from ollama_service import generate_with_ollama
 
-        scored = []
-        for item in results:
+        async def _score_one(item: dict) -> dict:
             doc_text = item.get("document", "")[:300]
             prompt = (
                 f"질문: {query}\n"
@@ -59,14 +58,15 @@ async def rerank_results(
                     temperature=0.1,
                     client=client,
                 )
-                # 숫자만 추출
                 match = re.search(r"(\d+)", score_text.strip())
                 score = int(match.group(1)) if match else 5
                 score = min(max(score, 0), 10)
             except Exception:
-                score = 5  # 평가 실패 시 중간 점수
+                score = 5
+            return {**item, "_rerank_score": score}
 
-            scored.append({**item, "_rerank_score": score})
+        import asyncio
+        scored = await asyncio.gather(*[_score_one(item) for item in results])
 
         # 점수 내림차순 정렬
         scored.sort(key=lambda x: x["_rerank_score"], reverse=True)

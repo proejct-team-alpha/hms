@@ -11,6 +11,14 @@ import java.time.LocalTime;
 
 /**
  * 예약 엔티티 (ERD §2.5)
+ *
+ * <h3>취소 API 선택 가이드 (H-01)</h3>
+ * <ul>
+ *   <li>{@link #cancel(String)} — 접수(Staff) 화면용 <strong>부분 취소</strong>. {@code RESERVED} → 최종 {@code CANCELLED},
+ *       {@code RECEIVED} → 접수 롤백 {@code RESERVED}. {@code IN_TREATMENT}에서는 호출 불가(명시적 예외).</li>
+ *   <li>{@link #cancelFully(String)} — 비회원 취소·예약 변경 시 구예약 폐기 등 <strong>무조건 CANCELLED</strong> 전이.
+ *       {@link com.smartclinic.hms.reservation.reservation.ReservationService} 에서 사용.</li>
+ * </ul>
  */
 @Entity
 @Table(name = "reservation",
@@ -134,15 +142,33 @@ public class Reservation {
         if (this.status == ReservationStatus.CANCELLED) {
             throw new IllegalStateException("이미 취소된 예약");
         }
+        if (this.status == ReservationStatus.IN_TREATMENT) {
+            throw new IllegalStateException(
+                    "진료 중인 예약은 접수 화면 취소로 되돌릴 수 없습니다. 진료 완료 처리 또는 관리자 취소를 사용하세요.");
+        }
 
         if (this.status == ReservationStatus.RECEIVED) {
             // 진료 대기 상태에서 취소하면 접수 대기 상태로 되돌림
             this.status = ReservationStatus.RESERVED;
-            // 필요하다면 이때는 사유를 저장하지 않거나 별도 로그를 남길 수 있음
         } else if (this.status == ReservationStatus.RESERVED) {
             // 접수 대기 상태에서 취소하면 최종 취소 상태로 변경
             this.status = ReservationStatus.CANCELLED;
             this.cancellationReason = reason;
         }
+    }
+
+    /**
+     * 현재 상태와 무관하게 예약을 즉시 CANCELLED로 전이한다.
+     * 비회원 취소, 예약 변경(구 예약 폐기) 등 상태 단계와 무관하게 최종 취소가 필요한 경우에 사용한다.
+     */
+    public void cancelFully(String reason) {
+        if (this.status == ReservationStatus.COMPLETED) {
+            throw new IllegalStateException("진료 완료된 예약은 취소 불가");
+        }
+        if (this.status == ReservationStatus.CANCELLED) {
+            throw new IllegalStateException("이미 취소된 예약");
+        }
+        this.status = ReservationStatus.CANCELLED;
+        this.cancellationReason = reason;
     }
 }

@@ -1,9 +1,8 @@
 package com.smartclinic.hms.llm.controller;
 
-import com.smartclinic.hms.auth.StaffRepository;
+import com.smartclinic.hms.common.exception.CustomException;
+import com.smartclinic.hms.common.util.SecurityUtils;
 import com.smartclinic.hms.domain.MedicalHistory;
-import com.smartclinic.hms.domain.MedicalHistoryRepository;
-import com.smartclinic.hms.domain.Staff;
 import com.smartclinic.hms.llm.dto.*;
 import com.smartclinic.hms.llm.service.DoctorService;
 import com.smartclinic.hms.llm.service.LlmResponseParser;
@@ -14,8 +13,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -29,14 +26,13 @@ import java.util.List;
 public class MedicalController {
 
     private final MedicalService medicalService;
-    private final MedicalHistoryRepository medicalHistoryRepository;
     private final DoctorService doctorService;
     private final LlmResponseParser llmResponseParser;
-    private final StaffRepository staffRepository;
+    private final SecurityUtils securityUtils;
 
     @PostMapping("/query")
     public Mono<String> handleMedicalQuery(@RequestBody LlmRequest request) {
-        Long staffId = resolveStaffId();
+        Long staffId = securityUtils.resolveStaffId();
         log.debug("Medical LLM 쿼리 수신 - query: {}, staffId: {}", request.getQuery(), staffId);
 
         MedicalHistory history = medicalService.saveMedicalPending(request.getQuery(), staffId);
@@ -56,7 +52,7 @@ public class MedicalController {
 
     @PostMapping("/query/consult")
     public Mono<MedicalLlmResponse> handleMedicalQueryWithDoctors(@RequestBody LlmRequest request) {
-        Long staffId = resolveStaffId();
+        Long staffId = securityUtils.resolveStaffId();
         log.debug("Medical+Doctor 쿼리 수신 - query: {}, staffId: {}", request.getQuery(), staffId);
 
         MedicalHistory history = medicalService.saveMedicalPending(request.getQuery(), staffId);
@@ -93,17 +89,13 @@ public class MedicalController {
             @PathVariable Long staffId,
             @PageableDefault(size = 20) Pageable pageable) {
 
+        Long authenticatedStaffId = securityUtils.resolveStaffId();
+        if (authenticatedStaffId == null || !authenticatedStaffId.equals(staffId)) {
+            throw CustomException.forbidden("본인의 히스토리만 조회할 수 있습니다.");
+        }
+
         log.debug("의학 히스토리 조회 - staffId: {}, page: {}", staffId, pageable.getPageNumber());
-        return medicalHistoryRepository.findByStaff_IdOrderByCreatedAtDesc(staffId, pageable)
-                .map(MedicalHistoryResponse::from);
+        return medicalService.getMedicalHistory(staffId, pageable);
     }
 
-    private Long resolveStaffId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-            return null;
-        }
-        return staffRepository.findByUsernameAndActiveTrue(auth.getName())
-                .map(Staff::getId).orElse(null);
-    }
 }

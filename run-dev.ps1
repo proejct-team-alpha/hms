@@ -30,13 +30,15 @@ if (Test-Path $EnvPath) {
     Write-Host "  copy .env.example .env" -ForegroundColor Gray
 }
 
-# CLAUDE_API_KEY 미설정 시 경고 (LLM 기능 사용 불가)
-if (-not $env:CLAUDE_API_KEY) {
-    Write-Host "[run-dev] CLAUDE_API_KEY 가 설정되지 않았습니다. LLM(증상 분석, 챗봇) 기능은 동작하지 않습니다." -ForegroundColor Yellow
-}
+# ─────────────────────────────────────────────────────────────────────────────
+# dev 환경: prod 전용 datasource 환경변수 제거 (H2 사용)
+# ─────────────────────────────────────────────────────────────────────────────
+[Environment]::SetEnvironmentVariable("SPRING_DATASOURCE_URL", $null, "Process")
+[Environment]::SetEnvironmentVariable("SPRING_DATASOURCE_USERNAME", $null, "Process")
+[Environment]::SetEnvironmentVariable("SPRING_DATASOURCE_PASSWORD", $null, "Process")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Spring Boot 실행
 # ─────────────────────────────────────────────────────────────────────────────
 Set-Location $ProjectRoot
-& .\gradlew.bat bootRun
+& .\gradlew.bat bootRun --args='--spring.profiles.active=dev'

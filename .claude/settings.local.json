@@ -79,7 +79,11 @@
       "Bash(curl -s -o /dev/null -w \"HTTP_CODE: %{http_code}\\\\nTIME_TOTAL: %{time_total}s\\\\nTIME_CONNECT: %{time_connect}s\\\\nTIME_STARTTRANSFER: %{time_starttransfer}s\\\\n\" http://localhost:8000/docs)",
       "Bash(curl -s http://localhost:8000/)",
       "Bash(curl -s -w \"\\\\n---TIMING---\\\\nHTTP_CODE: %{http_code}\\\\nTIME_CONNECT: %{time_connect}s\\\\nTIME_STARTTRANSFER\\(TTFB\\): %{time_starttransfer}s\\\\nTIME_TOTAL: %{time_total}s\\\\nSIZE_DOWNLOAD: %{size_download} bytes\\\\n\" -X POST http://localhost:8000/infer/medical -H \"Content-Type: application/json\" -d '{\"\"query\"\": \"\"두통이 심하고 어지러워요\"\", \"\"max_length\"\": 512, \"\"temperature\"\": 0.3}')",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(python -m pytest tests/test_typo_corrector.py tests/test_response_cleaner.py tests/test_schemas.py -v)",
+      "Bash(python -m pytest tests/test_infer.py -v)",
+      "Bash(pip list:*)",
+      "Bash(.venv/Scripts/python -m pytest tests/test_infer.py -v)"
     ],
     "deny": [],
     "ask": []

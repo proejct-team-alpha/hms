@@ -10,8 +10,6 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import jakarta.persistence.LockModeType;
-
 // [W2-#4 작업 목록]
 // DONE 1. JpaRepository<Reservation, Long> 구현
 
@@ -27,86 +25,107 @@ import jakarta.persistence.LockModeType;
 import com.smartclinic.hms.domain.Reservation;
 import com.smartclinic.hms.domain.ReservationStatus;
 
+import jakarta.persistence.LockModeType;
+
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
-        Optional<Reservation> findByReservationNumber(String reservationNumber);
+    Optional<Reservation> findByReservationNumber(String reservationNumber);
 
-        // '-' 제거 정규화 전화번호와 이름으로 조회
-        @Query("SELECT r FROM Reservation r WHERE REPLACE(r.patient.phone, '-', '') = :phone AND r.patient.name = :name")
-        List<Reservation> findByNormalizedPhoneAndName(@Param("phone") String phone, @Param("name") String name);
+    // '-' 제거 정규화 전화번호와 이름으로 조회
+    @Query("SELECT r FROM Reservation r WHERE REPLACE(r.patient.phone, '-', '') = :phone AND r.patient.name = :name")
+    List<Reservation> findByNormalizedPhoneAndName(@Param("phone") String phone, @Param("name") String name);
 
-        boolean existsByDoctor_IdAndReservationDateAndTimeSlotAndStatusNot(
-                        Long doctorId, LocalDate reservationDate, String timeSlot, ReservationStatus status);
+    boolean existsByDoctor_IdAndReservationDateAndTimeSlotAndStatusNot(
+            Long doctorId, LocalDate reservationDate, String timeSlot, ReservationStatus status);
 
-        long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+    long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
-        long countByReservationDate(LocalDate reservationDate);
+    long countByReservationDate(LocalDate reservationDate);
 
-        @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date AND r.status <> :excluded ORDER BY r.timeSlot")
-        List<Reservation> findTodayExcludingStatus(@Param("date") LocalDate date,
-                        @Param("excluded") ReservationStatus excluded);
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date AND r.status <> :excluded ORDER BY r.timeSlot")
+    List<Reservation> findTodayExcludingStatus(@Param("date") LocalDate date,
+            @Param("excluded") ReservationStatus excluded);
 
-        @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date AND r.status = :status ORDER BY r.timeSlot")
-        List<Reservation> findTodayByStatus(@Param("date") LocalDate date, @Param("status") ReservationStatus status);
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date AND r.status = :status ORDER BY r.timeSlot")
+    List<Reservation> findTodayByStatus(@Param("date") LocalDate date, @Param("status") ReservationStatus status);
 
-        @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate >= :fromDate AND r.status <> :excluded ORDER BY r.reservationDate, r.timeSlot")
-        List<Reservation> findFromDateExcludingStatus(@Param("fromDate") LocalDate fromDate,
-                        @Param("excluded") ReservationStatus excluded);
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate >= :fromDate AND r.status <> :excluded ORDER BY r.reservationDate, r.timeSlot")
+    List<Reservation> findFromDateExcludingStatus(@Param("fromDate") LocalDate fromDate,
+            @Param("excluded") ReservationStatus excluded);
 
-        @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate >= :fromDate AND r.status = :status ORDER BY r.reservationDate, r.timeSlot")
-        List<Reservation> findFromDateByStatus(@Param("fromDate") LocalDate fromDate,
-                        @Param("status") ReservationStatus status);
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate >= :fromDate AND r.status = :status ORDER BY r.reservationDate, r.timeSlot")
+    List<Reservation> findFromDateByStatus(@Param("fromDate") LocalDate fromDate,
+            @Param("status") ReservationStatus status);
 
-        @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date ORDER BY r.timeSlot")
-        List<Reservation> findTodayAll(@Param("date") LocalDate date);
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date ORDER BY r.timeSlot")
+    List<Reservation> findTodayAll(@Param("date") LocalDate date);
 
-        @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate >= :fromDate ORDER BY r.reservationDate, r.timeSlot")
-        List<Reservation> findFromDateAll(@Param("fromDate") LocalDate fromDate);
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate >= :fromDate ORDER BY r.reservationDate, r.timeSlot")
+    List<Reservation> findFromDateAll(@Param("fromDate") LocalDate fromDate);
 
-        @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.id = :id")
-        Optional<Reservation> findByIdWithDetails(@Param("id") Long id);
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.id = :id")
+    Optional<Reservation> findByIdWithDetails(@Param("id") Long id);
 
-        // H-03: 비관적 락 — 예약 변경 시 동시 수정 직렬화
-        @Lock(LockModeType.PESSIMISTIC_WRITE)
-        @Query("SELECT r FROM Reservation r WHERE r.id = :id")
-        Optional<Reservation> findByIdForUpdate(@Param("id") Long id);
+    // H-03: 비관적 락 — 예약 변경 시 동시 수정 직렬화
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT r FROM Reservation r WHERE r.id = :id")
+    Optional<Reservation> findByIdForUpdate(@Param("id") Long id);
 
-        // 직접 예약 페이지용 — CANCELLED 제외한 예약된 슬롯 조회
-        @Query("SELECT r.timeSlot FROM Reservation r " +
-               "WHERE r.doctor.id = :doctorId " +
-               "AND r.reservationDate = :date " +
-               "AND r.status <> :excluded")
-        List<String> findBookedTimeSlots(
-                @Param("doctorId") Long doctorId,
-                @Param("date") LocalDate date,
-                @Param("excluded") ReservationStatus excluded);
+    // 직접 예약 페이지용 — CANCELLED 제외한 예약된 슬롯 조회
+    @Query("SELECT r.timeSlot FROM Reservation r " +
+            "WHERE r.doctor.id = :doctorId " +
+            "AND r.reservationDate = :date " +
+            "AND r.status <> :excluded")
+    List<String> findBookedTimeSlots(
+            @Param("doctorId") Long doctorId,
+            @Param("date") LocalDate date,
+            @Param("excluded") ReservationStatus excluded);
 
-        // LLM 예약 슬롯 중복 체크 — startTime 기반
-        long countByDoctor_IdAndReservationDateAndStartTime(
-                Long doctorId, java.time.LocalDate date, java.time.LocalTime startTime);
+    // LLM 예약 슬롯 중복 체크 — startTime 기반
+    long countByDoctor_IdAndReservationDateAndStartTime(
+            Long doctorId, java.time.LocalDate date, java.time.LocalTime startTime);
 
-        // LLM 예약 — 날짜 범위 내 예약된 슬롯 벌크 조회 (N+1 방지)
-        @Query("""
-            SELECT r.reservationDate, r.startTime
-            FROM Reservation r
-            WHERE r.doctor.id = :doctorId
-              AND r.reservationDate BETWEEN :startDate AND :endDate
-              AND r.status <> 'CANCELLED'
-            """)
-        List<Object[]> findBookedSlots(
-                @Param("doctorId") Long doctorId,
-                @Param("startDate") LocalDate startDate,
-                @Param("endDate") LocalDate endDate);
+    // LLM 슬롯 조회용 — 날짜 범위 내 예약된 (date, startTime) 배치 조회 (N+1 방지)
+    @Query("SELECT r.reservationDate, r.startTime FROM Reservation r " +
+            "WHERE r.doctor.id = :doctorId " +
+            "AND r.reservationDate BETWEEN :fromDate AND :toDate " +
+            "AND r.status <> com.smartclinic.hms.domain.ReservationStatus.CANCELLED")
+    List<Object[]> findBookedSlotsBetween(
+            @Param("doctorId") Long doctorId,
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate);
 
-        // 예약 변경 페이지용 — 현재 수정 중인 예약 제외
-        @Query("SELECT r.timeSlot FROM Reservation r " +
-               "WHERE r.doctor.id = :doctorId " +
-               "AND r.reservationDate = :date " +
-               "AND r.status <> :excluded " +
-               "AND r.id <> :excludeId")
-        List<String> findBookedTimeSlotsExcluding(
-                @Param("doctorId") Long doctorId,
-                @Param("date") LocalDate date,
-                @Param("excluded") ReservationStatus excluded,
-                @Param("excludeId") Long excludeId);
+    // 예약 변경 페이지용 — 현재 수정 중인 예약 제외
+    @Query("SELECT r.timeSlot FROM Reservation r " +
+            "WHERE r.doctor.id = :doctorId " +
+            "AND r.reservationDate = :date " +
+            "AND r.status <> :excluded " +
+            "AND r.id <> :excludeId")
+    List<String> findBookedTimeSlotsExcluding(
+            @Param("doctorId") Long doctorId,
+            @Param("date") LocalDate date,
+            @Param("excluded") ReservationStatus excluded,
+            @Param("excludeId") Long excludeId);
+
+    // ==========================================
+    // [신규 추가] 환자 초재진 판별 및 히스토리 관리용
+    // ==========================================
+
+    /**
+     * 특정 환자의 특정 상태(예: COMPLETED) 예약 건수를 조회합니다.
+     * (0건이면 초진, 1건 이상이면 재진으로 판단하는 근거가 됩니다.)
+     */
+    long countByPatient_IdAndStatus(Long patientId, ReservationStatus status);
+
+    /**
+     * 특정 환자의 모든 예약 이력을 최신순으로 조회합니다.
+     */
+    @Query("SELECT r FROM Reservation r " +
+            "JOIN FETCH r.patient " +
+            "JOIN FETCH r.doctor d " +
+            "JOIN FETCH d.staff " +
+            "JOIN FETCH r.department " +
+            "WHERE r.patient.id = :patientId " +
+            "ORDER BY r.reservationDate DESC, r.timeSlot DESC")
+    List<Reservation> findByPatient_IdOrderByReservationDateDesc(@Param("patientId") Long patientId);
 }

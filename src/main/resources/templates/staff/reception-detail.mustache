@@ -31,8 +31,14 @@
               </div>
               <div>
                 <div class="flex items-center gap-2 mb-1">
+                  {{#detail.isFirstVisit}}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500 shrink-0">초</span>
+                  {{/detail.isFirstVisit}}
+                  {{^detail.isFirstVisit}}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500 shrink-0">재</span>
+                  {{/detail.isFirstVisit}}
                   <h2 class="text-xl font-bold text-slate-800">{{detail.patientName}}</h2>
-                  <span class="px-2.5 py-0.5 rounded-full text-xs font-medium {{detail.sourceBadgeClass}}">
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-medium {{detail.sourceBadgeClass}} ml-1">
                     {{detail.sourceText}} 예약
                   </span>
                 </div>
@@ -177,6 +183,74 @@
           </div>
         </div>
       </div>
+
+      <!-- [신규] 과거 예약 및 진료 이력 섹션 -->
+      <div class="mt-8 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-6 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i data-feather="clock" class="w-5 h-5 text-indigo-600"></i>
+            <h2 class="text-lg font-bold text-slate-800">과거 예약 및 진료 이력</h2>
+          </div>
+          <!-- 페이징 컨트롤 -->
+          <div id="history-pagination" class="flex items-center gap-3" style="display: none;">
+            <button type="button" id="history-prev" class="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+              <i data-feather="chevron-left" class="w-4 h-4"></i>
+            </button>
+            <span class="text-xs font-bold text-slate-500">
+              <span id="history-current-page" class="text-indigo-600">1</span> / <span id="history-total-pages">1</span>
+            </span>
+            <button type="button" id="history-next" class="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+              <i data-feather="chevron-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="p-6">
+          {{#detail.history.size}}
+            <div id="history-list-container" class="space-y-8 relative before:absolute before:inset-0 before:left-4 before:w-0.5 before:bg-slate-100 before:content-['']">
+              {{#detail.history}}
+                <div class="history-item relative pl-10 transition-all duration-300">
+                  <!-- 타임라인 점 -->
+                  <div class="absolute left-2.5 top-1.5 w-3.5 h-3.5 rounded-full bg-white border-4 border-indigo-500 shadow-sm"></div>
+                  
+                  <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-4 transition-all hover:border-indigo-200 hover:bg-white hover:shadow-md">
+                    <div class="flex justify-between items-start">
+                      <div>
+                        <div class="text-sm font-bold text-slate-800 mb-0.5">{{date}}</div>
+                        <div class="text-xs font-medium text-slate-500">{{deptName}} · {{doctorName}} 의사</div>
+                      </div>
+                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold {{statusBadgeClass}}">{{statusText}}</span>
+                    </div>
+                    
+                    <!-- 진료 완료 상태일 때만 진단명/처방내역 표시 -->
+                    {{#diagnosis}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                      <div class="space-y-1">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">진단명</span>
+                        <div class="text-sm text-slate-700">{{diagnosis}}</div>
+                      </div>
+                      <div class="space-y-1">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">처방 내역</span>
+                        <div class="text-sm text-slate-600">{{prescription}}</div>
+                      </div>
+                    </div>
+                    {{/diagnosis}}
+                  </div>
+                </div>
+              {{/detail.history}}
+            </div>
+          {{/detail.history.size}}
+          
+          {{^detail.history.size}}
+            <div class="py-12 flex flex-col items-center justify-center text-slate-400 gap-3">
+              <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
+                <i data-feather="folder" class="w-8 h-8 opacity-20"></i>
+              </div>
+              <p class="text-sm font-medium">과거 예약 및 진료 기록이 없습니다.</p>
+            </div>
+          {{/detail.history.size}}
+        </div>
+      </div>
     </main>
 
     {{> common/footer-staff}}
@@ -184,6 +258,60 @@
 
   <script>
     feather.replace();
+
+    // ── 과거 예약 히스토리 페이징 (3개씩) ──
+    (function() {
+      var HISTORY_PAGE_SIZE = 3;
+      var historyPage = 1;
+      var items = document.querySelectorAll('.history-item');
+      var total = items.length;
+      var totalPages = Math.ceil(total / HISTORY_PAGE_SIZE);
+
+      if (total > HISTORY_PAGE_SIZE) {
+        document.getElementById('history-pagination').style.display = 'flex';
+        document.getElementById('history-total-pages').textContent = totalPages;
+      }
+
+      function renderHistory() {
+        var start = (historyPage - 1) * HISTORY_PAGE_SIZE;
+        var end = start + HISTORY_PAGE_SIZE;
+
+        items.forEach(function(item, index) {
+          if (index >= start && index < end) {
+            item.style.display = 'block';
+            setTimeout(function() { item.style.opacity = '1'; }, 10);
+          } else {
+            item.style.display = 'none';
+            item.style.opacity = '0';
+          }
+        });
+
+        document.getElementById('history-current-page').textContent = historyPage;
+        document.getElementById('history-prev').disabled = (historyPage <= 1);
+        document.getElementById('history-next').disabled = (historyPage >= totalPages);
+      }
+
+      var prevBtn = document.getElementById('history-prev');
+      var nextBtn = document.getElementById('history-next');
+
+      if (prevBtn && nextBtn) {
+        prevBtn.addEventListener('click', function() {
+          if (historyPage > 1) {
+            historyPage--;
+            renderHistory();
+          }
+        });
+
+        nextBtn.addEventListener('click', function() {
+          if (historyPage < totalPages) {
+            historyPage++;
+            renderHistory();
+          }
+        });
+      }
+
+      if (total > 0) renderHistory();
+    })();
 
     function toggleEdit(isEdit) {
       document.getElementById('editBtn').classList.toggle('hidden', isEdit);

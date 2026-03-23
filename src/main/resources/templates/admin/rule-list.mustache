@@ -14,7 +14,10 @@
     {{> common/header-staff}}
 
     <main class="content-wrapper">
-      <div class="space-y-6 max-w-6xl mx-auto">
+      <div
+        class="space-y-6 max-w-6xl mx-auto"
+        data-rule-list-page
+      >
         <div class="flex items-center justify-between mb-6">
           <div>
             <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
@@ -31,13 +34,30 @@
               {{/model.hasPages}}
             </div>
             <a
-              href="/admin/rule/form"
+              href="/admin/rule/new"
               class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
             >
               규칙 등록
             </a>
           </div>
         </div>
+
+        {{#successMessage}}
+          <div class="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+            {{successMessage}}
+          </div>
+        {{/successMessage}}
+        {{#errorMessage}}
+          <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {{errorMessage}}
+          </div>
+        {{/errorMessage}}
+
+        <div
+          data-rule-list-toast
+          class="hidden fixed top-6 right-6 z-50 max-w-sm rounded-xl border px-4 py-3 text-sm font-medium shadow-lg"
+          aria-live="polite"
+        ></div>
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <form method="get" action="/admin/rule/list" class="p-4 border-b border-slate-200 bg-slate-50">
@@ -107,12 +127,24 @@
                 <th class="p-4 font-medium">제목</th>
                 <th class="p-4 font-medium">카테고리</th>
                 <th class="p-4 font-medium">상태</th>
+                <th class="p-4 font-medium text-right">관리</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-200">
+            <tbody
+              class="divide-y divide-slate-200"
+              data-rule-table-body
+              data-empty-message="조회된 규칙이 없습니다."
+            >
               {{#model.rules}}
-                <tr class="hover:bg-slate-50 transition-colors">
-                  <td class="p-4 text-sm font-semibold text-slate-800">{{title}}</td>
+                <tr
+                  class="hover:bg-slate-50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:ring-inset"
+                  data-rule-row
+                  data-rule-detail-url="/admin/rule/detail?ruleId={{id}}"
+                  tabindex="0"
+                >
+                  <td class="p-4 text-sm font-semibold text-slate-800">
+                    {{title}}
+                  </td>
                   <td class="p-4">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700">
                       {{categoryText}}
@@ -123,11 +155,22 @@
                       {{activeText}}
                     </span>
                   </td>
+                  <td class="p-4 text-right">
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-sm font-medium text-red-600 hover:bg-red-100 transition-colors"
+                      data-rule-delete-button
+                      data-rule-delete-url="/admin/api/rules/{{id}}"
+                    >
+                      <i data-feather="trash-2" class="w-4 h-4"></i>
+                      삭제
+                    </button>
+                  </td>
                 </tr>
               {{/model.rules}}
               {{^model.rules}}
-                <tr>
-                  <td colspan="3" class="p-8 text-center text-slate-500">조회된 규칙이 없습니다.</td>
+                <tr data-rule-empty-row>
+                  <td colspan="4" class="p-8 text-center text-slate-500">조회된 규칙이 없습니다.</td>
                 </tr>
               {{/model.rules}}
             </tbody>
@@ -155,6 +198,190 @@
 
   <script>
     feather.replace();
+
+    (function () {
+      const page = document.querySelector('[data-rule-list-page]');
+
+      if (!page) {
+        return;
+      }
+
+      const toast = page.querySelector('[data-rule-list-toast]');
+      const tableBody = page.querySelector('[data-rule-table-body]');
+      const csrfToken = '{{_csrf.token}}';
+      const emptyMessage = tableBody ? tableBody.dataset.emptyMessage : '';
+      let toastTimerId;
+
+      function showToast(type, message) {
+        if (!toast) {
+          return;
+        }
+
+        if (toastTimerId) {
+          window.clearTimeout(toastTimerId);
+        }
+
+        toast.className = 'fixed top-6 right-6 z-50 max-w-sm rounded-xl border px-4 py-3 text-sm font-medium shadow-lg';
+
+        if (type === 'success') {
+          toast.classList.add('border-green-200', 'bg-green-50', 'text-green-700');
+        } else {
+          toast.classList.add('border-red-200', 'bg-red-50', 'text-red-700');
+        }
+
+        toast.textContent = message;
+        toast.classList.remove('hidden');
+
+        toastTimerId = window.setTimeout(function () {
+          toast.classList.add('hidden');
+        }, 2500);
+      }
+
+      function ensureEmptyStateRow() {
+        if (!tableBody) {
+          return;
+        }
+
+        const remainingRows = tableBody.querySelectorAll('[data-rule-row]');
+        const existingEmptyRow = tableBody.querySelector('[data-rule-empty-row]');
+
+        if (remainingRows.length > 0) {
+          if (existingEmptyRow) {
+            existingEmptyRow.remove();
+          }
+          return;
+        }
+
+        if (existingEmptyRow) {
+          return;
+        }
+
+        const emptyRow = document.createElement('tr');
+        emptyRow.setAttribute('data-rule-empty-row', '');
+
+        const emptyCell = document.createElement('td');
+        emptyCell.colSpan = 4;
+        emptyCell.className = 'p-8 text-center text-slate-500';
+        emptyCell.textContent = emptyMessage || '조회된 규칙이 없습니다.';
+
+        emptyRow.appendChild(emptyCell);
+        tableBody.appendChild(emptyRow);
+      }
+
+      function resolveErrorMessage(payload) {
+        const message = payload && payload.msg ? payload.msg : '';
+
+        if (message.indexOf('RESOURCE_NOT_FOUND') !== -1) {
+          return '이미 삭제되었거나 존재하지 않는 규칙입니다.';
+        }
+
+        if (message.indexOf('ACCESS_DENIED') !== -1) {
+          return '규칙 삭제 권한이 없습니다.';
+        }
+
+        return '규칙 삭제에 실패했습니다. 잠시 후 다시 시도해 주세요.';
+      }
+
+      async function parseResponse(response) {
+        const contentType = response.headers.get('content-type') || '';
+
+        if (contentType.indexOf('application/json') !== -1) {
+          return response.json();
+        }
+
+        const text = await response.text();
+
+        try {
+          return JSON.parse(text);
+        } catch (error) {
+          return { msg: text };
+        }
+      }
+
+      function bindRowNavigation(row) {
+        const detailUrl = row.dataset.ruleDetailUrl;
+
+        if (!detailUrl) {
+          return;
+        }
+
+        row.addEventListener('click', function (event) {
+          if (event.target.closest('[data-rule-delete-button]')) {
+            return;
+          }
+
+          window.location.href = detailUrl;
+        });
+
+        row.addEventListener('keydown', function (event) {
+          if (event.key !== 'Enter') {
+            return;
+          }
+
+          if (event.target.closest('[data-rule-delete-button]')) {
+            return;
+          }
+
+          event.preventDefault();
+          window.location.href = detailUrl;
+        });
+      }
+
+      function bindDeleteButton(button) {
+        button.addEventListener('click', async function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+
+          const deleteUrl = button.dataset.ruleDeleteUrl;
+          const row = button.closest('[data-rule-row]');
+
+          if (!deleteUrl || !row) {
+            return;
+          }
+
+          if (!window.confirm('정말 삭제하시겠습니까?')) {
+            return;
+          }
+
+          button.disabled = true;
+          button.classList.add('opacity-60', 'cursor-not-allowed');
+
+          try {
+            const response = await fetch(deleteUrl, {
+              method: 'POST',
+              headers: {
+                'X-CSRF-TOKEN': csrfToken
+              }
+            });
+
+            const result = await parseResponse(response);
+
+            if (!response.ok) {
+              showToast('error', resolveErrorMessage(result));
+              return;
+            }
+
+            row.remove();
+            ensureEmptyStateRow();
+            showToast(
+              'success',
+              result && result.body && result.body.message
+                ? result.body.message
+                : '규칙이 삭제되었습니다.'
+            );
+          } catch (error) {
+            console.error(error);
+            showToast('error', '규칙 삭제 중 오류가 발생했습니다. 다시 시도해 주세요.');
+          } finally {
+            button.disabled = false;
+            button.classList.remove('opacity-60', 'cursor-not-allowed');
+          }
+        });
+      }
+
+      page.querySelectorAll('[data-rule-row]').forEach(bindRowNavigation);
+      page.querySelectorAll('[data-rule-delete-button]').forEach(bindDeleteButton);
+    }());
   </script>
 </body>
 </html>

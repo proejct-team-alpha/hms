@@ -160,7 +160,17 @@
               <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="location.href='/staff/reception/detail?id={{id}}&date={{#hasDate}}{{currentDate}}{{/hasDate}}&status={{currentStatus}}&page={{currentPage}}'">
                 <td class="p-4 text-sm text-slate-600">{{reservationDate}}</td>
                 <td class="p-4 text-sm font-medium text-slate-900">{{timeSlot}}</td>
-                <td class="p-4 text-sm font-semibold text-slate-800">{{patientName}}</td>
+                <td class="p-4 text-sm font-semibold text-slate-800">
+                  <div class="flex items-center gap-2">
+                    {{#isFirstVisit}}
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500 shrink-0">초</span>
+                    {{/isFirstVisit}}
+                    {{^isFirstVisit}}
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500 shrink-0">재</span>
+                    {{/isFirstVisit}}
+                    {{patientName}}
+                  </div>
+                </td>
                 <td class="p-4 text-sm text-slate-600">{{patientPhone}}</td>
                 <td class="p-4">
                   <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{sourceBadgeClass}}">

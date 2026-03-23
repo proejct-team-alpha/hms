@@ -3,7 +3,6 @@ package com.smartclinic.hms.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalTime;
 
@@ -13,7 +12,6 @@ import java.time.LocalTime;
         @Index(name = "idx_doctor_schedule_available", columnList = "doctor_id, is_available")
     })
 @Getter
-@Setter
 @NoArgsConstructor
 public class DoctorSchedule {
 

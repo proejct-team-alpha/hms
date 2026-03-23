@@ -22,7 +22,16 @@ public class NursePatientDto {
     private final boolean canReceive;
     private final boolean canUseItem;
 
+    /**
+     * 초진 여부 (true: 초진, false: 재진)
+     */
+    private final boolean isFirstVisit;
+
     public NursePatientDto(Reservation r) {
+        this(r, false);
+    }
+
+    public NursePatientDto(Reservation r, boolean isFirstVisit) {
         Patient p = r.getPatient();
         this.reservationId = r.getId();
         this.patientId = p.getId();
@@ -38,6 +47,7 @@ public class NursePatientDto {
         this.canReceive = r.getStatus() == ReservationStatus.RESERVED;
         this.canUseItem = r.getStatus() == ReservationStatus.RECEIVED
                        || r.getStatus() == ReservationStatus.IN_TREATMENT;
+        this.isFirstVisit = isFirstVisit;
     }
 
     private static String toStatusText(ReservationStatus s) {

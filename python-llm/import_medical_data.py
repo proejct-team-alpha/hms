@@ -21,14 +21,18 @@ import pymysql
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-DB_CONFIG = {
-    "host": os.getenv("MYSQL_HOST", "192.168.0.22"),
-    "port": int(os.getenv("MYSQL_PORT", "3306")),
-    "user": os.getenv("MYSQL_USER", "hms_admin"),
-    "password": os.getenv("MYSQL_PASSWORD", "hms_password"),
-    "db": os.getenv("MYSQL_DB", "hms_db"),
-    "charset": "utf8mb4",
-}
+def _get_db_config() -> dict:
+    """config.py Settings를 재사용하여 DB 접속 정보 생성"""
+    from config import get_settings
+    s = get_settings()
+    return {
+        "host": s.mysql_host,
+        "port": s.mysql_port,
+        "user": s.mysql_user,
+        "password": s.mysql_password,
+        "db": s.mysql_db,
+        "charset": "utf8mb4",
+    }
 
 # 파일명에서 진료과명 추출 (TL_진료과명.zip -> 진료과명)
 DEPT_PATTERN = re.compile(r"^[TV]L_(.+)\.zip$")
@@ -239,8 +243,9 @@ def main():
             logger.error("  필요: %s", zf)
         sys.exit(1)
 
-    logger.info("DB 연결: %s:%d/%s", DB_CONFIG["host"], DB_CONFIG["port"], DB_CONFIG["db"])
-    conn = pymysql.connect(**DB_CONFIG)
+    db_config = _get_db_config()
+    logger.info("DB 연결: %s:%d/%s", db_config["host"], db_config["port"], db_config["db"])
+    conn = pymysql.connect(**db_config)
 
     total_content = 0
     total_qa = 0

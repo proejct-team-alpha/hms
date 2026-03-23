@@ -1,5 +1,6 @@
 package com.smartclinic.hms._sample;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -38,6 +39,7 @@ import java.util.Optional;
  *   - count()               : 전체 건수
  * ════════════════════════════════════════════════════════════════════════════
  */
+@Profile("dev")
 public interface SampleReservationRepository extends JpaRepository<SampleReservation, Long> {
 
     // ════════════════════════════════════════════════════════════════════════
