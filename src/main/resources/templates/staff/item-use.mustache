@@ -184,14 +184,10 @@
               headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
               body: params.toString()
             }).then(res => res.json()).then(data => {
-              if (data.quantity !== undefined) {
-                const card = form.closest('.item-card');
-                if (card) {
-                  const qSpan = card.querySelector('.quantity-span');
-                  if (qSpan) qSpan.textContent = data.quantity;
-                }
+              // [기능 구현] 서버로부터 받은 최신 전체 재고 정보(items)와 내역(logs)을 사용하여 UI 일괄 갱신
+              if (data.items) {
+                refreshAllUI(data);
                 input.value = '';
-                if (typeof refreshUsageLogs === 'function') refreshUsageLogs(data.logs || []);
               } else if (data.error) alert(data.error);
             });
           });
@@ -211,9 +207,10 @@
             const amountInput = card.querySelector('input[name="amount"]');
             const amount = amountInput ? amountInput.value.trim() : "";
             if (amount && parseInt(amount) > 0) {
+              // [기능 구현] ID를 반드시 숫자(Number) 타입으로 변환하여 서버 데이터 타입 불일치 방지
               requests.push({
-                id: card.getAttribute('data-id'),
-                amount: parseInt(amount)
+                id: Number(card.getAttribute('data-id')),
+                amount: Number(amount)
               });
             }
           });
@@ -232,15 +229,15 @@
             body: JSON.stringify({
               requests: requests
             })
-          }).then(res => {
-            if (!res.ok) throw new Error('일괄 처리에 실패했습니다.');
-            return res.json();
-          }).then(data => {
-            if (data.logs) {
+          }).then(async res => {
+            // [기능 구현] 응답이 성공(200)이 아니더라도(예: 재고부족 400), 최신 재고 데이터를 받아 UI를 갱신
+            const data = await res.json();
+            if (data.items) {
               if (data.errors && data.errors.length > 0) {
                 alert('일부 물품의 재고가 부족하여 처리되지 않았습니다.\n\n' + data.errors.join('\n'));
+              } else if (data.error) {
+                alert(data.error);
               }
-              // 의사 페이지와 동일하게 전체 UI 갱신 로직 적용
               refreshAllUI(data);
               // 입력 필드 초기화
               document.querySelectorAll('.item-card input[name="amount"]').forEach(i => i.value = '');
