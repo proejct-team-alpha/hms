@@ -122,9 +122,16 @@ public class ReceptionService {
     }
 
     /**
-     * 날짜별 예약 목록 조회
+     * 날짜별 예약 목록 조회 (다중 필터링 지원)
+     * @param date 조회 날짜 (null이면 오늘 이후 전체)
+     * @param status 예약 상태 (문자열)
+     * @param query 검색어 (환자명, 전화번호 등)
+     * @param deptIds 다중 선택된 진료과 ID 리스트
+     * @param doctorIds 다중 선택된 의사 ID 리스트
+     * @param source 예약 경로 (ONLINE, PHONE, WALKIN)
+     * @return 필터링된 예약 DTO 리스트
      */
-    public List<StaffReservationDto> getReservations(LocalDate date, String status, String query, Long deptId, Long doctorId, String source) {
+    public List<StaffReservationDto> getReservations(LocalDate date, String status, String query, List<Long> deptIds, List<Long> doctorIds, String source) {
         List<Reservation> reservations;
         if (date == null) {
             LocalDate today = LocalDate.now();
@@ -152,10 +159,10 @@ public class ReceptionService {
                                           r.getDoctor().getStaff().getName().toLowerCase().contains(q);
                         if (!matches) return false;
                     }
-                    // 진료과 필터
-                    if (deptId != null && !r.getDepartment().getId().equals(deptId)) return false;
-                    // 전문의 필터
-                    if (doctorId != null && !r.getDoctor().getId().equals(doctorId)) return false;
+                    // 다중 진료과 필터 적용
+                    if (deptIds != null && !deptIds.isEmpty() && !deptIds.contains(r.getDepartment().getId())) return false;
+                    // 다중 전문의 필터 적용
+                    if (doctorIds != null && !doctorIds.isEmpty() && !doctorIds.contains(r.getDoctor().getId())) return false;
                     // 예약 구분 필터
                     if (source != null && !source.isBlank() && !r.getSource().name().equals(source)) return false;
                     
@@ -169,15 +176,21 @@ public class ReceptionService {
                 .collect(Collectors.toList());
     }
 
-    // 상태 필터 탭 목록
-    public List<StaffStatusFilter> getStatusFilters(String selected, String date, String query, Long deptId, Long doctorId, String source) {
+    /**
+     * 상태 필터 탭 목록 생성 (명칭 변경: 접수 대기 -> 예약)
+     */
+    public List<StaffStatusFilter> getStatusFilters(String selected, String date, String query, List<Long> deptIds, List<Long> doctorIds, String source) {
         String s = (selected == null) ? "" : selected;
+        // 단일 ID만 받는 기존 DTO 구조상 첫 번째 값을 전달 (기존 호환성 유지)
+        Long dId = (deptIds != null && !deptIds.isEmpty()) ? deptIds.get(0) : null;
+        Long docId = (doctorIds != null && !doctorIds.isEmpty()) ? doctorIds.get(0) : null;
+        
         return List.of(
-                new StaffStatusFilter("전체", "", s, date, query, deptId, doctorId, source),
-                new StaffStatusFilter("접수 대기", "RESERVED", s, date, query, deptId, doctorId, source),
-                new StaffStatusFilter("진료 대기", "RECEIVED", s, date, query, deptId, doctorId, source),
-                new StaffStatusFilter("진료 완료", "COMPLETED", s, date, query, deptId, doctorId, source),
-                new StaffStatusFilter("취소", "CANCELLED", s, date, query, deptId, doctorId, source));
+                new StaffStatusFilter("전체", "", s, date, query, dId, docId, source),
+                new StaffStatusFilter("예약", "RESERVED", s, date, query, dId, docId, source),
+                new StaffStatusFilter("진료 대기", "RECEIVED", s, date, query, dId, docId, source),
+                new StaffStatusFilter("진료 완료", "COMPLETED", s, date, query, dId, docId, source),
+                new StaffStatusFilter("취소", "CANCELLED", s, date, query, dId, docId, source));
     }
 
     /**
