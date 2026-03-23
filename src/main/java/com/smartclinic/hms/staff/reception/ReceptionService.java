@@ -217,7 +217,7 @@ public class ReceptionService {
         Reservation r = reservationRepository.findById(id)
                 .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
         try {
-            r.cancel(reason);
+            r.cancelFully(reason); // 원무과 취소: 상태 무관하게 바로 CANCELLED → 슬롯 즉시 해제
         } catch (IllegalStateException ex) {
             throw CustomException.invalidStatusTransition(ex.getMessage());
         }
