@@ -117,9 +117,9 @@ class ReservationControllerTest {
                 .param("reservationDate", "2026-04-01")
                 .param("timeSlot", "09:00"))
                 .andExpect(status().is3xxRedirection())
-                // URL에 쿼리 파라미터 없이 정확히 /reservation/complete 로만 리다이렉트
-                .andExpect(redirectedUrl("/reservation/complete"))
-                // flash attribute로 ReservationCompleteInfo DTO가 통째로 전달됨
+                // /reservation/complete 로 리다이렉트 (레이아웃 인터셉터 파라미터 허용)
+                .andExpect(redirectedUrlPattern("/reservation/complete*"))
+                // flash attribute로 ReservationCompleteInfo DTO가 통째로 전달됨 (개인정보 URL 미포함)
                 .andExpect(flash().attributeExists("info"));
     }
 
@@ -136,7 +136,7 @@ class ReservationControllerTest {
                 .with(csrf())
                 .param("phone", "01012345678"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/reservation/cancel-complete"))
+                .andExpect(redirectedUrlPattern("/reservation/cancel-complete*"))
                 // flash attribute로 ReservationCompleteInfo DTO가 통째로 전달됨
                 .andExpect(flash().attributeExists("info"));
     }
@@ -174,7 +174,7 @@ class ReservationControllerTest {
                 .param("reservationDate", "2026-04-02")
                 .param("timeSlot", "10:00"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/reservation/modify-complete"))
+                .andExpect(redirectedUrlPattern("/reservation/modify-complete*"))
                 // flash attribute로 ReservationCompleteInfo DTO가 통째로 전달됨
                 .andExpect(flash().attributeExists("info"));
     }

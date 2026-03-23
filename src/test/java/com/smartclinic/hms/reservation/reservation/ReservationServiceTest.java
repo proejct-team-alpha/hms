@@ -74,12 +74,12 @@ class ReservationServiceTest {
         ReservationCompleteInfo info = reservationService.createReservation(form);
 
         // then
-        assertThat(info.getPatientName()).isEqualTo("홍길동");
-        assertThat(info.getDepartmentName()).isEqualTo("내과");
-        assertThat(info.getDoctorName()).isEqualTo("김내과");
-        assertThat(info.getReservationDate()).isEqualTo("2026-04-01");
-        assertThat(info.getTimeSlot()).isEqualTo("09:00");
-        assertThat(info.getReservationNumber()).startsWith("RES-");
+        assertThat(info.patientName()).isEqualTo("홍길동");
+        assertThat(info.departmentName()).isEqualTo("내과");
+        assertThat(info.doctorName()).isEqualTo("김내과");
+        assertThat(info.reservationDate()).isEqualTo("2026-04-01");
+        assertThat(info.timeSlot()).isEqualTo("09:00");
+        assertThat(info.reservationNumber()).startsWith("RES-");
 
         // 기존 환자 재사용 - patientRepository.save() 호출 안 됨
         then(patientRepository).should(never()).save(any());
@@ -101,7 +101,7 @@ class ReservationServiceTest {
         ReservationCompleteInfo info = reservationService.createReservation(form);
 
         // then
-        assertThat(info.getPatientName()).isEqualTo("홍길동");
+        assertThat(info.patientName()).isEqualTo("홍길동");
         then(patientRepository).should().save(any(Patient.class));
     }
 
@@ -165,9 +165,9 @@ class ReservationServiceTest {
         ReservationCompleteInfo info = reservationService.cancelReservation(1L, "01012345678");
 
         // then
-        assertThat(info.getReservationNumber()).isEqualTo("RES-20260401-001");
-        assertThat(info.getPatientName()).isEqualTo("홍길동");
-        assertThat(info.getDepartmentName()).isEqualTo("내과");
+        assertThat(info.reservationNumber()).isEqualTo("RES-20260401-001");
+        assertThat(info.patientName()).isEqualTo("홍길동");
+        assertThat(info.departmentName()).isEqualTo("내과");
         // cancelFully 호출 확인 → 예약 상태가 CANCELLED로 변경됨
         then(reservation).should().cancelFully(null);
     }
@@ -207,8 +207,8 @@ class ReservationServiceTest {
         ReservationCompleteInfo info = reservationService.updateReservation(1L, "01012345678", updateForm);
 
         // then
-        assertThat(info.getReservationNumber()).isEqualTo("RES-20260402-001");
-        assertThat(info.getTimeSlot()).isEqualTo("10:00");
+        assertThat(info.reservationNumber()).isEqualTo("RES-20260402-001");
+        assertThat(info.timeSlot()).isEqualTo("10:00");
         // 기존 예약 취소 처리 확인
         then(oldReservation).should().cancelFully(null);
         // 새 예약 저장 확인
