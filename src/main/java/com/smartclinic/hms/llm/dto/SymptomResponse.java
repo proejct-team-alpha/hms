@@ -6,6 +6,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class SymptomResponse {
-    private Long departmentId;
-    private String departmentName;
+    private String dept;
+    private String doctor;
+    private String time;
 }
