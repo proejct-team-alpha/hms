@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * ════════════════════════════════════════════════════════════════════════════
- * 전역 예외 핸들러 — 모든 예외를 공통 ErrorResponse 포맷으로 반환
+ * REST API(@RestController) 전역 예외 핸들러 — 응답 본문은 {@link com.smartclinic.hms.common.util.Resp} 로 통일
  * ════════════════════════════════════════════════════════════════════════════
  *
  * ■ 처리 대상 (rule_spring.md §2)
@@ -32,13 +32,17 @@ import lombok.extern.slf4j.Slf4j;
  *   5. NoResourceFoundException       — 정적 리소스/라우트 없음
  *   6. Exception                       — 예측 불가 예외 (폴백)
  *
- * ■ 응답 포맷
- *   { "success": false, "errorCode": "...", "message": "...",
- *     "timestamp": "...", "path": "...", "traceId": "...", "details": {} }
+ * ■ 응답 JSON 스키마 (실제 필드명)
+ *   - 성공(컨트롤러에서 Resp.ok 사용 시): { "status": 200, "msg": "성공", "body": &lt;T&gt; }
+ *   - 실패(본 핸들러): { "status": &lt;httpCode&gt;, "msg": "[ERROR_CODE] 사용자 메시지", "body": null }
  *
- * ■ SSR + AJAX 공용
- *   POST 성공 시 → Controller에서 302 리다이렉트
- *   POST/GET 실패 시 → 이 핸들러가 JSON 반환 (클라이언트 JS에서 처리)
+ * ■ SSR(@Controller) 예외
+ *   - {@link SsrExceptionHandler} 가 담당한다. Mustache 에러 뷰(403/404/500) + HTTP 상태 반영.
+ *   - 본 클래스는 {@code @RestControllerAdvice(annotations = RestController.class)} 로
+ *     REST 레이어만 포괄한다.
+ *
+ * ■ AJAX 실패
+ *   - REST 컨트롤러에서 발생한 예외는 본 핸들러가 JSON(Resp)으로 반환한다.
  * ════════════════════════════════════════════════════════════════════════════
  */
 @Slf4j

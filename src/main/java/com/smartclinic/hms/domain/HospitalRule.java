@@ -60,11 +60,12 @@ public class HospitalRule {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public static HospitalRule create(String title, String content, HospitalRuleCategory category) {
+    public static HospitalRule create(String title, String content, HospitalRuleCategory category, boolean active) {
         HospitalRule r = new HospitalRule();
         r.title = title;
         r.content = content;
         r.category = category;
+        r.active = active;
         return r;
     }
 
@@ -75,7 +76,11 @@ public class HospitalRule {
         this.active = active;
     }
 
-    public void toggleActive() {
-        this.active = !this.active;
+    public void activate() {
+        this.active = true;
+    }
+
+    public void deactivate() {
+        this.active = false;
     }
 }

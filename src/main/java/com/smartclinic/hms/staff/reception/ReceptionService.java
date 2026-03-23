@@ -208,12 +208,19 @@ public class ReceptionService {
         return new StaffReservationDto(r, completedCount, history);
     }
 
-    // 예약 취소
+    /**
+     * 예약 취소: {@code Reservation#cancel} — RECEIVED→RESERVED 롤백, RESERVED→CANCELLED.
+     * IN_TREATMENT 등 전이 불가 시 {@link com.smartclinic.hms.common.exception.CustomException#invalidStatusTransition(String)}.
+     */
     @Transactional
     public Reservation cancel(Long id, String reason) {
         Reservation r = reservationRepository.findById(id)
                 .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
-        r.cancel(reason);
+        try {
+            r.cancelFully(reason); // 원무과 취소: 상태 무관하게 바로 CANCELLED → 슬롯 즉시 해제
+        } catch (IllegalStateException ex) {
+            throw CustomException.invalidStatusTransition(ex.getMessage());
+        }
         return r;
     }
 

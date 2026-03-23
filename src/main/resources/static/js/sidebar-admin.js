@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
   } else if (path.includes("department-list.html")) {
     document.getElementById("nav-department-list").classList.add("bg-indigo-50", "text-indigo-700");
     document.getElementById("nav-department-list").classList.remove("text-slate-600");
-  } else if (path.includes("rule-list.html") || path.includes("rule-form.html")) {
+  } else if (path.includes("rule-list.html") || path.includes("rule-new.html")) {
     document.getElementById("nav-rule-list").classList.add("bg-indigo-50", "text-indigo-700");
     document.getElementById("nav-rule-list").classList.remove("text-slate-600");
   } else if (path.includes("staff-list.html") || path.includes("staff-form.html")) {

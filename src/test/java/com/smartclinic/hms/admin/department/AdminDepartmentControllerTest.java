@@ -18,6 +18,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
+import com.smartclinic.hms.admin.department.dto.AdminDepartmentDetailResponse;
+import com.smartclinic.hms.admin.department.dto.AdminDepartmentItemResponse;
+import com.smartclinic.hms.admin.department.dto.AdminDepartmentListResponse;
+import com.smartclinic.hms.admin.department.dto.AdminDepartmentPageLinkResponse;
 import com.smartclinic.hms.common.util.SsrValidationViewSupport;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.Department;
@@ -98,7 +102,7 @@ class AdminDepartmentControllerTest {
                 // given
                 Department department = Department.create("Dept", true);
                 ReflectionTestUtils.setField(department, "id", 12L);
-                AdminDepartmentDto item = new AdminDepartmentDto(department);
+                AdminDepartmentItemResponse item = new AdminDepartmentItemResponse(department);
                 AdminDepartmentListResponse response = new AdminDepartmentListResponse(
                                 List.of(item),
                                 List.of(

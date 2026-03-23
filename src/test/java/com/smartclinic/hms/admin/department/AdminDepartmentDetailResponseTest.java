@@ -2,6 +2,7 @@ package com.smartclinic.hms.admin.department;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.smartclinic.hms.admin.department.dto.AdminDepartmentDetailResponse;
 import com.smartclinic.hms.domain.Department;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
