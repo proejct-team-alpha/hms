@@ -11,7 +11,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Entity
-@Table(name = "doctor")
+@Table(name = "doctor",
+    indexes = {
+        @Index(name = "idx_doctor_department", columnList = "department_id")
+    })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Doctor {

@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (path.includes("dashboard.html")) titleEl.textContent = "관리자 대시보드";
   else if (path.includes("reservation-list.html")) titleEl.textContent = "예약 취소 관리";
   else if (path.includes("department-list.html")) titleEl.textContent = "진료과 관리";
-  else if (path.includes("rule-list.html") || path.includes("rule-form.html")) titleEl.textContent = "병원 규칙 관리";
+  else if (path.includes("rule-list.html") || path.includes("rule-new.html")) titleEl.textContent = "병원 규칙 관리";
   else if (path.includes("staff-list.html") || path.includes("staff-form.html")) titleEl.textContent = "직원 관리";
   else if (path.includes("item-list.html") || path.includes("item-form.html")) titleEl.textContent = "물품 관리";
 });

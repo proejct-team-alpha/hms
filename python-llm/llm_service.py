@@ -26,10 +26,11 @@ def load_model():
         from transformers import pipeline
 
         logger.info("Loading LLM model: %s", settings.llm_model)
+        _TRUSTED_MODELS = {"Qwen/Qwen2.5-3B-Instruct"}
         _generator = pipeline(
             "text-generation",
             model=settings.llm_model,
-            trust_remote_code=True,
+            trust_remote_code=settings.llm_model in _TRUSTED_MODELS,
         )
         logger.info("Model loaded successfully")
         return _generator

@@ -1,9 +1,7 @@
 package com.smartclinic.hms.llm.controller;
 
-import com.smartclinic.hms.auth.StaffRepository;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.common.util.SecurityUtils;
-import com.smartclinic.hms.domain.ChatbotHistoryRepository;
 import com.smartclinic.hms.llm.dto.ChatbotHistoryResponse;
 import com.smartclinic.hms.llm.dto.LlmRequest;
 import com.smartclinic.hms.llm.service.ChatService;
@@ -24,8 +22,6 @@ import reactor.core.publisher.Mono;
 public class ChatController {
 
     private final ChatService chatService;
-    private final ChatbotHistoryRepository chatbotHistoryRepository;
-    private final StaffRepository staffRepository;
     private final SecurityUtils securityUtils;
 
     @PostMapping("/query")
@@ -69,8 +65,7 @@ public class ChatController {
         }
 
         log.debug("챗봇 히스토리 조회 - staffId: {}, page: {}", staffId, pageable.getPageNumber());
-        return chatbotHistoryRepository.findByStaff_IdOrderByCreatedAtDesc(staffId, pageable)
-                .map(ChatbotHistoryResponse::from);
+        return chatService.getRuleHistory(staffId, pageable);
     }
 
 }

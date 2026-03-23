@@ -6,6 +6,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
+import com.smartclinic.hms.admin.department.dto.AdminDepartmentDetailResponse;
+import com.smartclinic.hms.admin.department.dto.AdminDepartmentListResponse;
+import com.smartclinic.hms.admin.department.dto.AdminDepartmentPageLinkResponse;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.Department;
 import java.util.List;

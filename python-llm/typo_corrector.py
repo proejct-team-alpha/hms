@@ -109,6 +109,7 @@ _BUILTIN_TYPO_MAP = {k: v for k, v in _BUILTIN_TYPO_MAP.items() if k != v}
 
 # 활성 사전 (DB 로드 성공 시 DB 데이터, 실패 시 내장 사전)
 _active_map: dict[str, str] = dict(_BUILTIN_TYPO_MAP)
+_sorted_typo_keys: list[str] = sorted(_active_map.keys(), key=len, reverse=True)
 _last_reload: float = 0.0
 _RELOAD_INTERVAL: float = 600.0  # 10분
 
@@ -132,22 +133,27 @@ async def load_typo_dict_from_db() -> dict[str, str]:
 
 async def reload_typo_dict():
     """DB에서 사전을 리로드한다."""
-    global _active_map, _last_reload
+    global _active_map, _sorted_typo_keys, _last_reload
     db_map = await load_typo_dict_from_db()
     if db_map:
         _active_map = db_map
     else:
         _active_map = dict(_BUILTIN_TYPO_MAP)
+    _sorted_typo_keys = sorted(_active_map.keys(), key=len, reverse=True)
     _last_reload = time.monotonic()
     logger.info("Typo dictionary reloaded: %d entries", len(_active_map))
 
 
 async def _maybe_reload():
     """리로드 간격이 지났으면 백그라운드에서 리로드"""
-    global _last_reload
     if time.monotonic() - _last_reload > _RELOAD_INTERVAL:
         await reload_typo_dict()
 
+
+async def correct_typos_async(text: str) -> str:
+    """오타 교정 (async 버전: 자동 리로드 포함)"""
+    await _maybe_reload()
+    return correct_typos(text)
 
 
 def correct_typos(text: str) -> str:
@@ -161,9 +167,7 @@ def correct_typos(text: str) -> str:
     corrected = text
     corrections = []
 
-    sorted_typos = sorted(_active_map.keys(), key=len, reverse=True)
-
-    for typo in sorted_typos:
+    for typo in _sorted_typo_keys:
         if typo in corrected:
             correct = _active_map[typo]
             corrected = corrected.replace(typo, correct)

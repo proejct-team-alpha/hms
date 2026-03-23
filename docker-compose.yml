@@ -19,6 +19,19 @@ services:
       retries: 15
       start_period: 90s
 
+  redis:
+    image: redis:7-alpine
+    container_name: hms-redis
+    ports:
+      - "0.0.0.0:6379:6379"
+    volumes:
+      - hms_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   chromadb:
     image: chromadb/chroma:1.5.4
     container_name: hms-chromadb
@@ -34,7 +47,7 @@ services:
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v2/heartbeat', timeout=5)",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/heartbeat', timeout=5)",
         ]
       interval: 15s
       timeout: 10s
@@ -53,7 +66,7 @@ services:
     environment:
       - LLM_BACKEND=vllm
       - VLLM_BASE_URL=http://192.168.0.22:8000
-      - VLLM_MODEL=qwen2.5-7b
+      - VLLM_MODEL=qwen2.5-3b
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
@@ -82,8 +95,13 @@ services:
       - SPRING_DATASOURCE_USERNAME=hms_admin
       - SPRING_DATASOURCE_PASSWORD=hms_password
       - LLM_SERVICE_URL=http://python-llm:8000
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
     depends_on:
       mysql:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       python-llm:
         condition: service_started
@@ -91,3 +109,4 @@ services:
 volumes:
   hms_mysql_data:
   hms_chroma_data:
+  hms_redis_data:

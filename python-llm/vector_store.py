@@ -4,6 +4,7 @@ Ollama 임베딩 + ChromaDB로 의학 문서 벡터 검색
 """
 
 import logging
+import threading
 
 import chromadb
 
@@ -14,54 +15,78 @@ logger = logging.getLogger(__name__)
 _client = None
 _collection = None
 _rule_collection = None
+_client_lock = threading.Lock()
+_collection_lock = threading.Lock()
+_rule_collection_lock = threading.Lock()
 
 
 def get_chroma_client() -> chromadb.ClientAPI:
     """ChromaDB 클라이언트 싱글톤 (Docker HttpClient)"""
     global _client
-    if _client is None:
-        settings = get_settings()
-        _client = chromadb.HttpClient(
-            host=settings.chroma_host,
-            port=settings.chroma_port,
-        )
-        logger.info("ChromaDB connected: %s:%d", settings.chroma_host, settings.chroma_port)
+    if _client is not None:
+        return _client
+    with _client_lock:
+        if _client is None:
+            settings = get_settings()
+            _client = chromadb.HttpClient(
+                host=settings.chroma_host,
+                port=settings.chroma_port,
+            )
+            logger.info("ChromaDB connected: %s:%d", settings.chroma_host, settings.chroma_port)
     return _client
 
 
 def get_collection() -> chromadb.Collection:
     """의학 문서 컬렉션 조회/생성"""
     global _collection
-    if _collection is None:
-        settings = get_settings()
-        client = get_chroma_client()
-        _collection = client.get_or_create_collection(
-            name=settings.chroma_collection,
-            metadata={"hnsw:space": "cosine"},
-        )
-        logger.info(
-            "ChromaDB collection '%s': %d documents",
-            settings.chroma_collection,
-            _collection.count(),
-        )
+    if _collection is not None:
+        return _collection
+    with _collection_lock:
+        if _collection is None:
+            settings = get_settings()
+            client = get_chroma_client()
+            _collection = client.get_or_create_collection(
+                name=settings.chroma_collection,
+                metadata={
+                    "hnsw:space": "cosine",
+                    "hnsw:M": 16,
+                    "hnsw:construction_ef": 200,
+                    "hnsw:search_ef": 50,
+                    "hnsw:num_threads": 4,
+                },
+            )
+            logger.info(
+                "ChromaDB collection '%s': %d documents",
+                settings.chroma_collection,
+                _collection.count(),
+            )
     return _collection
 
 
 def get_rule_collection() -> chromadb.Collection:
     """병원규칙 전용 컬렉션 조회/생성"""
     global _rule_collection
-    if _rule_collection is None:
-        settings = get_settings()
-        client = get_chroma_client()
-        _rule_collection = client.get_or_create_collection(
-            name=settings.chroma_rule_collection,
-            metadata={"hnsw:space": "cosine"},
-        )
-        logger.info(
-            "ChromaDB rule collection '%s': %d documents",
-            settings.chroma_rule_collection,
-            _rule_collection.count(),
-        )
+    if _rule_collection is not None:
+        return _rule_collection
+    with _rule_collection_lock:
+        if _rule_collection is None:
+            settings = get_settings()
+            client = get_chroma_client()
+            _rule_collection = client.get_or_create_collection(
+                name=settings.chroma_rule_collection,
+                metadata={
+                    "hnsw:space": "cosine",
+                    "hnsw:M": 16,
+                    "hnsw:construction_ef": 200,
+                    "hnsw:search_ef": 50,
+                    "hnsw:num_threads": 4,
+                },
+            )
+            logger.info(
+                "ChromaDB rule collection '%s': %d documents",
+                settings.chroma_rule_collection,
+                _rule_collection.count(),
+            )
     return _rule_collection
 
 
@@ -93,6 +118,7 @@ def add_documents(
 def search_similar(
     query_embedding: list[float],
     top_k: int = 3,
+    min_similarity: float = 0.65,
 ) -> list[dict]:
     """
     쿼리 임베딩과 유사한 문서 검색
@@ -100,6 +126,7 @@ def search_similar(
     Args:
         query_embedding: 쿼리 임베딩 벡터
         top_k: 반환할 상위 결과 수
+        min_similarity: 최소 유사도 임계값 (cosine similarity)
 
     Returns:
         검색 결과 리스트 [{document, metadata, distance}, ...]
@@ -113,15 +140,20 @@ def search_similar(
     results = collection.query(
         query_embeddings=[query_embedding],
         n_results=min(top_k, collection.count()),
+        include=["documents", "metadatas", "distances"],
     )
 
     items = []
     if results and results["documents"]:
         for i, doc in enumerate(results["documents"][0]):
+            distance = results["distances"][0][i] if results["distances"] else 0
+            similarity = 1 - distance
+            if similarity < min_similarity:
+                continue
             item = {
                 "document": doc,
                 "metadata": results["metadatas"][0][i] if results["metadatas"] else {},
-                "distance": results["distances"][0][i] if results["distances"] else 0,
+                "distance": distance,
             }
             items.append(item)
 

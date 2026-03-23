@@ -49,7 +49,7 @@ def test_root(client):
 
 
 def test_health(client):
-    """GET /health 헬스체크"""
+    """GET /health 헬스체크 (외부 서비스 미연결 시 degraded)"""
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json()["status"] == "healthy"
+    assert response.json()["status"] in ("healthy", "degraded")

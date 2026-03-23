@@ -1,15 +1,5 @@
 package com.smartclinic.hms.llm.service;
 
-import com.smartclinic.hms.doctor.DoctorRepository;
-import com.smartclinic.hms.domain.Doctor;
-import com.smartclinic.hms.domain.DoctorScheduleRepository;
-import com.smartclinic.hms.llm.dto.LlmReservationResponse;
-import com.smartclinic.hms.reservation.reservation.ReservationRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -17,6 +7,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.smartclinic.hms.doctor.DoctorRepository;
+import com.smartclinic.hms.domain.Doctor;
+import com.smartclinic.hms.domain.DoctorScheduleRepository;
+import com.smartclinic.hms.llm.dto.LlmReservationResponse;
+import com.smartclinic.hms.reservation.reservation.ReservationRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -34,16 +36,18 @@ public class LlmReservationService {
 
         var schedules = doctorScheduleRepository.findByDoctor_IdAndIsAvailableTrue(doctorId);
 
-        List<LlmReservationResponse.Slot> slots = new ArrayList<>();
         LocalDate today = LocalDate.now();
-        LocalDate fromDate = today.plusDays(1);
-        LocalDate toDate = today.plusDays(7);
+        LocalDate startDate = today.plusDays(1);
+        LocalDate endDate = today.plusDays(7);
 
-        // 날짜 범위 전체를 한 번에 조회해 인메모리 Set으로 변환 — 루프 내 N+1 방지
-        Set<String> bookedKeys = reservationRepository.findBookedSlotsBetween(doctorId, fromDate, toDate)
+        // 1회 벌크 쿼리로 예약된 슬롯 전체 조회 (N+1 제거)
+        Set<String> bookedSlots = reservationRepository
+                .findBookedSlotsBetween(doctorId, startDate, endDate)
                 .stream()
-                .map(row -> row[0] + ":" + row[1])
+                .map(row -> row[0].toString() + "_" + row[1].toString())
                 .collect(Collectors.toSet());
+
+        List<LlmReservationResponse.Slot> slots = new ArrayList<>();
 
         for (int dayOffset = 1; dayOffset <= 7; dayOffset++) {
             LocalDate date = today.plusDays(dayOffset);
@@ -56,15 +60,17 @@ public class LlmReservationService {
                         LocalTime slotTime = schedule.getStartTime();
                         while (slotTime.isBefore(schedule.getEndTime())) {
                             LocalTime slotEnd = slotTime.plusMinutes(30);
-                            if (slotEnd.isAfter(schedule.getEndTime())) break;
+                            if (slotEnd.isAfter(schedule.getEndTime()))
+                                break;
 
-                            boolean available = !bookedKeys.contains(date + ":" + slotTime);
+                            boolean available = !bookedSlots.contains(date + "_" + slotTime);
                             slots.add(new LlmReservationResponse.Slot(date, slotTime, slotEnd, available));
                             slotTime = slotEnd;
                         }
                     });
 
-            if (slots.size() >= 12) break;
+            if (slots.size() >= 12)
+                break;
         }
 
         return new LlmReservationResponse.SlotList(doctorId, doctor.getStaff().getName(), slots);
