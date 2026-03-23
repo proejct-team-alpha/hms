@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.Set;
 import java.util.Locale;
+import java.util.Set;
 
 @Controller
 @RequiredArgsConstructor
@@ -21,7 +21,6 @@ public class AdminReservationController {
 
     private static final Set<String> ALLOWED_STATUSES = Set.of("ALL", "RESERVED", "RECEIVED", "COMPLETED", "CANCELLED");
 
-    // 서비스 선언
     private final AdminReservationService adminReservationService;
 
     @GetMapping("/list")
@@ -29,8 +28,9 @@ public class AdminReservationController {
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int size,
             @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "keyword", required = false) String keyword,
             HttpServletRequest req) {
-        AdminReservationListResponse result = adminReservationService.getReservationList(page, size, status);
+        AdminReservationListResponse result = adminReservationService.getReservationList(page, size, status, keyword);
         req.setAttribute("model", result);
         req.setAttribute("pageTitle", "예약 목록");
         return "admin/reservation-list";
@@ -42,6 +42,7 @@ public class AdminReservationController {
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10") int size,
             @RequestParam(name = "status", defaultValue = "ALL") String status,
+            @RequestParam(name = "keyword", required = false) String keyword,
             RedirectAttributes redirectAttributes) {
 
         try {
@@ -51,10 +52,10 @@ public class AdminReservationController {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
 
-        // URL 파라미터 유지
         redirectAttributes.addAttribute("page", page);
         redirectAttributes.addAttribute("size", size);
         redirectAttributes.addAttribute("status", normalizeStatus(status));
+        redirectAttributes.addAttribute("keyword", normalizeKeyword(keyword));
 
         return "redirect:/admin/reservation/list";
     }
@@ -66,5 +67,9 @@ public class AdminReservationController {
 
         String normalized = status.trim().toUpperCase(Locale.ROOT);
         return ALLOWED_STATUSES.contains(normalized) ? normalized : "ALL";
+    }
+
+    private String normalizeKeyword(String keyword) {
+        return keyword == null ? "" : keyword.trim();
     }
 }

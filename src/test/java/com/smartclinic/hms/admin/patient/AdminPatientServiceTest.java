@@ -1,8 +1,5 @@
 package com.smartclinic.hms.admin.patient;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.Department;
 import com.smartclinic.hms.domain.Doctor;
@@ -13,8 +10,6 @@ import com.smartclinic.hms.domain.ReservationStatus;
 import com.smartclinic.hms.domain.Staff;
 import com.smartclinic.hms.domain.StaffRole;
 import jakarta.persistence.EntityManager;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +17,12 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @Import(AdminPatientService.class)
@@ -35,26 +36,46 @@ class AdminPatientServiceTest {
     private EntityManager entityManager;
 
     @Test
-    @DisplayName("get patient list filters by name and normalized contact")
-    void getPatientList_filtersByNameAndNormalizedContact() {
+    @DisplayName("환자 목록은 keyword로 이름 검색을 수행한다")
+    void getPatientList_filtersByKeywordForName() {
         // given
         persistPatient("김철수", "010-1234-5678", LocalDateTime.of(2026, 3, 18, 10, 0));
         persistPatient("김영희", "010-8888-9999", LocalDateTime.of(2026, 3, 19, 10, 0));
-        persistPatient("이민수", "010-1234-0000", LocalDateTime.of(2026, 3, 17, 10, 0));
+        persistPatient("박민수", "010-1234-0000", LocalDateTime.of(2026, 3, 17, 10, 0));
         entityManager.flush();
         entityManager.clear();
 
         // when
-        var result = adminPatientService.getPatientList(1, 20, "김철", "0101234");
+        var result = adminPatientService.getPatientList(1, 20, "김철");
 
         // then
+        assertThat(result.keyword()).isEqualTo("김철");
         assertThat(result.totalCount()).isEqualTo(1);
         assertThat(result.patients()).hasSize(1);
         assertThat(result.patients().getFirst().name()).isEqualTo("김철수");
     }
 
     @Test
-    @DisplayName("get patient list applies default paging and ordering")
+    @DisplayName("환자 목록은 keyword로 하이픈 없는 연락처 검색을 수행한다")
+    void getPatientList_filtersByKeywordForNormalizedPhone() {
+        // given
+        persistPatient("김철수", "010-1234-5678", LocalDateTime.of(2026, 3, 18, 10, 0));
+        persistPatient("김영희", "010-8888-9999", LocalDateTime.of(2026, 3, 19, 10, 0));
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        var result = adminPatientService.getPatientList(1, 20, "0101234");
+
+        // then
+        assertThat(result.totalCount()).isEqualTo(1);
+        assertThat(result.patients()).hasSize(1);
+        assertThat(result.patients().getFirst().name()).isEqualTo("김철수");
+        assertThat(result.patients().getFirst().phone()).isEqualTo("010-1234-5678");
+    }
+
+    @Test
+    @DisplayName("환자 목록은 기본 페이징과 최신순 정렬을 적용한다")
     void getPatientList_appliesDefaultPagingAndOrdering() {
         // given
         for (int i = 1; i <= 21; i++) {
@@ -64,7 +85,7 @@ class AdminPatientServiceTest {
         entityManager.clear();
 
         // when
-        var result = adminPatientService.getPatientList(0, 0, null, null);
+        var result = adminPatientService.getPatientList(0, 0, null);
 
         // then
         assertThat(result.currentPage()).isEqualTo(1);
@@ -77,7 +98,34 @@ class AdminPatientServiceTest {
     }
 
     @Test
-    @DisplayName("get patient list returns empty result when no patient matches")
+    @DisplayName("환자 목록 페이지 링크는 keyword를 유지한다")
+    void getPatientList_preservesKeywordInPaginationUrls() {
+        // given
+        for (int i = 1; i <= 21; i++) {
+            persistPatient(
+                    "Kim Search " + i,
+                    "010-2000-" + String.format("%04d", i),
+                    LocalDateTime.of(2026, 3, 1, 0, 0).plusDays(i)
+            );
+        }
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        var result = adminPatientService.getPatientList(2, 10, "Kim");
+
+        // then
+        assertThat(result.currentPage()).isEqualTo(2);
+        assertThat(result.hasPrevious()).isTrue();
+        assertThat(result.hasNext()).isTrue();
+        assertThat(result.previousUrl()).contains("page=1").contains("size=10").contains("keyword=Kim");
+        assertThat(result.nextUrl()).contains("page=3").contains("size=10").contains("keyword=Kim");
+        assertThat(result.pageLinks()).hasSize(3);
+        assertThat(result.pageLinks()).allSatisfy(link -> assertThat(link.url()).contains("keyword=Kim"));
+    }
+
+    @Test
+    @DisplayName("환자 목록은 매칭되는 환자가 없으면 빈 결과를 반환한다")
     void getPatientList_returnsEmptyResultWhenNoPatientMatches() {
         // given
         persistPatient("김철수", "010-1234-5678", LocalDateTime.of(2026, 3, 18, 10, 0));
@@ -85,7 +133,7 @@ class AdminPatientServiceTest {
         entityManager.clear();
 
         // when
-        var result = adminPatientService.getPatientList(1, 20, "박", "0109999");
+        var result = adminPatientService.getPatientList(1, 20, "없는값");
 
         // then
         assertThat(result.totalCount()).isZero();
@@ -95,7 +143,7 @@ class AdminPatientServiceTest {
     }
 
     @Test
-    @DisplayName("get patient detail returns patient info with reservation histories")
+    @DisplayName("환자 상세는 환자 정보와 예약 이력을 반환한다")
     void getPatientDetail_returnsPatientInfoWithReservationHistories() {
         // given
         Department department = persistDepartment("치과");
@@ -130,16 +178,18 @@ class AdminPatientServiceTest {
     }
 
     @Test
-    @DisplayName("get patient detail throws when patient is missing")
+    @DisplayName("환자 상세는 없는 환자 요청 시 예외를 던진다")
     void getPatientDetail_throwsWhenPatientIsMissing() {
-        // given // when // then
+        // given
+        // when
+        // then
         assertThatThrownBy(() -> adminPatientService.getPatientDetail(999L))
                 .isInstanceOf(CustomException.class)
                 .hasMessage("환자를 찾을 수 없습니다.");
     }
 
     @Test
-    @DisplayName("update patient changes name phone note and preserves email address")
+    @DisplayName("환자 수정은 이름 연락처 메모를 바꾸고 이메일과 주소는 유지한다")
     void updatePatient_changesNamePhoneNoteAndPreservesEmailAddress() {
         // given
         Patient patient = Patient.create("김철수", "010-1234-5678", "kim@example.com");
@@ -168,7 +218,7 @@ class AdminPatientServiceTest {
     }
 
     @Test
-    @DisplayName("update patient converts blank note to null")
+    @DisplayName("환자 수정은 공백 메모를 null로 변환한다")
     void updatePatient_convertsBlankNoteToNull() {
         // given
         Patient patient = Patient.create("김철수", "010-1234-5678", "kim@example.com");
@@ -189,16 +239,18 @@ class AdminPatientServiceTest {
     }
 
     @Test
-    @DisplayName("update patient throws when patient is missing")
+    @DisplayName("환자 수정은 없는 환자 요청 시 예외를 던진다")
     void updatePatient_throwsWhenPatientIsMissing() {
-        // given // when // then
+        // given
+        // when
+        // then
         assertThatThrownBy(() -> adminPatientService.updatePatient(999L, "김철수", "010-1234-5678", "메모"))
                 .isInstanceOf(CustomException.class)
                 .hasMessage("환자를 찾을 수 없습니다.");
     }
 
     @Test
-    @DisplayName("update patient throws when phone is duplicated by another patient")
+    @DisplayName("환자 수정은 다른 환자와 연락처가 중복되면 예외를 던진다")
     void updatePatient_throwsWhenPhoneIsDuplicatedByAnotherPatient() {
         // given
         Patient first = Patient.create("김철수", "010-1234-5678", "kim@example.com");
@@ -208,14 +260,15 @@ class AdminPatientServiceTest {
         entityManager.flush();
         entityManager.clear();
 
-        // when // then
+        // when
+        // then
         assertThatThrownBy(() -> adminPatientService.updatePatient(second.getId(), "박영희", "01012345678", "메모"))
                 .isInstanceOf(CustomException.class)
                 .hasMessage("이미 사용 중인 연락처입니다.");
     }
 
     @Test
-    @DisplayName("update patient allows keeping the same phone")
+    @DisplayName("환자 수정은 같은 연락처를 그대로 유지하는 것을 허용한다")
     void updatePatient_allowsKeepingTheSamePhone() {
         // given
         Patient patient = Patient.create("김철수", "010-1234-5678", "kim@example.com");

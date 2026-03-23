@@ -41,13 +41,26 @@ public interface AdminReservationRepository extends JpaRepository<Reservation, L
             join r.doctor doctor
             join doctor.staff staff
             where (:status is null or r.status = :status)
+              and (
+                    :nameKeyword = ''
+                    or lower(patient.name) like lower(concat('%', :nameKeyword, '%'))
+                    or replace(patient.phone, '-', '') like concat('%', :phoneKeyword, '%')
+                  )
             """, countQuery = """
             select count(r.id)
             from Reservation r
+            join r.patient patient
             where (:status is null or r.status = :status)
+              and (
+                    :nameKeyword = ''
+                    or lower(patient.name) like lower(concat('%', :nameKeyword, '%'))
+                    or replace(patient.phone, '-', '') like concat('%', :phoneKeyword, '%')
+                  )
             """)
     Page<AdminReservationListProjection> findReservationListPage(
             @Param("status") ReservationStatus status,
+            @Param("nameKeyword") String nameKeyword,
+            @Param("phoneKeyword") String phoneKeyword,
             Pageable pageable);
 
     interface DailyPatientCountProjection {
