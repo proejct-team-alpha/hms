@@ -35,7 +35,7 @@ class SymptomControllerTest {
     @DisplayName("POST /llm/symptom/analyze - 비인증 200 (permitAll)")
     void analyze_비인증_200() throws Exception {
         given(symptomAnalysisService.analyzeSymptom(anyString()))
-                .willReturn(Mono.just(new SymptomResponse("내과", "의사이영희", "09:00")));
+                .willReturn(Mono.just(new SymptomResponse(1L, "내과")));
 
         MvcResult result = mockMvc.perform(post("/llm/symptom/analyze")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -48,10 +48,10 @@ class SymptomControllerTest {
     }
 
     @Test
-    @DisplayName("POST /llm/symptom/analyze - 응답 구조 확인 (dept, doctor, time)")
+    @DisplayName("POST /llm/symptom/analyze - 응답 구조 확인 (departmentId, departmentName)")
     void analyze_응답구조() throws Exception {
         given(symptomAnalysisService.analyzeSymptom(anyString()))
-                .willReturn(Mono.just(new SymptomResponse("소아과", "의사최지우", "11:00")));
+                .willReturn(Mono.just(new SymptomResponse(3L, "소아과")));
 
         MvcResult result = mockMvc.perform(post("/llm/symptom/analyze")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -61,8 +61,7 @@ class SymptomControllerTest {
 
         mockMvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.dept").value("소아과"))
-                .andExpect(jsonPath("$.doctor").value("의사최지우"))
-                .andExpect(jsonPath("$.time").value("11:00"));
+                .andExpect(jsonPath("$.departmentId").value(3))
+                .andExpect(jsonPath("$.departmentName").value("소아과"));
     }
 }
