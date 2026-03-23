@@ -150,7 +150,7 @@ class AdminDepartmentControllerTest {
                                 .with(user("admin").roles("ADMIN"))
                                 .with(csrf()))
                                 .andExpect(status().isOk())
-                                .andExpect(content().string(containsString("0 / 0")));
+                                .andExpect(content().string(containsString("\uB4F1\uB85D\uB41C \uC9C4\uB8CC\uACFC\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.")));
         }
 
         @Test

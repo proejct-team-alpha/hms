@@ -139,7 +139,7 @@ public class AdminStaffService {
     }
 
     public AdminStaffFormResponse getCreateForm() {
-        return buildCreateFormResponse("", "", "", DEFAULT_ROLE, null, true, "", List.of());
+        return buildCreateFormResponse("", "", "", DEFAULT_ROLE, null, true, List.of());
     }
 
     public AdminStaffFormResponse getCreateForm(CreateAdminStaffRequest request) {
@@ -150,7 +150,6 @@ public class AdminStaffService {
                 request.role(),
                 request.departmentId(),
                 request.active(),
-                request.specialty(),
                 request.availableDays());
     }
 
@@ -169,6 +168,7 @@ public class AdminStaffService {
     public UpdateAdminStaffApiResponse getUpdateApiResponse(Long staffId, String message) {
         Staff staff = getStaff(staffId);
         Doctor doctor = getDoctorIfNeeded(staff);
+        Department doctorDepartment = doctor == null ? null : doctor.getDepartment();
 
         return new UpdateAdminStaffApiResponse(
                 staff.getId(),
@@ -176,10 +176,9 @@ public class AdminStaffService {
                 staff.getEmployeeNumber(),
                 staff.getName(),
                 staff.getRole().name(),
-                staff.getDepartment() == null ? null : staff.getDepartment().getId(),
-                staff.getDepartment() == null ? NO_DEPARTMENT_LABEL : staff.getDepartment().getName(),
+                doctorDepartment == null ? null : doctorDepartment.getId(),
+                doctorDepartment == null ? NO_DEPARTMENT_LABEL : doctorDepartment.getName(),
                 staff.isActive(),
-                doctor == null ? null : doctor.getSpecialty(),
                 doctor == null ? List.of() : splitAvailableDays(doctor.getAvailableDays()),
                 message
         );
@@ -201,10 +200,10 @@ public class AdminStaffService {
                 passwordEncoder.encode(request.password().trim()),
                 request.name().trim(),
                 role,
-                department);
+                null);
 
         if (!request.active()) {
-            staff.update(staff.getName(), department, false);
+            staff.update(staff.getName(), null, false);
         }
 
         adminStaffRepository.save(staff);
@@ -214,7 +213,7 @@ public class AdminStaffService {
                     staff,
                     department,
                     joinAvailableDays(request.availableDays()),
-                    normalizeNullableText(request.specialty()));
+                    resolveDoctorSpecialty(department));
             doctorRepository.save(doctor);
         }
 
@@ -226,8 +225,7 @@ public class AdminStaffService {
         Staff staff = getStaff(request.staffId());
         Department department = resolveDepartment(request.departmentId());
         validateDoctorDepartment(staff.getRole(), department);
-
-        staff.update(request.name().trim(), department, staff.isActive());
+        staff.update(request.name().trim(), null, request.active());
 
         if (hasText(request.password())) {
             validatePassword(request.password());
@@ -239,7 +237,7 @@ public class AdminStaffService {
                     .orElseThrow(() -> CustomException.notFound(DOCTOR_NOT_FOUND_MESSAGE));
 
             String availableDays = joinAvailableDays(request.availableDays());
-            String specialty = normalizeNullableText(request.specialty());
+            String specialty = resolveDoctorSpecialty(department);
             doctor.updateProfile(department, availableDays, specialty);
         }
 
@@ -258,7 +256,7 @@ public class AdminStaffService {
             throw CustomException.badRequest("VALIDATION_ERROR", ALREADY_DEACTIVATED_MESSAGE);
         }
 
-        staff.update(staff.getName(), staff.getDepartment(), false);
+        staff.update(staff.getName(), null, false);
         return STAFF_DEACTIVATED_MESSAGE;
     }
 
@@ -299,7 +297,6 @@ public class AdminStaffService {
             String selectedRole,
             Long selectedDepartmentId,
             boolean active,
-            String specialty,
             List<String> availableDays) {
         String normalizedRole = normalizeSelectedRole(selectedRole);
         boolean doctorRole = StaffRole.DOCTOR.name().equals(normalizedRole);
@@ -319,7 +316,6 @@ public class AdminStaffService {
                 selectedDepartmentId,
                 active,
                 doctorRole,
-                doctorRole ? nullToEmpty(specialty) : "",
                 buildFormRoleOptions(normalizedRole),
                 buildDepartmentOptions(selectedDepartmentId),
                 buildEmploymentStatusFormOptions(active),
@@ -328,10 +324,9 @@ public class AdminStaffService {
 
     private AdminStaffFormResponse buildEditFormResponse(Staff staff, Doctor doctor, UpdateAdminStaffRequest request) {
         Long selectedDepartmentId = request != null ? request.departmentId()
-                : staff.getDepartment() == null ? null : staff.getDepartment().getId();
+                : doctor == null || doctor.getDepartment() == null ? null : doctor.getDepartment().getId();
         String name = request != null ? request.name() : staff.getName();
-        String specialty = request != null ? nullToEmpty(request.specialty())
-                : doctor == null ? "" : nullToEmpty(doctor.getSpecialty());
+        boolean active = request != null ? request.active() : staff.isActive();
         Set<String> selectedDays = request != null ? normalizeAvailableDaySet(request.availableDays())
                 : doctor == null ? Set.of() : normalizeAvailableDaySet(splitAvailableDays(doctor.getAvailableDays()));
 
@@ -347,12 +342,11 @@ public class AdminStaffService {
                 staff.getRole().name(),
                 ROLE_LABELS.getOrDefault(staff.getRole(), staff.getRole().name()),
                 selectedDepartmentId,
-                staff.isActive(),
+                active,
                 staff.getRole() == StaffRole.DOCTOR,
-                specialty,
                 buildFormRoleOptions(staff.getRole().name()),
                 buildDepartmentOptions(selectedDepartmentId),
-                buildEmploymentStatusFormOptions(staff.isActive()),
+                buildEmploymentStatusFormOptions(active),
                 buildAvailableDayOptions(selectedDays));
     }
 
@@ -608,6 +602,13 @@ public class AdminStaffService {
             return null;
         }
         return value.trim();
+    }
+
+    private String resolveDoctorSpecialty(Department department) {
+        if (department == null) {
+            return null;
+        }
+        return department.getName();
     }
 
     private String nullToEmpty(String value) {

@@ -7,22 +7,27 @@
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
 </head>
-<body>
+<body class="min-h-screen flex">
   {{> common/sidebar-admin}}
 
   <div class="main-content flex-1 flex flex-col ml-64">
     {{> common/header-staff}}
 
-    <main class="content-wrapper">
+    <main class="content-wrapper flex-1 p-6">
       <div class="space-y-6 max-w-6xl mx-auto">
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
-            <p class="text-slate-500 mt-1">환자명 또는 연락처로 예약과 접수 현황을 빠르게 조회합니다.</p>
+      
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+              <i data-feather="calendar" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
+              <p class="text-slate-500 mt-1">환자명 또는 연락처로 예약과 접수 현황을 빠르게 조회합니다.</p>
+            </div>
           </div>
           <div class="text-sm text-slate-500 text-right">
             <div>총 <span class="font-semibold text-slate-700">{{model.totalCount}}</span>건</div>
-            <div>{{model.currentPage}} 페이지</div>
           </div>
         </div>
 

@@ -7,27 +7,33 @@
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
 </head>
-<body>
+<body class="min-h-screen flex">
   {{> common/sidebar-admin}}
 
   <div class="main-content flex-1 flex flex-col ml-64">
     {{> common/header-staff}}
 
-    <main class="content-wrapper">
+    <main class="content-wrapper flex-1 p-6">
       <div class="space-y-6 max-w-6xl mx-auto">
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
-            <p class="text-slate-500 mt-1">이름, 로그인 아이디, 역할, 재직 상태 기준으로 직원을 조회합니다.</p>
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+              <i data-feather="users" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
+              <p class="text-slate-500 mt-1">이름, 로그인 아이디, 역할, 재직 상태 기준으로 직원을 조회합니다.</p>
+            </div>
           </div>
           <div class="flex items-center gap-4">
-            <div class="text-sm text-slate-500">
+            <div class="text-sm text-slate-500 text-right">
               총 <span class="font-semibold text-slate-700">{{model.totalCount}}</span>명
             </div>
             <a
               href="/admin/staff/new"
-              class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+              class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
             >
+              <i data-feather="plus" class="w-4 h-4"></i>
               직원 등록
             </a>
           </div>

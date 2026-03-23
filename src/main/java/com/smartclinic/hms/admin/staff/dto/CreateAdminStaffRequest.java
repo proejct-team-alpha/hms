@@ -1,14 +1,13 @@
 package com.smartclinic.hms.admin.staff.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
 public record CreateAdminStaffRequest(
         @NotBlank(message = "로그인 아이디는 필수입니다.")
-        @Size(max = 50, message = "로그인 아이디는 50자 이하로 입력해주세요.")
+        @Size(max = 50, message = "로그인 아이디는 50자 이하로 입력해 주세요.")
         String username,
 
         @NotBlank(message = "비밀번호는 필수입니다.")
@@ -16,23 +15,19 @@ public record CreateAdminStaffRequest(
         String password,
 
         @NotBlank(message = "이름은 필수입니다.")
-        @Size(max = 50, message = "이름은 50자 이하로 입력해주세요.")
+        @Size(max = 50, message = "이름은 50자 이하로 입력해 주세요.")
         String name,
 
         @NotBlank(message = "사번은 필수입니다.")
-        @Size(max = 20, message = "사번은 20자 이하로 입력해주세요.")
+        @Size(max = 20, message = "사번은 20자 이하로 입력해 주세요.")
         String employeeNumber,
 
         @NotBlank(message = "역할은 필수입니다.")
         String role,
 
-        @NotNull(message = "부서는 필수입니다.")
         Long departmentId,
 
         boolean active,
-
-        @Size(max = 100, message = "전문 분야는 100자 이하로 입력해주세요.")
-        String specialty,
 
         List<String> availableDays
 ) {

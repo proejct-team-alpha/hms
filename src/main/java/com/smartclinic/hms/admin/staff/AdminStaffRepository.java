@@ -23,10 +23,11 @@ public interface AdminStaffRepository extends JpaRepository<Staff, Long> {
                 s.username as username,
                 s.employeeNumber as employeeNumber,
                 s.role as role,
-                d.name as departmentName,
+                doctorDepartment.name as departmentName,
                 s.active as active
             from Staff s
-            left join s.department d
+            left join Doctor doctor on doctor.staff = s
+            left join doctor.department doctorDepartment
             where (:keyword is null
                 or lower(s.name) like lower(concat('%', :keyword, '%'))
                 or lower(s.username) like lower(concat('%', :keyword, '%')))
