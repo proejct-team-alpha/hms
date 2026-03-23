@@ -50,15 +50,15 @@
       <div class="max-w-6xl mx-auto">
         
         <!-- 상단 헤더 섹션 -->
-        <div class="flex items-end justify-between mb-8">
-          <div class="space-y-1">
-            <div class="flex items-center gap-2 text-indigo-600 font-bold text-sm mb-1">
-              <i data-feather="calendar" class="w-4 h-4"></i>
-              <span>MediCare+</span>
+        <div class="flex items-center justify-between mb-8">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+              <i data-feather="check-circle" class="w-6 h-6"></i>
             </div>
-            <h1 class="text-3xl font-black text-slate-800 tracking-tight">
-              {{searchDate}} <span class="text-slate-400 font-light text-2xl ml-1">진료 완료 목록</span>
-            </h1>
+            <div>
+              <h1 class="text-2xl font-bold text-slate-800">진료 완료 목록</h1>
+              <p class="text-slate-500 mt-1">{{searchDate}}의 진료 완료 내역입니다.</p>
+            </div>
           </div>
           <div class="flex items-center gap-6">
             <!-- 검색창 및 검색 버튼 추가 -->

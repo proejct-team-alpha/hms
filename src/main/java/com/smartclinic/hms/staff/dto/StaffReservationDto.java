@@ -9,6 +9,7 @@ import lombok.Getter;
 public class StaffReservationDto {
 
     private final Long id;
+    private final Long patientId; // [신규 추가] 환자 고유 번호 (ID)
     private final String reservationNumber;
     private final String patientName;
     private final String patientPhone;
@@ -17,7 +18,9 @@ public class StaffReservationDto {
     private final String patientNote;
     private final String reservationDate;
     private final String timeSlot;
+    private final Long departmentId;
     private final String departmentName;
+    private final Long doctorId;
     private final String doctorName;
     private final String statusText;
     private final String statusBadgeClass;
@@ -63,6 +66,7 @@ public class StaffReservationDto {
      */
     public StaffReservationDto(Reservation r, long completedCount, java.util.List<com.smartclinic.hms.domain.PatientHistoryDto> history) {
         this.id = r.getId();
+        this.patientId = r.getPatient().getId(); // [주석] 환자 엔티티의 고유 ID를 가져옵니다.
         this.reservationNumber = r.getReservationNumber();
         this.patientName = r.getPatient().getName();
         this.patientPhone = r.getPatient().getPhone();
@@ -71,7 +75,9 @@ public class StaffReservationDto {
         this.patientNote = r.getPatient().getNote() != null ? r.getPatient().getNote() : "";
         this.reservationDate = r.getReservationDate().toString();
         this.timeSlot = r.getTimeSlot();
+        this.departmentId = r.getDepartment().getId();
         this.departmentName = r.getDepartment().getName();
+        this.doctorId = r.getDoctor().getId();
         this.doctorName = r.getDoctor().getStaff().getName();
         this.cancellationReason = r.getCancellationReason();
         this.history = history;

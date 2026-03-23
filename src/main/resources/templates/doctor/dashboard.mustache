@@ -14,46 +14,83 @@
     {{> common/header-staff}}
 
     <main class="content-wrapper flex-1 p-6">
-      <div class="space-y-6 max-w-5xl mx-auto">
+      <div class="space-y-6 max-w-6xl mx-auto">
         <h1 class="text-2xl font-bold text-slate-800">의사 대시보드</h1>
 
         {{#message}}
           <div class="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">{{message}}</div>
         {{/message}}
+        {{#errorMessage}}
+          <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">{{errorMessage}}</div>
+        {{/errorMessage}}
 
-        <!-- 통계 카드 -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <!-- 4단 통계 카드 (한 줄 정렬) -->
+        <div class="grid grid-cols-4 gap-4">
+          <!-- 1. 오늘의 환자 수 -->
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 transition-all hover:shadow-md">
             <div class="flex items-center gap-4">
               <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
                 <i data-feather="users" class="w-6 h-6"></i>
               </div>
               <div>
-                <div class="text-sm font-medium text-slate-500">오늘 진료 환자 수</div>
-                <div class="text-2xl font-bold text-slate-800">{{dashboard.totalPatients}}명</div>
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">오늘의 환자 수</div>
+                <div class="text-2xl font-bold text-slate-800">{{dashboard.totalToday}}명</div>
               </div>
             </div>
           </div>
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <!-- 2. 대기 환자 수 -->
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 transition-all hover:shadow-md">
             <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
+              <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                <i data-feather="clock" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">대기 환자 수</div>
+                <div class="text-2xl font-bold text-slate-800">{{dashboard.waitingCount}}명</div>
+              </div>
+            </div>
+          </div>
+          <!-- 3. 진료 완료 수 -->
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 transition-all hover:shadow-md">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
                 <i data-feather="check-circle" class="w-6 h-6"></i>
               </div>
               <div>
-                <div class="text-sm font-medium text-slate-500">진료 완료</div>
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">진료 완료 수</div>
                 <div class="text-2xl font-bold text-slate-800">{{dashboard.completedCount}}명</div>
               </div>
             </div>
           </div>
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <!-- 4. 예약 환자 수 -->
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 transition-all hover:shadow-md">
             <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
-                <i data-feather="clock" class="w-6 h-6"></i>
+              <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600">
+                <i data-feather="calendar" class="w-6 h-6"></i>
               </div>
               <div>
-                <div class="text-sm font-medium text-slate-500">현재 대기 중</div>
-                <div class="text-2xl font-bold text-slate-800">{{dashboard.waitingCount}}명</div>
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">예약 환자 수</div>
+                <div class="text-2xl font-bold text-slate-800">{{dashboard.reservedCount}}명</div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 실시간 업무 브리핑 박스 (순수 정보 전달용) -->
+        <div class="rounded-2xl shadow-sm p-5 flex items-center border-l-4 transition-all {{dashboard.boxClass}}">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center {{dashboard.iconClass}}">
+              <i data-feather="{{dashboard.iconName}}" class="w-5 h-5"></i>
+            </div>
+            <div>
+              {{#dashboard.waitingCount}}
+                <p class="font-medium">
+                  의사 이영희님, 현재 진료를 대기 중인 환자가 <span class="font-bold text-lg underline">{{dashboard.waitingCount}}</span>명 있습니다.
+                </p>
+              {{/dashboard.waitingCount}}
+              {{^dashboard.waitingCount}}
+                <p class="font-medium">현재 모든 대기 환자의 진료가 완료되었습니다. 수고하셨습니다!</p>
+              {{/dashboard.waitingCount}}
             </div>
           </div>
         </div>
@@ -62,11 +99,11 @@
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
           <div class="flex justify-between items-center mb-6">
             <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <i data-feather="calendar" class="w-5 h-5 text-indigo-600"></i>
+              <i data-feather="list" class="w-5 h-5 text-indigo-600"></i>
               오늘의 진료 일정 미리 보기
             </h2>
             <a href="/doctor/treatment-list" class="text-sm text-indigo-600 font-medium flex items-center gap-1 hover:text-indigo-800">
-              진료 목록 전체보기 <i data-feather="arrow-right" class="w-4 h-4"></i>
+              진료 현황 전체보기 <i data-feather="arrow-right" class="w-4 h-4"></i>
             </a>
           </div>
 
@@ -86,7 +123,7 @@
                   {{/isFirstVisit}}
                   <div class="font-bold text-slate-800">{{patientName}}</div>
                 </div>
-                <div class="text-xs text-slate-500 truncate">{{note}}</div>
+                <div class="text-xs text-slate-500 truncate">{{visitReason}}</div>
               </a>
             {{/dashboard.schedulePreview}}
             {{^dashboard.schedulePreview}}

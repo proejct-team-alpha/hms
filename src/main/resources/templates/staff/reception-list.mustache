@@ -144,6 +144,7 @@
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
+                <th class="p-4 font-medium">환자번호</th>
                 <th class="p-4 font-medium">날짜</th>
                 <th class="p-4 font-medium">시간</th>
                 <th class="p-4 font-medium">환자명</th>
@@ -158,6 +159,7 @@
             <tbody class="divide-y divide-slate-200">
               {{#reservations}}
               <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="location.href='/staff/reception/detail?id={{id}}&date={{#hasDate}}{{currentDate}}{{/hasDate}}&status={{currentStatus}}&page={{currentPage}}'">
+                <td class="p-4 text-sm text-slate-600 font-mono">{{#patientId}}{{patientId}}{{/patientId}}</td>
                 <td class="p-4 text-sm text-slate-600">{{reservationDate}}</td>
                 <td class="p-4 text-sm font-medium text-slate-900">{{timeSlot}}</td>
                 <td class="p-4 text-sm font-semibold text-slate-800">
@@ -194,13 +196,10 @@
                     
                     {{#canReceive}}
                     
-                    <button 
-  type="button"
-  onclick="receiveAjax({{id}}, this, '{{currentStatus}}')"
-  class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 hover:bg-green-100 text-sm font-medium rounded-lg transition">
-  <i data-feather="check-circle" class="w-3.5 h-3.5"></i> 접수
-</button>
-
+                    <a href="/staff/walkin-reception?reservationId={{id}}&name={{patientName}}&phone={{patientPhone}}&deptId={{departmentId}}&doctorId={{doctorId}}"
+                       class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 hover:bg-green-100 text-sm font-medium rounded-lg transition">
+                      <i data-feather="check-circle" class="w-3.5 h-3.5"></i> 접수
+                    </a>
 
                     {{/canReceive}}
 

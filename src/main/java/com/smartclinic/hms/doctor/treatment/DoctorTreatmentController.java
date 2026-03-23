@@ -35,18 +35,46 @@ public class DoctorTreatmentController {
     // [W3-1] GET /doctor/treatment-list/poll — 5초 폴링 AJAX 엔드포인트
     @GetMapping("/treatment-list/poll")
     @ResponseBody
-    public ResponseEntity<Resp<List<DoctorReservationDto>>> pollTreatmentList(Authentication auth) {
-        List<DoctorReservationDto> list = treatmentService.getTodayReceivedList(auth.getName());
+    public ResponseEntity<Resp<List<DoctorReservationDto>>> pollTreatmentList(Authentication auth,
+                                                                             @RequestParam(name = "query", required = false) String query) {
+        List<DoctorReservationDto> list = treatmentService.getTodayReceivedList(auth.getName(), query);
         return Resp.ok(list);
     }
 
     @GetMapping("/treatment-list")
     public String treatmentList(Authentication auth,
+                                @RequestParam(name = "date", required = false) String date,
+                                @RequestParam(name = "tab", defaultValue = "waiting") String tab,
+                                @RequestParam(name = "query", required = false) String query,
                                 @RequestParam(name = "page", defaultValue = "0") int page,
                                 Model model) {
-        Page<DoctorReservationDto> resultPage = treatmentService.getTreatmentPage(auth.getName(), page);
-        addPaginationAttributes(model, resultPage, page, "/doctor/treatment-list?page=");
-        model.addAttribute("pageTitle", "진료 목록");
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalDate searchDate = (date != null && !date.isBlank()) 
+                ? java.time.LocalDate.parse(date) 
+                : today;
+
+        Page<DoctorReservationDto> resultPage = treatmentService.getTreatmentPage(auth.getName(), searchDate, tab, query, page);
+        
+        StringBuilder baseUrl = new StringBuilder("/doctor/treatment-list?");
+        baseUrl.append("date=").append(searchDate.toString()).append("&");
+        baseUrl.append("tab=").append(tab).append("&");
+        if (query != null && !query.isBlank()) {
+            baseUrl.append("query=").append(query).append("&");
+        }
+        baseUrl.append("page=");
+        
+        addPaginationAttributes(model, resultPage, page, baseUrl.toString());
+        model.addAttribute("searchDate", searchDate.toString());
+        model.addAttribute("currentTab", tab);
+        model.addAttribute("isWaitingTab", "waiting".equals(tab));
+        model.addAttribute("isCompletedTab", "completed".equals(tab));
+        model.addAttribute("isAllTab", "all".equals(tab));
+        model.addAttribute("isToday", searchDate.isEqual(today));
+        model.addAttribute("isPastDate", searchDate.isBefore(today));
+        model.addAttribute("query", query);
+        model.addAttribute("totalPatients", resultPage.getTotalElements());
+        model.addAttribute("dailyTotalPatients", treatmentService.getDailyTotalCount(auth.getName(), searchDate));
+        model.addAttribute("pageTitle", "진료 현황");
         return "doctor/treatment-list";
     }
 

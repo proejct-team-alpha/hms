@@ -35,6 +35,12 @@ public class Patient {
     @Column(length = 500)
     private String note;
 
+    @Column(name = "birth_info", length = 8)
+    private String birthInfo; // 생년월일 및 성별 정보 (예: "940101-2")
+
+    @Column(name = "visit_reason", length = 500)
+    private String visitReason;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -70,5 +76,14 @@ public class Patient {
     public void updateAddressAndNote(String address, String note) {
         this.address = address;
         this.note = note;
+    }
+
+    /**
+     * 환자의 의료 관련 정보(주민번호 앞자리/성별, 내원 사유)를 업데이트한다.
+     * 방문 접수 시 입력받은 정보를 저장하는 데 사용된다.
+     */
+    public void updateMedicalInfo(String birthInfo, String visitReason) {
+        this.birthInfo = birthInfo;
+        this.visitReason = visitReason;
     }
 }

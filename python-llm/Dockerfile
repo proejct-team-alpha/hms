@@ -8,9 +8,9 @@ RUN useradd --create-home appuser
 
 WORKDIR /app
 
-# 의존성 설치 (lock 파일 사용)
-COPY requirements-lock.txt .
-RUN pip install --no-cache-dir -r requirements-lock.txt
+# 의존성 설치
+COPY requirements.txt requirements-lock.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
 # 소스 복사
 COPY *.py ./
