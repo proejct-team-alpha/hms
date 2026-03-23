@@ -60,7 +60,7 @@ public class WalkinService {
                         patient.updateMedicalInfo(request.getBirthInfo(), request.getVisitReason());
                 }
 
-                // 2. 환자의 주소 및 기타 메모 정보 업데이트
+                // [주석] 환자의 주소 및 기타 메모 정보를 업데이트합니다.
                 String combinedAddress = null;
                 if (request.getAddress() != null && !request.getAddress().isBlank()) {
                         combinedAddress = String.format("[%s] %s %s", 
@@ -68,6 +68,7 @@ public class WalkinService {
                 }
                 patient.updateAddressAndNote(combinedAddress, request.getNotes());
 
+                // [주석] 선택된 의사와 진료과 정보를 조회합니다.
                 Doctor doctor = doctorRepository.findById(request.getDoctorId())
                                 .orElseThrow(() -> CustomException
                                                 .notFound("의사를 찾을 수 없습니다. ID: " + request.getDoctorId()));
@@ -76,35 +77,49 @@ public class WalkinService {
                                 .orElseThrow(() -> CustomException
                                                 .notFound("진료과를 찾을 수 없습니다. ID: " + request.getDepartmentId()));
 
-                // 중복 접수 검증 (request.getDate()가 이미 LocalDate 타입이므로 parse 불필요!)
-                LocalDate reservationDate = request.getDate();
-                List<Reservation> existingReservations = reservationRepository.findTodayExcludingStatus(reservationDate,
-                                ReservationStatus.CANCELLED);
-                boolean isDuplicate = existingReservations.stream()
-                                .anyMatch(r -> r.getDoctor().getId().equals(doctor.getId())
-                                                && r.getTimeSlot().equals(request.getTime()));
-                if (isDuplicate) {
-                        throw CustomException.conflict("DUPLICATE_RESERVATION",
-                                        "해당 의사 선생님의 선택하신 시간대에는 이미 접수된 정보가 있습니다.");
+                // 2. 예약/접수 데이터 처리
+                if (request.getReservationId() != null) {
+                        // [주석] 기존 예약 정보를 가지고 넘어온 경우 (예약 환자 접수)
+                        Reservation reservation = reservationRepository.findById(request.getReservationId())
+                                        .orElseThrow(() -> CustomException
+                                                        .notFound("예약 정보를 찾을 수 없습니다. ID: " + request.getReservationId()));
+
+                        // [주석] 상태를 '진료 대기'로 변경합니다.
+                        reservation.receive();
+                        
+                } else {
+                        // [주석] 새로운 방문 접수인 경우 (일반 현장 접수)
+                        
+                        // 중복 접수 검증
+                        LocalDate reservationDate = request.getDate();
+                        List<Reservation> existingReservations = reservationRepository.findTodayExcludingStatus(reservationDate,
+                                        ReservationStatus.CANCELLED);
+                        boolean isDuplicate = existingReservations.stream()
+                                        .anyMatch(r -> r.getDoctor().getId().equals(doctor.getId())
+                                                        && r.getTimeSlot().equals(request.getTime()));
+                        if (isDuplicate) {
+                                throw CustomException.conflict("DUPLICATE_RESERVATION",
+                                                "해당 의사 선생님의 선택하신 시간대에는 이미 접수된 정보가 있습니다.");
+                        }
+
+                        String reservationNumber = reservationNumberGenerator.generate(
+                                        reservationDate,
+                                        () -> reservationRepository.countByReservationDate(reservationDate));
+
+                        Reservation reservation = Reservation.create(
+                                        reservationNumber,
+                                        patient,
+                                        doctor,
+                                        department,
+                                        reservationDate,
+                                        request.getTime(),
+                                        ReservationSource.WALKIN);
+
+                        // 방문 접수는 생성 즉시 '진료 대기'(RECEIVED) 상태로 변경
+                        reservation.receive();
+
+                        reservationRepository.save(reservation);
                 }
-
-                String reservationNumber = reservationNumberGenerator.generate(
-                                reservationDate,
-                                () -> reservationRepository.countByReservationDate(reservationDate));
-
-                Reservation reservation = Reservation.create(
-                                reservationNumber,
-                                patient,
-                                doctor,
-                                department,
-                                reservationDate,
-                                request.getTime(),
-                                ReservationSource.WALKIN);
-
-                // 방문 접수는 생성 즉시 '진료 대기'(RECEIVED) 상태로 변경
-                reservation.receive();
-
-                reservationRepository.save(reservation);
 
                 return nameMismatch;
         }

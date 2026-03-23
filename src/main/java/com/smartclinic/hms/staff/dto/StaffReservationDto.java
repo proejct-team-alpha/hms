@@ -17,7 +17,9 @@ public class StaffReservationDto {
     private final String patientNote;
     private final String reservationDate;
     private final String timeSlot;
+    private final Long departmentId;
     private final String departmentName;
+    private final Long doctorId;
     private final String doctorName;
     private final String statusText;
     private final String statusBadgeClass;
@@ -71,7 +73,9 @@ public class StaffReservationDto {
         this.patientNote = r.getPatient().getNote() != null ? r.getPatient().getNote() : "";
         this.reservationDate = r.getReservationDate().toString();
         this.timeSlot = r.getTimeSlot();
+        this.departmentId = r.getDepartment().getId();
         this.departmentName = r.getDepartment().getName();
+        this.doctorId = r.getDoctor().getId();
         this.doctorName = r.getDoctor().getStaff().getName();
         this.cancellationReason = r.getCancellationReason();
         this.history = history;

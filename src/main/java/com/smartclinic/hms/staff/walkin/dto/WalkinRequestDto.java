@@ -11,6 +11,11 @@ import lombok.Data;
 @Data
 public class WalkinRequestDto {
 
+    /**
+     * [신규] 예약 연동 시 사용할 기존 예약 ID
+     */
+    private Long reservationId;
+
     @NotBlank(message = "환자 이름은 필수입니다.")
     private String name;
 

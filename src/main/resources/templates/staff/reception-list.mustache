@@ -194,13 +194,10 @@
                     
                     {{#canReceive}}
                     
-                    <button 
-  type="button"
-  onclick="receiveAjax({{id}}, this, '{{currentStatus}}')"
-  class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 hover:bg-green-100 text-sm font-medium rounded-lg transition">
-  <i data-feather="check-circle" class="w-3.5 h-3.5"></i> 접수
-</button>
-
+                    <a href="/staff/walkin-reception?reservationId={{id}}&name={{patientName}}&phone={{patientPhone}}&deptId={{departmentId}}&doctorId={{doctorId}}"
+                       class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 hover:bg-green-100 text-sm font-medium rounded-lg transition">
+                      <i data-feather="check-circle" class="w-3.5 h-3.5"></i> 접수
+                    </a>
 
                     {{/canReceive}}
 
