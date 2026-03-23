@@ -3,13 +3,14 @@ LLM 추론 서버 - FastAPI 앱
 PRD 기반: Spring Boot에서 HTTP 호출, RAG 없이 순수 LLM 추론
 """
 
+import asyncio
 import logging
 import time as _time
 from contextlib import asynccontextmanager
 
 import json
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 
@@ -27,7 +28,7 @@ from prompt_loader import load_prompt
 from response_cleaner import NON_KOREAN_CJK_PATTERN, SPECIAL_TOKEN_PATTERN, clean_llm_response
 import aiomysql
 from schemas import InferRequest, InferResponse, FeedbackRequest, FeedbackResponse
-from typo_corrector import correct_typos
+from typo_corrector import correct_typos_async
 
 # 로깅 설정
 logging.basicConfig(
@@ -35,6 +36,10 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+# LLM 생성 중단 토큰 (공통 상수)
+STOP_TOKENS = ["<|im_start|>", "<|im_end|>", "<|endoftext|>", "，。，", "。，。"]
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -87,6 +92,120 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization", "X-Session-Id"],
 )
 
+
+# ──────────────────────────────────────────────
+# 헬퍼 함수
+# ──────────────────────────────────────────────
+
+def _build_history_messages(history: list | None) -> list[dict]:
+    """대화 이력에서 최근 3턴(6개) 메시지를 추출한다."""
+    if not history:
+        return []
+    messages = []
+    recent = history[-6:]
+    for msg in recent:
+        role = msg.role if hasattr(msg, "role") else msg.get("role")
+        content = msg.content if hasattr(msg, "content") else msg.get("content")
+        if role in ("user", "assistant") and content:
+            messages.append({"role": role, "content": content})
+    return messages
+
+
+def _build_medical_messages(corrected_query: str, medical_context: str, history: list | None) -> list[dict]:
+    """의학 추론용 메시지 리스트를 조합한다."""
+    messages = [{"role": "system", "content": load_prompt("medical_system")}]
+    if medical_context:
+        messages.append({"role": "system", "content": medical_context})
+    messages.extend(_build_history_messages(history))
+    messages.append({"role": "user", "content": corrected_query})
+    return messages
+
+
+def _build_rule_messages(corrected_query: str, rule_context: str, history: list | None) -> list[dict]:
+    """병원규칙 추론용 메시지 리스트를 조합한다."""
+    messages = [{"role": "system", "content": load_prompt("rule_system")}]
+    messages.append({"role": "system", "content": rule_context})
+    messages.extend(_build_history_messages(history))
+    messages.append({"role": "user", "content": corrected_query})
+    return messages
+
+
+async def _chat_llm(messages: list[dict], body: InferRequest, client: httpx.AsyncClient) -> str:
+    """vLLM 또는 Ollama Chat API를 호출한다."""
+    settings = get_settings()
+    if settings.llm_backend == "vllm":
+        from vllm_service import chat_with_vllm
+        return await chat_with_vllm(
+            messages=messages,
+            temperature=body.temperature,
+            max_length=body.max_length,
+            stop=STOP_TOKENS,
+            client=client,
+        )
+    else:
+        from ollama_service import chat_with_ollama
+        return await chat_with_ollama(
+            messages=messages,
+            temperature=body.temperature,
+            max_length=body.max_length,
+            stop=STOP_TOKENS,
+            client=client,
+        )
+
+
+def _get_chat_stream_fn():
+    """스트리밍용 chat 함수를 반환한다."""
+    settings = get_settings()
+    if settings.llm_backend == "vllm":
+        from vllm_service import chat_with_vllm_stream
+        return chat_with_vllm_stream
+    else:
+        from ollama_service import chat_with_ollama_stream
+        return chat_with_ollama_stream
+
+
+def _make_sse_generator(chat_stream_fn, messages: list[dict], body: InferRequest, client: httpx.AsyncClient):
+    """SSE 스트리밍 제너레이터를 생성한다."""
+    async def generate_sse():
+        try:
+            async for item in chat_stream_fn(
+                messages=messages,
+                temperature=body.temperature,
+                max_length=body.max_length,
+                stop=STOP_TOKENS,
+                client=client,
+            ):
+                if "token" in item:
+                    raw_token = item["token"]
+                    token = SPECIAL_TOKEN_PATTERN.sub("", raw_token)
+                    token = NON_KOREAN_CJK_PATTERN.sub("", token)
+                    if token:
+                        data = json.dumps({"token": token}, ensure_ascii=False)
+                        yield f"data: {data}\n\n"
+                if item.get("done"):
+                    yield "data: [DONE]\n\n"
+        except Exception as exc:
+            logger.error("Stream error: %s", exc)
+            yield f"data: {json.dumps({'error': '응답 생성 중 오류가 발생했습니다'}, ensure_ascii=False)}\n\n"
+    return generate_sse
+
+
+def _streaming_response(generator):
+    """SSE StreamingResponse를 생성한다."""
+    return StreamingResponse(
+        generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+# ──────────────────────────────────────────────
+# 엔드포인트
+# ──────────────────────────────────────────────
 
 @app.get("/")
 def root():
@@ -151,8 +270,8 @@ async def health():
     # MySQL 체크
     checks["mysql"] = await _check_mysql_health()
 
-    # ChromaDB 체크
-    checks["chromadb"] = _check_chromadb_health()
+    # ChromaDB 체크 (동기 호출을 to_thread로 감싸서 이벤트 루프 블로킹 방지)
+    checks["chromadb"] = await asyncio.to_thread(_check_chromadb_health)
 
     all_healthy = all(checks.values())
 
@@ -194,8 +313,7 @@ def runtime_error_handler(request: Request, exc: RuntimeError):
 def connection_error_handler(request: Request, exc: ConnectionError):
     """Ollama/외부 서버 연결 실패 시 503 반환"""
     logger.error("Connection error: %s", exc)
-    detail = str(exc) if str(exc) else "LLM 서버에 연결할 수 없습니다. 서버 실행 여부를 확인하세요."
-    return JSONResponse(status_code=503, content={"detail": detail})
+    return JSONResponse(status_code=503, content={"detail": "LLM 서버에 연결할 수 없습니다. 서버 실행 여부를 확인하세요."})
 
 
 @app.exception_handler(OSError)
@@ -203,8 +321,7 @@ def os_error_handler(request: Request, exc: OSError):
     """모델 로딩 실패(DLL 등) 503 반환"""
     logger.error("OS error: %s", exc)
     if isinstance(exc, ConnectionError):
-        detail = str(exc) if str(exc) else "LLM 서버에 연결할 수 없습니다. 서버 실행 여부를 확인하세요."
-        return JSONResponse(status_code=503, content={"detail": detail})
+        return JSONResponse(status_code=503, content={"detail": "LLM 서버에 연결할 수 없습니다. 서버 실행 여부를 확인하세요."})
     return JSONResponse(status_code=503, content={"detail": "LLM 모델 로딩 실패"})
 
 
@@ -214,7 +331,7 @@ def circuit_breaker_handler(request: Request, exc: ServiceUnavailableError):
     logger.warning("Circuit breaker rejected request: %s", exc)
     return JSONResponse(
         status_code=503,
-        content={"detail": str(exc)},
+        content={"detail": "LLM 서비스가 일시적으로 중단되었습니다. 잠시 후 다시 시도해 주세요."},
         headers={"Retry-After": "30"},
     )
 
@@ -240,7 +357,7 @@ async def infer(request: Request, body: InferRequest) -> InferResponse:
 
     settings = get_settings()
 
-    corrected = correct_typos(body.query)
+    corrected = await correct_typos_async(body.query)
 
     try:
         if settings.llm_backend == "vllm":
@@ -264,10 +381,10 @@ async def infer(request: Request, body: InferRequest) -> InferResponse:
                 client=request.app.state.http_client,
             )
         else:
-            # ollama (default fallback)
             from llm_service import generate
 
-            generated_text = generate(
+            generated_text = await asyncio.to_thread(
+                generate,
                 query=corrected,
                 max_length=body.max_length,
                 temperature=body.temperature,
@@ -275,11 +392,13 @@ async def infer(request: Request, body: InferRequest) -> InferResponse:
                 num_return_sequences=body.num_return_sequences,
             )
     except Exception as exc:
+        _elapsed = (_time.time() - _start) * 1000
         fallback = settings.llm_fallback_response
         if fallback:
             logger.warning("LLM failed: %s, using fallback response", exc)
             generated_text = fallback
         else:
+            metrics.record_request(latency_ms=_elapsed, success=False)
             raise
 
     _elapsed = (_time.time() - _start) * 1000
@@ -301,52 +420,19 @@ async def infer_medical(request: Request, body: InferRequest) -> InferResponse:
     query_preview = body.query[:50] + "..." if len(body.query) > 50 else body.query
     logger.info("Medical infer request: query=%s", repr(query_preview))
 
-    settings = get_settings()
-
-    # (0) 오타 교정
-    corrected_query = correct_typos(body.query)
-
-    # (1) 의학 컨텍스트 조회
+    corrected_query = await correct_typos_async(body.query)
     medical_context = await build_medical_context(corrected_query)
     logger.info("Medical context: %d chars", len(medical_context))
 
-    # (2) 프롬프트 조합
-    messages = [{"role": "system", "content": load_prompt("medical_system")}]
-    if medical_context:
-        messages.append({"role": "system", "content": medical_context})
+    messages = _build_medical_messages(corrected_query, medical_context, body.history)
 
-    # 대화 이력 포함 (최근 3턴 = 6 메시지 제한)
-    if body.history:
-        recent_history = body.history[-6:]  # 최근 3턴
-        for msg in recent_history:
-            if msg.get("role") in ("user", "assistant") and msg.get("content"):
-                messages.append({"role": msg["role"], "content": msg["content"]})
-
-    messages.append({"role": "user", "content": corrected_query})
-
-    # (3) LLM Chat API 호출 (vLLM 또는 Ollama)
-    stop_tokens = ["<|im_start|>", "<|im_end|>", "<|endoftext|>", "，。，", "。，。"]
-
-    if settings.llm_backend == "vllm":
-        from vllm_service import chat_with_vllm
-        raw_text = await chat_with_vllm(
-            messages=messages,
-            temperature=body.temperature,
-            max_length=body.max_length,
-            stop=stop_tokens,
-            client=request.app.state.http_client,
-        )
-    else:
-        # ollama (default fallback)
-        from ollama_service import chat_with_ollama
-        raw_text = await chat_with_ollama(
-            messages=messages,
-            temperature=body.temperature,
-            max_length=body.max_length,
-            stop=stop_tokens,
-            client=request.app.state.http_client,
-        )
-    generated_text = clean_llm_response(raw_text)
+    try:
+        raw_text = await _chat_llm(messages, body, request.app.state.http_client)
+        generated_text = clean_llm_response(raw_text)
+    except Exception:
+        _elapsed = (_time.time() - _start) * 1000
+        metrics.record_request(latency_ms=_elapsed, success=False, vector_hit=len(medical_context) > 0)
+        raise
 
     _elapsed = (_time.time() - _start) * 1000
     metrics.record_request(latency_ms=_elapsed, success=True, vector_hit=len(medical_context) > 0)
@@ -364,67 +450,14 @@ async def infer_medical_stream(request: Request, body: InferRequest):
     query_preview = body.query[:50] + "..." if len(body.query) > 50 else body.query
     logger.info("Medical stream request: query=%s", repr(query_preview))
 
-    settings = get_settings()
-
-    corrected_query = correct_typos(body.query)
+    corrected_query = await correct_typos_async(body.query)
     medical_context = await build_medical_context(corrected_query)
     logger.info("Medical context (stream): %d chars", len(medical_context))
 
-    messages = [{"role": "system", "content": load_prompt("medical_system")}]
-    if medical_context:
-        messages.append({"role": "system", "content": medical_context})
-
-    # 대화 이력 포함 (최근 3턴 = 6 메시지 제한)
-    if body.history:
-        recent_history = body.history[-6:]  # 최근 3턴
-        for msg in recent_history:
-            if msg.get("role") in ("user", "assistant") and msg.get("content"):
-                messages.append({"role": msg["role"], "content": msg["content"]})
-
-    messages.append({"role": "user", "content": corrected_query})
-
-    stop_tokens = ["<|im_start|>", "<|im_end|>", "<|endoftext|>", "，。，", "。，。"]
-    http_client = request.app.state.http_client
-
-    if settings.llm_backend == "vllm":
-        from vllm_service import chat_with_vllm_stream as _chat_stream
-    else:
-        # ollama (default fallback)
-        from ollama_service import chat_with_ollama_stream as _chat_stream
-
-    async def generate_sse():
-        try:
-            async for item in _chat_stream(
-                messages=messages,
-                temperature=body.temperature,
-                max_length=body.max_length,
-                stop=stop_tokens,
-                client=http_client,
-            ):
-                if "token" in item:
-                    raw_token = item["token"]
-                    # 특수 토큰 + 중국어/일본어 문자 실시간 제거
-                    token = SPECIAL_TOKEN_PATTERN.sub("", raw_token)
-                    token = NON_KOREAN_CJK_PATTERN.sub("", token)
-                    if token:
-                        data = json.dumps({"token": token}, ensure_ascii=False)
-                        yield f"data: {data}\n\n"
-                if item.get("done"):
-                    yield "data: [DONE]\n\n"
-        except Exception as exc:
-            logger.error("Stream error: %s", exc)
-            error_data = json.dumps({"error": str(exc)}, ensure_ascii=False)
-            yield f"data: {error_data}\n\n"
-
-    return StreamingResponse(
-        generate_sse(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
-    )
+    messages = _build_medical_messages(corrected_query, medical_context, body.history)
+    chat_stream_fn = _get_chat_stream_fn()
+    generator = _make_sse_generator(chat_stream_fn, messages, body, request.app.state.http_client)
+    return _streaming_response(generator)
 
 
 @app.post("/infer/rule", response_model=InferResponse)
@@ -438,8 +471,7 @@ async def infer_rule(request: Request, body: InferRequest) -> InferResponse:
     query_preview = body.query[:50] + "..." if len(body.query) > 50 else body.query
     logger.info("Rule infer request: query=%s", repr(query_preview))
 
-    settings = get_settings()
-    corrected_query = correct_typos(body.query)
+    corrected_query = await correct_typos_async(body.query)
     if corrected_query != body.query:
         logger.info("Rule query typo corrected: '%s' -> '%s'", body.query, corrected_query)
 
@@ -455,7 +487,6 @@ async def infer_rule(request: Request, body: InferRequest) -> InferResponse:
     # 검색 결과가 없으면 LLM 호출 없이 안내 메시지 반환
     if not rule_context:
         no_result_msg = "해당 내용이 등록되어 있지 않습니다. 관리자에게 문의 바랍니다."
-        # 오타 교정이 있었으면 교정 결과도 안내
         if corrected_query != body.query:
             no_result_msg = (
                 f"'{body.query}'을(를) '{corrected_query}'(으)로 검색했으나, "
@@ -464,32 +495,15 @@ async def infer_rule(request: Request, body: InferRequest) -> InferResponse:
         logger.info("Rule infer: no context found, returning fallback message")
         return InferResponse(generated_text=no_result_msg)
 
-    messages = [{"role": "system", "content": load_prompt("rule_system")}]
-    messages.append({"role": "system", "content": rule_context})
-    messages.append({"role": "user", "content": corrected_query})
+    messages = _build_rule_messages(corrected_query, rule_context, body.history)
 
-    stop_tokens = ["<|im_start|>", "<|im_end|>", "<|endoftext|>", "，。，", "。，。"]
-
-    if settings.llm_backend == "vllm":
-        from vllm_service import chat_with_vllm
-        raw_text = await chat_with_vllm(
-            messages=messages,
-            temperature=body.temperature,
-            max_length=body.max_length,
-            stop=stop_tokens,
-            client=request.app.state.http_client,
-        )
-    else:
-        # ollama (default fallback)
-        from ollama_service import chat_with_ollama
-        raw_text = await chat_with_ollama(
-            messages=messages,
-            temperature=body.temperature,
-            max_length=body.max_length,
-            stop=stop_tokens,
-            client=request.app.state.http_client,
-        )
-    generated_text = clean_llm_response(raw_text)
+    try:
+        raw_text = await _chat_llm(messages, body, request.app.state.http_client)
+        generated_text = clean_llm_response(raw_text)
+    except Exception:
+        _elapsed = (_time.time() - _start) * 1000
+        metrics.record_request(latency_ms=_elapsed, success=False, vector_hit=len(rule_context) > 0)
+        raise
 
     _elapsed = (_time.time() - _start) * 1000
     metrics.record_request(latency_ms=_elapsed, success=True, vector_hit=len(rule_context) > 0)
@@ -507,8 +521,7 @@ async def infer_rule_stream(request: Request, body: InferRequest):
     query_preview = body.query[:50] + "..." if len(body.query) > 50 else body.query
     logger.info("Rule stream request: query=%s", repr(query_preview))
 
-    settings = get_settings()
-    corrected_query = correct_typos(body.query)
+    corrected_query = await correct_typos_async(body.query)
 
     # RAG: 병원규칙 컨텍스트 주입
     rule_context = ""
@@ -533,63 +546,12 @@ async def infer_rule_stream(request: Request, body: InferRequest):
             yield f"data: {data}\n\n"
             yield "data: [DONE]\n\n"
 
-        return StreamingResponse(
-            no_result_sse(),
-            media_type="text/event-stream",
-            headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
-        )
+        return _streaming_response(no_result_sse)
 
-    messages = [{"role": "system", "content": load_prompt("rule_system")}]
-    messages.append({"role": "system", "content": rule_context})
-
-    if body.history:
-        recent_history = body.history[-6:]
-        for msg in recent_history:
-            if msg.get("role") in ("user", "assistant") and msg.get("content"):
-                messages.append({"role": msg["role"], "content": msg["content"]})
-
-    messages.append({"role": "user", "content": corrected_query})
-
-    stop_tokens = ["<|im_start|>", "<|im_end|>", "<|endoftext|>", "，。，", "。，。"]
-    http_client = request.app.state.http_client
-
-    if settings.llm_backend == "vllm":
-        from vllm_service import chat_with_vllm_stream as _chat_stream
-    else:
-        from ollama_service import chat_with_ollama_stream as _chat_stream
-
-    async def generate_sse():
-        try:
-            async for item in _chat_stream(
-                messages=messages,
-                temperature=body.temperature,
-                max_length=body.max_length,
-                stop=stop_tokens,
-                client=http_client,
-            ):
-                if "token" in item:
-                    raw_token = item["token"]
-                    token = SPECIAL_TOKEN_PATTERN.sub("", raw_token)
-                    token = NON_KOREAN_CJK_PATTERN.sub("", token)
-                    if token:
-                        data = json.dumps({"token": token}, ensure_ascii=False)
-                        yield f"data: {data}\n\n"
-                if item.get("done"):
-                    yield "data: [DONE]\n\n"
-        except Exception as exc:
-            logger.error("Rule stream error: %s", exc)
-            error_data = json.dumps({"error": str(exc)}, ensure_ascii=False)
-            yield f"data: {error_data}\n\n"
-
-    return StreamingResponse(
-        generate_sse(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
-    )
+    messages = _build_rule_messages(corrected_query, rule_context, body.history)
+    chat_stream_fn = _get_chat_stream_fn()
+    generator = _make_sse_generator(chat_stream_fn, messages, body, request.app.state.http_client)
+    return _streaming_response(generator)
 
 
 @app.post("/feedback", response_model=FeedbackResponse)
@@ -616,7 +578,7 @@ async def submit_feedback(request: Request, body: FeedbackRequest) -> FeedbackRe
         return FeedbackResponse()
     except Exception as exc:
         logger.error("Failed to save feedback: %s", exc)
-        return JSONResponse(status_code=500, content={"detail": "피드백 저장에 실패했습니다"})
+        raise HTTPException(status_code=500, detail="피드백 저장에 실패했습니다")
 
 
 @app.get("/feedback/stats")
@@ -640,7 +602,7 @@ async def feedback_stats():
         return {"status": "ok", "stats": stats}
     except Exception as exc:
         logger.error("Failed to get feedback stats: %s", exc)
-        return JSONResponse(status_code=500, content={"detail": "통계 조회에 실패했습니다"})
+        raise HTTPException(status_code=500, detail="통계 조회에 실패했습니다")
 
 
 if __name__ == "__main__":

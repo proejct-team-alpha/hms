@@ -4,6 +4,7 @@ Ollama 임베딩 + ChromaDB로 의학 문서 벡터 검색
 """
 
 import logging
+import threading
 
 import chromadb
 
@@ -14,66 +15,78 @@ logger = logging.getLogger(__name__)
 _client = None
 _collection = None
 _rule_collection = None
+_client_lock = threading.Lock()
+_collection_lock = threading.Lock()
+_rule_collection_lock = threading.Lock()
 
 
 def get_chroma_client() -> chromadb.ClientAPI:
     """ChromaDB 클라이언트 싱글톤 (Docker HttpClient)"""
     global _client
-    if _client is None:
-        settings = get_settings()
-        _client = chromadb.HttpClient(
-            host=settings.chroma_host,
-            port=settings.chroma_port,
-        )
-        logger.info("ChromaDB connected: %s:%d", settings.chroma_host, settings.chroma_port)
+    if _client is not None:
+        return _client
+    with _client_lock:
+        if _client is None:
+            settings = get_settings()
+            _client = chromadb.HttpClient(
+                host=settings.chroma_host,
+                port=settings.chroma_port,
+            )
+            logger.info("ChromaDB connected: %s:%d", settings.chroma_host, settings.chroma_port)
     return _client
 
 
 def get_collection() -> chromadb.Collection:
     """의학 문서 컬렉션 조회/생성"""
     global _collection
-    if _collection is None:
-        settings = get_settings()
-        client = get_chroma_client()
-        _collection = client.get_or_create_collection(
-            name=settings.chroma_collection,
-            metadata={
-                "hnsw:space": "cosine",
-                "hnsw:M": 16,
-                "hnsw:construction_ef": 200,
-                "hnsw:search_ef": 50,
-                "hnsw:num_threads": 4,
-            },
-        )
-        logger.info(
-            "ChromaDB collection '%s': %d documents",
-            settings.chroma_collection,
-            _collection.count(),
-        )
+    if _collection is not None:
+        return _collection
+    with _collection_lock:
+        if _collection is None:
+            settings = get_settings()
+            client = get_chroma_client()
+            _collection = client.get_or_create_collection(
+                name=settings.chroma_collection,
+                metadata={
+                    "hnsw:space": "cosine",
+                    "hnsw:M": 16,
+                    "hnsw:construction_ef": 200,
+                    "hnsw:search_ef": 50,
+                    "hnsw:num_threads": 4,
+                },
+            )
+            logger.info(
+                "ChromaDB collection '%s': %d documents",
+                settings.chroma_collection,
+                _collection.count(),
+            )
     return _collection
 
 
 def get_rule_collection() -> chromadb.Collection:
     """병원규칙 전용 컬렉션 조회/생성"""
     global _rule_collection
-    if _rule_collection is None:
-        settings = get_settings()
-        client = get_chroma_client()
-        _rule_collection = client.get_or_create_collection(
-            name=settings.chroma_rule_collection,
-            metadata={
-                "hnsw:space": "cosine",
-                "hnsw:M": 16,
-                "hnsw:construction_ef": 200,
-                "hnsw:search_ef": 50,
-                "hnsw:num_threads": 4,
-            },
-        )
-        logger.info(
-            "ChromaDB rule collection '%s': %d documents",
-            settings.chroma_rule_collection,
-            _rule_collection.count(),
-        )
+    if _rule_collection is not None:
+        return _rule_collection
+    with _rule_collection_lock:
+        if _rule_collection is None:
+            settings = get_settings()
+            client = get_chroma_client()
+            _rule_collection = client.get_or_create_collection(
+                name=settings.chroma_rule_collection,
+                metadata={
+                    "hnsw:space": "cosine",
+                    "hnsw:M": 16,
+                    "hnsw:construction_ef": 200,
+                    "hnsw:search_ef": 50,
+                    "hnsw:num_threads": 4,
+                },
+            )
+            logger.info(
+                "ChromaDB rule collection '%s': %d documents",
+                settings.chroma_rule_collection,
+                _rule_collection.count(),
+            )
     return _rule_collection
 
 

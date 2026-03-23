@@ -218,13 +218,15 @@ async def search_rule_vector_store(query: str, top_k: int = 3) -> list[dict]:
         from embedding_service import get_embedding
 
         col = _get_collection()
-        if col.count() == 0:
+        doc_count = await asyncio.to_thread(col.count)
+        if doc_count == 0:
             return []
 
         query_embedding = await get_embedding(query)
-        results = col.query(
+        results = await asyncio.to_thread(
+            col.query,
             query_embeddings=[query_embedding],
-            n_results=min(top_k, col.count()),
+            n_results=min(top_k, doc_count),
         )
 
         items = []

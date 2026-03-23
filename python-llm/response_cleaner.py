@@ -58,8 +58,8 @@ def clean_llm_response(text: str) -> str:
     # (4) 전각 구두점을 반각으로 변환
     cleaned = cleaned.replace("。", ".").replace("，", ",").replace("：", ":").replace("；", ";")
 
-    # (5) CJK 제거 후 남은 고아 구두점 정리 (예: ",,.", "...")
-    cleaned = re.sub(r"[.,;:]{2,}", "", cleaned)
+    # (5) CJK 제거 후 남은 고아 구두점 정리 (예: ",,." 등, "..."은 보존)
+    cleaned = re.sub(r"(?!\.{3})[.,;:]{2,}", "", cleaned)
 
     # (6) 연속 공백 정규화
     cleaned = re.sub(r"[ \t]+", " ", cleaned)
