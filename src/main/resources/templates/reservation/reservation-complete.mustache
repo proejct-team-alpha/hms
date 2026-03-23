@@ -12,7 +12,8 @@
 
   <main class="flex-1 overflow-y-auto p-8">
     <div class="max-w-5xl mx-auto">
-      <div id="error-view" class="hidden text-center py-20">
+      {{^info}}
+      <div class="text-center py-20">
         <h2 class="text-2xl font-bold text-slate-800">예약 정보가 없습니다.</h2>
         <button
           onclick="location.href='/reservation'"
@@ -21,8 +22,10 @@
           처음으로 돌아가기
         </button>
       </div>
+      {{/info}}
 
-      <div id="success-view" class="hidden max-w-2xl mx-auto">
+      {{#info}}
+      <div class="max-w-2xl mx-auto">
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-10 text-center">
           <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <i data-feather="check-circle" class="w-10 h-10 text-green-600"></i>
@@ -30,7 +33,7 @@
 
           <h1 class="text-3xl font-bold text-slate-800 mb-2">예약이 완료되었습니다!</h1>
           <p class="text-slate-500 mb-10">
-            <span id="res-name-title" class="font-semibold"></span>님의 진료 예약이 성공적으로 접수되었습니다.<br/>
+            <span class="font-semibold">{{patientName}}</span>님의 진료 예약이 성공적으로 접수되었습니다.<br/>
             예약 당일 원무과에서 접수를 진행해주세요.
           </p>
 
@@ -42,7 +45,7 @@
                 <i data-feather="hash" class="w-5 h-5 text-indigo-500 shrink-0 mt-0.5"></i>
                 <div>
                   <div class="text-sm text-slate-500 mb-1">예약번호</div>
-                  <div id="res-number" class="font-mono font-semibold text-indigo-700 text-lg"></div>
+                  <div class="font-mono font-semibold text-indigo-700 text-lg">{{reservationNumber}}</div>
                 </div>
               </div>
 
@@ -50,7 +53,7 @@
                 <i data-feather="user" class="w-5 h-5 text-indigo-500 shrink-0 mt-0.5"></i>
                 <div>
                   <div class="text-sm text-slate-500 mb-1">환자명</div>
-                  <div id="res-name" class="font-medium text-slate-800"></div>
+                  <div class="font-medium text-slate-800">{{patientName}}</div>
                 </div>
               </div>
 
@@ -58,7 +61,7 @@
                 <i data-feather="map-pin" class="w-5 h-5 text-indigo-500 shrink-0 mt-0.5"></i>
                 <div>
                   <div class="text-sm text-slate-500 mb-1">진료과 / 전문의</div>
-                  <div id="res-dept-doctor" class="font-medium text-slate-800"></div>
+                  <div class="font-medium text-slate-800">{{departmentName}} / {{doctorName}}</div>
                 </div>
               </div>
 
@@ -66,7 +69,7 @@
                 <i data-feather="calendar" class="w-5 h-5 text-indigo-500 shrink-0 mt-0.5"></i>
                 <div>
                   <div class="text-sm text-slate-500 mb-1">예약 일자</div>
-                  <div id="res-date" class="font-medium text-slate-800"></div>
+                  <div class="font-medium text-slate-800">{{reservationDate}}</div>
                 </div>
               </div>
 
@@ -74,7 +77,7 @@
                 <i data-feather="clock" class="w-5 h-5 text-indigo-500 shrink-0 mt-0.5"></i>
                 <div>
                   <div class="text-sm text-slate-500 mb-1">예약 시간</div>
-                  <div id="res-time" class="font-medium text-slate-800"></div>
+                  <div class="font-medium text-slate-800">{{timeSlot}}</div>
                 </div>
               </div>
             </div>
@@ -87,44 +90,22 @@
             >
               메인으로 가기
             </button>
-            <button
-              id="btn-lookup"
+            <a
+              href="/reservation/lookup?reservationNumber={{reservationNumber}}"
               class="px-8 py-3 bg-white border border-indigo-600 text-indigo-600 font-medium rounded-xl hover:bg-indigo-50 transition-colors shadow-sm"
             >
               예약 조회
-            </button>
+            </a>
           </div>
         </div>
       </div>
+      {{/info}}
     </div>
   </main>
 
   {{> common/footer-public}}
   <script>
     feather.replace();
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const reservationNumber = urlParams.get('reservationNumber');
-    const name = urlParams.get('name');
-    const department = urlParams.get('department');
-    const doctor = urlParams.get('doctor');
-    const date = urlParams.get('date');
-    const time = urlParams.get('time');
-
-    if (name && department && doctor && date && time) {
-      document.getElementById('success-view').classList.remove('hidden');
-      document.getElementById('res-number').innerText = reservationNumber || '';
-      document.getElementById('res-name-title').innerText = name;
-      document.getElementById('res-name').innerText = name;
-      document.getElementById('res-dept-doctor').innerText = department + ' / ' + doctor;
-      document.getElementById('res-date').innerText = date;
-      document.getElementById('res-time').innerText = time;
-      document.getElementById('btn-lookup').onclick = function () {
-        location.href = '/reservation/lookup?reservationNumber=' + encodeURIComponent(reservationNumber);
-      };
-    } else {
-      document.getElementById('error-view').classList.remove('hidden');
-    }
   </script>
 </body>
 </html>

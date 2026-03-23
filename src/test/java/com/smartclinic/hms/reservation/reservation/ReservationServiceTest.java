@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
@@ -145,5 +146,160 @@ class ReservationServiceTest {
         assertThatThrownBy(() -> reservationService.createReservation(form))
                 .isInstanceOf(CustomException.class)
                 .hasMessageContaining("이미 예약된 시간대입니다.");
+    }
+
+    @Test
+    @DisplayName("예약 취소 성공 - 전화번호 일치 시 ReservationCompleteInfo 반환 및 cancelFully 호출")
+    void cancelReservation_success_returnsCompleteInfo() {
+        // given - Mockito.mock으로 Reservation 엔티티 연관관계 스텁 처리
+        Reservation reservation = Mockito.mock(Reservation.class);
+        given(reservation.getReservationNumber()).willReturn("RES-20260401-001");
+        given(reservation.getPatient()).willReturn(patient);  // phone: 01012345678
+        given(reservation.getDepartment()).willReturn(department);  // name: 내과
+        given(reservation.getDoctor()).willReturn(doctor);  // staff name: 김내과
+        given(reservation.getReservationDate()).willReturn(LocalDate.of(2026, 4, 1));
+        given(reservation.getTimeSlot()).willReturn("09:00");
+        given(reservationRepository.findById(1L)).willReturn(Optional.of(reservation));
+
+        // when
+        ReservationCompleteInfo info = reservationService.cancelReservation(1L, "01012345678");
+
+        // then
+        assertThat(info.getReservationNumber()).isEqualTo("RES-20260401-001");
+        assertThat(info.getPatientName()).isEqualTo("홍길동");
+        assertThat(info.getDepartmentName()).isEqualTo("내과");
+        // cancelFully 호출 확인 → 예약 상태가 CANCELLED로 변경됨
+        then(reservation).should().cancelFully(null);
+    }
+
+    @Test
+    @DisplayName("예약 취소 실패 - 전화번호 불일치 시 403 Forbidden CustomException 발생")
+    void cancelReservation_wrongPhone_throwsForbidden() {
+        // given - 저장된 전화번호(01012345678)와 다른 번호(01099999999)로 취소 시도
+        Reservation reservation = Mockito.mock(Reservation.class);
+        given(reservation.getPatient()).willReturn(patient);  // phone: 01012345678
+        given(reservationRepository.findById(1L)).willReturn(Optional.of(reservation));
+
+        // when & then
+        assertThatThrownBy(() -> reservationService.cancelReservation(1L, "01099999999"))
+                .isInstanceOf(CustomException.class)
+                .hasMessageContaining("예약 소유자가 아닙니다.");
+    }
+
+    @Test
+    @DisplayName("예약 변경 성공 - 기존 예약 취소 후 새 예약 생성, ReservationCompleteInfo 반환")
+    void updateReservation_success_cancelsOldAndCreatesNew() {
+        // given
+        Reservation oldReservation = Mockito.mock(Reservation.class);
+        given(oldReservation.getPatient()).willReturn(patient);  // phone: 01012345678
+        given(reservationRepository.findByIdForUpdate(1L)).willReturn(Optional.of(oldReservation));
+        // 새 슬롯 중복 없음
+        given(reservationRepository.existsByDoctor_IdAndReservationDateAndTimeSlotAndStatusNot(
+                anyLong(), any(), anyString(), any())).willReturn(false);
+        given(doctorRepository.findById(2L)).willReturn(Optional.of(doctor));
+        given(departmentRepository.findById(2L)).willReturn(Optional.of(department));
+        given(reservationNumberGenerator.generate(any(LocalDate.class), any())).willReturn("RES-20260402-001");
+
+        UpdateReservationRequest updateForm = new UpdateReservationRequest(
+                2L, 2L, LocalDate.of(2026, 4, 2), "10:00");
+
+        // when
+        ReservationCompleteInfo info = reservationService.updateReservation(1L, "01012345678", updateForm);
+
+        // then
+        assertThat(info.getReservationNumber()).isEqualTo("RES-20260402-001");
+        assertThat(info.getTimeSlot()).isEqualTo("10:00");
+        // 기존 예약 취소 처리 확인
+        then(oldReservation).should().cancelFully(null);
+        // 새 예약 저장 확인
+        then(reservationRepository).should().save(any(Reservation.class));
+    }
+
+    @Test
+    @DisplayName("예약 변경 실패 - 전화번호 불일치 시 403 Forbidden CustomException 발생")
+    void updateReservation_wrongPhone_throwsForbidden() {
+        // given - 저장된 전화번호(01012345678)와 다른 번호로 변경 시도
+        Reservation oldReservation = Mockito.mock(Reservation.class);
+        given(oldReservation.getPatient()).willReturn(patient);  // phone: 01012345678
+        given(reservationRepository.findByIdForUpdate(1L)).willReturn(Optional.of(oldReservation));
+
+        UpdateReservationRequest updateForm = new UpdateReservationRequest(
+                1L, 1L, LocalDate.of(2026, 4, 1), "09:00");
+
+        // when & then
+        assertThatThrownBy(() -> reservationService.updateReservation(1L, "01099999999", updateForm))
+                .isInstanceOf(CustomException.class)
+                .hasMessageContaining("예약 소유자가 아닙니다.");
+    }
+
+    @Test
+    @DisplayName("예약 변경 실패 - 새 시간대 중복 시 409 Conflict CustomException 발생")
+    void updateReservation_duplicateSlot_throwsConflict() {
+        // given - 소유권은 통과, 새 슬롯 중복 발생
+        Reservation oldReservation = Mockito.mock(Reservation.class);
+        given(oldReservation.getPatient()).willReturn(patient);
+        given(reservationRepository.findByIdForUpdate(1L)).willReturn(Optional.of(oldReservation));
+        given(reservationRepository.existsByDoctor_IdAndReservationDateAndTimeSlotAndStatusNot(
+                anyLong(), any(), anyString(), any())).willReturn(true);
+
+        UpdateReservationRequest updateForm = new UpdateReservationRequest(
+                1L, 1L, LocalDate.of(2026, 4, 1), "09:00");
+
+        // when & then
+        assertThatThrownBy(() -> reservationService.updateReservation(1L, "01012345678", updateForm))
+                .isInstanceOf(CustomException.class)
+                .hasMessageContaining("이미 예약된 시간대입니다.");
+    }
+
+    @Test
+    @DisplayName("예약번호로 단건 조회 - 존재하는 경우 ReservationInfoDto 반환")
+    void findByReservationNumber_exists_returnsDto() {
+        // given - ReservationInfoDto 생성에 필요한 모든 필드 스텁 처리
+        Reservation reservation = Mockito.mock(Reservation.class);
+        given(reservation.getId()).willReturn(1L);
+        given(reservation.getReservationNumber()).willReturn("RES-20260401-001");
+        given(reservation.getPatient()).willReturn(patient);  // id/name/phone
+        given(reservation.getDepartment()).willReturn(department);
+        given(reservation.getDoctor()).willReturn(doctor);
+        given(reservation.getReservationDate()).willReturn(LocalDate.of(2026, 4, 1));
+        given(reservation.getTimeSlot()).willReturn("09:00");
+        given(reservation.getStatus()).willReturn(ReservationStatus.RESERVED);
+        given(reservationRepository.findByReservationNumber("RES-20260401-001"))
+                .willReturn(Optional.of(reservation));
+
+        // when
+        Optional<ReservationInfoDto> result =
+                reservationService.findByReservationNumber("RES-20260401-001");
+
+        // then
+        assertThat(result).isPresent();
+        assertThat(result.get().getReservationNumber()).isEqualTo("RES-20260401-001");
+        assertThat(result.get().getPatientName()).isEqualTo("홍길동");
+    }
+
+    @Test
+    @DisplayName("이름 + 전화번호 조회 - 전화번호 정규화 후 ReservationInfoDto 리스트 반환")
+    void findByPhoneAndName_normalizedPhone_returnsDto() {
+        // given - 하이픈 포함 전화번호 입력 → 숫자만 추출하여 조회
+        Reservation reservation = Mockito.mock(Reservation.class);
+        given(reservation.getId()).willReturn(1L);
+        given(reservation.getReservationNumber()).willReturn("RES-20260401-001");
+        given(reservation.getPatient()).willReturn(patient);
+        given(reservation.getDepartment()).willReturn(department);
+        given(reservation.getDoctor()).willReturn(doctor);
+        given(reservation.getReservationDate()).willReturn(LocalDate.of(2026, 4, 1));
+        given(reservation.getTimeSlot()).willReturn("09:00");
+        given(reservation.getStatus()).willReturn(ReservationStatus.RESERVED);
+        // 정규화된 전화번호(하이픈 제거)와 이름으로 조회됨
+        given(reservationRepository.findByNormalizedPhoneAndName("01012345678", "홍길동"))
+                .willReturn(List.of(reservation));
+
+        // when - 하이픈 포함 전화번호와 공백 포함 이름으로 서비스 호출
+        List<ReservationInfoDto> result =
+                reservationService.findByPhoneAndName("010-1234-5678", " 홍길동 ");
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getPatientName()).isEqualTo("홍길동");
     }
 }
