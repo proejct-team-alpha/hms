@@ -79,6 +79,11 @@ public class LlmServiceUnavailableException extends CustomException {
 }
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: Python LLM 서버에 연결할 수 없을 때 던지는(throw) 예외 클래스를 정의합니다. `extends CustomException`으로 기존 HMS 예외 체계를 그대로 이어받고, HTTP 상태 코드 503(서비스 사용 불가)을 응답으로 보냅니다.
+> - **왜 이렇게 썼는지**: `CustomException`을 상속하면 `GlobalExceptionHandler`가 이미 이 예외를 처리하도록 되어 있어서 별도 핸들러를 추가할 필요가 없습니다. 생성자를 두 가지로 만든 이유는, 원인 예외(`cause`)를 함께 전달할 때와 메시지만 전달할 때 모두 대응하기 위해서입니다.
+> - **쉽게 말하면**: "LLM 서버가 꺼져 있어요"라는 전용 에러 카드를 만들어, 문제 발생 시 이 카드를 꺼내 보여주는 것과 같습니다.
+
 ### LlmTimeoutException (504)
 
 ```java
@@ -95,6 +100,11 @@ public class LlmTimeoutException extends CustomException {
     }
 }
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: Python LLM 서버가 응답하는 데 너무 오래 걸릴 때 던지는 예외 클래스를 정의합니다. HTTP 상태 코드 504(게이트웨이 시간 초과)를 응답으로 보냅니다.
+> - **왜 이렇게 썼는지**: 서버가 꺼진 것(503)과 응답이 느린 것(504)을 다른 예외 클래스로 분리하면, 문제의 원인을 더 명확하게 구분할 수 있습니다. `LlmServiceUnavailableException`과 구조가 동일하지만 에러 코드와 HTTP 상태가 다릅니다.
+> - **쉽게 말하면**: "LLM 서버가 너무 오래 걸려요"라는 전용 에러 카드로, 연결 실패와 시간 초과를 구별해서 사용자에게 다른 메시지를 줄 수 있습니다.
 
 ---
 

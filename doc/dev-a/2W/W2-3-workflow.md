@@ -95,12 +95,22 @@ public class DoctorDto {
 }
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 의사 정보 DTO에 진료 가능 요일 정보(`availableDays`)를 추가합니다. API 응답 JSON에 `"availableDays": "MON,WED,FRI"` 형태로 포함됩니다.
+> - **왜 이렇게 썼는지**: 브라우저가 캘린더에서 특정 요일을 비활성화하려면, 어떤 요일이 가능한지 알아야 합니다. 서버가 의사 목록 API 응답에 이 정보를 함께 담아 전달하면 JS가 이를 활용할 수 있습니다.
+> - **쉽게 말하면**: 의사 소개 카드에 "진료 요일: 월, 수, 금"이라는 항목을 추가하는 것입니다.
+
 ### direct-reservation.mustache — Flatpickr CDN
 
 ```html
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: Flatpickr 라이브러리(날짜 선택 달력)의 CSS(스타일)와 JS(동작)를 외부 CDN에서 불러옵니다.
+> - **왜 이렇게 썼는지**: 네이티브 `<input type="date">`는 특정 요일만 비활성화하는 기능을 지원하지 않습니다. Flatpickr는 `disable` 옵션으로 특정 요일 클릭을 막고 회색 처리할 수 있어 선택했습니다.
+> - **쉽게 말하면**: 기본 달력 대신 더 강력한 기능의 달력 앱을 인터넷에서 가져다 쓰는 것입니다.
 
 ### direct-reservation.mustache — input 교체
 
@@ -112,6 +122,11 @@ public class DoctorDto {
 <input type="text" id="date" name="reservationDate" required readonly
   placeholder="날짜를 선택해주세요" />
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 브라우저 기본 날짜 입력(`type="date"`)을 일반 텍스트 입력으로 바꿉니다. `readonly` 속성으로 직접 입력을 막고, Flatpickr가 이 필드를 제어합니다.
+> - **왜 이렇게 썼는지**: Flatpickr는 `<input type="text">`를 대상으로 달력 팝업을 연결합니다. `readonly`를 사용해 사용자가 직접 타이핑하지 못하고 달력에서만 날짜를 선택하도록 강제합니다.
+> - **쉽게 말하면**: 기존 날짜 입력창을 떼어내고 Flatpickr 달력이 대신 날짜를 채워주는 입력창으로 교체하는 것입니다.
 
 ### direct-reservation.mustache — JS
 
@@ -142,6 +157,11 @@ document.getElementById('doctor').addEventListener('change', function () {
 // 의사 선택 전: 전체 비활성
 initDatePicker([]);
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 의사가 선택될 때마다 해당 의사의 진료 가능 요일을 파악해 Flatpickr 달력을 새로 초기화합니다. 진료 불가 요일은 회색 처리되어 클릭이 불가능해집니다.
+> - **왜 이렇게 썼는지**: `DAY_MAP`은 "MON" 같은 문자열을 JS의 `getDay()`가 반환하는 숫자(0~6)로 변환하는 사전입니다. `disable: [date => !availableDayNums.includes(date.getDay())]`는 "가능 요일 목록에 없는 날은 비활성화해라"는 Flatpickr 설정입니다. 의사를 바꿀 때마다 `datePicker.destroy()`로 기존 달력을 제거하고 새로 만듭니다.
+> - **쉽게 말하면**: 의사를 선택하면 그 의사의 출근 요일표를 달력에 반영해서, 쉬는 날엔 예약 버튼 자체를 회색으로 비활성화하는 로직입니다.
 
 ---
 

@@ -114,6 +114,11 @@ public class SymptomAnalysisService {
 }
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 변경 전에는 Anthropic Claude API에 직접 동기(기다리는) 방식으로 호출했고, 변경 후에는 내부 python-llm 서버에 비동기(기다리지 않는) 방식으로 호출합니다. `Mono<SymptomResponse>`는 "나중에 완성될 하나의 결과"를 의미하는 비동기 타입입니다.
+> - **왜 이렇게 썼는지**: `WebClient`는 Spring WebFlux의 비동기 HTTP 클라이언트로, 서버 자원을 효율적으로 사용합니다. `Map.of()`로 요청 파라미터를 간결하게 구성하고, `.bodyToMono()`로 응답을 객체로 변환합니다. `.onErrorMap()`은 통신 오류 시 애플리케이션용 예외로 변환해 일관된 오류 처리를 가능하게 합니다. `temperature`는 AI 답변의 창의성 정도를 조절하는 값입니다(낮을수록 일관된 답변).
+> - **쉽게 말하면**: 외부 유명 AI 서비스에 직접 전화하던 것을, 사내 AI 서버에 메시지를 보내는 방식으로 바꾼 것입니다. 결과는 나중에 와도 괜찮은 비동기 방식으로 처리합니다.
+
 ### SymptomController — Mono 반환
 
 ```java
@@ -122,6 +127,11 @@ public Mono<SymptomResponse> analyze(@RequestBody SymptomRequest request) {
     return symptomAnalysisService.analyzeSymptom(request.getSymptomText());
 }
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 컨트롤러의 응답 타입을 `SymptomResponse`(즉시 반환)에서 `Mono<SymptomResponse>`(비동기 반환)로 변경합니다. Spring WebFlux가 이 `Mono`를 자동으로 처리해 실제 값이 준비되면 클라이언트에게 응답을 보냅니다.
+> - **왜 이렇게 썼는지**: 서비스 레이어가 `Mono<SymptomResponse>`를 반환하도록 바뀌었으므로, 컨트롤러도 동일한 타입을 반환해야 비동기 흐름이 유지됩니다. Spring MVC는 `Mono` 타입을 인식하고 비동기로 처리합니다.
+> - **쉽게 말하면**: 창구 직원(컨트롤러)이 "지금 바로 결과 드릴게요"에서 "잠시 기다리시면 결과 드릴게요" 방식으로 바뀐 것입니다.
 
 ### SymptomControllerTest — asyncDispatch 패턴 적용
 
@@ -142,6 +152,11 @@ void analyze_비인증_200() throws Exception {
             .andExpect(jsonPath("$.dept").value("내과"));
 }
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 서비스가 `Mono<SymptomResponse>`를 반환하도록 바뀌었으므로, 테스트의 mock 설정도 `Mono.just(...)`로 감싸서 가짜 응답을 설정합니다. 그리고 W5-2에서 배운 asyncDispatch 2단계 패턴을 그대로 적용합니다.
+> - **왜 이렇게 썼는지**: `Mono.just(value)`는 이미 완성된 값 하나를 즉시 담고 있는 `Mono`를 만듭니다. 비동기 컨트롤러는 `andReturn()` → `asyncDispatch()` 순서로 테스트해야 실제 응답을 검증할 수 있습니다. `any()`는 어떤 값이 인자로 와도 이 mock이 동작하도록 하는 Mockito 매처입니다.
+> - **쉽게 말하면**: "무슨 증상을 물어봐도 '내과 / 의사이영희 / 09:00'이라고 답하는 가짜 AI"를 만들어서 컨트롤러의 동작만 검증합니다.
 
 ---
 
