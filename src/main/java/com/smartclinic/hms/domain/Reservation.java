@@ -53,6 +53,12 @@ public class Reservation {
     @Column(name = "end_time")
     private LocalTime endTime;
 
+    /**
+     * 접수 시각 (환자가 실제 내원하여 접수 처리가 완료된 시점)
+     */
+    @Column(name = "reception_time")
+    private LocalDateTime receptionTime;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private ReservationStatus status;
@@ -108,12 +114,17 @@ public class Reservation {
         return r;
     }
 
+    /**
+     * 예약을 실제 접수(RECEIVED) 상태로 전이시키고 접수 시각을 기록한다.
+     * Staff가 '접수' 버튼을 눌러 환자의 내원을 확인한 시점에 호출된다.
+     */
     public void receive() {
         checkPaid();
         if (this.status != ReservationStatus.RESERVED) {
             throw new IllegalStateException("RESERVED 상태에서만 접수 가능. 현재: " + this.status);
         }
         this.status = ReservationStatus.RECEIVED;
+        this.receptionTime = LocalDateTime.now(); // 접수 버튼을 누른 현재 시각을 기록
     }
 
     public void startTreatment() {

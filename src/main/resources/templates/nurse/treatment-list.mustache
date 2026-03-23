@@ -260,7 +260,8 @@
                     <div class="text-sm font-semibold text-slate-600">{{genderAge}}</div>
                     <div class="text-sm font-medium text-slate-600">{{doctorName}} ({{departmentName}})</div>
                     <div>
-                      <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border {{statusBadgeClass}}">
+                      <!-- 환자 상태 표시 배지: 타 화면과의 통일성을 위해 테두리(border) 제거 -->
+                      <span class="px-2.5 py-1 rounded-full text-[10px] font-bold {{statusBadgeClass}}">
                         {{statusText}}
                       </span>
                     </div>

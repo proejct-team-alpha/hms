@@ -77,4 +77,13 @@ public class Patient {
         this.address = address;
         this.note = note;
     }
+
+    /**
+     * 환자의 의료 관련 정보(주민번호 앞자리/성별, 내원 사유)를 업데이트한다.
+     * 방문 접수 시 입력받은 정보를 저장하는 데 사용된다.
+     */
+    public void updateMedicalInfo(String birthInfo, String visitReason) {
+        this.birthInfo = birthInfo;
+        this.visitReason = visitReason;
+    }
 }

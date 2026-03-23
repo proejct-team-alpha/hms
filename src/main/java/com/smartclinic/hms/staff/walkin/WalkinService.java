@@ -45,14 +45,28 @@ public class WalkinService {
                 boolean nameMismatch = false;
 
                 if (patient == null) {
+                        // 신규 환자 생성 시 생년월일/성별 정보 포함하여 저장
                         patient = patientRepository.save(
                                         Patient.create(
                                                         request.getName(),
                                                         request.getPhone(),
                                                         null));
-                } else if (!patient.getName().equals(request.getName())) {
-                        nameMismatch = true;
+                        patient.updateMedicalInfo(request.getBirthInfo(), request.getVisitReason());
+                } else {
+                        // 기존 환자라도 이번에 입력한 의료 정보(생년월일, 내원 사유 등)로 최신화
+                        if (!patient.getName().equals(request.getName())) {
+                                nameMismatch = true;
+                        }
+                        patient.updateMedicalInfo(request.getBirthInfo(), request.getVisitReason());
                 }
+
+                // 2. 환자의 주소 및 기타 메모 정보 업데이트
+                String combinedAddress = null;
+                if (request.getAddress() != null && !request.getAddress().isBlank()) {
+                        combinedAddress = String.format("[%s] %s %s", 
+                                request.getZipcode(), request.getAddress(), request.getDetailAddress()).trim();
+                }
+                patient.updateAddressAndNote(combinedAddress, request.getNotes());
 
                 Doctor doctor = doctorRepository.findById(request.getDoctorId())
                                 .orElseThrow(() -> CustomException
