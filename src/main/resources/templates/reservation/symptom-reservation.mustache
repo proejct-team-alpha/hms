@@ -214,7 +214,8 @@
         body: JSON.stringify({ symptomText })
       });
       if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
-      return res.json();
+      const json = await res.json();
+      return json.body || json;
     }
 
     // ── 로딩 애니메이션 ──
@@ -285,7 +286,8 @@
 
       const res = await fetch(`/api/reservation/doctors?departmentId=${departmentId}`);
       if (!res.ok) throw new Error(`의사 목록 조회 실패: ${res.status}`);
-      const doctors = await res.json();
+      const json = await res.json();
+      const doctors = json.body || json;
 
       doctors.forEach(doctor => {
         const option = document.createElement('option');
@@ -337,7 +339,8 @@
         try {
           const res = await fetch(`/api/reservation/booked-slots?doctorId=${doctorId}&date=${dateStr}`);
           if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
-          const booked = await res.json();
+          const bookedJson = await res.json();
+          const booked = bookedJson.body || bookedJson;
           const today = new Date();
           const todayStr = today.getFullYear() + '-'
             + String(today.getMonth() + 1).padStart(2, '0') + '-'
