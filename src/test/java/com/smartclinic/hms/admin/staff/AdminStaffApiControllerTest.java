@@ -20,11 +20,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -46,7 +46,6 @@ class AdminStaffApiControllerTest {
     @Test
     @DisplayName("admin can update staff via admin api")
     void updateStaff_success() throws Exception {
-        // given
         UpdateAdminStaffApiResponse response = new UpdateAdminStaffApiResponse(
                 10L,
                 "doctor01",
@@ -56,25 +55,22 @@ class AdminStaffApiControllerTest {
                 2L,
                 "가정의학과",
                 true,
-                "가정의학과",
                 List.of("MON", "WED"),
                 STAFF_UPDATED_MESSAGE
         );
         given(adminStaffService.updateStaff(any())).willReturn(STAFF_UPDATED_MESSAGE);
         given(adminStaffService.getUpdateApiResponse(10L, STAFF_UPDATED_MESSAGE)).willReturn(response);
 
-        // when
-        // then
         mockMvc.perform(post("/admin/api/staff/10")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf())
                         .contentType("application/json")
-                .content("""
+                        .content("""
                                 {
                                   \"name\": \"수정직원\",
                                   \"departmentId\": 2,
                                   \"password\": \"\",
-                                  \"specialty\": \"가정의학과\",
+                                  \"active\": true,
                                   \"availableDays\": [\"MON\", \"WED\"]
                                 }
                                 """))
@@ -84,6 +80,7 @@ class AdminStaffApiControllerTest {
                 .andExpect(jsonPath("$.body.name").value("수정직원"))
                 .andExpect(jsonPath("$.body.role").value("DOCTOR"))
                 .andExpect(jsonPath("$.body.departmentId").value(2))
+                .andExpect(jsonPath("$.body.specialty").doesNotExist())
                 .andExpect(jsonPath("$.body.message").value(STAFF_UPDATED_MESSAGE));
 
         then(adminStaffService).should().updateStaff(any());
@@ -93,10 +90,6 @@ class AdminStaffApiControllerTest {
     @Test
     @DisplayName("non-admin cannot update staff via admin api")
     void updateStaff_forbiddenWhenNotAdmin() throws Exception {
-        // given
-
-        // when
-        // then
         mockMvc.perform(post("/admin/api/staff/10")
                         .with(user("staff").roles("STAFF"))
                         .with(csrf())
@@ -106,6 +99,7 @@ class AdminStaffApiControllerTest {
                                   \"name\": \"수정직원\",
                                   \"departmentId\": 2,
                                   \"password\": \"\",
+                                  \"active\": true,
                                   \"availableDays\": []
                                 }
                                 """))
@@ -117,12 +111,9 @@ class AdminStaffApiControllerTest {
     @Test
     @DisplayName("returns 404 when staff does not exist")
     void updateStaff_notFound() throws Exception {
-        // given
         given(adminStaffService.updateStaff(any()))
                 .willThrow(CustomException.notFound("직원을 찾을 수 없습니다."));
 
-        // when
-        // then
         mockMvc.perform(post("/admin/api/staff/999")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf())
@@ -132,6 +123,7 @@ class AdminStaffApiControllerTest {
                                   \"name\": \"수정직원\",
                                   \"departmentId\": 2,
                                   \"password\": \"\",
+                                  \"active\": true,
                                   \"availableDays\": []
                                 }
                                 """))
@@ -144,10 +136,6 @@ class AdminStaffApiControllerTest {
     @Test
     @DisplayName("returns 400 when request body is invalid")
     void updateStaff_validationFailure() throws Exception {
-        // given
-
-        // when
-        // then
         mockMvc.perform(post("/admin/api/staff/10")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf())
@@ -157,6 +145,7 @@ class AdminStaffApiControllerTest {
                                   \"name\": \"\",
                                   \"departmentId\": 2,
                                   \"password\": \"\",
+                                  \"active\": true,
                                   \"availableDays\": []
                                 }
                                 """))

@@ -15,20 +15,25 @@
 
     <main class="content-wrapper flex-1 p-6">
       <div class="space-y-6 max-w-6xl mx-auto">
-        <div class="flex justify-between items-center mb-8">
+        <div class="flex items-center justify-between gap-4">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
               <i data-feather="package" class="w-6 h-6"></i>
             </div>
             <div>
-              <h1 class="text-2xl font-bold text-slate-800">물품 목록</h1>
+              <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
               <p class="text-slate-500 mt-1">병원 내 의료소모품 및 비품 재고를 관리합니다.</p>
             </div>
           </div>
-          <a href="/admin/item/form" class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
-            <i data-feather="plus" class="w-5 h-5"></i>
-            물품 등록
-          </a>
+          <div class="flex items-center gap-4">
+            <div class="text-sm text-slate-500 text-right">
+              <div>총 <span class="font-semibold text-slate-700">{{totalCount}}</span>건</div>
+            </div>
+            <a href="/admin/item/form" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+              <i data-feather="plus" class="w-4 h-4"></i>
+              물품 등록
+            </a>
+          </div>
         </div>
 
         {{#message}}

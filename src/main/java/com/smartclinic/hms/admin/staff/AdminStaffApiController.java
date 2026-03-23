@@ -29,7 +29,7 @@ public class AdminStaffApiController {
                 request.name(),
                 request.departmentId(),
                 request.password(),
-                request.specialty(),
+                request.active(),
                 request.availableDays()
         );
 

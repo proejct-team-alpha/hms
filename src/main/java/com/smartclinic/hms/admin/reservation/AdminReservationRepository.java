@@ -30,6 +30,7 @@ public interface AdminReservationRepository extends JpaRepository<Reservation, L
                    r.reservationNumber as reservationNumber,
                    r.reservationDate as reservationDate,
                    r.timeSlot as timeSlot,
+                   patient.id as patientId,
                    patient.name as patientName,
                    patient.phone as patientPhone,
                    department.name as departmentName,
@@ -77,6 +78,8 @@ public interface AdminReservationRepository extends JpaRepository<Reservation, L
         LocalDate getReservationDate();
 
         String getTimeSlot();
+
+        Long getPatientId();
 
         String getPatientName();
 

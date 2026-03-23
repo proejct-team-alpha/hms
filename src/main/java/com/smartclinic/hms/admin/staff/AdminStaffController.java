@@ -80,6 +80,10 @@ public class AdminStaffController {
             redirectAttributes.addFlashAttribute("successMessage", successMessage);
             return "redirect:/admin/staff/list";
         } catch (CustomException ex) {
+            if ("VALIDATION_ERROR".equals(ex.getErrorCode())
+                    && "DOCTOR".equalsIgnoreCase(request.role())) {
+                req.setAttribute("departmentIdError", ex.getMessage());
+            }
             req.setAttribute("errorMessage", ex.getMessage());
             req.setAttribute("model", adminStaffService.getCreateForm(request));
             return "admin/staff-form";
@@ -103,6 +107,9 @@ public class AdminStaffController {
             redirectAttributes.addFlashAttribute("successMessage", successMessage);
             return "redirect:/admin/staff/list";
         } catch (CustomException ex) {
+            if ("VALIDATION_ERROR".equals(ex.getErrorCode()) && ex.getMessage().contains("부서")) {
+                req.setAttribute("departmentIdError", ex.getMessage());
+            }
             req.setAttribute("errorMessage", ex.getMessage());
             req.setAttribute("model", adminStaffService.getEditForm(request));
             return "admin/staff-form";

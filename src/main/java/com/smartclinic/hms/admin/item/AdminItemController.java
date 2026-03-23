@@ -23,7 +23,9 @@ public class AdminItemController {
 
     @GetMapping("/list")
     public String list(@RequestParam(name = "category", required = false) String category, Model model) {
-        model.addAttribute("items", adminItemService.getItemList(category));
+        List<?> items = adminItemService.getItemList(category);
+        model.addAttribute("items", items);
+        model.addAttribute("totalCount", items.size());
         model.addAttribute("categoryFilters", adminItemService.getCategoryFilters(category));
         model.addAttribute("pageTitle", "물품 목록");
         model.addAttribute("isAdminItemList", true);
@@ -112,6 +114,7 @@ public class AdminItemController {
         List<?> histories = itemManagerService.getStockHistory();
         model.addAttribute("histories", histories);
         model.addAttribute("hasHistories", !histories.isEmpty());
+        model.addAttribute("totalCount", histories.size());
         model.addAttribute("totalIn", itemManagerService.getTotalInAmount());
         model.addAttribute("totalOut", itemManagerService.getTotalOutAmount());
         model.addAttribute("pageTitle", "입출고 내역");
