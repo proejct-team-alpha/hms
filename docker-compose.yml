@@ -42,13 +42,7 @@ services:
     environment:
       - ANONYMIZED_TELEMETRY=FALSE
     healthcheck:
-      test:
-        [
-          "CMD",
-          "python",
-          "-c",
-          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/heartbeat', timeout=5)",
-        ]
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/8000'"]
       interval: 15s
       timeout: 10s
       retries: 10
@@ -89,6 +83,8 @@ services:
     container_name: hms-spring
     ports:
       - "0.0.0.0:8080:8080"
+    volumes:
+      - ./logs/spring:/opt/hms/logs
     environment:
       - SERVER_PORT=8080
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/hms_db
@@ -98,6 +94,7 @@ services:
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
       - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
+      - LOG_PATH=/opt/hms/logs
     depends_on:
       mysql:
         condition: service_healthy
