@@ -26,16 +26,15 @@ public class AdminPatientController {
     public String list(
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,
-            @RequestParam(name = "nameKeyword", required = false) String nameKeyword,
-            @RequestParam(name = "contactKeyword", required = false) String contactKeyword,
+            @RequestParam(name = "keyword", required = false) String keyword,
             HttpServletRequest req) {
-        AdminPatientListResponse result = adminPatientService.getPatientList(page, size, nameKeyword, contactKeyword);
+        AdminPatientListResponse result = adminPatientService.getPatientList(page, size, keyword);
         return renderListPage(req, result);
     }
 
     @GetMapping("/detail")
     public String detail(
-            @RequestParam("patientId") Long patientId,
+            @RequestParam(name = "patientId") Long patientId,
             HttpServletRequest req,
             HttpServletResponse response) {
         try {

@@ -8,15 +8,16 @@ import com.smartclinic.hms.admin.patient.dto.UpdateAdminPatientApiResponse;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.Patient;
 import com.smartclinic.hms.domain.ReservationStatus;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +31,7 @@ public class AdminPatientService {
     private static final String DUPLICATE_PATIENT_PHONE_MESSAGE = "이미 사용 중인 연락처입니다.";
     private static final String PATIENT_UPDATED_MESSAGE = "환자 정보가 수정되었습니다.";
     private static final String DEFAULT_TEXT = "-";
+
     private static final Map<ReservationStatus, String> STATUS_LABELS = Map.of(
             ReservationStatus.RESERVED, "예약",
             ReservationStatus.RECEIVED, "접수",
@@ -40,15 +42,14 @@ public class AdminPatientService {
 
     private final AdminPatientRepository adminPatientRepository;
 
-    public AdminPatientListResponse getPatientList(int page, int size, String nameKeyword, String contactKeyword) {
+    public AdminPatientListResponse getPatientList(int page, int size, String keyword) {
         int safePage = page < 1 ? DEFAULT_PAGE : page;
         int safeSize = size < 1 ? DEFAULT_SIZE : size;
-        String normalizedNameKeyword = normalizeKeyword(nameKeyword);
-        String normalizedContactKeyword = normalizeContact(contactKeyword);
-        String displayContactKeyword = normalizeKeyword(contactKeyword);
+        String normalizedKeyword = normalizeKeyword(keyword);
+        String normalizedContactKeyword = normalizeContact(keyword);
 
         Pageable pageable = PageRequest.of(safePage - 1, safeSize);
-        Page<Patient> pageResult = adminPatientRepository.search(normalizedNameKeyword, normalizedContactKeyword, pageable);
+        Page<Patient> pageResult = adminPatientRepository.search(normalizedKeyword, normalizedContactKeyword, pageable);
 
         int currentPage = pageResult.getNumber() + 1;
         int totalPages = pageResult.getTotalPages();
@@ -59,9 +60,8 @@ public class AdminPatientService {
                 pageResult.getContent().stream()
                         .map(AdminPatientSummary::from)
                         .toList(),
-                buildPageLinks(totalPages, currentPage, safeSize, normalizedNameKeyword, displayContactKeyword),
-                normalizedNameKeyword,
-                displayContactKeyword,
+                buildPageLinks(totalPages, currentPage, safeSize, normalizedKeyword),
+                normalizedKeyword,
                 pageResult.getTotalElements(),
                 currentPage,
                 safeSize,
@@ -69,8 +69,8 @@ public class AdminPatientService {
                 totalPages > 0,
                 hasPrevious,
                 hasNext,
-                hasPrevious ? buildListUrl(currentPage - 1, safeSize, normalizedNameKeyword, displayContactKeyword) : "",
-                hasNext ? buildListUrl(currentPage + 1, safeSize, normalizedNameKeyword, displayContactKeyword) : ""
+                hasPrevious ? buildListUrl(currentPage - 1, safeSize, normalizedKeyword) : "",
+                hasNext ? buildListUrl(currentPage + 1, safeSize, normalizedKeyword) : ""
         );
     }
 
@@ -142,8 +142,8 @@ public class AdminPatientService {
         return value == null ? "" : value.trim();
     }
 
-    private String normalizeContact(String contactKeyword) {
-        return normalizeKeyword(contactKeyword).replace("-", "");
+    private String normalizeContact(String keyword) {
+        return normalizeKeyword(keyword).replace("-", "");
     }
 
     private String normalizeComparablePhone(String phone) {
@@ -169,8 +169,7 @@ public class AdminPatientService {
             int totalPages,
             int currentPage,
             int size,
-            String nameKeyword,
-            String contactKeyword) {
+            String keyword) {
         if (totalPages < 1) {
             return List.of();
         }
@@ -178,24 +177,22 @@ public class AdminPatientService {
         return IntStream.rangeClosed(1, totalPages)
                 .mapToObj(page -> new AdminPatientPageLinkResponse(
                         page,
-                        buildListUrl(page, size, nameKeyword, contactKeyword),
+                        buildListUrl(page, size, keyword),
                         page == currentPage
                 ))
                 .toList();
     }
 
-    private String buildListUrl(int page, int size, String nameKeyword, String contactKeyword) {
+    private String buildListUrl(int page, int size, String keyword) {
         StringBuilder builder = new StringBuilder("/admin/patient/list?page=")
                 .append(page)
                 .append("&size=")
                 .append(size);
 
-        if (!nameKeyword.isBlank()) {
-            builder.append("&nameKeyword=").append(nameKeyword);
+        if (!keyword.isBlank()) {
+            builder.append("&keyword=").append(keyword);
         }
-        if (!contactKeyword.isBlank()) {
-            builder.append("&contactKeyword=").append(contactKeyword);
-        }
+
         return builder.toString();
     }
 }

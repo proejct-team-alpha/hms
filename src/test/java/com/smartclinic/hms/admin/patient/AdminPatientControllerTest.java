@@ -45,54 +45,58 @@ class AdminPatientControllerTest {
     private AdminPatientService adminPatientService;
 
     @Test
-    @DisplayName("list uses default paging and renders view")
+    @DisplayName("목록은 기본 페이지와 pageTitle을 포함해 렌더링한다")
     void list_usesDefaultPagingAndRendersView() throws Exception {
         // given
         AdminPatientListResponse response = createEmptyListResponse();
-        given(adminPatientService.getPatientList(1, 20, null, null)).willReturn(response);
+        given(adminPatientService.getPatientList(1, 20, null)).willReturn(response);
 
-        // when // then
+        // when
+        // then
         mockMvc.perform(get("/admin/patient/list")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/patient-list"))
                 .andExpect(request().attribute("model", response))
-                .andExpect(request().attribute("pageTitle", notNullValue()));
+                .andExpect(request().attribute("pageTitle", notNullValue()))
+                .andExpect(content().string(containsString("환자명 또는 연락처로 환자를 빠르게 조회하고 관리합니다.")))
+                .andExpect(content().string(containsString("placeholder=\"환자명 또는 연락처 검색\"")))
+                .andExpect(content().string(containsString("조회")))
+                .andExpect(content().string(containsString("초기화")));
 
-        then(adminPatientService).should().getPatientList(1, 20, null, null);
+        then(adminPatientService).should().getPatientList(1, 20, null);
     }
 
     @Test
-    @DisplayName("list passes request params to service")
-    void list_passesRequestParamsToService() throws Exception {
+    @DisplayName("목록은 keyword 파라미터를 서비스에 전달한다")
+    void list_passesKeywordParamToService() throws Exception {
         // given
-        AdminPatientListResponse response = createEmptyListResponse();
-        given(adminPatientService.getPatientList(2, 20, "kim", "0101234")).willReturn(response);
+        AdminPatientListResponse response = createKeywordListResponse("kim");
+        given(adminPatientService.getPatientList(2, 20, "kim")).willReturn(response);
 
-        // when // then
+        // when
+        // then
         mockMvc.perform(get("/admin/patient/list")
                         .param("page", "2")
                         .param("size", "20")
-                        .param("nameKeyword", "kim")
-                        .param("contactKeyword", "0101234")
+                        .param("keyword", "kim")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/patient-list"))
                 .andExpect(request().attribute("model", response));
 
-        then(adminPatientService).should().getPatientList(2, 20, "kim", "0101234");
+        then(adminPatientService).should().getPatientList(2, 20, "kim");
     }
 
     @Test
-    @DisplayName("list renders patient row")
+    @DisplayName("목록은 환자 row를 렌더링한다")
     void list_rendersPatientRow() throws Exception {
         // given
         AdminPatientListResponse response = new AdminPatientListResponse(
                 List.of(new AdminPatientSummary(3L, "Kim Cheolsu", "010-1234-5678", "2026-03-19", "/admin/patient/detail?patientId=3")),
                 List.of(new AdminPatientPageLinkResponse(1, "/admin/patient/list?page=1&size=20", true)),
-                "",
                 "",
                 1,
                 1,
@@ -104,36 +108,57 @@ class AdminPatientControllerTest {
                 "",
                 ""
         );
-        given(adminPatientService.getPatientList(1, 20, null, null)).willReturn(response);
+        given(adminPatientService.getPatientList(1, 20, null)).willReturn(response);
 
-        // when // then
+        // when
+        // then
         mockMvc.perform(get("/admin/patient/list")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Kim Cheolsu")))
                 .andExpect(content().string(containsString("010-1234-5678")))
-                .andExpect(content().string(containsString("2026-03-19")));
+                .andExpect(content().string(containsString("2026-03-19")))
+                .andExpect(content().string(containsString("상세보기")));
     }
 
     @Test
-    @DisplayName("list renders empty state when no patients found")
+    @DisplayName("목록은 검색어를 입력창 값으로 유지한다")
+    void list_keepsKeywordInSearchInput() throws Exception {
+        // given
+        AdminPatientListResponse response = createKeywordListResponse("0101234");
+        given(adminPatientService.getPatientList(1, 20, "0101234")).willReturn(response);
+
+        // when
+        // then
+        mockMvc.perform(get("/admin/patient/list")
+                        .param("keyword", "0101234")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("value=\"0101234\"")));
+    }
+
+    @Test
+    @DisplayName("목록은 빈 결과 상태를 렌더링한다")
     void list_rendersEmptyStateWhenNoPatientsFound() throws Exception {
         // given
         AdminPatientListResponse response = createEmptyListResponse();
-        given(adminPatientService.getPatientList(1, 20, null, null)).willReturn(response);
+        given(adminPatientService.getPatientList(1, 20, null)).willReturn(response);
 
-        // when // then
+        // when
+        // then
         mockMvc.perform(get("/admin/patient/list")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/patient-list"))
-                .andExpect(request().attribute("model", response));
+                .andExpect(request().attribute("model", response))
+                .andExpect(content().string(containsString("조회된 환자가 없습니다.")));
     }
 
     @Test
-    @DisplayName("detail renders patient info and reservation histories")
+    @DisplayName("상세는 환자 정보와 예약 이력을 렌더링한다")
     void detail_rendersPatientInfoAndReservationHistories() throws Exception {
         // given
         AdminPatientDetailResponse response = new AdminPatientDetailResponse(
@@ -155,7 +180,8 @@ class AdminPatientControllerTest {
         );
         given(adminPatientService.getPatientDetail(7L)).willReturn(response);
 
-        // when // then
+        // when
+        // then
         mockMvc.perform(get("/admin/patient/detail")
                         .param("patientId", "7")
                         .with(user("admin").roles("ADMIN"))
@@ -177,13 +203,14 @@ class AdminPatientControllerTest {
     }
 
     @Test
-    @DisplayName("detail returns 404 when patient is missing")
+    @DisplayName("상세는 없는 환자 요청 시 404를 반환한다")
     void detail_returns404WhenPatientIsMissing() throws Exception {
         // given
         given(adminPatientService.getPatientDetail(99L))
                 .willThrow(CustomException.notFound("patient not found"));
 
-        // when // then
+        // when
+        // then
         mockMvc.perform(get("/admin/patient/detail")
                         .param("patientId", "99")
                         .with(user("admin").roles("ADMIN"))
@@ -198,7 +225,23 @@ class AdminPatientControllerTest {
                 List.of(),
                 List.of(),
                 "",
+                0,
+                1,
+                20,
+                0,
+                false,
+                false,
+                false,
                 "",
+                ""
+        );
+    }
+
+    private AdminPatientListResponse createKeywordListResponse(String keyword) {
+        return new AdminPatientListResponse(
+                List.of(),
+                List.of(new AdminPatientPageLinkResponse(1, "/admin/patient/list?page=1&size=20&keyword=" + keyword, true)),
+                keyword,
                 0,
                 1,
                 20,

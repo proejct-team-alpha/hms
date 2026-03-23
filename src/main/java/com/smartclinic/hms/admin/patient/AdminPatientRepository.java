@@ -1,26 +1,28 @@
 package com.smartclinic.hms.admin.patient;
 
-import com.smartclinic.hms.domain.ReservationStatus;
 import com.smartclinic.hms.domain.Patient;
-import java.time.LocalDate;
-import java.util.List;
+import com.smartclinic.hms.domain.ReservationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
+import java.util.List;
+
 public interface AdminPatientRepository extends JpaRepository<Patient, Long> {
 
     @Query("""
             SELECT p
             FROM Patient p
-            WHERE (:nameKeyword = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :nameKeyword, '%')))
-              AND (:contactKeyword = '' OR REPLACE(p.phone, '-', '') LIKE CONCAT('%', :contactKeyword, '%'))
+            WHERE (:keyword = ''
+                   OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                   OR REPLACE(p.phone, '-', '') LIKE CONCAT('%', :contactKeyword, '%'))
             ORDER BY p.createdAt DESC, p.id DESC
             """)
     Page<Patient> search(
-            @Param("nameKeyword") String nameKeyword,
+            @Param("keyword") String keyword,
             @Param("contactKeyword") String contactKeyword,
             Pageable pageable);
 
@@ -52,10 +54,15 @@ public interface AdminPatientRepository extends JpaRepository<Patient, Long> {
 
     interface AdminPatientReservationHistoryProjection {
         String getReservationNumber();
+
         LocalDate getReservationDate();
+
         String getTimeSlot();
+
         String getDepartmentName();
+
         String getDoctorName();
+
         ReservationStatus getStatus();
     }
 }
