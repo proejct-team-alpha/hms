@@ -31,12 +31,6 @@
                 <i data-feather="package" class="w-5 h-5 text-indigo-600"></i>
                 물품 사용
               </h3>
-              <!-- 일괄 사용 버튼 -->
-              <button type="button" id="item-batch-use-btn"
-                      class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-1.5">
-                <i data-feather="plus-square" class="w-4 h-4"></i>
-                선택 물품 일괄 사용
-              </button>
             </div>
             <div class="flex gap-1.5" id="item-category-btns">
               <button type="button" data-cat="" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors">전체</button>
@@ -190,63 +184,6 @@
                 input.value = '';
               } else if (data.error) alert(data.error);
             });
-          });
-        });
-      }
-
-      // 3. 선택 물품 일괄 사용 - 의사 페이지 로직 그대로 이식
-      const batchUseBtn = document.getElementById('item-batch-use-btn');
-      if (batchUseBtn) {
-        batchUseBtn.addEventListener('click', function(e) {
-          e.preventDefault();
-          const requests = [];
-          const csrfToken = '{{_csrf.token}}';
-          const csrfHeader = '{{_csrf.headerName}}';
-
-          document.querySelectorAll('.item-card').forEach(card => {
-            const amountInput = card.querySelector('input[name="amount"]');
-            const amount = amountInput ? amountInput.value.trim() : "";
-            if (amount && parseInt(amount) > 0) {
-              // [기능 구현] ID를 반드시 숫자(Number) 타입으로 변환하여 서버 데이터 타입 불일치 방지
-              requests.push({
-                id: Number(card.getAttribute('data-id')),
-                amount: Number(amount)
-              });
-            }
-          });
-
-          if (requests.length === 0) {
-            alert('사용할 물품의 수량을 하나 이상 입력해주세요.');
-            return;
-          }
-
-          fetch('/staff/item/use-batch', {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              [csrfHeader]: csrfToken
-            },
-            body: JSON.stringify({
-              requests: requests
-            })
-          }).then(async res => {
-            // [기능 구현] 응답이 성공(200)이 아니더라도(예: 재고부족 400), 최신 재고 데이터를 받아 UI를 갱신
-            const data = await res.json();
-            if (data.items) {
-              if (data.errors && data.errors.length > 0) {
-                alert('일부 물품의 재고가 부족하여 처리되지 않았습니다.\n\n' + data.errors.join('\n'));
-              } else if (data.error) {
-                alert(data.error);
-              }
-              refreshAllUI(data);
-              // 입력 필드 초기화
-              document.querySelectorAll('.item-card input[name="amount"]').forEach(i => i.value = '');
-            } else if (data.error) {
-              alert('오류: ' + data.error);
-            }
-          }).catch(err => {
-            console.error(err);
-            alert('서버 통신 중 오류가 발생했습니다.');
           });
         });
       }
