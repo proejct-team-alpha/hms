@@ -255,6 +255,16 @@ public class ReceptionService {
     }
 
     /**
+     * 수납 완료 처리
+     */
+    @Transactional
+    public void completePayment(Long id) {
+        Reservation r = reservationRepository.findById(id)
+                .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
+        r.pay();
+    }
+
+    /**
      * 대시보드 통계 및 최근 예약 목록
      */
     public StaffDashboardDto getDashboard() {

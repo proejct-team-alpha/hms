@@ -93,13 +93,28 @@ public class ReceptionController {
         List<StaffReservationDto> filtered = all.stream()
             .filter(r -> {
                 if ("treatment_status".equals(activeTab)) {
+                    // [기능 개선] 진료현황 탭: 진료중, 진료 완료, 처치 완료 환자 모두 노출
                     return (r.getStatusText().equals("진료중") || r.getStatusText().equals("진료 완료") || r.getStatusText().equals("처치 완료")) 
                            && !r.isPaid();
                 }
                 if ("paid".equals(activeTab)) {
-                    return r.isPaid();
+                    // [기능 개선] 수납 탭: 처치 완료(수납 대기) 환자 + 이미 수납 완료된 환자 통합 노출
+                    return r.isPaid() || r.getStatusText().equals("처치 완료");
                 }
                 return true;
+            })
+            .map(r -> {
+                // [명칭 변경] 수납 탭에서는 '처치 완료'를 '수납 대기'로 표시
+                if ("paid".equals(activeTab)) {
+                    if (r.isPaid()) {
+                        r.setStatusText("수납 완료");
+                        r.setStatusBadgeClass("bg-green-100 text-green-700");
+                    } else if ("처치 완료".equals(r.getStatusText())) {
+                        r.setStatusText("수납 대기");
+                        r.setStatusBadgeClass("bg-orange-100 text-orange-700");
+                    }
+                }
+                return r;
             })
             .collect(Collectors.toList());
 
@@ -110,12 +125,13 @@ public class ReceptionController {
         int to = Math.min(from + PAGE_SIZE, total);
         List<StaffReservationDto> paged = filtered.subList(from, to);
 
+        // [상태 유지] 모든 검색 파라미터를 유지하기 위한 빌더
         StringBuilder keepParams = new StringBuilder();
         if (query != null && !query.isEmpty()) keepParams.append("&query=").append(query);
-        if (deptIds != null) {
+        if (deptIds != null && !deptIds.isEmpty()) {
             for (Long id : deptIds) keepParams.append("&deptIds=").append(id);
         }
-        if (doctorIds != null) {
+        if (doctorIds != null && !doctorIds.isEmpty()) {
             for (Long id : doctorIds) keepParams.append("&doctorIds=").append(id);
         }
         if (source != null && !source.isEmpty()) keepParams.append("&source=").append(source);
@@ -126,6 +142,7 @@ public class ReceptionController {
         model.addAttribute("isToday", selectedDate.equals(LocalDate.now()));
         model.addAttribute("currentTab", activeTab);
         model.addAttribute("query", query != null ? query : "");
+        model.addAttribute("currentPage", finalPage); // 현재 페이지 추가
         model.addAttribute("keepParams", params);
 
         // 탭 활성화 상태 전달
@@ -277,6 +294,18 @@ public class ReceptionController {
             result.put("statusText", "취소");
             result.put("statusClass", "bg-red-100 text-red-700");
         }
+        return result;
+    }
+
+    // [기능 추가] 수납 즉시 처리 AJAX
+    @PostMapping("/pay-ajax")
+    @ResponseBody
+    public Map<String, Object> payAjax(@RequestBody Map<String, Object> request) {
+        Long id = Long.valueOf(request.get("id").toString());
+        receptionService.completePayment(id); // 수납 완료 처리 서비스 호출
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("message", "수납이 완료되었습니다.");
         return result;
     }
 

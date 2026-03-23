@@ -4,8 +4,10 @@ import com.smartclinic.hms.domain.Reservation;
 import com.smartclinic.hms.domain.ReservationStatus;
 import com.smartclinic.hms.domain.ReservationSource;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 public class StaffReservationDto {
 
     private final Long id;
@@ -22,8 +24,8 @@ public class StaffReservationDto {
     private final String departmentName;
     private final Long doctorId;
     private final String doctorName;
-    private final String statusText;
-    private final String statusBadgeClass;
+    private String statusText;
+    private String statusBadgeClass;
     private final String sourceText;
     private final String sourceBadgeClass;
     private final String ageGender; 
