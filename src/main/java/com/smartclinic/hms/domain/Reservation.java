@@ -22,10 +22,6 @@ import java.time.LocalTime;
  */
 @Entity
 @Table(name = "reservation",
-    uniqueConstraints = @UniqueConstraint(
-        name = "uk_reservation_doctor_date_slot",
-        columnNames = {"doctor_id", "reservation_date", "time_slot"}
-    ),
     indexes = {
         @Index(name = "idx_reservation_doctor_date", columnList = "doctor_id, reservation_date, start_time"),
         @Index(name = "idx_reservation_status_date", columnList = "status, reservation_date")
