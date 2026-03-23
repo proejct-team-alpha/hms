@@ -1,7 +1,6 @@
 package com.smartclinic.hms.admin.reservation;
 
 import com.smartclinic.hms.admin.reservation.dto.AdminReservationListResponse;
-import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.Department;
 import com.smartclinic.hms.domain.Doctor;
 import com.smartclinic.hms.domain.Patient;
@@ -20,15 +19,11 @@ import org.springframework.test.context.TestPropertySource;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @Import(AdminReservationService.class)
 @TestPropertySource(properties = "spring.sql.init.mode=never")
 class AdminReservationServiceTest {
-
-    private static final String RESERVATION_CANCELLED_MESSAGE = "예약이 취소되었습니다.";
-    private static final String RECEPTION_CANCELLED_MESSAGE = "접수가 취소되었습니다.";
 
     @Autowired
     private AdminReservationService adminReservationService;
@@ -39,16 +34,13 @@ class AdminReservationServiceTest {
     @Test
     @DisplayName("status invalid value falls back to ALL")
     void invalidStatus_fallbackToAll() {
-        // given
         persistReservation("RES-20260310-001", LocalDate.of(2026, 3, 10), "09:00", "RESERVED", "홍길동", "010-1111-2222");
         persistReservation("RES-20260310-002", LocalDate.of(2026, 3, 10), "10:00", "RECEIVED", "김만두", "010-2222-3333");
         entityManager.flush();
         entityManager.clear();
 
-        // when
         AdminReservationListResponse result = adminReservationService.getReservationList(1, 10, "INVALID", null);
 
-        // then
         assertThat(result.selectedStatus()).isEqualTo("ALL");
         assertThat(result.totalCount()).isEqualTo(2);
         assertThat(result.reservations()).hasSize(2);
@@ -57,7 +49,6 @@ class AdminReservationServiceTest {
     @Test
     @DisplayName("status filter and default sort are applied")
     void statusFilterAndDefaultSort_applied() {
-        // given
         persistReservation("RES-20260310-001", LocalDate.of(2026, 3, 10), "09:00", "RECEIVED", "환자1", "010-1111-1111");
         persistReservation("RES-20260310-002", LocalDate.of(2026, 3, 10), "11:00", "RECEIVED", "환자2", "010-2222-2222");
         persistReservation("RES-20260309-001", LocalDate.of(2026, 3, 9), "15:00", "RECEIVED", "환자3", "010-3333-3333");
@@ -65,10 +56,8 @@ class AdminReservationServiceTest {
         entityManager.flush();
         entityManager.clear();
 
-        // when
         AdminReservationListResponse result = adminReservationService.getReservationList(1, 10, "RECEIVED", null);
 
-        // then
         assertThat(result.selectedStatus()).isEqualTo("RECEIVED");
         assertThat(result.totalCount()).isEqualTo(3);
         assertThat(result.reservations()).extracting("reservationNumber")
@@ -78,15 +67,12 @@ class AdminReservationServiceTest {
     @Test
     @DisplayName("received status uses 접수 label in option and row response")
     void receivedStatus_usesReceptionLabel() {
-        // given
         persistReservation("RES-20260310-101", LocalDate.of(2026, 3, 10), "10:30", "RECEIVED", "홍길동", "010-1111-2222");
         entityManager.flush();
         entityManager.clear();
 
-        // when
         AdminReservationListResponse result = adminReservationService.getReservationList(1, 10, "RECEIVED", null);
 
-        // then
         assertThat(result.selectedStatus()).isEqualTo("RECEIVED");
         assertThat(result.statusOptions())
                 .filteredOn(option -> "RECEIVED".equals(option.value()))
@@ -105,17 +91,14 @@ class AdminReservationServiceTest {
     @Test
     @DisplayName("default paging is applied")
     void defaultPaging_applied() {
-        // given
         for (int i = 1; i <= 12; i++) {
             persistReservation(String.format("RES-20260310-%03d", i), LocalDate.of(2026, 3, 10), String.format("%02d:00", i), "RESERVED", "환자" + i, "010-1000-" + String.format("%04d", i));
         }
         entityManager.flush();
         entityManager.clear();
 
-        // when
         AdminReservationListResponse result = adminReservationService.getReservationList(1, 10, "ALL", null);
 
-        // then
         assertThat(result.currentPage()).isEqualTo(1);
         assertThat(result.size()).isEqualTo(10);
         assertThat(result.reservations()).hasSize(10);
@@ -125,7 +108,6 @@ class AdminReservationServiceTest {
     @Test
     @DisplayName("page links preserve status and keyword")
     void pageLinks_preserveStatusAndKeyword() {
-        // given
         for (int i = 1; i <= 11; i++) {
             persistReservation(
                     String.format("RES-20260311-%03d", i),
@@ -139,10 +121,8 @@ class AdminReservationServiceTest {
         entityManager.flush();
         entityManager.clear();
 
-        // when
         AdminReservationListResponse result = adminReservationService.getReservationList(2, 5, "RECEIVED", "Kim");
 
-        // then
         assertThat(result.currentPage()).isEqualTo(2);
         assertThat(result.hasPrevious()).isTrue();
         assertThat(result.hasNext()).isTrue();
@@ -163,16 +143,13 @@ class AdminReservationServiceTest {
     @Test
     @DisplayName("keyword search matches patient name")
     void keywordSearch_matchesPatientName() {
-        // given
         persistReservation("RES-20260310-201", LocalDate.of(2026, 3, 10), "09:00", "RESERVED", "홍길동", "010-1111-2222");
         persistReservation("RES-20260310-202", LocalDate.of(2026, 3, 10), "10:00", "RESERVED", "김만두", "010-3333-4444");
         entityManager.flush();
         entityManager.clear();
 
-        // when
         AdminReservationListResponse result = adminReservationService.getReservationList(1, 10, "ALL", "홍길동");
 
-        // then
         assertThat(result.keyword()).isEqualTo("홍길동");
         assertThat(result.totalCount()).isEqualTo(1);
         assertThat(result.reservations()).singleElement().satisfies(item -> {
@@ -186,16 +163,13 @@ class AdminReservationServiceTest {
     @Test
     @DisplayName("keyword search matches patient phone ignoring hyphen")
     void keywordSearch_matchesPatientPhoneIgnoringHyphen() {
-        // given
         persistReservation("RES-20260310-301", LocalDate.of(2026, 3, 10), "09:00", "RESERVED", "홍길동", "010-1234-5678");
         persistReservation("RES-20260310-302", LocalDate.of(2026, 3, 10), "10:00", "RESERVED", "김만두", "010-0000-0000");
         entityManager.flush();
         entityManager.clear();
 
-        // when
         AdminReservationListResponse result = adminReservationService.getReservationList(1, 10, "ALL", "0101234");
 
-        // then
         assertThat(result.totalCount()).isEqualTo(1);
         assertThat(result.reservations()).singleElement().satisfies(item -> {
             assertThat(item.patientName()).isEqualTo("홍길동");
@@ -206,92 +180,35 @@ class AdminReservationServiceTest {
     @Test
     @DisplayName("status and keyword filters can be combined")
     void statusAndKeyword_filtersCanBeCombined() {
-        // given
         persistReservation("RES-20260310-401", LocalDate.of(2026, 3, 10), "09:00", "RESERVED", "홍길동", "010-1111-2222");
         persistReservation("RES-20260310-402", LocalDate.of(2026, 3, 10), "10:00", "RECEIVED", "홍길동", "010-1111-2222");
         entityManager.flush();
         entityManager.clear();
 
-        // when
         AdminReservationListResponse result = adminReservationService.getReservationList(1, 10, "RECEIVED", "홍길동");
 
-        // then
         assertThat(result.selectedStatus()).isEqualTo("RECEIVED");
         assertThat(result.totalCount()).isEqualTo(1);
         assertThat(result.reservations()).singleElement().satisfies(item -> assertThat(item.status()).isEqualTo("RECEIVED"));
     }
 
     @Test
-    @DisplayName("예약 상태 취소 시 예약 취소 메시지를 반환한다")
-    void cancelReservation_reserved_returnsReservationCancelledMessage() {
-        // given
-        persistReservation("RES-20260310-901", LocalDate.of(2026, 3, 10), "09:00", "RESERVED", "홍길동", "010-1111-2222");
+    @DisplayName("reservation row includes patient detail navigation info")
+    void reservationRow_includesPatientDetailNavigationInfo() {
+        persistReservation("RES-20260310-501", LocalDate.of(2026, 3, 10), "09:00", "RESERVED", "홍길동", "010-1111-2222");
         entityManager.flush();
         entityManager.clear();
 
-        Long reservationId = entityManager.createQuery(
-                        "select r.id from Reservation r where r.reservationNumber = :number", Long.class)
-                .setParameter("number", "RES-20260310-901")
-                .getSingleResult();
+        AdminReservationListResponse result = adminReservationService.getReservationList(1, 10, "ALL", null);
 
-        // when
-        String result = adminReservationService.cancelReservation(reservationId);
-        entityManager.flush();
-        entityManager.clear();
-
-        Reservation reservation = entityManager.find(Reservation.class, reservationId);
-
-        // then
-        assertThat(result).isEqualTo(RESERVATION_CANCELLED_MESSAGE);
-        assertThat(reservation.getStatus().name()).isEqualTo("CANCELLED");
-    }
-
-    @Test
-    @DisplayName("접수 상태 취소 시 접수 취소 메시지를 반환한다")
-    void cancelReservation_received_returnsReceptionCancelledMessage() {
-        // given
-        persistReservation("RES-20260310-903", LocalDate.of(2026, 3, 10), "10:00", "RECEIVED", "홍길동", "010-1111-2222");
-        entityManager.flush();
-        entityManager.clear();
-
-        Long reservationId = entityManager.createQuery(
-                        "select r.id from Reservation r where r.reservationNumber = :number", Long.class)
-                .setParameter("number", "RES-20260310-903")
-                .getSingleResult();
-
-        // when
-        String result = adminReservationService.cancelReservation(reservationId);
-        entityManager.flush();
-        entityManager.clear();
-
-        Reservation reservation = entityManager.find(Reservation.class, reservationId);
-
-        // then
-        assertThat(result).isEqualTo(RECEPTION_CANCELLED_MESSAGE);
-        assertThat(reservation.getStatus().name()).isEqualTo("RESERVED");
-    }
-
-    @Test
-    @DisplayName("완료 상태 취소 시도는 예외가 발생한다")
-    void cancelReservation_completed_throwsException() {
-        // given
-        persistReservation("RES-20260310-902", LocalDate.of(2026, 3, 10), "09:30", "COMPLETED", "홍길동", "010-1111-2222");
-        entityManager.flush();
-        entityManager.clear();
-
-        Long reservationId = entityManager.createQuery(
-                        "select r.id from Reservation r where r.reservationNumber = :number", Long.class)
-                .setParameter("number", "RES-20260310-902")
-                .getSingleResult();
-
-        // when
-        // then
-        assertThatThrownBy(() -> adminReservationService.cancelReservation(reservationId))
-                .isInstanceOf(CustomException.class);
+        assertThat(result.reservations()).singleElement().satisfies(item -> {
+            assertThat(item.patientId()).isNotNull();
+            assertThat(item.patientDetailUrl()).isEqualTo("/admin/patient/detail?patientId=" + item.patientId());
+        });
     }
 
     private void persistReservation(String reservationNumber, LocalDate date, String timeSlot, String status, String patientName, String patientPhone) {
-        Department department = Department.create("내과-" + reservationNumber, true);
+        Department department = Department.create("진료과-" + reservationNumber, true);
         entityManager.persist(department);
 
         Staff doctorStaff = Staff.create(

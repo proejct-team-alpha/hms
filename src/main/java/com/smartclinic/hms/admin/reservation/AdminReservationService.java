@@ -4,7 +4,6 @@ import com.smartclinic.hms.admin.reservation.dto.AdminReservationItemResponse;
 import com.smartclinic.hms.admin.reservation.dto.AdminReservationListResponse;
 import com.smartclinic.hms.admin.reservation.dto.AdminReservationPageLinkResponse;
 import com.smartclinic.hms.admin.reservation.dto.AdminReservationStatusOptionResponse;
-import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.ReservationStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,9 +25,6 @@ public class AdminReservationService {
 
     private static final int DEFAULT_PAGE = 1;
     private static final int DEFAULT_SIZE = 10;
-    private static final String RESERVATION_CANCELLED_MESSAGE = "예약이 취소되었습니다.";
-    private static final String RECEPTION_CANCELLED_MESSAGE = "접수가 취소되었습니다.";
-
     private static final Map<String, String> STATUS_LABELS = Map.of(
             "ALL", "전체",
             "RESERVED", "예약",
@@ -126,13 +122,14 @@ public class AdminReservationService {
                 row.getReservationNumber(),
                 row.getReservationDate().toString(),
                 row.getTimeSlot(),
+                row.getPatientId(),
+                buildPatientDetailUrl(row.getPatientId()),
                 row.getPatientName(),
                 row.getPatientPhone(),
                 row.getDepartmentName(),
                 row.getDoctorName(),
                 status,
                 STATUS_LABELS.getOrDefault(status, status),
-                "RESERVED".equals(status) || "RECEIVED".equals(status),
                 "RESERVED".equals(status),
                 "RECEIVED".equals(status),
                 "COMPLETED".equals(status),
@@ -175,25 +172,7 @@ public class AdminReservationService {
         return builder.toString();
     }
 
-    @Transactional
-    public String cancelReservation(Long reservationId) {
-        var reservation = adminReservationRepository.findById(reservationId)
-                .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다. ID: " + reservationId));
-        ReservationStatus originalStatus = reservation.getStatus();
-
-        try {
-            reservation.cancel();
-        } catch (IllegalStateException ex) {
-            throw CustomException.invalidStatusTransition(ex.getMessage());
-        }
-
-        return buildCancelSuccessMessage(originalStatus);
-    }
-
-    private String buildCancelSuccessMessage(ReservationStatus originalStatus) {
-        if (originalStatus == ReservationStatus.RECEIVED) {
-            return RECEPTION_CANCELLED_MESSAGE;
-        }
-        return RESERVATION_CANCELLED_MESSAGE;
+    private String buildPatientDetailUrl(Long patientId) {
+        return "/admin/patient/detail?patientId=" + patientId;
     }
 }
