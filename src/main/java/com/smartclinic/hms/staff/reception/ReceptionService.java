@@ -58,9 +58,19 @@ public class ReceptionService {
                     request.getName(),
                     phone,
                     request.getEmail());
+            // [기능 구현] 신규 환자 생성 시 주민번호 정보가 있으면 저장
+            if (request.getBirthInfo() != null && !request.getBirthInfo().isBlank()) {
+                patient.updateMedicalInfo(request.getBirthInfo(), request.getVisitReason());
+            }
             patientRepository.save(patient);
-        } else if (!patient.getName().equals(request.getName())) {
-            nameMismatch = true;
+        } else {
+            // [기능 구현] 기존 환자라도 전화 예약 시 입력된 내원 사유 및 주민번호(정보가 있을 때만)를 최신 정보로 업데이트
+            if (!patient.getName().equals(request.getName())) {
+                nameMismatch = true;
+            }
+            String finalBirth = (request.getBirthInfo() != null && !request.getBirthInfo().isBlank()) ? request.getBirthInfo() : patient.getBirthInfo();
+            String finalReason = (request.getVisitReason() != null && !request.getVisitReason().isBlank()) ? request.getVisitReason() : patient.getVisitReason();
+            patient.updateMedicalInfo(finalBirth, finalReason);
         }
 
         // 3️ 의사 조회

@@ -15,6 +15,7 @@ public class PhoneReservationRequestDto {
     @Pattern(regexp = "^01[0-9]-?\\d{3,4}-?\\d{4}$", message = "올바른 전화번호 형식이 아닙니다.")
     private String phone;
 
+    private String birthInfo; // [기능 구현] 주민번호 필드 추가 (YYMMDD-G)
     private String email;
 
     @NotNull(message = "진료과 선택은 필수입니다.")
@@ -29,6 +30,6 @@ public class PhoneReservationRequestDto {
     @NotBlank(message = "예약 시간은 필수입니다.")
     private String time;
 
-    private String symptoms;
+    private String visitReason; // [기능 구현] symptoms -> visitReason 으로 명칭 통합
     private String notes;
 }
