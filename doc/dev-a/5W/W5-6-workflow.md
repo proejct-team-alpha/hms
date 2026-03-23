@@ -130,6 +130,11 @@ redirectAttributes.addFlashAttribute("info", info);
 return "redirect:/reservation/complete";
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 예약 생성 후 완료 화면으로 이동할 때, 완료 정보를 URL 파라미터가 아닌 flash attribute(임시 세션 저장소)로 전달합니다. redirect 이후 Spring MVC가 이 값을 자동으로 뷰 모델에 담아 Mustache 템플릿에서 `{{#info}}`로 접근할 수 있게 합니다.
+> - **왜 이렇게 썼는지**: `addAttribute()`는 데이터를 URL 쿼리 파라미터(`?name=홍길동&department=내과`)로 노출시켜 개인정보가 브라우저 주소창에 표시됩니다. `addFlashAttribute()`는 데이터를 서버 세션에 한 번만 저장하고, redirect 완료 후 자동 삭제됩니다. PRG(Post-Redirect-Get) 패턴을 지키면서 개인정보를 URL에 노출하지 않는 안전한 방법입니다.
+> - **쉽게 말하면**: 완료 정보를 "주소창에 적어서" 전달하던 것을 "봉투에 넣어 한 번만 전달"하는 방식으로 바꿔, 주소창에 이름/진료과 등이 노출되지 않도록 했습니다.
+
 ### 2. reservation-complete.mustache — Mustache 바인딩
 
 ```html
@@ -153,6 +158,11 @@ return "redirect:/reservation/complete";
 {{/info}}
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: Mustache 조건문(`{{#info}}` / `{{^info}}`)으로 완료 화면을 서버에서 렌더링합니다. `info` 객체가 있으면 예약 완료 내용을 표시하고, 없으면(직접 URL 접근 시) "예약 정보가 없습니다" 오류 화면을 표시합니다.
+> - **왜 이렇게 썼는지**: `{{#info}}...{{/info}}`는 "info가 존재할 때" 블록을 렌더링하는 Mustache 조건문입니다. `{{^info}}...{{/info}}`는 반대로 "info가 없을 때"를 의미합니다. 이전 방식(JS로 URL 파라미터 파싱 후 DOM 조작)에 비해 서버 렌더링이므로 더 안전하고 간결합니다. `{{reservationNumber}}`처럼 이중 중괄호 안의 변수명은 Java 객체의 필드명과 매칭됩니다.
+> - **쉽게 말하면**: 서버가 HTML을 만들 때 예약 정보를 직접 채워 넣어 완성된 페이지를 보내주는 방식입니다. 브라우저에서 JavaScript로 데이터를 파싱하는 복잡한 과정이 없어집니다.
+
 ### 3. ReservationService — 주석 예시 (createReservation)
 
 ```java
@@ -172,6 +182,11 @@ reservationRepository.flush();
 // 완료 화면 표시에 필요한 정보만 DTO로 포장하여 반환 (트랜잭션 종료 후 LazyLoad 방지)
 return new ReservationCompleteInfo(...);
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 예약 생성 서비스 메서드의 핵심 단계들을 주석으로 설명합니다. ① 중복 예약 체크 → ② 환자 조회 또는 신규 등록 → ③ 예약번호 생성 및 저장 → ④ 완료 정보 DTO 반환의 순서입니다.
+> - **왜 이렇게 썼는지**: `orElseGet()`은 값이 없을 때만 람다(함수)를 실행해 새 객체를 만들어 저장합니다. `flush()`는 JPA가 메모리에만 가지고 있던 변경 사항을 즉시 DB에 반영해, DB 제약 위반을 트랜잭션 끝이 아닌 이 시점에 감지합니다. `ReservationCompleteInfo` DTO를 반환하는 이유는, 트랜잭션이 끝난 후 엔티티의 연관 객체(LazyLoad)에 접근하면 오류가 발생하기 때문에 필요한 값만 미리 뽑아두는 것입니다.
+> - **쉽게 말하면**: "이미 예약된 자리인지 확인 → 환자 등록(첫 방문이면 신규 등록) → 예약 번호표 발급 및 저장 → 완료 정보 정리해서 전달"의 4단계 흐름입니다.
 
 ---
 

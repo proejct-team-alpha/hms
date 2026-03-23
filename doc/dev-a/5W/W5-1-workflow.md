@@ -109,6 +109,11 @@ public class SymptomResponse {
 }
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 증상 분석 API가 주고받는 데이터의 형태(틀)를 정의합니다. `SymptomRequest`는 사용자가 입력한 증상 텍스트를 담는 틀이고, `SymptomResponse`는 분석 결과인 진료과(`dept`), 의사(`doctor`), 시간(`time`)을 담는 틀입니다.
+> - **왜 이렇게 썼는지**: DTO(Data Transfer Object)는 계층 간 데이터를 안전하게 전달하기 위한 객체입니다. `@Getter`는 각 필드를 읽는 메서드를 자동 생성하고, `@NoArgsConstructor`/`@AllArgsConstructor`는 생성자를 자동으로 만들어주는 Lombok 어노테이션입니다.
+> - **쉽게 말하면**: "증상을 보내는 봉투(Request)"와 "분석 결과를 받는 봉투(Response)"를 미리 만들어 두는 것과 같습니다.
+
 ### SymptomAnalysisService — Claude API 호출 + 파싱
 
 ```java
@@ -132,6 +137,11 @@ Pattern.compile("전문의:\\s*(.+)");
 Pattern.compile("시간:\\s*(\\d{2}:\\d{2})");
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: Claude AI에게 보낼 요청 구조와 질문(프롬프트)을 정의하고, AI가 돌려준 자유 형식의 텍스트에서 진료과·전문의·시간 정보를 뽑아내는 정규식 패턴을 정의합니다.
+> - **왜 이렇게 썼는지**: AI는 자유롭게 텍스트를 반환하기 때문에, 원하는 형식으로만 답변하도록 프롬프트에 명시적으로 지시합니다. 정규식(`Pattern.compile`)은 "진료과: 내과"처럼 특정 패턴의 텍스트를 찾아서 값만 추출하는 도구입니다. `\\s*`는 콜론 뒤의 공백을 허용하는 표현이고, `(.+)`는 이후 내용 전체를 캡처합니다.
+> - **쉽게 말하면**: AI한테 "반드시 이 형식으로 대답해"라고 지시하고, 받은 답변에서 필요한 정보만 쏙 뽑아내는 규칙을 만드는 것입니다.
+
 ### SymptomController
 
 ```java
@@ -148,6 +158,11 @@ public class SymptomController {
 }
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: `POST /llm/symptom/analyze` 주소로 HTTP 요청이 오면 받아서 처리하는 컨트롤러입니다. 요청 본문(JSON)에서 증상 텍스트를 꺼내 분석 서비스에 넘기고, 결과를 JSON으로 응답합니다.
+> - **왜 이렇게 썼는지**: `@RestController`는 이 클래스가 REST API 엔드포인트임을 선언합니다. `@RequestMapping("/llm/symptom")`으로 공통 경로를 지정하고, `@PostMapping("/analyze")`로 하위 경로를 추가합니다. `@RequestBody`는 요청 본문의 JSON을 자동으로 `SymptomRequest` 객체로 변환해 줍니다. `@RequiredArgsConstructor`는 `final` 필드를 주입받는 생성자를 자동 생성합니다.
+> - **쉽게 말하면**: 손님(클라이언트)이 "/llm/symptom/analyze"라는 창구로 증상을 접수하면, 담당 직원(Service)에게 넘겨주고 결과를 돌려주는 안내 창구 역할입니다.
+
 ### symptom-reservation.mustache — CSRF + fetch 교체
 
 ```html
@@ -155,6 +170,11 @@ public class SymptomController {
 <meta name="_csrf" content="{{_csrf.token}}">
 <meta name="_csrf_header" content="{{_csrf.headerName}}">
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 브라우저가 서버로 POST 요청을 보낼 때 필요한 CSRF 토큰 값을 HTML 헤더 메타태그에 심어 둡니다. 이 값은 서버가 렌더링할 때 `{{_csrf.token}}`이 실제 토큰 값으로 치환됩니다.
+> - **왜 이렇게 썼는지**: Spring Security는 기본적으로 CSRF(사이트 간 요청 위조) 공격을 막기 위해 POST 요청에 토큰 검증을 요구합니다. JavaScript fetch로 요청을 보낼 때 이 토큰을 헤더에 포함시켜야 서버가 신뢰할 수 있는 요청으로 받아들입니다. 메타태그에 저장하면 JS에서 `document.querySelector('meta[name="_csrf"]').content`로 쉽게 읽을 수 있습니다.
+> - **쉽게 말하면**: 서버한테 "나 진짜 우리 사이트에서 보낸 요청이에요"라는 신분증 번호를 HTML 페이지에 숨겨두는 것입니다.
 
 ```javascript
 // 변경 전 (더미)
@@ -177,6 +197,11 @@ async function callSymptomApi(symptomText) {
 }
 // analyzeSymptom() 함수와 SYMPTOM_MAP 삭제
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 변경 전에는 1.5초 후 미리 정해둔 답변을 주는 가짜(더미) 함수였고, 변경 후에는 실제 서버의 `/llm/symptom/analyze` 엔드포인트에 증상 텍스트를 POST로 전송하고 AI 분석 결과를 받아옵니다.
+> - **왜 이렇게 썼는지**: `async/await`는 비동기 작업(서버 통신처럼 시간이 걸리는 작업)을 순서대로 읽히도록 작성하는 방식입니다. `fetch`는 브라우저 내장 HTTP 요청 함수입니다. `?.content || ''`는 메타태그가 없을 경우 빈 문자열로 대체하는 안전 처리입니다. `res.json()`은 서버 응답을 JavaScript 객체로 변환합니다.
+> - **쉽게 말하면**: 예전에는 "항상 이 답변 줄게"라는 가짜 직원이었는데, 이제는 실제로 AI 서버에 물어보고 결과를 가져오는 진짜 직원으로 교체한 것입니다.
 
 ---
 
