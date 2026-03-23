@@ -26,6 +26,9 @@
     .tab-btn.active::after { content: ''; position: absolute; bottom: 0; left: 15%; right: 15%; height: 3px; background-color: #4f46e5; border-radius: 10px 10px 0 0; }
     .tab-btn:hover:not(.active) { color: #334155; background-color: #f8fafc; }
     .reception-header-row th { padding-top: 1.1rem !important; padding-bottom: 1.1rem !important; }
+
+    /* [기능 구현] 취소 사유 열의 너비를 150px로 제한하고 넘칠 경우 말줄임표(...) 처리 */
+    .reason-cell { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   </style>
 </head>
 <body class="min-h-screen flex bg-[#f8fafc] text-slate-900">
@@ -160,16 +163,21 @@
                     <th class="px-4 py-5">진료과</th>
                     <th class="px-4 py-5">의사</th>
                     
+                    <!-- [기능 구현] 취소 탭 전용 취소사유 헤더 추가 -->
+                    {{#isCancelledTab}}
+                      <th class="px-4 py-5">취소사유</th>
+                    {{/isCancelledTab}}
+                    
                     <!-- 3. 대기 탭 전용 정보 -->
                     {{#isReceivedTab}}
                       <th class="px-4 py-5">예약경로</th>
                       <th class="px-4 py-5">예약시간</th>
                     {{/isReceivedTab}}
 
-                    <!-- 4. 액션 -->
-                    {{^isAllTab}}{{^isTreatmentStatusTab}}
+                    <!-- 4. 액션 (취소 탭에서는 숨김) -->
+                    {{^isAllTab}}{{^isTreatmentStatusTab}}{{^isCancelledTab}}
                       <th class="px-4 py-5 text-center">액션</th>
-                    {{/isTreatmentStatusTab}}{{/isAllTab}}
+                    {{/isCancelledTab}}{{/isTreatmentStatusTab}}{{/isAllTab}}
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -202,6 +210,11 @@
                     <td class="px-4 py-6 text-sm font-bold text-slate-500">{{patientPhone}}</td>
                     <td class="px-4 py-6 text-sm font-bold text-slate-700">{{departmentName}}</td>
                     <td class="px-4 py-6 text-sm font-bold text-slate-600">{{doctorName}}</td>
+                    
+                    <!-- [기능 구현] 취소 탭 전용 취소사유 데이터 출력 (말줄임표 적용) -->
+                    {{#isCancelledTab}}
+                      <td class="px-4 py-6 text-sm font-medium text-red-600 reason-cell">{{cancellationReason}}</td>
+                    {{/isCancelledTab}}
 
                     <!-- 3. 대기 탭 전용 데이터 -->
                     {{#isReceivedTab}}
@@ -209,8 +222,8 @@
                       <td class="px-4 py-6 text-sm font-bold text-slate-400">{{timeSlot}}</td>
                     {{/isReceivedTab}}
                     
-                    <!-- 4. 액션 데이터 -->
-                    {{^isAllTab}}{{^isTreatmentStatusTab}}
+                    <!-- 4. 액션 데이터 (취소 탭에서는 숨김) -->
+                    {{^isAllTab}}{{^isTreatmentStatusTab}}{{^isCancelledTab}}
                       <td class="px-4 py-6 text-center" onclick="event.stopPropagation()">
                         <div class="flex justify-center gap-2">
                           {{#isPaidTab}}
@@ -235,7 +248,7 @@
                           {{#isCancelledTab}}<span class="text-[10px] text-red-400 italic">취소됨</span>{{/isCancelledTab}}
                         </div>
                       </td>
-                    {{/isTreatmentStatusTab}}{{/isAllTab}}
+                    {{/isCancelledTab}}{{/isTreatmentStatusTab}}{{/isAllTab}}
                   </tr>
                   {{/reservations}}
                   {{^reservations}}
