@@ -97,6 +97,7 @@ services:
       - LLM_SERVICE_URL=http://python-llm:8000
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
     depends_on:
       mysql:
         condition: service_healthy
