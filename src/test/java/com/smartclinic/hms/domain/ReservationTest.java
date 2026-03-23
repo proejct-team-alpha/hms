@@ -99,6 +99,6 @@ class ReservationTest {
         // when & then
         assertThatThrownBy(() -> reserved.cancel(null))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("진료 완료");
+                .hasMessageContaining("취소 불가");
     }
 }
