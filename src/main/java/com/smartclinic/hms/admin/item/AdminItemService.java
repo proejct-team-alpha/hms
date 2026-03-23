@@ -1,6 +1,7 @@
 package com.smartclinic.hms.admin.item;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -20,21 +21,65 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class AdminItemService {
 
+    private static final char[] CHOSUNG = {'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'};
+
     private final ItemRepository itemRepository;
 
-    public List<AdminItemListItemResponse> getItemList(String category) {
+    public List<AdminItemListItemResponse> getItemList(String category, String keyword) {
+        return getItemsByCategory(category).stream()
+                .filter(item -> matchesKeyword(item.getName(), keyword))
+                .map(AdminItemListItemResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    private List<Item> getItemsByCategory(String category) {
         if (category == null || category.isBlank()) {
-            return itemRepository.findAllByOrderByNameAsc().stream()
-                    .map(AdminItemListItemResponse::new).collect(Collectors.toList());
+            return itemRepository.findAllByOrderByNameAsc();
         }
         try {
             ItemCategory cat = ItemCategory.valueOf(category);
-            return itemRepository.findByCategoryOrderByNameAsc(cat).stream()
-                    .map(AdminItemListItemResponse::new).collect(Collectors.toList());
+            return itemRepository.findByCategoryOrderByNameAsc(cat);
         } catch (IllegalArgumentException e) {
-            return itemRepository.findAllByOrderByNameAsc().stream()
-                    .map(AdminItemListItemResponse::new).collect(Collectors.toList());
+            return itemRepository.findAllByOrderByNameAsc();
         }
+    }
+
+    private boolean matchesKeyword(String itemName, String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return true;
+        }
+
+        String normalizedKeyword = keyword.trim().toLowerCase(Locale.ROOT);
+        String normalizedItemName = itemName.toLowerCase(Locale.ROOT);
+        if (normalizedItemName.contains(normalizedKeyword)) {
+            return true;
+        }
+
+        if (isChosungOnly(normalizedKeyword)) {
+            return extractChosung(itemName).contains(normalizedKeyword);
+        }
+
+        return false;
+    }
+
+    private boolean isChosungOnly(String keyword) {
+        return keyword.chars().allMatch(this::isChosungCharacter);
+    }
+
+    private boolean isChosungCharacter(int character) {
+        return character >= 'ㄱ' && character <= 'ㅎ';
+    }
+
+    private String extractChosung(String value) {
+        StringBuilder builder = new StringBuilder();
+        for (char character : value.toCharArray()) {
+            if (character >= 0xAC00 && character <= 0xD7A3) {
+                builder.append(CHOSUNG[(character - 0xAC00) / 588]);
+                continue;
+            }
+            builder.append(Character.toLowerCase(character));
+        }
+        return builder.toString();
     }
 
     public List<ItemCategoryFilter> getCategoryFilters(String selected) {

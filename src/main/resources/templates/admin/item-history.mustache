@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>입출고 내역 - MediCare+</title>
+  <title>{{pageTitle}} - MediCare+</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
 </head>
@@ -23,7 +23,7 @@
             </div>
             <div>
               <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
-              <p class="text-slate-500 mt-1">물품 입출고 기록을 조회합니다.</p>
+              <p class="text-slate-500 mt-1">날짜 범위를 기준으로 물품 입출고 이력을 조회합니다.</p>
             </div>
           </div>
           <div class="text-sm text-slate-500 text-right">
@@ -31,44 +31,89 @@
           </div>
         </div>
 
-        <!-- 총량 요약 -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex items-center gap-4">
-            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
-              <i data-feather="arrow-down-circle" class="w-5 h-5"></i>
-            </div>
-            <div>
-              <div class="text-xs text-slate-500 font-medium">총 입고 수량</div>
-              <div class="text-xl font-bold text-blue-700">{{totalIn}}<span class="text-sm font-normal text-slate-500 ml-1">개</span></div>
-            </div>
-          </div>
-          <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex items-center gap-4">
-            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">
-              <i data-feather="arrow-up-circle" class="w-5 h-5"></i>
-            </div>
-            <div>
-              <div class="text-xs text-slate-500 font-medium">총 출고 수량</div>
-              <div class="text-xl font-bold text-orange-700">{{totalOut}}<span class="text-sm font-normal text-slate-500 ml-1">개</span></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 검색 -->
-        <div class="flex gap-3">
-          <div class="relative flex-1">
-            <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input type="text" id="history-search" placeholder="물품명 검색"
-                   class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300">
-          </div>
-          <div class="flex gap-1.5" id="type-filter-btns">
-            <button type="button" data-type="" class="type-filter-btn px-3 py-2 text-xs font-medium rounded-xl bg-indigo-600 text-white transition-colors">전체</button>
-            <button type="button" data-type="입고" class="type-filter-btn px-3 py-2 text-xs font-medium rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">입고</button>
-            <button type="button" data-type="출고" class="type-filter-btn px-3 py-2 text-xs font-medium rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">출고</button>
-          </div>
-        </div>
-
-        <!-- 내역 테이블 -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <form method="get" action="/admin/item/history" class="p-4 border-b border-slate-200 bg-slate-50" id="history-date-form">
+            <input type="hidden" name="keyword" id="history-hidden-keyword" value="">
+            <input type="hidden" name="type" id="history-hidden-type" value="">
+
+            <div class="flex flex-wrap items-end gap-3">
+              <div class="min-w-[180px]">
+                <label for="history-from-date" class="block text-sm font-medium text-slate-700 mb-1.5">시작일</label>
+                <input
+                  type="date"
+                  id="history-from-date"
+                  name="fromDate"
+                  value="{{fromDate}}"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                >
+              </div>
+
+              <div class="min-w-[180px]">
+                <label for="history-to-date" class="block text-sm font-medium text-slate-700 mb-1.5">종료일</label>
+                <input
+                  type="date"
+                  id="history-to-date"
+                  name="toDate"
+                  value="{{toDate}}"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                >
+              </div>
+
+              <button
+                type="submit"
+                class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                조회
+              </button>
+              <a
+                href="/admin/item/history"
+                class="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
+              >
+                초기화
+              </a>
+            </div>
+          </form>
+
+          {{#dateError}}
+          <div class="px-4 py-3 border-b border-red-200 bg-red-50 text-sm text-red-700">
+            {{dateError}}
+          </div>
+          {{/dateError}}
+
+          <div class="grid grid-cols-2 gap-4 p-4 border-b border-slate-200 bg-white">
+            <div class="rounded-xl border border-blue-200 bg-blue-50 p-4">
+              <div class="text-xs font-medium text-blue-700">총 입고 수량</div>
+              <div class="mt-1 text-xl font-bold text-blue-800">{{totalIn}}<span class="ml-1 text-sm font-normal text-blue-600">개</span></div>
+            </div>
+            <div class="rounded-xl border border-orange-200 bg-orange-50 p-4">
+              <div class="text-xs font-medium text-orange-700">총 출고 수량</div>
+              <div class="mt-1 text-xl font-bold text-orange-800">{{totalOut}}<span class="ml-1 text-sm font-normal text-orange-600">개</span></div>
+            </div>
+          </div>
+
+          <div class="p-4 border-b border-slate-200 bg-white">
+            <div class="flex flex-wrap items-end gap-3">
+              <div class="min-w-[260px] flex-1">
+                <label for="history-search" class="block text-sm font-medium text-slate-700 mb-1.5">물품명 검색</label>
+                <div class="relative">
+                  <i data-feather="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                  <input
+                    type="text"
+                    id="history-search"
+                    placeholder="물품명 검색"
+                    class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  >
+                </div>
+              </div>
+
+              <div class="flex items-center gap-1.5" id="type-filter-btns">
+                <button type="button" data-type="" class="type-filter-btn px-3 py-2 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors">전체</button>
+                <button type="button" data-type="입고" class="type-filter-btn px-3 py-2 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">입고</button>
+                <button type="button" data-type="출고" class="type-filter-btn px-3 py-2 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">출고</button>
+              </div>
+            </div>
+          </div>
+
           {{#hasHistories}}
           <table class="w-full text-sm">
             <thead class="bg-slate-50 border-b border-slate-200">
@@ -82,11 +127,9 @@
             </thead>
             <tbody id="history-tbody" class="divide-y divide-slate-100">
               {{#histories}}
-              <tr class="history-row hover:bg-slate-50 transition-colors"
-                  data-name="{{itemName}}" data-type="{{typeText}}">
+              <tr class="history-row hover:bg-slate-50 transition-colors" data-name="{{itemName}}" data-type="{{typeText}}">
                 <td class="px-5 py-3">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                    {{#isIn}}bg-blue-100 text-blue-700{{/isIn}}{{^isIn}}bg-orange-100 text-orange-700{{/isIn}}">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{#isIn}}bg-blue-100 text-blue-700{{/isIn}}{{^isIn}}bg-orange-100 text-orange-700{{/isIn}}">
                     {{typeText}}
                   </span>
                 </td>
@@ -104,28 +147,21 @@
             <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <i data-feather="clock" class="w-8 h-8 text-slate-400"></i>
             </div>
-            <p class="text-sm text-slate-500">입출고 내역이 없습니다.</p>
+            <p class="text-sm text-slate-500">조회된 입출고 내역이 없습니다.</p>
+          </div>
+          {{/hasHistories}}
+
+          {{#hasHistories}}
+          <div class="p-4 border-t border-slate-200 flex items-center justify-between bg-slate-50" id="pagination-bar">
+            <span class="text-xs text-slate-500" id="page-info"></span>
+            <div class="flex items-center gap-2">
+              <button id="btn-prev" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">이전</button>
+              <div id="page-numbers" class="flex items-center gap-1"></div>
+              <button id="btn-next" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">다음</button>
+            </div>
           </div>
           {{/hasHistories}}
         </div>
-
-        <!-- 페이징 -->
-        {{#hasHistories}}
-        <div class="flex items-center justify-between" id="pagination-bar">
-          <span class="text-xs text-slate-500" id="page-info"></span>
-          <div class="flex items-center gap-2">
-            <button id="btn-prev" type="button"
-                    class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-              이전
-            </button>
-            <div id="page-numbers" class="flex items-center gap-1"></div>
-            <button id="btn-next" type="button"
-                    class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-              다음
-            </button>
-          </div>
-        </div>
-        {{/hasHistories}}
 
       </div>
     </main>
@@ -134,107 +170,212 @@
   </div>
 
   <script>
-    var PAGE_SIZE = 10;
-    var currentPage = 1;
-    var totalPages = 1;
-    var currentType = '';
-    var currentQuery = '';
+    const PAGE_SIZE = 10;
+    let currentPage = 1;
+    let totalPages = 1;
+    let currentType = '';
+    let currentQuery = '';
+
+    function getStateParams() {
+      return new URLSearchParams(window.location.search);
+    }
+
+    function syncStateToUrl() {
+      const params = getStateParams();
+      if (currentQuery) {
+        params.set('keyword', currentQuery);
+      } else {
+        params.delete('keyword');
+      }
+
+      if (currentType) {
+        params.set('type', currentType);
+      } else {
+        params.delete('type');
+      }
+
+      const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+      window.history.replaceState({}, '', nextUrl);
+
+      const hiddenKeyword = document.getElementById('history-hidden-keyword');
+      const hiddenType = document.getElementById('history-hidden-type');
+      if (hiddenKeyword) {
+        hiddenKeyword.value = currentQuery;
+      }
+      if (hiddenType) {
+        hiddenType.value = currentType;
+      }
+    }
+
+    function applyInitialState() {
+      const params = getStateParams();
+      currentQuery = params.get('keyword') || '';
+      currentType = params.get('type') || '';
+
+      const searchInput = document.getElementById('history-search');
+      if (searchInput) {
+        searchInput.value = currentQuery;
+      }
+
+      const targetButton = Array.from(document.querySelectorAll('.type-filter-btn')).find((button) => button.dataset.type === currentType)
+        || document.querySelector('.type-filter-btn[data-type=""]');
+      if (targetButton) {
+        document.querySelectorAll('.type-filter-btn').forEach((button) => {
+          button.className = 'type-filter-btn px-3 py-2 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors';
+        });
+        targetButton.className = 'type-filter-btn px-3 py-2 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors';
+      }
+
+      syncStateToUrl();
+    }
 
     function getFilteredRows() {
-      return Array.from(document.querySelectorAll('#history-tbody .history-row')).filter(function(row) {
-        var nameOk = !currentQuery || row.dataset.name.includes(currentQuery);
-        var typeOk = !currentType || row.dataset.type === currentType;
+      const rows = Array.from(document.querySelectorAll('#history-tbody .history-row'));
+      return rows.filter((row) => {
+        const rowName = row.dataset.name || '';
+        const rowType = row.dataset.type || '';
+        const nameOk = !currentQuery || rowName.includes(currentQuery);
+        const typeOk = !currentType || rowType === currentType;
         return nameOk && typeOk;
       });
     }
 
     function buildPageNumbers(totalPgs) {
-      var start = Math.max(1, currentPage - 2);
-      var end   = Math.min(totalPgs, start + 4);
-      start = Math.max(1, end - 4);
-      var html = '';
+      const startBase = Math.max(1, currentPage - 2);
+      const end = Math.min(totalPgs, startBase + 4);
+      const start = Math.max(1, end - 4);
+      let html = '';
+
       if (start > 1) {
         html += '<button type="button" data-page="1" class="hist-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors">1</button>';
-        if (start > 2) html += '<span class="px-1 text-xs text-slate-400">...</span>';
+        if (start > 2) {
+          html += '<span class="px-1 text-xs text-slate-400">...</span>';
+        }
       }
-      for (var p = start; p <= end; p++) {
-        var active = p === currentPage ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100';
-        html += '<button type="button" data-page="' + p + '" class="hist-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 ' + active + ' transition-colors">' + p + '</button>';
+
+      for (let page = start; page <= end; page += 1) {
+        const active = page === currentPage
+          ? 'bg-indigo-600 text-white border-indigo-600'
+          : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200';
+        html += `<button type="button" data-page="${page}" class="hist-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border ${active} transition-colors">${page}</button>`;
       }
+
       if (end < totalPgs) {
-        if (end < totalPgs - 1) html += '<span class="px-1 text-xs text-slate-400">...</span>';
-        html += '<button type="button" data-page="' + totalPgs + '" class="hist-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors">' + totalPgs + '</button>';
+        if (end < totalPgs - 1) {
+          html += '<span class="px-1 text-xs text-slate-400">...</span>';
+        }
+        html += `<button type="button" data-page="${totalPgs}" class="hist-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors">${totalPgs}</button>`;
       }
+
       return html;
     }
 
     function render() {
-      var rows = getFilteredRows();
-      var total = rows.length;
+      const body = document.getElementById('history-tbody');
+      if (!body) {
+        return;
+      }
+
+      const rows = getFilteredRows();
+      const total = rows.length;
       totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-      if (currentPage < 1) currentPage = 1;
-      if (currentPage > totalPages) currentPage = totalPages;
+      currentPage = Math.min(Math.max(1, currentPage), totalPages);
 
-      var start = (currentPage - 1) * PAGE_SIZE;
-      var end   = start + PAGE_SIZE;
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const end = start + PAGE_SIZE;
 
-      Array.from(document.querySelectorAll('#history-tbody .history-row')).forEach(function(row) {
+      Array.from(document.querySelectorAll('#history-tbody .history-row')).forEach((row) => {
         row.style.display = 'none';
       });
-      rows.forEach(function(row, i) {
-        row.style.display = (i >= start && i < end) ? '' : 'none';
+      rows.forEach((row, index) => {
+        row.style.display = index >= start && index < end ? '' : 'none';
       });
 
-      var bar = document.getElementById('pagination-bar');
-      var info = document.getElementById('page-info');
-      var numbersEl = document.getElementById('page-numbers');
+      const bar = document.getElementById('pagination-bar');
+      const info = document.getElementById('page-info');
+      const numbersEl = document.getElementById('page-numbers');
+      const prevButton = document.getElementById('btn-prev');
+      const nextButton = document.getElementById('btn-next');
 
-      if (totalPages <= 1) { if (bar) bar.style.display = 'none'; return; }
-      if (bar) bar.style.display = '';
+      if (totalPages <= 1) {
+        if (bar) {
+          bar.style.display = 'none';
+        }
+        syncStateToUrl();
+        return;
+      }
+      if (bar) {
+        bar.style.display = '';
+      }
 
-      if (info) info.textContent = total + '건 / ' + totalPages + '페이지';
+      if (info) {
+        info.textContent = `${total}건 / ${totalPages}페이지`;
+      }
 
       if (numbersEl) {
         numbersEl.innerHTML = buildPageNumbers(totalPages);
-        numbersEl.querySelectorAll('.hist-page-btn').forEach(function(btn) {
-          btn.addEventListener('click', function() { currentPage = parseInt(this.dataset.page); render(); });
+        numbersEl.querySelectorAll('.hist-page-btn').forEach((button) => {
+          button.addEventListener('click', () => {
+            currentPage = Number(button.dataset.page);
+            render();
+          });
         });
       }
 
-      var btnPrev = document.getElementById('btn-prev');
-      var btnNext = document.getElementById('btn-next');
-      if (btnPrev) btnPrev.disabled = currentPage <= 1;
-      if (btnNext) btnNext.disabled = currentPage >= totalPages;
+      if (prevButton) {
+        prevButton.disabled = currentPage <= 1;
+      }
+      if (nextButton) {
+        nextButton.disabled = currentPage >= totalPages;
+      }
+
+      syncStateToUrl();
     }
 
-    var searchInput = document.getElementById('history-search');
+    const searchInput = document.getElementById('history-search');
     if (searchInput) {
-      searchInput.addEventListener('input', function() {
-        currentQuery = this.value.trim();
+      searchInput.addEventListener('input', () => {
+        currentQuery = searchInput.value.trim();
         currentPage = 1;
         render();
       });
     }
 
-    document.querySelectorAll('.type-filter-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        currentType = this.dataset.type;
+    document.querySelectorAll('.type-filter-btn').forEach((button) => {
+      button.addEventListener('click', () => {
+        currentType = button.dataset.type || '';
         currentPage = 1;
-        document.querySelectorAll('.type-filter-btn').forEach(function(b) {
-          b.className = 'type-filter-btn px-3 py-2 text-xs font-medium rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors';
+        document.querySelectorAll('.type-filter-btn').forEach((target) => {
+          target.className = 'type-filter-btn px-3 py-2 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors';
         });
-        this.className = 'type-filter-btn px-3 py-2 text-xs font-medium rounded-xl bg-indigo-600 text-white transition-colors';
+        button.className = 'type-filter-btn px-3 py-2 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors';
         render();
       });
     });
 
-    var btnPrev = document.getElementById('btn-prev');
-    var btnNext = document.getElementById('btn-next');
-    if (btnPrev) btnPrev.addEventListener('click', function() { if (currentPage > 1) { currentPage--; render(); } });
-    if (btnNext) btnNext.addEventListener('click', function() { if (currentPage < totalPages) { currentPage++; render(); } });
+    const prevButton = document.getElementById('btn-prev');
+    if (prevButton) {
+      prevButton.addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage -= 1;
+          render();
+        }
+      });
+    }
 
+    const nextButton = document.getElementById('btn-next');
+    if (nextButton) {
+      nextButton.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+          currentPage += 1;
+          render();
+        }
+      });
+    }
+
+    feather.replace();
+    applyInitialState();
     render();
   </script>
-  <script>feather.replace();</script>
 </body>
 </html>
