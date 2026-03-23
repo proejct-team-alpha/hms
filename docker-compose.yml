@@ -65,7 +65,7 @@ services:
       - "0.0.0.0:8000:8000"
     environment:
       - LLM_BACKEND=vllm
-      - VLLM_BASE_URL=http://192.168.0.22:8000
+      - VLLM_BASE_URL=http://192.168.0.22:9000
       - VLLM_MODEL=qwen2.5-3b
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
       - MYSQL_HOST=mysql
