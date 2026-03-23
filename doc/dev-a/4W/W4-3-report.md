@@ -41,6 +41,11 @@ HMS의 `CustomException`을 상속하는 방식으로 전환하면 `GlobalExcept
 BUILD SUCCESSFUL in 2s
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 두 개의 새 예외 클래스를 추가한 후 프로젝트 전체가 오류 없이 빌드되었음을 나타냅니다.
+> - **왜 이렇게 썼는지**: 새로운 클래스를 추가했을 때 기존 코드와 이름 충돌이나 의존성 문제가 없는지 빌드로 확인합니다.
+> - **쉽게 말하면**: 새 직원이 입사했을 때 기존 팀과 문제 없이 잘 어울리는지 확인하는 과정입니다.
+
 ## 특이사항
 - `GlobalExceptionHandler` 수정 없음 — `handleBusiness(CustomException)` 핸들러가 하위 클래스 자동 처리
 - `LLM_TIMEOUT` 에러코드는 기존 `CustomException` 주석에 없던 코드 — Task 5 Service 이식 시 활용 예정

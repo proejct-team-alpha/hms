@@ -101,6 +101,11 @@ public String directReservation(HttpServletRequest request) {
 }
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 사용자가 브라우저에서 `/reservation/direct-reservation` 주소로 접속하면 이 함수가 실행됩니다. 페이지 제목을 "직접 선택 예약"으로 설정하고, 예약 폼 화면(`direct-reservation.mustache`)을 보여줍니다.
+> - **왜 이렇게 썼는지**: `@GetMapping`은 "이 URL로 GET 요청(단순 조회)이 오면 이 함수를 실행해"라는 표시입니다. `HttpServletRequest`는 이 프로젝트의 컨트롤러 규칙으로 사용하는 요청 정보 객체이며, `setAttribute`로 페이지에 데이터를 전달합니다.
+> - **쉽게 말하면**: 손님(브라우저)이 특정 주소를 입력하면, 서버가 알맞은 예약 폼 페이지를 찾아서 보여주는 안내원 역할입니다.
+
 ### 2. direct-reservation.mustache — form 태그
 
 ```html
@@ -108,6 +113,11 @@ public String directReservation(HttpServletRequest request) {
   {{! CSRF 토큰 }}
   <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 폼 제출 시 데이터를 서버의 `/reservation/create` 주소로 POST 방식으로 전송합니다. CSRF 토큰은 보안을 위한 숨겨진 인증 값입니다.
+> - **왜 이렇게 썼는지**: `method="POST"`는 데이터를 서버에 전송하는 방식입니다. CSRF(Cross-Site Request Forgery) 토큰은 악의적인 사이트에서 사용자 몰래 요청을 보내는 공격을 막기 위해 Spring Security가 요구하는 보안 값입니다.
+> - **쉽게 말하면**: 편지 봉투(form)에 받는 사람 주소(`/reservation/create`)를 적고, 위조 방지 스티커(CSRF 토큰)를 붙여서 보내는 것과 같습니다.
 
 ### 3. direct-reservation.mustache — name 속성
 
@@ -120,6 +130,11 @@ public String directReservation(HttpServletRequest request) {
 <select id="time"  name="timeSlot" required>...</select>
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 예약 폼의 각 입력 필드에 `name` 속성을 부여합니다. 폼이 제출될 때 서버는 이 `name` 값을 기준으로 어떤 데이터인지 구분합니다.
+> - **왜 이렇게 썼는지**: `name` 속성이 없으면 서버에 데이터가 전달되지 않습니다. `name="departmentId"`처럼 서버의 Java 클래스 필드명과 일치시켜야 Spring이 자동으로 값을 바인딩(연결)해줍니다.
+> - **쉽게 말하면**: 택배 박스 안의 물건마다 이름표(`name`)를 붙여두어야 서버가 "이건 환자 이름이고, 저건 전화번호구나"하고 구분할 수 있습니다.
+
 ### 4. direct-reservation.mustache — JS 정리
 
 ```javascript
@@ -131,6 +146,11 @@ const recDept   = urlParams.get('dept');
 const recDoctor = urlParams.get('doctor');
 if (recDept && recDoctor) { ... }
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 이전에 있던 JS 폼 제출 핸들러를 제거하고, AI 추천 기능(URL 파라미터로 진료과/의사 자동 선택)만 남깁니다. `feather.replace()`는 아이콘을 렌더링하는 함수입니다.
+> - **왜 이렇게 썼는지**: 폼 제출을 JS로 처리하던 방식에서 서버(Spring MVC)가 직접 처리하는 방식으로 전환했기 때문에, 기존 JS submit 핸들러는 필요 없어졌습니다. URL에서 `dept`나 `doctor` 파라미터를 읽어 자동으로 선택해주는 AI 추천 기능은 별도로 유지합니다.
+> - **쉽게 말하면**: 직접 배달하던 택배기사를 해고하고 운송 회사(서버)에 맡겼으니, 배달 차 운전만 제거하면 됩니다. AI 추천 표시판은 그대로 유지합니다.
 
 ---
 

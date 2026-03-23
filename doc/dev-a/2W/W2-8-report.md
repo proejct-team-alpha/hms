@@ -46,6 +46,11 @@ public class ReservationCreateForm {
 }
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 폼 DTO의 각 필드에 유효성 검증 규칙을 추가합니다. `@NotBlank`는 빈 문자열/공백만 입력하면 오류, `@NotNull`은 null 값이면 오류를 발생시킵니다.
+> - **왜 이렇게 썼는지**: Bean Validation(Java 표준 유효성 검증)을 사용합니다. `@NotBlank`는 문자열용(공백 체크), `@NotNull`은 객체/숫자용(null 체크)으로 구분합니다. `message` 속성으로 오류 메시지를 직접 지정합니다. `@DateTimeFormat`은 날짜 문자열을 `LocalDate`로 자동 변환할 포맷을 지정합니다.
+> - **쉽게 말하면**: 예약 신청서의 필수 항목 칸에 "이 칸은 반드시 채워야 합니다"라는 규칙을 붙여두는 것입니다.
+
 ---
 
 ### 2. ReservationController — @Valid + BindingResult 적용
@@ -68,6 +73,11 @@ public String createReservation(@Valid @ModelAttribute ReservationCreateForm for
 }
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 폼 데이터를 받을 때 `@Valid`로 유효성 검증을 수행하고, 오류가 있으면 오류 메시지를 모아 폼 화면으로 돌려보냅니다.
+> - **왜 이렇게 썼는지**: `@Valid`는 "이 파라미터에 Bean Validation을 적용해라"는 표시입니다. `BindingResult`는 검증 결과를 담는 객체로, `hasErrors()`로 오류 여부를 확인합니다. `.stream().map(...).collect(Collectors.joining(" "))`은 여러 오류 메시지를 공백으로 이어 붙입니다. 검증 실패 시 리다이렉트 없이 뷰를 직접 반환하는 것이 표준입니다.
+> - **쉽게 말하면**: 예약 신청서를 받아 빠진 항목이 있으면 "이 항목을 채워주세요"라는 오류 메시지와 함께 신청서를 돌려주는 창구입니다.
+
 **설계 결정**: 검증 실패 시 PRG 리다이렉트 없이 폼 뷰를 직접 반환한다.
 PRG 패턴은 성공 시 중복 제출 방지 목적이므로, 검증 실패 시에는 적용하지 않는 것이 표준이다.
 
@@ -83,6 +93,11 @@ PRG 패턴은 성공 시 중복 제출 방지 목적이므로, 검증 실패 시
 </div>
 {{/errorMessage}}
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: `errorMessage`가 있을 때만 빨간색 오류 배너를 폼 화면에 표시합니다.
+> - **왜 이렇게 썼는지**: Mustache의 `{{#errorMessage}}...{{/errorMessage}}`는 `errorMessage` 값이 있을 때만 내용을 렌더링합니다. `data-feather="alert-circle"`은 경고 아이콘, `bg-red-50 border border-red-200 text-red-600`은 Tailwind CSS로 빨간색 테마 배너를 만듭니다.
+> - **쉽게 말하면**: 오류가 있을 때만 "빨간 경고 배너"가 나타나도록 조건부로 표시하는 것입니다.
 
 ---
 

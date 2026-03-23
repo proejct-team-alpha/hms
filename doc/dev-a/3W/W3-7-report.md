@@ -72,6 +72,12 @@ List<String> findBookedTimeSlots(...);
 @Query("... AND r.id <> :excludeId")
 List<String> findBookedTimeSlotsExcluding(...);
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 데이터베이스에서 특정 의사와 날짜의 예약된 시간 슬롯 목록을 조회하는 쿼리 메서드입니다. `findBookedTimeSlots`는 신규 예약용, `findBookedTimeSlotsExcluding`은 예약 변경 시 현재 수정 중인 예약은 제외하고 조회합니다.
+> - **왜 이렇게 썼는지**: `@Query`는 직접 JPQL 쿼리를 작성하는 어노테이션입니다. `r.status <> :excluded`는 취소된 예약(`CANCELLED`)을 제외합니다. Hibernate가 nullable Long 파라미터를 하나의 메서드에서 처리하지 못하는 기술적 제한 때문에 메서드 2개로 분리했습니다.
+> - **쉽게 말하면**: "이 의사의 이 날짜에 취소되지 않은 예약들의 시간 목록을 DB에서 뽑아오는" 쿼리입니다.
+
 - Hibernate nullable Long JPQL 타입 추론 실패 문제로 메서드 2개로 분리
 
 #### `ReservationService.java`
@@ -80,11 +86,21 @@ public List<String> getBookedTimeSlots(Long doctorId, LocalDate date) { ... }
 public List<String> getBookedTimeSlots(Long doctorId, LocalDate date, Long excludeId) { ... }
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: Repository의 쿼리를 감싸는 서비스 메서드 2개입니다. 같은 이름(`getBookedTimeSlots`)이지만 파라미터 개수가 달라 자바가 알아서 구분합니다(메서드 오버로드).
+> - **왜 이렇게 썼는지**: Java에서 같은 이름의 메서드를 파라미터 목록이 다르게 여러 개 정의할 수 있는 것을 "오버로드(overload)"라고 합니다. 직접 예약 페이지와 예약 변경 페이지에서 동일한 메서드 이름으로 사용할 수 있어 코드가 직관적입니다.
+> - **쉽게 말하면**: 이름은 같지만 상황에 따라 "제외할 예약 ID 없이", 또는 "제외할 예약 ID 포함해서" 두 가지 방식으로 호출할 수 있는 함수입니다.
+
 #### `ReservationApiController.java`
 ```
 GET /api/reservation/booked-slots?doctorId=&date=[&excludeId=]
 → 200 OK: ["09:00", "10:30", ...]
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: `GET /api/reservation/booked-slots` API의 요청 형식과 응답 형식을 나타냅니다. `doctorId`와 `date`는 필수, `excludeId`는 선택입니다. 응답은 예약된 시간 문자열 배열입니다.
+> - **왜 이렇게 썼는지**: REST API 설계에서 조회는 GET 방식을 사용합니다. `?` 이후의 쿼리 파라미터로 필요한 조건을 전달합니다. 응답을 JSON 배열(`["09:00", ...]`)로 반환하면 프론트엔드 JS에서 `booked.includes(time)`으로 쉽게 비교할 수 있습니다.
+> - **쉽게 말하면**: "이 의사, 이 날짜에 이미 찬 시간 목록 주세요" 요청에 대해 `["09:00", "10:30"]`처럼 답해주는 API입니다.
 
 ### 프론트엔드
 

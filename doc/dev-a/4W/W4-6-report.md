@@ -24,6 +24,11 @@ Page<ChatbotHistory> findByStaff_IdOrderByCreatedAtDesc(Long staffId, Pageable p
 Page<MedicalHistory> findByStaff_IdOrderByCreatedAtDesc(Long staffId, Pageable pageable);
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 특정 직원의 챗봇/의료 상담 이력을 페이지 단위로 조회하는 메서드를 추가합니다. `Page<T>`는 전체 결과를 한 번에 가져오지 않고 "1페이지", "2페이지" 형태로 나눠서 가져올 수 있는 결과 타입입니다.
+> - **왜 이렇게 썼는지**: 대화 이력이 수백, 수천 건이 될 수 있는데 전부 한 번에 가져오면 서버에 부담이 큽니다. `Pageable` 파라미터를 추가하면 `?page=0&size=10` 형태로 요청해서 10건씩 나눠 받을 수 있습니다.
+> - **쉽게 말하면**: 도서관 목록을 한 번에 전부 보여주는 대신, 10권씩 페이지를 나눠서 보여주는 것과 같습니다.
+
 ### 2. DTO 추가
 | DTO | 원본 | HMS 변경 사항 |
 |---|---|---|
@@ -68,6 +73,11 @@ spring-llm `ReservationApiController`의 예약 생성(`POST`)은 제외하고,
     "/llm/reservation/**")
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 지정된 LLM 관련 경로들에 대해 CSRF(사이트 간 요청 위조) 토큰 검사를 생략하도록 설정합니다.
+> - **왜 이렇게 썼는지**: CSRF 보호는 주로 브라우저 폼 제출에서 악의적인 사이트가 사용자 권한으로 요청을 위조하는 것을 방지합니다. LLM 경로는 JavaScript `fetch`로 JSON을 주고받는 API 방식이며, CSRF 토큰 없이 호출하기 때문에 ignore 처리해야 요청이 차단되지 않습니다.
+> - **쉽게 말하면**: 도장(CSRF 토큰) 없이도 통과할 수 있는 문을 지정하는 것으로, LLM API 문들은 도장 검사를 하지 않겠다고 설정합니다.
+
 #### 접근 제어 추가
 | 경로 | 정책 |
 |---|---|
@@ -79,6 +89,12 @@ spring-llm `ReservationApiController`의 예약 생성(`POST`)은 제외하고,
 ```
 BUILD SUCCESSFUL in 2s
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: Controller, DTO, SecurityConfig 수정 후 전체 프로젝트가 오류 없이 빌드되었음을 나타냅니다.
+> - **왜 이렇게 썼는지**: SecurityConfig 수정은 잘못될 경우 기존 인증 흐름 전체에 영향을 줄 수 있으므로 빌드 확인이 중요합니다.
+> - **쉽게 말하면**: 건물 보안 시스템을 수정한 후 기존 출입증들이 여전히 잘 동작하는지 확인하는 과정입니다.
+
 (기존 SecurityConfig의 `permissionsPolicy` unchecked 경고는 Spring Boot 4.0.3 API 변경 관련 기존 경고로 이번 작업과 무관)
 
 ## 특이사항
