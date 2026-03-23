@@ -33,6 +33,7 @@ public class WalkinController {
     @GetMapping("/walkin-reception")
     public String walkinPage(
             @RequestParam(name = "reservationId", required = false) Long reservationId,
+            @RequestParam(name = "patientId", required = false) Long patientId,
             @RequestParam(name = "name", required = false) String name,
             @RequestParam(name = "phone", required = false) String phone,
             @RequestParam(name = "deptId", required = false) Long deptId,
@@ -44,6 +45,7 @@ public class WalkinController {
         model.addAttribute("today", LocalDate.now().toString());
 
         model.addAttribute("reservationId", reservationId);
+        model.addAttribute("patientId", patientId);
         model.addAttribute("name", name);
         
         // [주석] 전화번호(010-1234-5678)를 하이픈 기준으로 분리하여 각 입력 칸에 배치합니다.
