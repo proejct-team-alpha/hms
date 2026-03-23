@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>물품 출고 - MediCare+</title>
+  <title>{{pageTitle}} - MediCare+</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
 </head>
@@ -16,100 +16,171 @@
     <main class="content-wrapper flex-1 p-6">
       <div class="max-w-5xl mx-auto space-y-6">
 
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
-            <i data-feather="package" class="w-5 h-5"></i>
-          </div>
-          <h1 class="text-2xl font-bold text-slate-800">물품 출고</h1>
-        </div>
-
-        <!-- 오늘 출고 내역 -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-3">
-          <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-            <i data-feather="list" class="w-5 h-5 text-indigo-600"></i>
-            오늘 출고 내역
-          </h3>
-          <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
-            <table class="w-full text-xs">
-              <thead class="bg-slate-100 text-slate-500">
-                <tr>
-                  <th class="px-3 py-2 text-left font-medium">물품명</th>
-                  <th class="px-3 py-2 text-right font-medium">수량</th>
-                  <th class="px-3 py-2 text-right font-medium">시간</th>
-                </tr>
-              </thead>
-              <tbody id="today-log-tbody" class="divide-y divide-slate-100">
-                {{#todayLogs}}
-                <tr>
-                  <td class="px-3 py-2 text-slate-700 font-medium">{{itemName}}</td>
-                  <td class="px-3 py-2 text-right text-slate-600">{{amount}}개</td>
-                  <td class="px-3 py-2 text-right text-slate-400">{{usedAt}}</td>
-                </tr>
-                {{/todayLogs}}
-                {{^todayLogs}}
-                <tr id="today-log-empty"><td colspan="3" class="px-3 py-2 text-xs text-slate-400">오늘 출고된 물품이 없습니다.</td></tr>
-                {{/todayLogs}}
-              </tbody>
-            </table>
-          </div>
-          <div id="today-log-pagination" class="flex items-center justify-between pt-1" style="display:none!important">
-            <span id="today-log-page-info" class="text-xs text-slate-500"></span>
-            <div class="flex items-center gap-2">
-              <button id="today-log-prev" type="button"
-                      class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">이전</button>
-              <div id="today-log-page-numbers" class="flex items-center gap-1"></div>
-              <button id="today-log-next" type="button"
-                      class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">다음</button>
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+              <i data-feather="package" class="w-6 h-6"></i>
             </div>
+            <div>
+              <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
+              <p class="text-slate-500 mt-1">날짜 범위를 지정해 출고 내역을 조회하고 바로 출고를 처리합니다.</p>
+            </div>
+          </div>
+          <div class="text-sm text-slate-500 text-right">
+            <div>총 <span class="font-semibold text-slate-700">{{todayLogCount}}</span>건</div>
           </div>
         </div>
 
-        <!-- 물품 출고 섹션 -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-              <i data-feather="package" class="w-5 h-5 text-indigo-600"></i>
-              물품 선택
-            </h3>
-            <div class="flex gap-1.5" id="item-category-btns">
-              <button type="button" data-cat="" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors">전체</button>
-              <button type="button" data-cat="MEDICAL_SUPPLIES" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">의료소모품</button>
-              <button type="button" data-cat="MEDICAL_EQUIPMENT" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">의료기기</button>
-              <button type="button" data-cat="GENERAL_SUPPLIES" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">사무/비품</button>
-            </div>
-          </div>
-          <div class="relative">
-            <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input type="text" id="item-search" placeholder="물품명 검색 (초성·영문 가능)"
-                   class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300">
-          </div>
-          <div class="grid grid-cols-4 gap-3" id="item-use-grid">
-            {{#items}}
-            <div class="item-card border border-slate-200 rounded-xl p-3 space-y-2" data-category="{{category}}">
-              <div class="item-name text-sm font-bold text-slate-800 truncate">{{name}}</div>
-              <div class="text-xs text-slate-500">{{categoryText}}</div>
-              <div class="text-xs font-bold {{#lowStock}}text-red-600{{/lowStock}}{{^lowStock}}text-slate-600{{/lowStock}}">
-                재고: <span class="quantity-span">{{quantity}}</span>개
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <form method="get" action="/admin/item/use" class="p-4 border-b border-slate-200 bg-slate-50" id="use-date-form">
+            <input type="hidden" name="keyword" id="use-hidden-keyword" value="">
+            <input type="hidden" name="category" id="use-hidden-category" value="">
+
+            <div class="flex flex-wrap items-end gap-3">
+              <div class="min-w-[180px]">
+                <label for="use-from-date" class="block text-sm font-medium text-slate-700 mb-1.5">시작일</label>
+                <input
+                  type="date"
+                  id="use-from-date"
+                  name="fromDate"
+                  value="{{fromDate}}"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                >
               </div>
-              <form action="/admin/item/use" method="post" class="flex items-center gap-1">
-                <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
-                <input type="hidden" name="id" value="{{id}}">
-                <input type="number" name="amount" min="1" placeholder="수량"
-                       class="flex-1 w-0 px-2 py-1 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-1 focus:ring-indigo-400">
-                <button type="submit" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap">
-                  출고
-                </button>
-              </form>
+
+              <div class="min-w-[180px]">
+                <label for="use-to-date" class="block text-sm font-medium text-slate-700 mb-1.5">종료일</label>
+                <input
+                  type="date"
+                  id="use-to-date"
+                  name="toDate"
+                  value="{{toDate}}"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                >
+              </div>
+
+              <button
+                type="submit"
+                class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                조회
+              </button>
+              <a
+                href="/admin/item/use"
+                class="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
+              >
+                초기화
+              </a>
             </div>
-            {{/items}}
+          </form>
+
+          {{#dateError}}
+          <div class="px-4 py-3 border-b border-red-200 bg-red-50 text-sm text-red-700">
+            {{dateError}}
           </div>
-          <div id="card-grid-pagination" class="flex items-center justify-center pt-2" style="display:none!important">
-            <div class="flex items-center gap-2">
-              <button id="card-grid-prev" type="button"
-                      class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">이전</button>
-              <div id="card-grid-page-numbers" class="flex items-center gap-1"></div>
-              <button id="card-grid-next" type="button"
-                      class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">다음</button>
+          {{/dateError}}
+
+          <div class="grid grid-cols-2 gap-4 p-4 border-b border-slate-200 bg-white">
+            <div class="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+              <div class="text-xs font-medium text-indigo-700">출고 건수</div>
+              <div class="mt-1 text-xl font-bold text-indigo-800">{{todayLogCount}}<span class="ml-1 text-sm font-normal text-indigo-600">건</span></div>
+            </div>
+            <div class="rounded-xl border border-orange-200 bg-orange-50 p-4">
+              <div class="text-xs font-medium text-orange-700">총 출고 수량</div>
+              <div class="mt-1 text-xl font-bold text-orange-800">{{todayTotalUsedAmount}}<span class="ml-1 text-sm font-normal text-orange-600">개</span></div>
+            </div>
+          </div>
+
+          <div class="p-6 space-y-3 border-b border-slate-200 bg-white">
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+              <i data-feather="list" class="w-5 h-5 text-indigo-600"></i>
+              출고 내역
+            </h3>
+            <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+              <table class="w-full text-xs">
+                <thead class="bg-slate-100 text-slate-500">
+                  <tr>
+                    <th class="px-3 py-2 text-left font-medium">물품명</th>
+                    <th class="px-3 py-2 text-right font-medium">수량</th>
+                    <th class="px-3 py-2 text-right font-medium">시간</th>
+                  </tr>
+                </thead>
+                <tbody id="today-log-tbody" class="divide-y divide-slate-100">
+                  {{#todayLogs}}
+                  <tr>
+                    <td class="px-3 py-2 text-slate-700 font-medium">{{itemName}}</td>
+                    <td class="px-3 py-2 text-right text-slate-600">{{amount}}개</td>
+                    <td class="px-3 py-2 text-right text-slate-400">{{usedAt}}</td>
+                  </tr>
+                  {{/todayLogs}}
+                  {{^todayLogs}}
+                  <tr id="today-log-empty"><td colspan="3" class="px-3 py-2 text-xs text-slate-400">조회된 출고 물품이 없습니다.</td></tr>
+                  {{/todayLogs}}
+                </tbody>
+              </table>
+            </div>
+            <div id="today-log-pagination" class="flex items-center justify-between pt-1" style="display:none!important">
+              <span id="today-log-page-info" class="text-xs text-slate-500"></span>
+              <div class="flex items-center gap-2">
+                <button id="today-log-prev" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">이전</button>
+                <div id="today-log-page-numbers" class="flex items-center gap-1"></div>
+                <button id="today-log-next" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">다음</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-b-xl p-6 space-y-4">
+            <div class="flex items-center justify-between gap-3">
+              <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                <i data-feather="package" class="w-5 h-5 text-indigo-600"></i>
+                물품 선택
+              </h3>
+              <div class="flex gap-1.5" id="item-category-btns">
+                <button type="button" data-cat="" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors">전체</button>
+                <button type="button" data-cat="MEDICAL_SUPPLIES" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">의료소모품</button>
+                <button type="button" data-cat="MEDICAL_EQUIPMENT" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">의료기기</button>
+                <button type="button" data-cat="GENERAL_SUPPLIES" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">사무/비품</button>
+              </div>
+            </div>
+
+            <div class="relative">
+              <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input
+                type="text"
+                id="item-search"
+                placeholder="물품명 검색 (초성/영문 가능)"
+                class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              >
+            </div>
+
+            <div class="grid grid-cols-4 gap-3" id="item-use-grid">
+              {{#items}}
+              <div class="item-card border border-slate-200 rounded-xl p-3 space-y-2" data-category="{{category}}">
+                <div class="item-name text-sm font-bold text-slate-800 truncate">{{name}}</div>
+                <div class="text-xs text-slate-500">{{categoryText}}</div>
+                <div class="text-xs font-bold {{#lowStock}}text-red-600{{/lowStock}}{{^lowStock}}text-slate-600{{/lowStock}}">
+                  재고: <span class="quantity-span">{{quantity}}</span>개
+                </div>
+                <form action="/admin/item/use" method="post" class="flex items-center gap-1">
+                  <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                  <input type="hidden" name="id" value="{{id}}">
+                  <input type="hidden" name="fromDate" value="{{fromDate}}">
+                  <input type="hidden" name="toDate" value="{{toDate}}">
+                  <input type="number" name="amount" min="1" placeholder="수량"
+                         class="flex-1 w-0 px-2 py-1 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                  <button type="submit" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap">
+                    출고
+                  </button>
+                </form>
+              </div>
+              {{/items}}
+            </div>
+            <div id="card-grid-pagination" class="flex items-center justify-center pt-2" style="display:none!important">
+              <div class="flex items-center gap-2">
+                <button id="card-grid-prev" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">이전</button>
+                <div id="card-grid-page-numbers" class="flex items-center gap-1"></div>
+                <button id="card-grid-next" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">다음</button>
+              </div>
             </div>
           </div>
         </div>
@@ -121,193 +192,413 @@
   </div>
 
   <script>
-    var CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+    const CHOSUNG = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+    const TODAY_LOG_PAGE_SIZE = 10;
+    const CARD_PAGE_SIZE = 10;
+    let todayLogPage = 1;
+    let cardPage = 1;
+    let currentCategory = '';
+
+    function getStateParams() {
+      return new URLSearchParams(window.location.search);
+    }
+
+    function syncStateToUrl() {
+      const params = getStateParams();
+      const searchInput = document.getElementById('item-search');
+      const keyword = searchInput ? searchInput.value.trim() : '';
+
+      if (keyword) {
+        params.set('keyword', keyword);
+      } else {
+        params.delete('keyword');
+      }
+
+      if (currentCategory) {
+        params.set('category', currentCategory);
+      } else {
+        params.delete('category');
+      }
+
+      const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+      window.history.replaceState({}, '', nextUrl);
+
+      const hiddenKeyword = document.getElementById('use-hidden-keyword');
+      const hiddenCategory = document.getElementById('use-hidden-category');
+      if (hiddenKeyword) {
+        hiddenKeyword.value = keyword;
+      }
+      if (hiddenCategory) {
+        hiddenCategory.value = currentCategory;
+      }
+    }
+
+    function applyInitialState() {
+      const params = getStateParams();
+      const searchInput = document.getElementById('item-search');
+      if (searchInput) {
+        searchInput.value = params.get('keyword') || '';
+      }
+      currentCategory = params.get('category') || '';
+
+      const targetButton = Array.from(document.querySelectorAll('.item-cat-btn')).find((button) => button.dataset.cat === currentCategory)
+        || document.querySelector('.item-cat-btn[data-cat=""]');
+      if (targetButton) {
+        document.querySelectorAll('.item-cat-btn').forEach((button) => {
+          button.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors';
+        });
+        targetButton.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors';
+      }
+
+      syncStateToUrl();
+    }
+
     function getChosung(str) {
-      return str.split('').map(function(ch) {
-        var code = ch.charCodeAt(0);
-        if (code >= 0xAC00 && code <= 0xD7A3) return CHOSUNG[Math.floor((code - 0xAC00) / 588)];
+      return str.split('').map((ch) => {
+        const code = ch.charCodeAt(0);
+        if (code >= 0xAC00 && code <= 0xD7A3) {
+          return CHOSUNG[Math.floor((code - 0xAC00) / 588)];
+        }
         return ch;
       }).join('');
     }
-    function isChosungOnly(str) { return /^[ㄱ-ㅎ]+$/.test(str); }
-    function itemMatches(name, query) {
-      if (!query) return true;
-      var q = query.toLowerCase();
-      if (isChosungOnly(q)) return getChosung(name).includes(q);
-      return name.toLowerCase().includes(q);
+
+    function isChosungOnly(str) {
+      return /^[ㄱ-ㅎ]+$/.test(str);
     }
 
-    // ── 오늘 출고 내역 페이징 ──
-    var TODAY_LOG_PAGE_SIZE = 10;
-    var todayLogPage = 1;
+    function itemMatches(name, query) {
+      if (!query) {
+        return true;
+      }
+      const loweredQuery = query.toLowerCase();
+      if (isChosungOnly(loweredQuery)) {
+        return getChosung(name).includes(loweredQuery);
+      }
+      return name.toLowerCase().includes(loweredQuery);
+    }
 
     function buildTodayLogPageNumbers(current, total) {
-      var container = document.getElementById('today-log-page-numbers');
+      const container = document.getElementById('today-log-page-numbers');
+      if (!container) {
+        return;
+      }
       container.innerHTML = '';
-      if (total <= 1) return;
-      var start = Math.max(1, current - 2);
-      var end   = Math.min(total, start + 4);
-      if (end - start < 4) start = Math.max(1, end - 4);
-      function makeBtn(n) {
-        var b = document.createElement('button');
-        b.type = 'button'; b.textContent = n;
-        b.className = 'px-2 py-1 text-xs rounded-lg border transition-colors ' +
-          (n === current ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 text-slate-600 hover:bg-slate-100');
-        b.addEventListener('click', function() { todayLogPage = n; renderTodayLog(); });
-        return b;
+      if (total <= 1) {
+        return;
       }
-      function makeDots() {
-        var s = document.createElement('span'); s.textContent = '...';
-        s.className = 'px-1 text-xs text-slate-400'; return s;
+
+      let start = Math.max(1, current - 2);
+      let end = Math.min(total, start + 4);
+      if (end - start < 4) {
+        start = Math.max(1, end - 4);
       }
-      if (start > 1) { container.appendChild(makeBtn(1)); if (start > 2) container.appendChild(makeDots()); }
-      for (var i = start; i <= end; i++) container.appendChild(makeBtn(i));
-      if (end < total) { if (end < total - 1) container.appendChild(makeDots()); container.appendChild(makeBtn(total)); }
+
+      const makeButton = (page) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = page;
+        button.className = 'px-2 py-1 text-xs rounded-lg border transition-colors ' +
+          (page === current ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 text-slate-600 hover:bg-slate-100');
+        button.addEventListener('click', () => {
+          todayLogPage = page;
+          renderTodayLog();
+        });
+        return button;
+      };
+
+      const makeDots = () => {
+        const span = document.createElement('span');
+        span.textContent = '...';
+        span.className = 'px-1 text-xs text-slate-400';
+        return span;
+      };
+
+      if (start > 1) {
+        container.appendChild(makeButton(1));
+        if (start > 2) {
+          container.appendChild(makeDots());
+        }
+      }
+
+      for (let page = start; page <= end; page += 1) {
+        container.appendChild(makeButton(page));
+      }
+
+      if (end < total) {
+        if (end < total - 1) {
+          container.appendChild(makeDots());
+        }
+        container.appendChild(makeButton(total));
+      }
     }
 
     function renderTodayLog() {
-      var rows = Array.from(document.querySelectorAll('#today-log-tbody tr:not(#today-log-empty)'));
-      var total = rows.length;
-      var totalPages = Math.max(1, Math.ceil(total / TODAY_LOG_PAGE_SIZE));
-      if (todayLogPage > totalPages) todayLogPage = totalPages;
-      if (todayLogPage < 1) todayLogPage = 1;
-      var start = (todayLogPage - 1) * TODAY_LOG_PAGE_SIZE;
-      rows.forEach(function(r, i) { r.style.display = (i >= start && i < start + TODAY_LOG_PAGE_SIZE) ? '' : 'none'; });
-      var bar = document.getElementById('today-log-pagination');
-      if (total === 0 || totalPages <= 1) { bar.style.removeProperty('display'); bar.style.display = 'none'; }
-      else { bar.style.removeProperty('display'); }
+      const rows = Array.from(document.querySelectorAll('#today-log-tbody tr:not(#today-log-empty)'));
+      const total = rows.length;
+      const totalPages = Math.max(1, Math.ceil(total / TODAY_LOG_PAGE_SIZE));
+      todayLogPage = Math.min(Math.max(1, todayLogPage), totalPages);
+
+      const start = (todayLogPage - 1) * TODAY_LOG_PAGE_SIZE;
+      rows.forEach((row, index) => {
+        row.style.display = index >= start && index < start + TODAY_LOG_PAGE_SIZE ? '' : 'none';
+      });
+
+      const bar = document.getElementById('today-log-pagination');
+      const info = document.getElementById('today-log-page-info');
+      const prev = document.getElementById('today-log-prev');
+      const next = document.getElementById('today-log-next');
+
+      if (bar) {
+        if (total === 0 || totalPages <= 1) {
+          bar.style.display = 'none';
+        } else {
+          bar.style.removeProperty('display');
+        }
+      }
+      if (info) {
+        info.textContent = `${total}건 / ${totalPages}페이지`;
+      }
+
       buildTodayLogPageNumbers(todayLogPage, totalPages);
-      document.getElementById('today-log-prev').disabled = todayLogPage <= 1;
-      document.getElementById('today-log-next').disabled = todayLogPage >= totalPages;
+      if (prev) {
+        prev.disabled = todayLogPage <= 1;
+      }
+      if (next) {
+        next.disabled = todayLogPage >= totalPages;
+      }
     }
 
-    document.getElementById('today-log-prev').addEventListener('click', function() {
-      if (todayLogPage > 1) { todayLogPage--; renderTodayLog(); }
-    });
-    document.getElementById('today-log-next').addEventListener('click', function() {
-      var rows = document.querySelectorAll('#today-log-tbody tr:not(#today-log-empty)');
-      var totalPages = Math.max(1, Math.ceil(rows.length / TODAY_LOG_PAGE_SIZE));
-      if (todayLogPage < totalPages) { todayLogPage++; renderTodayLog(); }
-    });
-    renderTodayLog();
-
-    // ── 카드 그리드 페이징 ──
-    var CARD_PAGE_SIZE = 10;
-    var cardPage = 1;
-    var currentCat = '';
-
     function buildCardPageNumbers(current, total) {
-      var container = document.getElementById('card-grid-page-numbers');
-      if (!container) return;
+      const container = document.getElementById('card-grid-page-numbers');
+      if (!container) {
+        return;
+      }
       container.innerHTML = '';
-      if (total <= 1) return;
-      var start = Math.max(1, current - 2);
-      var end   = Math.min(total, start + 4);
-      if (end - start < 4) start = Math.max(1, end - 4);
-      function makeBtn(n) {
-        var b = document.createElement('button');
-        b.type = 'button'; b.textContent = n;
-        b.className = 'px-2 py-1 text-xs rounded-lg border transition-colors ' +
-          (n === current ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 text-slate-600 hover:bg-slate-100');
-        b.addEventListener('click', function() { cardPage = n; applyFilter(); });
-        return b;
+      if (total <= 1) {
+        return;
       }
-      function makeDots() {
-        var s = document.createElement('span'); s.textContent = '...';
-        s.className = 'px-1 text-xs text-slate-400'; return s;
+
+      let start = Math.max(1, current - 2);
+      let end = Math.min(total, start + 4);
+      if (end - start < 4) {
+        start = Math.max(1, end - 4);
       }
-      if (start > 1) { container.appendChild(makeBtn(1)); if (start > 2) container.appendChild(makeDots()); }
-      for (var i = start; i <= end; i++) container.appendChild(makeBtn(i));
-      if (end < total) { if (end < total - 1) container.appendChild(makeDots()); container.appendChild(makeBtn(total)); }
+
+      const makeButton = (page) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = page;
+        button.className = 'px-2 py-1 text-xs rounded-lg border transition-colors ' +
+          (page === current ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 text-slate-600 hover:bg-slate-100');
+        button.addEventListener('click', () => {
+          cardPage = page;
+          applyFilter();
+        });
+        return button;
+      };
+
+      const makeDots = () => {
+        const span = document.createElement('span');
+        span.textContent = '...';
+        span.className = 'px-1 text-xs text-slate-400';
+        return span;
+      };
+
+      if (start > 1) {
+        container.appendChild(makeButton(1));
+        if (start > 2) {
+          container.appendChild(makeDots());
+        }
+      }
+
+      for (let page = start; page <= end; page += 1) {
+        container.appendChild(makeButton(page));
+      }
+
+      if (end < total) {
+        if (end < total - 1) {
+          container.appendChild(makeDots());
+        }
+        container.appendChild(makeButton(total));
+      }
     }
 
     function applyFilter() {
-      var query = document.getElementById('item-search').value.trim();
-      var allCards = Array.from(document.querySelectorAll('#item-use-grid .item-card'));
-      var filtered = allCards.filter(function(card) {
-        var catOk  = !currentCat || card.dataset.category === currentCat;
-        var nameOk = itemMatches(card.querySelector('.item-name').textContent, query);
-        return catOk && nameOk;
+      const searchInput = document.getElementById('item-search');
+      const query = searchInput ? searchInput.value.trim() : '';
+      const allCards = Array.from(document.querySelectorAll('#item-use-grid .item-card'));
+      const filtered = allCards.filter((card) => {
+        const categoryOk = !currentCategory || card.dataset.category === currentCategory;
+        const itemName = card.querySelector('.item-name')?.textContent || '';
+        const nameOk = itemMatches(itemName, query);
+        return categoryOk && nameOk;
       });
-      var totalPages = Math.max(1, Math.ceil(filtered.length / CARD_PAGE_SIZE));
-      if (cardPage > totalPages) cardPage = totalPages;
-      if (cardPage < 1) cardPage = 1;
-      var startIdx = (cardPage - 1) * CARD_PAGE_SIZE;
-      allCards.forEach(function(c) { c.style.display = 'none'; });
-      filtered.forEach(function(c, i) { c.style.display = (i >= startIdx && i < startIdx + CARD_PAGE_SIZE) ? '' : 'none'; });
-      var bar = document.getElementById('card-grid-pagination');
+
+      const totalPages = Math.max(1, Math.ceil(filtered.length / CARD_PAGE_SIZE));
+      cardPage = Math.min(Math.max(1, cardPage), totalPages);
+      const start = (cardPage - 1) * CARD_PAGE_SIZE;
+
+      allCards.forEach((card) => {
+        card.style.display = 'none';
+      });
+      filtered.forEach((card, index) => {
+        card.style.display = index >= start && index < start + CARD_PAGE_SIZE ? '' : 'none';
+      });
+
+      const bar = document.getElementById('card-grid-pagination');
+      const prev = document.getElementById('card-grid-prev');
+      const next = document.getElementById('card-grid-next');
       if (bar) {
-        if (filtered.length === 0 || totalPages <= 1) { bar.style.removeProperty('display'); bar.style.display = 'none'; }
-        else { bar.style.removeProperty('display'); }
-        buildCardPageNumbers(cardPage, totalPages);
-        document.getElementById('card-grid-prev').disabled = cardPage <= 1;
-        document.getElementById('card-grid-next').disabled = cardPage >= totalPages;
+        if (filtered.length === 0 || totalPages <= 1) {
+          bar.style.display = 'none';
+        } else {
+          bar.style.removeProperty('display');
+        }
       }
+      buildCardPageNumbers(cardPage, totalPages);
+      if (prev) {
+        prev.disabled = cardPage <= 1;
+      }
+      if (next) {
+        next.disabled = cardPage >= totalPages;
+      }
+
+      syncStateToUrl();
     }
 
-    document.getElementById('item-search').addEventListener('input', function() { cardPage = 1; applyFilter(); });
+    const todayLogPrev = document.getElementById('today-log-prev');
+    if (todayLogPrev) {
+      todayLogPrev.addEventListener('click', () => {
+        if (todayLogPage > 1) {
+          todayLogPage -= 1;
+          renderTodayLog();
+        }
+      });
+    }
 
-    document.querySelectorAll('.item-cat-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        currentCat = this.dataset.cat;
-        document.querySelectorAll('.item-cat-btn').forEach(function(b) {
-          b.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors';
+    const todayLogNext = document.getElementById('today-log-next');
+    if (todayLogNext) {
+      todayLogNext.addEventListener('click', () => {
+        const rows = document.querySelectorAll('#today-log-tbody tr:not(#today-log-empty)');
+        const totalPages = Math.max(1, Math.ceil(rows.length / TODAY_LOG_PAGE_SIZE));
+        if (todayLogPage < totalPages) {
+          todayLogPage += 1;
+          renderTodayLog();
+        }
+      });
+    }
+
+    const itemSearch = document.getElementById('item-search');
+    if (itemSearch) {
+      itemSearch.addEventListener('input', () => {
+        cardPage = 1;
+        applyFilter();
+      });
+    }
+
+    document.querySelectorAll('.item-cat-btn').forEach((button) => {
+      button.addEventListener('click', () => {
+        currentCategory = button.dataset.cat || '';
+        document.querySelectorAll('.item-cat-btn').forEach((target) => {
+          target.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors';
         });
-        this.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors';
+        button.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors';
         cardPage = 1;
         applyFilter();
       });
     });
 
-    document.getElementById('card-grid-prev').addEventListener('click', function() {
-      if (cardPage > 1) { cardPage--; applyFilter(); }
-    });
-    document.getElementById('card-grid-next').addEventListener('click', function() {
-      var query = document.getElementById('item-search').value.trim();
-      var filtered = Array.from(document.querySelectorAll('#item-use-grid .item-card')).filter(function(c) {
-        return (!currentCat || c.dataset.category === currentCat) && itemMatches(c.querySelector('.item-name').textContent, query);
+    const cardPrev = document.getElementById('card-grid-prev');
+    if (cardPrev) {
+      cardPrev.addEventListener('click', () => {
+        if (cardPage > 1) {
+          cardPage -= 1;
+          applyFilter();
+        }
       });
-      var totalPages = Math.max(1, Math.ceil(filtered.length / CARD_PAGE_SIZE));
-      if (cardPage < totalPages) { cardPage++; applyFilter(); }
-    });
+    }
+
+    const cardNext = document.getElementById('card-grid-next');
+    if (cardNext) {
+      cardNext.addEventListener('click', () => {
+        const searchInput = document.getElementById('item-search');
+        const query = searchInput ? searchInput.value.trim() : '';
+        const filtered = Array.from(document.querySelectorAll('#item-use-grid .item-card')).filter((card) => {
+          const categoryOk = !currentCategory || card.dataset.category === currentCategory;
+          const itemName = card.querySelector('.item-name')?.textContent || '';
+          const nameOk = itemMatches(itemName, query);
+          return categoryOk && nameOk;
+        });
+        const totalPages = Math.max(1, Math.ceil(filtered.length / CARD_PAGE_SIZE));
+        if (cardPage < totalPages) {
+          cardPage += 1;
+          applyFilter();
+        }
+      });
+    }
 
     function refreshTodayLog(logs) {
-      var tbody = document.getElementById('today-log-tbody');
-      if (!tbody) return;
-      Array.from(tbody.querySelectorAll('tr:not(#today-log-empty)')).forEach(function(r) { r.remove(); });
-      var emptyRow = document.getElementById('today-log-empty');
-      if (logs && logs.length > 0) {
-        if (emptyRow) emptyRow.style.display = 'none';
-        logs.forEach(function(log) {
-          const tr = document.createElement('tr');
-          const td1 = document.createElement('td'); td1.className = 'px-3 py-2 text-slate-700 font-medium'; td1.textContent = log.itemName;
-          const td2 = document.createElement('td'); td2.className = 'px-3 py-2 text-right text-slate-600'; td2.textContent = log.amount + '개';
-          const td3 = document.createElement('td'); td3.className = 'px-3 py-2 text-right text-slate-400'; td3.textContent = log.usedAt;
-          tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
-          tbody.appendChild(tr);
-        });
-      } else {
-        if (emptyRow) emptyRow.style.display = '';
+      const tbody = document.getElementById('today-log-tbody');
+      if (!tbody) {
+        return;
       }
+
+      Array.from(tbody.querySelectorAll('tr:not(#today-log-empty)')).forEach((row) => {
+        row.remove();
+      });
+
+      const emptyRow = document.getElementById('today-log-empty');
+      if (logs && logs.length > 0) {
+        if (emptyRow) {
+          emptyRow.style.display = 'none';
+        }
+        logs.forEach((log) => {
+          const row = document.createElement('tr');
+          const nameCell = document.createElement('td');
+          const amountCell = document.createElement('td');
+          const timeCell = document.createElement('td');
+
+          nameCell.className = 'px-3 py-2 text-slate-700 font-medium';
+          nameCell.textContent = log.itemName;
+          amountCell.className = 'px-3 py-2 text-right text-slate-600';
+          amountCell.textContent = `${log.amount}개`;
+          timeCell.className = 'px-3 py-2 text-right text-slate-400';
+          timeCell.textContent = log.usedAt;
+
+          row.appendChild(nameCell);
+          row.appendChild(amountCell);
+          row.appendChild(timeCell);
+          tbody.appendChild(row);
+        });
+      } else if (emptyRow) {
+        emptyRow.style.display = '';
+      }
+
       todayLogPage = 1;
       renderTodayLog();
     }
 
-    document.querySelectorAll('form[action$="/admin/item/use"]').forEach(function(form) {
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        var input = form.querySelector('input[name="amount"]');
-        var value = input.value.trim();
-        var amount = Number(value);
-        if (value === '' || isNaN(amount) || !Number.isInteger(amount) || amount <= 0) {
-          alert('올바른 수량을 입력해주세요. (1 이상의 정수)');
+    document.querySelectorAll('form[action$="/admin/item/use"]').forEach((form) => {
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const input = form.querySelector('input[name="amount"]');
+        const value = input.value.trim();
+        const amount = Number(value);
+        if (value === '' || Number.isNaN(amount) || !Number.isInteger(amount) || amount <= 0) {
+          alert('올바른 수량을 입력해 주세요. (1 이상 정수)');
           return;
         }
-        var id = form.querySelector('input[name="id"]').value;
-        var csrfInput = form.querySelector('input[type="hidden"]:not([name="id"])');
-        var params = new URLSearchParams();
+
+        const id = form.querySelector('input[name="id"]').value;
+        const csrfInput = form.querySelector('input[type="hidden"][name="_csrf"]')
+          || form.querySelector('input[type="hidden"]:not([name="id"]):not([name="fromDate"]):not([name="toDate"])');
+        const params = new URLSearchParams();
+        const currentParams = new URLSearchParams(window.location.search);
         params.append('id', id);
         params.append('amount', value);
+        if (currentParams.has('fromDate')) params.append('fromDate', currentParams.get('fromDate'));
+        if (currentParams.has('toDate')) params.append('toDate', currentParams.get('toDate'));
         params.append(csrfInput.name, csrfInput.value);
 
         fetch('/admin/item/use', {
@@ -315,25 +606,36 @@
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: params.toString()
         })
-        .then(function(res) {
-          if (!res.ok) { return res.json().then(function(d) { alert(d.error || '서버 오류가 발생했습니다.'); throw new Error('server error'); }); }
-          return res.json();
-        })
-        .then(function(data) {
-          if (data.quantity !== undefined) {
-            form.closest('.item-card').querySelector('.quantity-span').textContent = data.quantity;
-            input.value = '';
-            refreshTodayLog(data.logs || []);
-          } else if (data.error) {
-            alert(data.error);
-          }
-        })
-        .catch(function(err) { if (err.message !== 'server error') alert('오류가 발생했습니다. 다시 시도해주세요.'); });
+          .then((response) => {
+            if (!response.ok) {
+              return response.json().then((data) => {
+                alert(data.error || '서버 오류가 발생했습니다.');
+                throw new Error('server error');
+              });
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (data.quantity !== undefined) {
+              form.closest('.item-card').querySelector('.quantity-span').textContent = data.quantity;
+              input.value = '';
+              refreshTodayLog(data.logs || []);
+            } else if (data.error) {
+              alert(data.error);
+            }
+          })
+          .catch((error) => {
+            if (error.message !== 'server error') {
+              alert('오류가 발생했습니다. 다시 시도해 주세요.');
+            }
+          });
       });
     });
 
+    feather.replace();
+    applyInitialState();
+    renderTodayLog();
     applyFilter();
   </script>
-  <script>feather.replace();</script>
 </body>
 </html>
