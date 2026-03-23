@@ -19,9 +19,10 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -43,6 +44,44 @@ class AdminItemControllerTest {
 
     @MockitoBean
     private ItemManagerService itemManagerService;
+
+    @Test
+    @DisplayName("restock delegates to item manager service so inbound log is recorded")
+    void restock_delegatesToItemManagerService() throws Exception {
+        // given
+
+        // when
+        // then
+                mockMvc.perform(post("/admin/item/restock")
+                        .param("id", "1")
+                        .param("amount", "5")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("/admin/item/list*"));
+
+        then(adminItemService).should().restockItem(1L, 5);
+        then(itemManagerService).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("restock with invalid amount does not call services")
+    void restock_withInvalidAmount_doesNotCallServices() throws Exception {
+        // given
+
+        // when
+        // then
+                mockMvc.perform(post("/admin/item/restock")
+                        .param("id", "1")
+                        .param("amount", "abc")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("/admin/item/list*"));
+
+        then(itemManagerService).shouldHaveNoInteractions();
+        then(adminItemService).shouldHaveNoInteractions();
+    }
 
     @Test
     @DisplayName("history uses today as default date range")

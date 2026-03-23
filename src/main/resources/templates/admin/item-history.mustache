@@ -16,7 +16,7 @@
     <main class="content-wrapper flex-1 p-6">
       <div class="space-y-6 max-w-6xl mx-auto">
 
-        <div class="flex items-center justify-between gap-4">
+        <div class="flex flex-wrap items-start justify-between gap-4">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
               <i data-feather="list" class="w-6 h-6"></i>
@@ -26,37 +26,84 @@
               <p class="text-slate-500 mt-1">날짜 범위를 기준으로 물품 입출고 이력을 조회합니다.</p>
             </div>
           </div>
-          <div class="text-sm text-slate-500 text-right">
-            <div>총 <span class="font-semibold text-slate-700">{{totalCount}}</span>건</div>
+          <div class="w-full sm:w-auto">
+            <div class="flex flex-col gap-3 text-sm text-slate-500 sm:items-end">
+              <div class="text-right">
+                총 <span class="font-semibold text-slate-700">{{totalCount}}</span>건
+              </div>
+              <div class="flex flex-wrap items-end gap-2 sm:justify-end">
+                <div class="min-w-[150px]">
+                  <label for="history-from-date" class="mb-1 block text-xs font-medium text-slate-500">시작일</label>
+                  <input
+                    type="date"
+                    id="history-from-date"
+                    name="fromDate"
+                    value="{{fromDate}}"
+                    form="history-filter-form"
+                    class="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm text-slate-700 outline-none transition focus:ring-2 focus:ring-indigo-500"
+                  >
+                </div>
+                <div class="min-w-[150px]">
+                  <label for="history-to-date" class="mb-1 block text-xs font-medium text-slate-500">종료일</label>
+                  <input
+                    type="date"
+                    id="history-to-date"
+                    name="toDate"
+                    value="{{toDate}}"
+                    form="history-filter-form"
+                    class="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm text-slate-700 outline-none transition focus:ring-2 focus:ring-indigo-500"
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {{#dateError}}
+        <div class="px-4 py-3 rounded-lg border border-red-200 bg-red-50 text-sm text-red-700">
+          {{dateError}}
+        </div>
+        {{/dateError}}
+
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div class="rounded-xl border border-blue-200 bg-blue-50 p-4">
+            <div class="text-xs font-medium text-blue-700">총 입고 수량</div>
+            <div class="mt-1 text-xl font-bold text-blue-800">{{totalIn}}<span class="ml-1 text-sm font-normal text-blue-600">개</span></div>
+          </div>
+          <div class="rounded-xl border border-orange-200 bg-orange-50 p-4">
+            <div class="text-xs font-medium text-orange-700">총 출고 수량</div>
+            <div class="mt-1 text-xl font-bold text-orange-800">{{totalOut}}<span class="ml-1 text-sm font-normal text-orange-600">개</span></div>
           </div>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <form method="get" action="/admin/item/history" class="p-4 border-b border-slate-200 bg-slate-50" id="history-date-form">
-            <input type="hidden" name="keyword" id="history-hidden-keyword" value="">
-            <input type="hidden" name="type" id="history-hidden-type" value="">
-
+          <form method="get" action="/admin/item/history" class="p-4 border-b border-slate-200 bg-slate-50" id="history-filter-form">
             <div class="flex flex-wrap items-end gap-3">
-              <div class="min-w-[180px]">
-                <label for="history-from-date" class="block text-sm font-medium text-slate-700 mb-1.5">시작일</label>
-                <input
-                  type="date"
-                  id="history-from-date"
-                  name="fromDate"
-                  value="{{fromDate}}"
-                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                >
+              <div class="min-w-[260px] flex-1">
+                <label for="history-search" class="block text-sm font-medium text-slate-700 mb-1.5">물품명 검색</label>
+                <div class="relative">
+                  <i data-feather="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                  <input
+                    type="text"
+                    id="history-search"
+                    name="keyword"
+                    placeholder="물품명 검색"
+                    class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  >
+                </div>
               </div>
 
               <div class="min-w-[180px]">
-                <label for="history-to-date" class="block text-sm font-medium text-slate-700 mb-1.5">종료일</label>
-                <input
-                  type="date"
-                  id="history-to-date"
-                  name="toDate"
-                  value="{{toDate}}"
+                <label for="history-type" class="block text-sm font-medium text-slate-700 mb-1.5">구분</label>
+                <select
+                  id="history-type"
+                  name="type"
                   class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                 >
+                  <option value="">전체</option>
+                  <option value="입고">입고</option>
+                  <option value="출고">출고</option>
+                </select>
               </div>
 
               <button
@@ -73,46 +120,6 @@
               </a>
             </div>
           </form>
-
-          {{#dateError}}
-          <div class="px-4 py-3 border-b border-red-200 bg-red-50 text-sm text-red-700">
-            {{dateError}}
-          </div>
-          {{/dateError}}
-
-          <div class="grid grid-cols-2 gap-4 p-4 border-b border-slate-200 bg-white">
-            <div class="rounded-xl border border-blue-200 bg-blue-50 p-4">
-              <div class="text-xs font-medium text-blue-700">총 입고 수량</div>
-              <div class="mt-1 text-xl font-bold text-blue-800">{{totalIn}}<span class="ml-1 text-sm font-normal text-blue-600">개</span></div>
-            </div>
-            <div class="rounded-xl border border-orange-200 bg-orange-50 p-4">
-              <div class="text-xs font-medium text-orange-700">총 출고 수량</div>
-              <div class="mt-1 text-xl font-bold text-orange-800">{{totalOut}}<span class="ml-1 text-sm font-normal text-orange-600">개</span></div>
-            </div>
-          </div>
-
-          <div class="p-4 border-b border-slate-200 bg-white">
-            <div class="flex flex-wrap items-end gap-3">
-              <div class="min-w-[260px] flex-1">
-                <label for="history-search" class="block text-sm font-medium text-slate-700 mb-1.5">물품명 검색</label>
-                <div class="relative">
-                  <i data-feather="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                  <input
-                    type="text"
-                    id="history-search"
-                    placeholder="물품명 검색"
-                    class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                  >
-                </div>
-              </div>
-
-              <div class="flex items-center gap-1.5" id="type-filter-btns">
-                <button type="button" data-type="" class="type-filter-btn px-3 py-2 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors">전체</button>
-                <button type="button" data-type="입고" class="type-filter-btn px-3 py-2 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">입고</button>
-                <button type="button" data-type="출고" class="type-filter-btn px-3 py-2 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">출고</button>
-              </div>
-            </div>
-          </div>
 
           {{#hasHistories}}
           <table class="w-full text-sm">
@@ -196,15 +203,6 @@
 
       const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
       window.history.replaceState({}, '', nextUrl);
-
-      const hiddenKeyword = document.getElementById('history-hidden-keyword');
-      const hiddenType = document.getElementById('history-hidden-type');
-      if (hiddenKeyword) {
-        hiddenKeyword.value = currentQuery;
-      }
-      if (hiddenType) {
-        hiddenType.value = currentType;
-      }
     }
 
     function applyInitialState() {
@@ -213,17 +211,12 @@
       currentType = params.get('type') || '';
 
       const searchInput = document.getElementById('history-search');
+      const typeSelect = document.getElementById('history-type');
       if (searchInput) {
         searchInput.value = currentQuery;
       }
-
-      const targetButton = Array.from(document.querySelectorAll('.type-filter-btn')).find((button) => button.dataset.type === currentType)
-        || document.querySelector('.type-filter-btn[data-type=""]');
-      if (targetButton) {
-        document.querySelectorAll('.type-filter-btn').forEach((button) => {
-          button.className = 'type-filter-btn px-3 py-2 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors';
-        });
-        targetButton.className = 'type-filter-btn px-3 py-2 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors';
+      if (typeSelect) {
+        typeSelect.value = currentType;
       }
 
       syncStateToUrl();
@@ -333,25 +326,15 @@
     }
 
     const searchInput = document.getElementById('history-search');
-    if (searchInput) {
-      searchInput.addEventListener('input', () => {
-        currentQuery = searchInput.value.trim();
+    const typeSelect = document.getElementById('history-type');
+    const historyFilterForm = document.getElementById('history-filter-form');
+    if (historyFilterForm) {
+      historyFilterForm.addEventListener('submit', () => {
+        currentQuery = searchInput ? searchInput.value.trim() : '';
+        currentType = typeSelect ? typeSelect.value : '';
         currentPage = 1;
-        render();
       });
     }
-
-    document.querySelectorAll('.type-filter-btn').forEach((button) => {
-      button.addEventListener('click', () => {
-        currentType = button.dataset.type || '';
-        currentPage = 1;
-        document.querySelectorAll('.type-filter-btn').forEach((target) => {
-          target.className = 'type-filter-btn px-3 py-2 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors';
-        });
-        button.className = 'type-filter-btn px-3 py-2 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors';
-        render();
-      });
-    });
 
     const prevButton = document.getElementById('btn-prev');
     if (prevButton) {

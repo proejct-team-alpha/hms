@@ -11,6 +11,7 @@ import com.smartclinic.hms.admin.item.dto.AdminItemListItemResponse;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.Item;
 import com.smartclinic.hms.domain.ItemCategory;
+import com.smartclinic.hms.item.ItemManagerService;
 import com.smartclinic.hms.item.dto.ItemCategoryFilter;
 import com.smartclinic.hms.item.dto.ItemFormDto;
 
@@ -24,6 +25,7 @@ public class AdminItemService {
     private static final char[] CHOSUNG = {'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'};
 
     private final ItemRepository itemRepository;
+    private final ItemManagerService itemManagerService;
 
     public List<AdminItemListItemResponse> getItemList(String category, String keyword) {
         return getItemsByCategory(category).stream()
@@ -114,11 +116,10 @@ public class AdminItemService {
         }
     }
 
+
     @Transactional
     public void restockItem(Long id, int amount) {
-        Item item = itemRepository.findById(id)
-                .orElseThrow(() -> CustomException.notFound("물품을 찾을 수 없습니다. ID: " + id));
-        item.addStock(amount);
+        itemManagerService.restockItem(id, amount);
     }
 
     @Transactional
