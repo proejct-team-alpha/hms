@@ -167,23 +167,35 @@
                     </div>
                   </div>
 
-                  <!-- 최종 진료과/의사 -->
+                  <!-- [기능 구현] 최종 진료과/의사: 수정 가능 상태(예약/대기)일 때만 드롭다운 표시, 그 외엔 텍스트 표시 -->
                   <div class="grid grid-cols-2 gap-6">
                     <div>
                       <label class="info-label">최종 진료과</label>
+                      {{#detail.canEditReceptionInfo}}
                       <select id="receptionDept" class="info-input" onchange="filterDoctors(this.value)">
                         {{#departments}}
                         <option value="{{id}}" {{#selected}}selected{{/selected}}>{{name}}</option>
                         {{/departments}}
                       </select>
+                      {{/detail.canEditReceptionInfo}}
+                      {{^detail.canEditReceptionInfo}}
+                      <div class="read-only-text py-2 border-b border-slate-100">{{detail.departmentName}}</div>
+                      <input type="hidden" id="receptionDept" value="{{detail.departmentId}}">
+                      {{/detail.canEditReceptionInfo}}
                     </div>
                     <div>
                       <label class="info-label">담당 의사</label>
+                      {{#detail.canEditReceptionInfo}}
                       <select id="receptionDoctor" class="info-input">
                         {{#doctors}}
                         <option value="{{id}}" data-dept-id="{{deptId}}" {{#selected}}selected{{/selected}}>{{name}}</option>
                         {{/doctors}}
                       </select>
+                      {{/detail.canEditReceptionInfo}}
+                      {{^detail.canEditReceptionInfo}}
+                      <div class="read-only-text py-2 border-b border-slate-100">{{detail.doctorName}} 전문의</div>
+                      <input type="hidden" id="receptionDoctor" value="{{detail.doctorId}}">
+                      {{/detail.canEditReceptionInfo}}
                     </div>
                   </div>
 
@@ -224,7 +236,13 @@
 
                   <div>
                     <label class="info-label">내원 사유</label>
+                    {{#detail.canEditReceptionInfo}}
                     <textarea id="visitReason" rows="2" class="info-input resize-none">{{detail.visitReason}}</textarea>
+                    {{/detail.canEditReceptionInfo}}
+                    {{^detail.canEditReceptionInfo}}
+                    <div class="read-only-text py-2 border-b border-slate-100 leading-relaxed">{{detail.visitReason}}</div>
+                    <input type="hidden" id="visitReason" value="{{detail.visitReason}}">
+                    {{/detail.canEditReceptionInfo}}
                   </div>
 
                   <div>

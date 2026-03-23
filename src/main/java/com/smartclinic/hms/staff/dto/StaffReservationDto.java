@@ -40,6 +40,8 @@ public class StaffReservationDto {
     private final boolean paid; 
     private final boolean canReceive;
     private final boolean canCancel;
+    /* [기능 구현] 최종 진료과, 담당 의사, 내원 사유의 수정 가능 여부 판단 플래그 */
+    private final boolean canEditReceptionInfo;
     private final boolean isFirstVisit;
     private final long visitCount;
     private final java.util.List<com.smartclinic.hms.domain.PatientHistoryDto> history;
@@ -112,6 +114,8 @@ public class StaffReservationDto {
         this.canCancel = r.getStatus() == ReservationStatus.RESERVED || r.getStatus() == ReservationStatus.RECEIVED;
         this.treatmentCompleted = r.isTreatmentCompleted();
         this.paid = r.isPaid();
+        this.canEditReceptionInfo = !this.paid && !this.treatmentCompleted && 
+                                   (r.getStatus() == ReservationStatus.RESERVED || r.getStatus() == ReservationStatus.RECEIVED);
         this.visitCount = completedCount;
         this.isFirstVisit = (completedCount == 0);
 

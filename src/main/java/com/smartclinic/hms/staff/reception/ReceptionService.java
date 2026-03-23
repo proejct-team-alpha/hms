@@ -122,13 +122,19 @@ public class ReceptionService {
         // 2. 환자 정보 조회 및 업데이트
         Patient patient = reservation.getPatient();
         
-        // [주석] 환자의 기본 정보(이메일, 주소, 메모)와 의료 정보(주민번호, 내원사유)를 모두 업데이트합니다.
-        patient.updateInfo(patient.getName(), patient.getPhone(), request.getEmail(), request.getAddress(), request.getNote());
-        patient.updateMedicalInfo(request.getBirthInfo(), request.getVisitReason());
+        // [기능 구현] 수정 가능 상태 여부 판단 (예약/대기 중일 때만 핵심 진료 정보 수정 가능)
+        boolean canEditReception = !reservation.isPaid() && !reservation.isTreatmentCompleted() && 
+                                  (reservation.getStatus() == ReservationStatus.RESERVED || reservation.getStatus() == ReservationStatus.RECEIVED);
         
-        // 3. 진료과 및 의사 정보 업데이트 (예약 정보 변경)
-        // [주석] 요청된 진료과와 의사 엔티티를 찾아 예약 정보에 반영합니다.
-        if (request.getDeptId() != null && request.getDoctorId() != null) {
+        // [주석] 환자의 기본 정보(이메일, 주소, 메모)는 항상 업데이트 가능
+        patient.updateInfo(patient.getName(), patient.getPhone(), request.getEmail(), request.getAddress(), request.getNote());
+        
+        // [기능 구현] 내원 사유는 수정 가능할 때만 업데이트, 주민번호는 항상 업데이트 허용
+        String finalVisitReason = canEditReception ? request.getVisitReason() : patient.getVisitReason();
+        patient.updateMedicalInfo(request.getBirthInfo(), finalVisitReason);
+        
+        // 3. 진료과 및 의사 정보 업데이트 (수정 가능 상태일 때만 반영)
+        if (canEditReception && request.getDeptId() != null && request.getDoctorId() != null) {
             Department dept = departmentRepository.findById(request.getDeptId())
                 .orElseThrow(() -> CustomException.notFound("진료과를 찾을 수 없습니다."));
             Doctor doctor = doctorRepository.findById(request.getDoctorId())

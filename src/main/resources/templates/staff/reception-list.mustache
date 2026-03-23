@@ -105,7 +105,7 @@
 
               <div class="relative group">
                 <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors"></i>
-                <input type="text" name="query" value="{{query}}" placeholder="환자명 검색" 
+                <input type="text" name="query" value="{{query}}" placeholder="환자명, 전화번호 검색" 
                        style="padding-left: 2.5rem !important;"
                        class="pr-4 py-2.5 w-48 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm">
               </div>
@@ -125,7 +125,8 @@
                 <button type="button" id="nextMonth" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400"><i data-feather="chevron-right" class="w-4 h-4"></i></button>
               </div>
               <div id="calendarDays" class="calendar-container"></div>
-              <button type="button" onclick="location.href='/staff/reception/list?tab={{currentTab}}'" class="btn-today mt-4">오늘로 이동</button>
+              <!-- [기능 구현] '오늘로 이동' 클릭 시 기존 필터링 조건(tab, deptIds, doctorIds, query 등) 유지 -->
+              <button type="button" onclick="location.href='/staff/reception/list?tab={{currentTab}}{{keepParams}}'" class="btn-today mt-4">오늘로 이동</button>
             </div>
           </div>
 
