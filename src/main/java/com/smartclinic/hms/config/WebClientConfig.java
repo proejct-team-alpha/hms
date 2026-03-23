@@ -16,13 +16,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class WebClientConfig {
 
-    @Value("${llm.service.url}")
+    @Value("${llm.service.url:${LLM_SERVICE_URL:http://localhost:8000}}")
     private String llmServiceUrl;
 
-    @Value("${llm.service.timeout.connect}")
+    @Value("${llm.service.timeout.connect:5000}")
     private int connectTimeout;
 
-    @Value("${llm.service.timeout.read}")
+    @Value("${llm.service.timeout.read:30000}")
     private int readTimeout;
 
     @Bean
