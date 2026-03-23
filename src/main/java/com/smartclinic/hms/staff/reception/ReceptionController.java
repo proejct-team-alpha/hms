@@ -52,6 +52,10 @@ public class ReceptionController {
             @RequestParam(name = "page", defaultValue = "1") int page,
             Model model) {
 
+        // 중복 파라미터 방어 로직: 쉼표가 포함되어 있으면 첫 번째 값만 사용
+        if (dateStr != null && dateStr.contains(",")) dateStr = dateStr.split(",")[0];
+        if (tab != null && tab.contains(",")) tab = tab.split(",")[0];
+
         if ((dateStr == null || dateStr.isBlank()) && flashDate != null && !flashDate.isBlank()) {
             dateStr = flashDate;
         }
@@ -62,6 +66,11 @@ public class ReceptionController {
             ? LocalDate.now() 
             : LocalDate.parse(dateStr);
         String finalDateStr = selectedDate.toString();
+
+        // 요일 정보 추가 (월, 화, 수...)
+        String dayOfWeek = selectedDate.getDayOfWeek().getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.KOREAN);
+        String formattedDate = finalDateStr + " (" + dayOfWeek + ")";
+        model.addAttribute("formattedDate", formattedDate);
 
         // 탭에 따른 실제 DB 상태값 매핑 (Nurse 컨트롤러 스타일)
         String dbStatus = switch (tab) {
@@ -87,15 +96,13 @@ public class ReceptionController {
         // 페이징 처리
         int total = filtered.size();
         int totalPages = Math.max(1, (total + PAGE_SIZE - 1) / PAGE_SIZE);
-        page = Math.max(1, Math.min(page, totalPages));
-        int from = (page - 1) * PAGE_SIZE;
+        int finalPage = Math.max(1, Math.min(page, totalPages));
+        int from = (finalPage - 1) * PAGE_SIZE;
         int to = Math.min(from + PAGE_SIZE, total);
         List<StaffReservationDto> paged = filtered.subList(from, to);
 
-        // 검색/필터 유지를 위한 파라미터 구성
+        // 검색/필터 유지를 위한 파라미터 구성 (date와 tab은 링크에서 직접 처리하므로 제외)
         StringBuilder keepParams = new StringBuilder();
-        keepParams.append("&date=").append(finalDateStr);
-        keepParams.append("&tab=").append(tab);
         if (query != null && !query.isBlank()) keepParams.append("&query=").append(query);
         if (deptIds != null) deptIds.forEach(id -> keepParams.append("&deptIds=").append(id));
         if (doctorIds != null) doctorIds.forEach(id -> keepParams.append("&doctorIds=").append(id));
@@ -133,14 +140,14 @@ public class ReceptionController {
         ));
 
         // 페이징 정보
-        model.addAttribute("currentPage", page);
+        model.addAttribute("currentPage", finalPage);
         model.addAttribute("totalPages", totalPages);
         model.addAttribute("totalCount", total);
-        model.addAttribute("hasPrev", page > 1);
-        model.addAttribute("hasNext", page < totalPages);
-        model.addAttribute("prevPageUrl", "/staff/reception/list?page=" + (page - 1) + params);
-        model.addAttribute("nextPageUrl", "/staff/reception/list?page=" + (page + 1) + params);
-        model.addAttribute("pageInfo", page + " / " + totalPages);
+        model.addAttribute("hasPrev", finalPage > 1);
+        model.addAttribute("hasNext", finalPage < totalPages);
+        model.addAttribute("prevPageUrl", "/staff/reception/list?page=" + (finalPage - 1) + params);
+        model.addAttribute("nextPageUrl", "/staff/reception/list?page=" + (finalPage + 1) + params);
+        model.addAttribute("pageInfo", finalPage + " / " + totalPages);
 
         return "staff/reception-list";
     }
@@ -151,12 +158,36 @@ public class ReceptionController {
                         @RequestParam(name = "tab", defaultValue = "all") String tab,
                         @RequestParam(name = "date", required = false) String date,
                         @RequestParam(name = "page", defaultValue = "1") int page,
+                        @RequestParam(name = "query", required = false) String query,
+                        @RequestParam(name = "deptIds", required = false) List<Long> deptIds,
+                        @RequestParam(name = "doctorIds", required = false) List<Long> doctorIds,
+                        @RequestParam(name = "source", required = false) String source,
                         Model model) {
+        
+        // [주석] 중복 파라미터 방어 (쉼표로 구분된 문자열 등이 들어올 경우 대비)
+        if (date != null && date.contains(",")) date = date.split(",")[0];
+        if (tab != null && tab.contains(",")) tab = tab.split(",")[0];
+        if (source != null && source.contains(",")) source = source.split(",")[0];
+
         model.addAttribute("isStaffReception", true);
-        model.addAttribute("detail", receptionService.getDetail(id));
+        StaffReservationDto dto = receptionService.getDetail(id);
+        model.addAttribute("detail", dto);
         model.addAttribute("currentTab", tab);
         model.addAttribute("currentDate", date != null ? date : "");
         model.addAttribute("currentPage", page);
+        
+        // [주석] 목록 필터링 상태 유지를 위한 파라미터 추가
+        model.addAttribute("query", query != null ? query : "");
+        model.addAttribute("deptIds", deptIds);
+        model.addAttribute("doctorIds", doctorIds);
+        model.addAttribute("source", source != null ? source : "");
+
+        // 상세 화면 수정을 위한 리스트 데이터 추가
+        model.addAttribute("departments", receptionService.getAllDepartments());
+        model.addAttribute("doctors", receptionService.getAllDoctors().stream()
+                .map(d -> Map.of("id", d.getId(), "name", d.getDisplayName(), "deptId", d.getDepartmentId()))
+                .collect(Collectors.toList()));
+
         return "staff/reception-detail";
     }
 

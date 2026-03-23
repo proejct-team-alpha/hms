@@ -26,9 +26,20 @@ public class StaffReservationDto {
     private final String statusBadgeClass;
     private final String sourceText;
     private final String sourceBadgeClass;
+    private final String ageGender; 
+    private final String birthInfo; 
+    private final String birthDatePart; // [추가] 주민번호 앞 6자리
+    private final String genderDigitPart; // [추가] 주민번호 뒤 1자리
+    private final String visitReason; 
     private final String cancellationReason;
+    private final String actualReceptionDate; // [주석] 실제 접수가 완료된 날짜 (yyyy-MM-dd)
+    private final String receptionTime; // [주석] 실제 접수가 완료된 시각 (HH:mm 포맷)
     private final boolean canReceive;
     private final boolean canCancel;
+
+    // [주석] 명시적 Getter 추가 (Mustache 연동 안정성 확보)
+    public String getActualReceptionDate() { return actualReceptionDate; }
+    public String getReceptionTime() { return receptionTime; }
 
     // ==========================================
     // [신규 추가] 팀 프로젝트 - 환자 초재진 정보
@@ -79,11 +90,46 @@ public class StaffReservationDto {
         this.departmentName = r.getDepartment().getName();
         this.doctorId = r.getDoctor().getId();
         this.doctorName = r.getDoctor().getStaff().getName();
-        this.cancellationReason = r.getCancellationReason();
+        this.cancellationReason = r.getCancellationReason() != null ? r.getCancellationReason() : "-";
         this.history = history;
 
+        // [주석] 나이 및 성별 계산 (기본값 '-'로 통합)
+        String bInfo = r.getPatient().getBirthInfo();
+        String ageGen = "-";
+        if (bInfo != null && bInfo.contains("-") && bInfo.length() >= 8) {
+            try {
+                String[] parts = bInfo.split("-");
+                int birthYear2Digit = Integer.parseInt(parts[0].substring(0, 2));
+                String genderDigit = parts[1];
+                
+                int currentYear = java.time.LocalDate.now().getYear();
+                int fullBirthYear = (genderDigit.equals("1") || genderDigit.equals("2")) ? 1900 + birthYear2Digit : 2000 + birthYear2Digit;
+                int age = currentYear - fullBirthYear + 1;
+                String gender = (genderDigit.equals("1") || genderDigit.equals("3")) ? "M" : "F";
+                
+                ageGen = gender + " / " + age + " 세";
+            } catch (Exception e) {
+                ageGen = "-";
+            }
+        }
+        this.ageGender = ageGen;
+        this.birthInfo = bInfo != null ? bInfo : "";
+        
+        // [주석] 주민번호 분할 처리 (YYMMDD-G): 데이터가 부정확해도 에러가 발생하지 않도록 방어 로직 적용
+        if (this.birthInfo != null && this.birthInfo.contains("-")) {
+            String[] parts = this.birthInfo.split("-");
+            this.birthDatePart = (parts.length > 0) ? parts[0] : "";
+            this.genderDigitPart = (parts.length > 1) ? parts[1] : "";
+        } else {
+            // [주석] 데이터에 하이픈이 없거나 null인 경우 기본값 처리
+            this.birthDatePart = (this.birthInfo != null) ? this.birthInfo : "";
+            this.genderDigitPart = "";
+        }
+
+        this.visitReason = r.getPatient().getVisitReason() != null ? r.getPatient().getVisitReason() : "";
+
         this.statusText = switch (r.getStatus()) {
-            case RESERVED -> "접수 대기";
+            case RESERVED -> "예약"; // '접수 대기'에서 '예약'으로 명칭 변경
             case RECEIVED -> "진료 대기";
             case IN_TREATMENT -> "진료중";
             case COMPLETED -> "진료 완료";
@@ -113,5 +159,14 @@ public class StaffReservationDto {
         // 초재진 판별 로직 적용
         this.visitCount = completedCount;
         this.isFirstVisit = (completedCount == 0);
+
+        // [주석] 실제 접수 시각 및 날짜 포맷팅
+        if (r.getReceptionTime() != null) {
+            this.actualReceptionDate = r.getReceptionTime().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            this.receptionTime = r.getReceptionTime().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+        } else {
+            this.actualReceptionDate = null;
+            this.receptionTime = null;
+        }
     }
 }

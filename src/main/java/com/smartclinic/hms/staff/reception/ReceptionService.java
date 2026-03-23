@@ -112,13 +112,30 @@ public class ReceptionService {
         reservation.receive();
     }
 
-    // 환자 정보 수정
+    // [주석] 환자 상세 정보 업데이트 (예약 및 환자 엔티티 모두 반영)
     @Transactional
     public void updatePatientInfo(PatientInfoUpdateRequest request) {
+        // 1. 예약 정보 조회
         Reservation reservation = reservationRepository.findById(request.getReservationId())
                 .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
+        
+        // 2. 환자 정보 조회 및 업데이트
         Patient patient = reservation.getPatient();
-        patient.updateAddressAndNote(request.getAddress(), request.getNote());
+        
+        // [주석] 환자의 기본 정보(이메일, 주소, 메모)와 의료 정보(주민번호, 내원사유)를 모두 업데이트합니다.
+        patient.updateInfo(patient.getName(), patient.getPhone(), request.getEmail(), request.getAddress(), request.getNote());
+        patient.updateMedicalInfo(request.getBirthInfo(), request.getVisitReason());
+        
+        // 3. 진료과 및 의사 정보 업데이트 (예약 정보 변경)
+        // [주석] 요청된 진료과와 의사 엔티티를 찾아 예약 정보에 반영합니다.
+        if (request.getDeptId() != null && request.getDoctorId() != null) {
+            Department dept = departmentRepository.findById(request.getDeptId())
+                .orElseThrow(() -> CustomException.notFound("진료과를 찾을 수 없습니다."));
+            Doctor doctor = doctorRepository.findById(request.getDoctorId())
+                .orElseThrow(() -> CustomException.notFound("의사를 찾을 수 없습니다."));
+            
+            reservation.updateReceptionInfo(dept, doctor);
+        }
     }
 
     /**
