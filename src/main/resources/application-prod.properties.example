@@ -60,13 +60,11 @@ claude.api.model=claude-sonnet-4-6
 claude.api.timeout-seconds=5
 
 # ------------------------------------------------------------------------------
-# 로깅 (운영: 최소)
+# 로깅 — logback-spring.xml 에서 관리
+# prod: 콘솔(plain) + 파일(롤링 50MB/90일) + 에러 전용 파일
+# 파일 경로는 LOG_PATH 환경변수로 지정 (기본: logs/)
 # ------------------------------------------------------------------------------
-logging.level.root=WARN
-logging.level.com.smartclinic.hms=INFO
-logging.file.name=/opt/hms/logs/hms-app.log
-logging.file.max-size=50MB
-logging.file.max-history=90
+logging.config=classpath:logback-spring.xml
 
 # ------------------------------------------------------------------------------
 # 세션 쿠키 보안 (운영: HTTPS 필수)
