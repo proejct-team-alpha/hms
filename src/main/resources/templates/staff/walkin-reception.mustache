@@ -3,115 +3,153 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>방문 접수 - MediCare+</title>
+  <title>접수 - MediCare+</title>
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="/css/flatpickr.min.css">
   <script src="/js/feather.min.js"></script>
-  <script src="/js/flatpickr.min.js"></script>
+  <style>
+    /* MediCare+ 스타일 유지하며 박스형 입력 및 단 구분 최적화 */
+    .split-input { text-align: center; padding: 0.75rem 0.5rem !important; }
+    .split-input:focus { border-color: #4f46e5; ring: 2px; ring-color: #4f46e5; }
+    /* 단 사이 수직 구분선 (데스크탑 전용) */
+    @media (min-width: 768px) {
+      .vertical-divider {
+        position: relative;
+      }
+      .vertical-divider::after {
+        content: '';
+        position: absolute;
+        right: -3rem; /* gap-24의 절반인 3rem 위치 */
+        top: 0;
+        height: 100%;
+        width: 1px;
+        background-color: #f1f5f9;
+      }
+    }
+  </style>
 </head>
-<body class="min-h-screen flex">
+<body class="min-h-screen flex bg-[#f8fafc]">
   {{> common/sidebar-staff}}
 
   <div class="main-content flex-1 flex flex-col ml-64">
     {{> common/header-staff}}
 
     <main class="content-wrapper flex-1 p-6">
-      <div class="max-w-2xl mx-auto">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-          <div class="flex items-center gap-3 mb-8">
-            <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600">
-              <i data-feather="user-plus" class="w-6 h-6"></i>
+      <div class="max-w-5xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-10">
+          
+          <!-- 헤더 섹션: 제목 및 목록가기 추가 -->
+          <div class="flex items-center justify-between mb-10 pb-6 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+                <i data-feather="user-plus" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <h1 class="text-2xl font-bold text-slate-800">접수</h1>
+                <p class="text-slate-500 mt-1 text-sm">환자 접수 등록하는 화면입니다.</p>
+              </div>
             </div>
-            <div>
-              <h1 class="text-2xl font-bold text-slate-800">방문 접수 (Walk-in)</h1>
-              <p class="text-slate-500 mt-1">예약 없이 방문한 환자를 즉시 접수합니다.</p>
-            </div>
+            <!-- 우측 상단 목록가기 링크 -->
+            <a href="/staff/reception/list" class="text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center gap-1 transition-colors">
+              <i data-feather="arrow-left" class="w-4 h-4"></i>
+              목록으로 돌아가기
+            </a>
           </div>
 
-          <form id="walkinForm" method="post" action="/staff/walkin" class="space-y-6">
+          <form id="walkinForm" method="post" action="/staff/walkin" class="space-y-10">
             <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+            <input type="hidden" name="reservationId" value="{{#reservationId}}{{reservationId}}{{/reservationId}}">
+            <input type="hidden" name="birthInfo" id="hiddenBirthInfo">
+            <input type="hidden" name="phone" id="hiddenPhone">
+            <input type="hidden" name="date" value="{{today}}">
+            <input type="hidden" name="time" id="hiddenTime">
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">환자 성함</label>
-                <div class="relative">
-                  <i data-feather="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input type="text" name="name" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" placeholder="홍길동" value="{{#form}}{{name}}{{/form}}" />
+            <!-- 5:5 단 배치 - 여백을 gap-24로 넉넉하게 조정 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-24">
+              
+              <!-- 왼쪽 단: 환자 기본 정보 -->
+              <div class="space-y-6 vertical-divider">
+                <div class="flex items-center gap-2 mb-4 text-indigo-600">
+                  <i data-feather="user" class="w-4 h-4"></i>
+                  <h3 class="text-xs font-bold uppercase tracking-widest">환자 기본 정보</h3>
+                </div>
+                
+                <div>
+                  <div class="flex justify-between items-end mb-2 ml-1">
+                    <label class="block text-sm font-medium text-slate-700">환자 성함</label>
+                    {{#patientId}}
+                    <span class="text-[11px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">환자번호: {{patientId}}</span>
+                    {{/patientId}}
+                  </div>
+                  <input type="text" name="name" value="{{#name}}{{name}}{{/name}}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="성함을 입력하세요" />
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2 ml-1">주민등록번호</label>
+                  <div class="flex items-center gap-2">
+                    <!-- 주민번호 필수 입력 설정 -->
+                    <input type="text" id="ssn1" maxlength="6" required class="split-input w-28 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" placeholder="앞 6자리" />
+                    <span class="text-slate-400 font-bold">-</span>
+                    <input type="text" id="ssn2" maxlength="1" required class="split-input w-12 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" placeholder="뒤 1자" />
+                    <span class="text-slate-400 font-medium tracking-widest ml-1 text-lg">******</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2 ml-1">연락처</label>
+                  <div class="flex items-center gap-2">
+                    <input type="text" id="p1" maxlength="3" value="{{#p1}}{{p1}}{{/p1}}" class="split-input w-20 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" placeholder="010" />
+                    <span class="text-slate-400 font-bold">-</span>
+                    <input type="text" id="p2" maxlength="4" value="{{#p2}}{{p2}}{{/p2}}" class="split-input w-24 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" placeholder="1234" />
+                    <span class="text-slate-400 font-bold">-</span>
+                    <input type="text" id="p3" maxlength="4" value="{{#p3}}{{p3}}{{/p3}}" class="split-input w-24 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" placeholder="5678" />
+                  </div>
                 </div>
               </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">연락처</label>
-                <div class="relative">
-                  <i data-feather="phone" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input 
-                    type="tel" 
-                    id="phoneInput"
-                    name="phone" 
-                    pattern="\d{3}-\d{4}-\d{4}" 
-                    maxlength="13" 
-                    required 
-                    class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" 
-                    placeholder="010-1234-5678" 
-                    value="{{#form}}{{phone}}{{/form}}" 
-                  />
+
+              <!-- 오른쪽 단: 진료 정보 설정 -->
+              <div class="space-y-6">
+                <div class="flex items-center gap-2 mb-4 text-indigo-600">
+                  <i data-feather="activity" class="w-4 h-4"></i>
+                  <h3 class="text-xs font-bold uppercase tracking-widest">진료 정보 설정</h3>
                 </div>
-                <p class="mt-2 text-xs text-slate-500 flex items-center gap-1.5 ml-1">
-                  <i data-feather="info" class="w-3.5 h-3.5"></i>
-                  숫자만 입력하시면 하이픈(-)이 자동으로 추가됩니다.
-                </p>
+
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2 ml-1">진료과</label>
+                  <select name="departmentId" data-selected="{{#selectedDeptId}}{{selectedDeptId}}{{/selectedDeptId}}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                    <option value="">진료과를 선택하세요</option>
+                    {{#departments}}
+                    <option value="{{id}}">{{name}}</option>
+                    {{/departments}}
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2 ml-1">전문의</label>
+                  <select name="doctorId" data-selected="{{#selectedDoctorId}}{{selectedDoctorId}}{{/selectedDoctorId}}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                    <option value="">의사를 선택하세요</option>
+                    {{#doctors}}
+                    <option value="{{id}}" data-dept-id="{{departmentId}}">{{displayName}}</option>
+                    {{/doctors}}
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2 ml-1">내원 사유</label>
+                  <input type="text" name="visitReason" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="증상을 간단히 입력하세요" />
+                </div>
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">진료과</label>
-                <select name="departmentId" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none bg-white">
-                  <option value="">선택해주세요</option>
-                  {{#departments}}
-                  <option value="{{id}}">{{name}}</option>
-                  {{/departments}}
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">전문의</label>
-                <select name="doctorId" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none bg-white">
-                  <option value="">선택해주세요</option>
-                  {{#doctors}}
-                  <option value="{{id}}" data-dept-id="{{departmentId}}" data-available-days="{{availableDays}}">{{displayName}}</option>
-                  {{/doctors}}
-                </select>
-              </div>
+            <!-- 하단: 메모 및 특이사항 (Full Width) - 상단 선 제거 -->
+            <div class="pt-6">
+              <label class="block text-sm font-medium text-slate-700 mb-2 ml-1">메모 및 특이사항</label>
+              <textarea name="notes" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none h-32 resize-none" placeholder="특이사항이나 과거 이력 등을 기록하세요."></textarea>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">접수 날짜</label>
-                <div class="relative">
-                  <i data-feather="calendar" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input type="text" name="date" id="dateInput" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" value="{{today}}" />
-                </div>
-                <p id="dateWarning" class="text-xs text-red-500 mt-1 hidden">선택하신 의사의 진료일이 아닙니다.</p>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">접수 시간</label>
-                <div class="relative">
-                  <i data-feather="clock" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input type="text" name="time" id="timeInput" required maxlength="5" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" placeholder="HH:mm" />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">증상 및 메모</label>
-              <div class="relative">
-                <i data-feather="file-text" class="absolute left-3 top-4 w-5 h-5 text-slate-400"></i>
-                <textarea name="notes" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none h-24 resize-none" placeholder="환자의 증상이나 특이사항을 입력하세요.">{{#form}}{{notes}}{{/form}}</textarea>
-              </div>
-            </div>
-
-            <div class="pt-6 border-t border-slate-200">
-              <button type="submit" class="w-full py-4 bg-orange-600 text-white rounded-xl font-medium text-lg hover:bg-orange-700 transition-colors shadow-sm">
-                즉시 접수하기
+            <!-- 등록 버튼 -->
+            <div class="pt-8 flex justify-end">
+              <button type="submit" class="w-full md:w-72 py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-lg active:scale-[0.98]">
+                등록
               </button>
             </div>
           </form>
@@ -123,189 +161,73 @@
   </div>
 
   <script>feather.replace();</script>
-  {{#message}}
-  <script>alert("{{message}}");</script>
-  {{/message}}
+  
   <script>
     (function () {
-      const form       = document.getElementById('walkinForm');
+      const form = document.getElementById('walkinForm');
+      const hiddenTime = document.getElementById('hiddenTime');
+      const ssn1 = document.getElementById('ssn1'), ssn2 = document.getElementById('ssn2');
+      const p1 = document.getElementById('p1'), p2 = document.getElementById('p2'), p3 = document.getElementById('p3');
+      const hiddenBirth = document.getElementById('hiddenBirthInfo'), hiddenPhone = document.getElementById('hiddenPhone');
+
+      function updateHiddenTime() {
+        const now = new Date();
+        hiddenTime.value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      }
+      updateHiddenTime();
+
+      function setupSplitInput(curr, next, prev) {
+        curr.addEventListener('input', () => {
+          curr.value = curr.value.replace(/\D/g, '');
+          if (curr.value.length >= curr.maxLength && next) next.focus();
+          hiddenBirth.value = (ssn1.value || ssn2.value) ? `${ssn1.value}-${ssn2.value}` : '';
+          hiddenPhone.value = (p1.value || p2.value || p3.value) ? `${p1.value}-${p2.value}-${p3.value}` : '';
+        });
+        curr.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && curr.value.length === 0 && prev) prev.focus();
+        });
+      }
+
+      setupSplitInput(ssn1, ssn2, null);
+      setupSplitInput(ssn2, p1, ssn1);
+      setupSplitInput(p1, p2, ssn2);
+      setupSplitInput(p2, p3, p1);
+      setupSplitInput(p3, null, p2);
+
       const deptSelect = document.querySelector('select[name="departmentId"]');
-      const docSelect  = document.querySelector('select[name="doctorId"]');
-      const dateInput  = document.getElementById('dateInput');
-      const timeInput  = document.getElementById('timeInput');
-      const dateWarning = document.getElementById('dateWarning');
+      const docSelect = document.querySelector('select[name="doctorId"]');
       const docOptions = Array.from(docSelect.querySelectorAll('option[data-dept-id]'));
 
-      const DAY_MAP = { SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6 };
-
-      // Flatpickr 초기화
-      const datePicker = flatpickr(dateInput, {
-        dateFormat: 'Y-m-d',
-        minDate: 'today',
-        onChange: function() { validateDoctorAvailability(); }
+      deptSelect.addEventListener('change', () => {
+        const id = deptSelect.value;
+        docOptions.forEach(opt => opt.style.display = (!id || opt.dataset.deptId === id) ? '' : 'none');
+        docSelect.value = '';
       });
 
-      // 현재 시간 설정 (HH:mm)
-      function setCurrentTime() {
-        const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        timeInput.value = `${hours}:${minutes}`;
-      }
+      // [주석] 서버에서 넘어온 선택 정보가 있다면(예약 연동) 자동으로 선택 상태를 반영합니다.
+      function initSelectedValues() {
+        const selectedDeptId = deptSelect.getAttribute('data-selected');
+        const selectedDocId = docSelect.getAttribute('data-selected');
 
-      // 진료과 → 의사 필터
-      function filterDoctorsOnly() {
-        const deptId = deptSelect.value;
-        docOptions.forEach(function(opt) {
-          opt.style.display = (!deptId || opt.dataset.deptId === deptId) ? '' : 'none';
-        });
-        if (docSelect.options[docSelect.selectedIndex] &&
-            docSelect.options[docSelect.selectedIndex].style.display === 'none') {
-          docSelect.value = '';
-        }
-      }
-
-      // 의사 선택 시 진료 가능 요일 적용
-      function validateDoctorAvailability() {
-        const selectedDoc = docSelect.options[docSelect.selectedIndex];
-        const availableDaysStr = (selectedDoc && selectedDoc.dataset.availableDays) || '';
-        const selectedDateStr = dateInput.value;
-
-        if (!availableDaysStr || !selectedDateStr) {
-          dateWarning.classList.add('hidden');
-          return true;
-        }
-
-        const availableDayNums = availableDaysStr
-          .split(',')
-          .map(d => DAY_MAP[d.trim()]);
-
-        const selectedDate = new Date(selectedDateStr);
-        const selectedDayNum = selectedDate.getDay();
-
-        if (availableDayNums.includes(selectedDayNum)) {
-          dateWarning.classList.add('hidden');
-          // 다시 진료 가능일이 되면, 비어있을 경우에만 현재 시간으로 채워줌
-          if (!timeInput.value) {
-            setCurrentTime();
+        if (selectedDeptId) {
+          deptSelect.value = selectedDeptId;
+          // 진료과 선택에 따른 의사 필터링 강제 실행
+          const id = selectedDeptId;
+          docOptions.forEach(opt => opt.style.display = (!id || opt.dataset.deptId === id) ? '' : 'none');
+          
+          if (selectedDocId) {
+            docSelect.value = selectedDocId;
           }
-          return true;
-        } else {
-          dateWarning.classList.remove('hidden');
-          timeInput.value = ''; // 진료 불가능일이면 시간 비움
-          return false;
-        }
-      }
-
-      // 의사 변경 시 달력 제한 업데이트 및 날짜/시간 리셋
-      function updateDatePickerLimits() {
-        const selectedDoc = docSelect.options[docSelect.selectedIndex];
-        const availableDaysStr = (selectedDoc && selectedDoc.dataset.availableDays) || '';
-
-        // 1. 먼저 날짜 제한을 일시적으로 해제 (오늘 날짜 설정을 보장하기 위함)
-        datePicker.set('enable', [function() { return true; }]);
-
-        // 2. 날짜와 시간을 현재 시점으로 초기화
-        const now = new Date();
-        const todayStr = now.getFullYear() + '-' + 
-                         String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-                         String(now.getDate()).padStart(2, '0');
-
-        datePicker.setDate(todayStr);
-        setCurrentTime();
-
-        // 3. 새 의사의 진료 요일에 맞춰 다시 제한 설정
-        if (availableDaysStr) {
-          const availableDayNums = availableDaysStr.split(',').map(d => DAY_MAP[d.trim()]);
-          datePicker.set('enable', [
-            function(date) { return availableDayNums.includes(date.getDay()); }
-          ]);
         }
         
-        // 4. 경고 메시지 및 시간 필드 상태 동기화
-        validateDoctorAvailability();
+        // 초기 로드 시 히든 필드 값 동기화
+        hiddenBirth.value = (ssn1.value || ssn2.value) ? `${ssn1.value}-${ssn2.value}` : '';
+        hiddenPhone.value = (p1.value || p2.value || p3.value) ? `${p1.value}-${p2.value}-${p3.value}` : '';
       }
+      initSelectedValues();
 
-      deptSelect.addEventListener('change', function() { filterDoctorsOnly(); });
-      docSelect.addEventListener('change', function() { updateDatePickerLimits(); });
-
-      // 폼 제출 전 최종 확인
-      form.addEventListener('submit', function(e) {
-        if (!validateDoctorAvailability()) {
-          e.preventDefault();
-          alert('선택하신 의사의 진료일이 아닙니다. 날짜를 확인해주세요.');
-        }
-      });
-
-      // 초기 설정
-      setCurrentTime();
-      
-      // 폼 오류 복원 시 처리
-      const restoreDeptId = '{{#form}}{{departmentId}}{{/form}}';
-      const restoreDocId  = '{{#form}}{{doctorId}}{{/form}}';
-      const restoreDate   = '{{#form}}{{date}}{{/form}}';
-      const restoreTime   = '{{#form}}{{time}}{{/form}}';
-
-      if (restoreDeptId) {
-        deptSelect.value = restoreDeptId;
-        filterDoctorsOnly();
-      }
-      if (restoreDocId) {
-        docSelect.value = restoreDocId;
-        updateDatePickerLimits();
-      }
-      if (restoreDate) {
-        datePicker.setDate(restoreDate);
-      }
-      if (restoreTime) {
-        timeInput.value = restoreTime;
-      }
+      form.addEventListener('submit', updateHiddenTime);
     })();
   </script>
-  <script>
-const phoneInput = document.getElementById('phoneInput');
-
-// 자동 하이픈
-phoneInput.addEventListener('input', function (e) {
-  let value = e.target.value.replace(/\D/g, '');
-
-  if (value.length <= 3) {
-    value = value;
-  } else if (value.length <= 7) {
-    value = value.slice(0, 3) + '-' + value.slice(3);
-  } else {
-    value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
-  }
-
-  e.target.value = value;
-});
-
-// 시간 입력 자동 콜론 (HH:mm)
-const timeInput = document.getElementById('timeInput');
-timeInput.addEventListener('input', function (e) {
-  let value = e.target.value.replace(/\D/g, ''); // 숫자만 남김
-  
-  if (value.length > 2) {
-    value = value.slice(0, 2) + ':' + value.slice(2, 4);
-  }
-  
-  e.target.value = value;
-});
-
-// 시간 유효성 체크 (포커스 아웃 시)
-timeInput.addEventListener('blur', function (e) {
-  const value = e.target.value;
-  if (value.length > 0 && value.length < 5) {
-    alert('시간 형식이 올바르지 않습니다. (예: 14:30)');
-    setTimeout(() => timeInput.focus(), 10);
-  } else if (value.length === 5) {
-    const [h, m] = value.split(':').map(Number);
-    if (h < 0 || h > 23 || m < 0 || m > 59) {
-      alert('유효하지 않은 시간입니다. (00:00 ~ 23:59)');
-      setTimeout(() => timeInput.focus(), 10);
-    }
-  }
-});
-</script>
 </body>
 </html>

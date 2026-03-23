@@ -10,7 +10,9 @@ import java.time.format.DateTimeFormatter;
 @Getter
 public class PatientHistoryDto {
     private final String date;          // 진료 일자
+    private final Long deptId;          // 진료과 ID
     private final String deptName;      // 진료과
+    private final Long doctorId;        // 담당 의사 ID
     private final String doctorName;    // 담당 의사
     private final String diagnosis;     // 진단명
     private final String remark;        // 진료 소견 (SOAP)
@@ -20,7 +22,9 @@ public class PatientHistoryDto {
 
     public PatientHistoryDto(Reservation r, TreatmentRecord record) {
         this.date = r.getReservationDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        this.deptId = r.getDepartment().getId();
         this.deptName = r.getDepartment().getName();
+        this.doctorId = r.getDoctor().getId();
         this.doctorName = r.getDoctor().getStaff().getName();
         
         // 상태별 텍스트 및 배지 색상 설정
