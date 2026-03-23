@@ -33,33 +33,37 @@ public class NurseService {
     private final DoctorTreatmentRecordRepository treatmentRecordRepository;
 
     public NurseDashboardDto getDashboard() {
+        // 현재 날짜와 요일을 가져옵니다.
         LocalDate today = LocalDate.now();
-        String todayDayOfWeek = toKoreanDayOfWeek(today.getDayOfWeek().getValue());
+        java.time.DayOfWeek currentDay = today.getDayOfWeek();
 
-        // 1. 모든 의사 조회
+        // 1. 모든 의사 정보를 상세 정보와 함께 조회합니다.
         List<Doctor> allDoctors = doctorRepository.findAllWithDetails();
         
-        // 2. 오늘 모든 예약(취소 제외) 조회
+        // 2. 오늘 생성된 모든 예약 건 중 취소되지 않은 건들을 조회합니다.
         List<Reservation> todayReservations = nursePatientStatusRepository.findTodayNonCancelled(today, ReservationStatus.CANCELLED);
 
-        // 3. 의사별로 데이터 가공
+        // 3. 각 의사별로 대시보드에 표시할 상태 데이터를 가공합니다.
         List<NurseDoctorStatusDto> doctorStatuses = allDoctors.stream()
                 .map(doctor -> {
-                    // 해당 의사의 오늘 예약들 필터링
+                    // 해당 의사에게 배정된 오늘의 예약 리스트를 필터링합니다.
                     List<Reservation> drRes = todayReservations.stream()
                             .filter(r -> r.getDoctor().getId().equals(doctor.getId()))
                             .toList();
 
-                    // 오늘 진료 여부 확인 (예: "월,화,수"에 오늘 요일이 포함되는지)
-                    boolean isAvailableToday = doctor.getAvailableDays() != null && doctor.getAvailableDays().contains(todayDayOfWeek);
+                    // [수정] 오늘 진료 여부 확인 로직
+                    // 기존: "월,화" 한글 문자열 포함 여부로 확인 (데이터가 MON,TUE 형식이어서 상시 false 발생)
+                    // 변경: Doctor 도메인의 getAvailableDaysList()를 사용하여 현재 요일(DayOfWeek)이 포함되어 있는지 객체로 비교
+                    boolean isAvailableToday = doctor.getAvailableDaysList().contains(currentDay);
 
-                    // 상태별 집계
+                    // 상태별 환자 수를 집계합니다.
                     long totalToday = drRes.size();
                     long waitingCount = drRes.stream().filter(r -> r.getStatus() == ReservationStatus.RECEIVED).count();
                     long treatingCount = drRes.stream().filter(r -> r.getStatus() == ReservationStatus.IN_TREATMENT).count();
                     long pendingTreatmentCount = drRes.stream().filter(r -> r.getStatus() == ReservationStatus.COMPLETED && !r.isTreatmentCompleted()).count();
                     long paidCount = drRes.stream().filter(r -> r.isPaid()).count();
 
+                    // 의사 이름, 부서명과 함께 가공된 상태 데이터를 DTO로 반환합니다.
                     return new NurseDoctorStatusDto(
                             doctor.getStaff().getName(),
                             doctor.getDepartment().getName(),
