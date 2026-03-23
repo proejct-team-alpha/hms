@@ -3,6 +3,7 @@ Ollama 임베딩 서비스
 Ollama /api/embed API를 사용하여 텍스트를 벡터로 변환
 """
 
+import asyncio
 import hashlib
 import logging
 from collections import OrderedDict
@@ -14,6 +15,7 @@ from config import get_settings
 logger = logging.getLogger(__name__)
 
 _embedding_cache: OrderedDict[str, list[float]] = OrderedDict()
+_cache_lock = asyncio.Lock()
 MAX_CACHE_SIZE = 500
 
 
@@ -29,9 +31,10 @@ async def get_embedding(text: str, client: httpx.AsyncClient | None = None) -> l
         임베딩 벡터 (float 리스트)
     """
     cache_key = hashlib.sha256(text.encode()).hexdigest()
-    if cache_key in _embedding_cache:
-        logger.debug("Embedding cache hit")
-        return _embedding_cache[cache_key]
+    async with _cache_lock:
+        if cache_key in _embedding_cache:
+            logger.debug("Embedding cache hit")
+            return _embedding_cache[cache_key]
 
     settings = get_settings()
 
@@ -56,9 +59,10 @@ async def get_embedding(text: str, client: httpx.AsyncClient | None = None) -> l
         async with httpx.AsyncClient(timeout=30.0) as _client:
             embedding = await _call(_client)
 
-    if len(_embedding_cache) >= MAX_CACHE_SIZE:
-        _embedding_cache.popitem(last=False)
-    _embedding_cache[cache_key] = embedding
+    async with _cache_lock:
+        if len(_embedding_cache) >= MAX_CACHE_SIZE:
+            _embedding_cache.popitem(last=False)
+        _embedding_cache[cache_key] = embedding
     return embedding
 
 

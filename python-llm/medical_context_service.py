@@ -123,16 +123,7 @@ async def search_medical_content(
                     (keywords, language, keywords, limit),
                 )
             else:
-                await cur.execute(
-                    """
-                    SELECT c_id, source_spec, content
-                    FROM medical_content
-                    WHERE language = %s
-                    ORDER BY RAND()
-                    LIMIT %s
-                    """,
-                    (language, limit),
-                )
+                return []
             return await cur.fetchall()
 
 

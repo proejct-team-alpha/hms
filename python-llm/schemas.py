@@ -6,6 +6,12 @@ Spring Boot와 JSON 형식 협의
 from pydantic import BaseModel, Field
 
 
+class ChatMessage(BaseModel):
+    """대화 이력 메시지"""
+    role: str = Field(..., pattern="^(user|assistant)$")
+    content: str = Field(..., min_length=1, max_length=4096)
+
+
 class InferRequest(BaseModel):
     """LLM 추론 요청"""
 
@@ -15,7 +21,7 @@ class InferRequest(BaseModel):
     top_p: float | None = Field(default=1.0, ge=0.0, le=1.0, description="nucleus sampling (선택)")
     num_return_sequences: int = Field(default=1, ge=1, le=5, description="생성 시퀀스 수")
     session_id: str | None = Field(default=None, description="세션 ID (대화 이력 추적용)")
-    history: list[dict] | None = Field(default=None, max_length=20, description="이전 대화 이력 [{role, content}, ...], 최대 20개")
+    history: list[ChatMessage] | None = Field(default=None, max_length=20, description="이전 대화 이력, 최대 20개")
 
     model_config = {"json_schema_extra": {"examples": [{"query": "안녕하세요, 오늘 날씨는?"}]}}
 
