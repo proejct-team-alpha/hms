@@ -38,6 +38,12 @@ public class WalkinController {
             @RequestParam(name = "phone", required = false) String phone,
             @RequestParam(name = "deptId", required = false) Long deptId,
             @RequestParam(name = "doctorId", required = false) Long doctorId,
+            @RequestParam(name = "query", required = false) String query,
+            @RequestParam(name = "deptIds", required = false) java.util.List<Long> deptIds,
+            @RequestParam(name = "doctorIds", required = false) java.util.List<Long> doctorIds,
+            @RequestParam(name = "source", required = false) String source,
+            @RequestParam(name = "tab", required = false) String tab,
+            @RequestParam(name = "page", required = false) Integer page,
             Model model) {
         
         model.addAttribute("departments", receptionService.getAllDepartments());
@@ -47,6 +53,14 @@ public class WalkinController {
         model.addAttribute("reservationId", reservationId);
         model.addAttribute("patientId", patientId);
         model.addAttribute("name", name);
+        
+        // [주석] 필터 유지를 위한 파라미터들을 모델에 담습니다.
+        model.addAttribute("query", query);
+        model.addAttribute("deptIds", deptIds);
+        model.addAttribute("doctorIds", doctorIds);
+        model.addAttribute("source", source);
+        model.addAttribute("tab", tab);
+        model.addAttribute("page", page);
         
         // [주석] 전화번호(010-1234-5678)를 하이픈 기준으로 분리하여 각 입력 칸에 배치합니다.
         if (phone != null && phone.contains("-")) {
@@ -93,7 +107,16 @@ public class WalkinController {
                 redirectAttributes.addFlashAttribute("message", "방문 접수가 완료되었습니다.");
             }
 
-            return "redirect:/staff/reception/list?date=" + request.getDate();
+            // [기능 추가] 목록 화면 필터 유지를 위한 파라미터들 전달 (날짜는 ISO 표준 형식으로 강제)
+            redirectAttributes.addAttribute("date", request.getDate().toString());
+            if (request.getQuery() != null) redirectAttributes.addAttribute("query", request.getQuery());
+            if (request.getDeptIds() != null) redirectAttributes.addAttribute("deptIds", request.getDeptIds());
+            if (request.getDoctorIds() != null) redirectAttributes.addAttribute("doctorIds", request.getDoctorIds());
+            if (request.getSource() != null) redirectAttributes.addAttribute("source", request.getSource());
+            if (request.getTab() != null) redirectAttributes.addAttribute("tab", request.getTab());
+            if (request.getPage() != null) redirectAttributes.addAttribute("page", request.getPage());
+
+            return "redirect:/staff/reception/list";
 
         } catch (CustomException e) {
             model.addAttribute("message", e.getMessage());

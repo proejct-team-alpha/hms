@@ -46,6 +46,18 @@
             <input type="hidden" name="date" value="{{today}}">
             <input type="hidden" name="time" id="hiddenTime">
 
+            <!-- [기능 추가] 목록 화면 필터 유지를 위한 파라미터들 -->
+            <input type="hidden" name="query" value="{{#query}}{{query}}{{/query}}">
+            {{#deptIds}}
+            <input type="hidden" name="deptIds" value="{{.}}">
+            {{/deptIds}}
+            {{#doctorIds}}
+            <input type="hidden" name="doctorIds" value="{{.}}">
+            {{/doctorIds}}
+            <input type="hidden" name="source" value="{{#source}}{{source}}{{/source}}">
+            <input type="hidden" name="tab" value="{{#tab}}{{tab}}{{/tab}}">
+            <input type="hidden" name="page" value="{{#page}}{{page}}{{/page}}">
+
             <!-- [디자인 수정] 단 사이 간격을 60px로 조정하여 적절한 여백 확보 -->
             <div class="flex flex-col md:flex-row" style="column-gap: 60px;">
               

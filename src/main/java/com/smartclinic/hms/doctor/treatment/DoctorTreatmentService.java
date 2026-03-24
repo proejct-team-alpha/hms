@@ -117,6 +117,13 @@ public class DoctorTreatmentService {
     public Page<DoctorReservationDto> getTreatmentPage(String username, LocalDate date, String tab, String query, int page) {
         LocalDate today = LocalDate.now();
         List<ReservationStatus> statuses;
+        int size = 20;
+
+        // [기능 추가] 대기/진료중 탭(waiting)인 경우 페이징 없이 모든 환자(최대 1000명)를 한 화면에 노출
+        if ("waiting".equals(tab) || tab == null || tab.isEmpty()) {
+            size = 1000;
+            page = 0; // 대기 목록은 항상 전체를 보여주기 위해 0페이지로 고정
+        }
 
         // 과거 날짜인 경우 모든 상태 조회, 오늘인 경우 탭에 따라 필터링
         if (date.isBefore(today)) {
@@ -130,17 +137,17 @@ public class DoctorTreatmentService {
                 statuses = List.of(ReservationStatus.RECEIVED, ReservationStatus.IN_TREATMENT);
             }
         }
-        
+
         Page<Reservation> resultPage;
         if (query != null && !query.isBlank()) {
             resultPage = doctorReservationRepository.findTodayByDoctorAndStatusesAndPatientNamePage(
-                    username, date, statuses, query, PageRequest.of(page, 10));
+                    username, date, statuses, query, PageRequest.of(page, size));
         } else {
             resultPage = doctorReservationRepository.findTodayByDoctorAndStatusesPage(
-                    username, date, statuses, PageRequest.of(page, 10));
+                    username, date, statuses, PageRequest.of(page, size));
         }
-        
-        java.util.concurrent.atomic.AtomicInteger index = new java.util.concurrent.atomic.AtomicInteger(page * 10 + 1);
+
+        java.util.concurrent.atomic.AtomicInteger index = new java.util.concurrent.atomic.AtomicInteger(page * size + 1);
         return resultPage.map(r -> {
                     long count = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
                     // 확정된 진단명 가져오기 (진료 완료된 경우)
@@ -179,11 +186,11 @@ public class DoctorTreatmentService {
         if (query != null && !query.isBlank()) {
             // 이름 검색어가 있는 경우
             result = doctorReservationRepository.findTodayByDoctorAndStatusAndPatientNamePage(
-                    username, searchDate, ReservationStatus.COMPLETED, query, PageRequest.of(page, 10));
+                    username, searchDate, ReservationStatus.COMPLETED, query, PageRequest.of(page, 20));
         } else {
             // 검색어가 없는 경우 (기존 방식)
             result = doctorReservationRepository.findTodayByDoctorAndStatusPage(
-                    username, searchDate, ReservationStatus.COMPLETED, PageRequest.of(page, 10));
+                    username, searchDate, ReservationStatus.COMPLETED, PageRequest.of(page, 20));
         }
 
         return result.map(r -> {

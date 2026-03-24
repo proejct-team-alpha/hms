@@ -250,7 +250,7 @@
                           {{/isPaidTab}}
                           
                           {{#isReservedTab}}
-                            {{#canReceive}}<a href="/staff/walkin-reception?reservationId={{id}}&name={{patientName}}&phone={{patientPhone}}&deptId={{departmentId}}&doctorId={{doctorId}}" 
+                            {{#canReceive}}<a href="/staff/walkin-reception?reservationId={{id}}&name={{patientName}}&phone={{patientPhone}}&deptId={{departmentId}}&doctorId={{doctorId}}&tab={{currentTab}}&page={{currentPage}}{{keepParams}}" 
                                class="inline-flex px-2.5 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-lg hover:bg-indigo-100 transition-colors">접수</a>{{/canReceive}}
                             {{#canCancel}}<button type="button" onclick="cancelAjax({{id}})" 
                                class="inline-flex px-2.5 py-1 bg-red-50 text-red-600 text-[10px] font-bold rounded-lg hover:bg-red-100 transition-colors">취소</button>{{/canCancel}}
