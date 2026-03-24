@@ -18,15 +18,15 @@
       <div class="space-y-6 max-w-5xl mx-auto">
         <h1 class="text-2xl font-bold text-slate-800">원무과 대시보드</h1>
 
-        <!-- [기능 구현] 오늘 현황 요약 섹션 (수납 완료 추가) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <!-- [기능 수정] 오늘 현황 요약 섹션: 데스크톱 전용 (무조건 1행 4열로 고정) -->
+        <div class="grid grid-cols-4 gap-6">
           <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <div class="flex items-center gap-4">
               <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
                 <i data-feather="users" class="w-6 h-6"></i>
               </div>
               <div>
-                <div class="text-sm font-medium text-slate-500">오늘 총 예약</div>
+                <div class="text-sm font-medium text-slate-500">오늘 총 환자</div>
                 <div class="text-2xl font-bold text-slate-800">{{dashboard.totalToday}}명</div>
               </div>
             </div>
@@ -37,7 +37,7 @@
                 <i data-feather="calendar" class="w-6 h-6"></i>
               </div>
               <div>
-                <div class="text-sm font-medium text-slate-500">접수 대기</div>
+                <div class="text-sm font-medium text-slate-500">예약 환자</div>
                 <div class="text-2xl font-bold text-slate-800">{{dashboard.waitingCount}}명</div>
               </div>
             </div>
@@ -48,7 +48,7 @@
                 <i data-feather="check-circle" class="w-6 h-6"></i>
               </div>
               <div>
-                <div class="text-sm font-medium text-slate-500">접수 완료</div>
+                <div class="text-sm font-medium text-slate-500">진료 대기</div>
                 <div class="text-2xl font-bold text-slate-800">{{dashboard.receivedCount}}명</div>
               </div>
             </div>
@@ -68,9 +68,9 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- 시간대별 예약 현황 차트 -->
+          <!-- 시간대별 총 환자 현황 차트 -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <h2 class="text-lg font-bold text-slate-800 mb-6">시간대별 예약 및 접수 현황</h2>
+            <h2 class="text-lg font-bold text-slate-800 mb-6">시간대별 총 환자 현황</h2>
             <div style="position: relative; height: 250px; width: 100%;">
               <canvas id="hourlyChart"></canvas>
             </div>
@@ -125,12 +125,6 @@
     const labels = [
       {{#dashboard.hourlyStats}}"{{label}}",{{/dashboard.hourlyStats}}
     ];
-    const reservationData = [
-      {{#dashboard.hourlyStats}}{{reservationCount}},{{/dashboard.hourlyStats}}
-    ];
-    const receptionData = [
-      {{#dashboard.hourlyStats}}{{receptionCount}},{{/dashboard.hourlyStats}}
-    ];
     const totalData = [
       {{#dashboard.hourlyStats}}{{totalCount}},{{/dashboard.hourlyStats}}
     ];
@@ -147,9 +141,9 @@
             backgroundColor: 'rgba(99, 102, 241, 0.05)',
             borderWidth: 3,
             fill: true,
-            tension: 0.3, // 곡선을 조금 더 완만하게
-            pointRadius: 0, // 평소에는 점을 숨김
-            pointHoverRadius: 6, // 마우스 올릴 때만 점 표시
+            tension: 0.3, 
+            pointRadius: 0, 
+            pointHoverRadius: 6, 
             pointHoverBackgroundColor: '#6366f1',
             pointHoverBorderColor: '#fff',
             pointHoverBorderWidth: 3,
@@ -173,7 +167,7 @@
         },
         plugins: {
           legend: {
-            display: false // 범례 숨김 (어차피 하나니까요!)
+            display: false 
           },
           tooltip: {
             backgroundColor: '#1e293b',
@@ -183,12 +177,7 @@
             displayColors: false,
             callbacks: {
               label: function(context) {
-                const index = context.dataIndex;
-                return [
-                  `전체: ${totalData[index]}명`,
-                  `  • 예약: ${reservationData[index]}명`,
-                  `  • 접수: ${receptionData[index]}명`
-                ];
+                return `총 환자 수: ${context.raw}명`;
               }
             }
           }
@@ -219,7 +208,6 @@
                 size: 11
               },
               callback: function(val, index) {
-                // 라벨이 너무 많으면 띄엄띄엄 표시 (징그러움 방지)
                 return index % 2 === 0 ? this.getLabelForValue(val) : '';
               }
             },
