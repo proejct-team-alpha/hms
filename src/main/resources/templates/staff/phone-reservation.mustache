@@ -127,15 +127,25 @@
                       <i data-feather="clock" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
                       <select name="time" id="timeSelect" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none bg-white text-sm">
                         <option value="">선택해주세요</option>
-                        <optgroup label="오전">
-                          <option value="09:00">09:00</option><option value="09:30">09:30</option><option value="10:00">10:00</option>
-                          <option value="10:30">10:30</option><option value="11:00">11:00</option><option value="11:30">11:30</option>
-                        </optgroup>
-                        <optgroup label="오후">
-                          <option value="14:00">14:00</option><option value="14:30">14:30</option><option value="15:00">15:00</option>
-                          <option value="15:30">15:30</option><option value="16:00">16:00</option><option value="16:30">16:30</option>
-                          <option value="17:00">17:00</option><option value="17:30">17:30</option>
-                        </optgroup>
+                        <!-- 09:00부터 17:30까지 30분 단위로 예약 가능 시간을 구성 (점심시간 없이 연속 운영) -->
+                        <option value="09:00">09:00</option>
+                        <option value="09:30">09:30</option>
+                        <option value="10:00">10:00</option>
+                        <option value="10:30">10:30</option>
+                        <option value="11:00">11:00</option>
+                        <option value="11:30">11:30</option>
+                        <option value="12:00">12:00</option>
+                        <option value="12:30">12:30</option>
+                        <option value="13:00">13:00</option>
+                        <option value="13:30">13:30</option>
+                        <option value="14:00">14:00</option>
+                        <option value="14:30">14:30</option>
+                        <option value="15:00">15:00</option>
+                        <option value="15:30">15:30</option>
+                        <option value="16:00">16:00</option>
+                        <option value="16:30">16:30</option>
+                        <option value="17:00">17:00</option>
+                        <option value="17:30">17:30</option>
                       </select>
                     </div>
                   </div>
@@ -170,92 +180,211 @@
   {{#message}}<script>alert("{{message}}");</script>{{/message}}
   
   <script>
+    /**
+     * 전화 예약 폼 제어 및 자동 추천 로직
+     */
     (async function () {
       const deptSelect = document.querySelector('select[name="departmentId"]');
       const docSelect  = document.querySelector('select[name="doctorId"]');
       const dateInput  = document.getElementById('dateInput');
       const timeSelect = document.getElementById('timeSelect');
       const docOptions = Array.from(docSelect.querySelectorAll('option[data-dept-id]'));
+      
+      // 요일 맵핑 (SUN: 0, ..., SAT: 6)
       const DAY_MAP = { SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6 };
 
+      /**
+       * 진료과 선택 시 해당 진료과의 의사만 필터링
+       */
       function filterDoctorsOnly() {
         const deptId = deptSelect.value;
-        docOptions.forEach(opt => opt.style.display = (!deptId || opt.dataset.deptId === deptId) ? '' : 'none');
-        if (docSelect.options[docSelect.selectedIndex] && docSelect.options[docSelect.selectedIndex].style.display === 'none') docSelect.value = '';
-      }
-
-      async function refreshTimeSlots() {
-        const doctorId = docSelect.value;
-        const date = dateInput.value;
-        const opts = Array.from(timeSelect.querySelectorAll('option[value]'));
-        opts.forEach(opt => { opt.disabled = false; opt.textContent = opt.value; });
-        if (!doctorId || !date) return;
-        try {
-          const res = await fetch('/api/reservation/booked-slots?doctorId=' + doctorId + '&date=' + date);
-          if (!res.ok) throw new Error();
-          const booked = await res.json();
-          opts.forEach(opt => { if (booked.includes(opt.value)) { opt.disabled = true; opt.textContent = opt.value + ' (불가)'; } });
-          const today = new Date().toISOString().slice(0, 10);
-          if (date === today) {
-            const now = new Date();
-            const currentTime = now.getHours() * 60 + now.getMinutes();
-            opts.forEach(opt => {
-              const [h, m] = opt.value.split(':').map(Number);
-              if (h * 60 + m <= currentTime) { opt.disabled = true; opt.textContent = opt.value + ' (마감)'; }
-            });
-          }
-          timeSelect.value = '';
-          const first = opts.find(opt => !opt.disabled && opt.value);
-          if (first) timeSelect.value = first.value;
-        } catch (e) { console.error('슬롯 조회 실패'); }
-      }
-
-      const datePicker = flatpickr(dateInput, {
-        dateFormat: 'Y-m-d', minDate: 'today', animate: false,
-        disable: [function() { return true; }],
-        onChange: function() { refreshTimeSlots(); }
-      });
-
-      async function applyDoctorAvailableDays(autoSelect = false) {
-        const selected = docSelect.options[docSelect.selectedIndex];
-        if (!selected || !selected.value) { datePicker.set('disable', [() => true]); datePicker.clear(); return; }
-        const days = (selected.dataset.availableDays || '').split(',').map(d => DAY_MAP[d.trim()]).filter(n => n !== undefined);
-        if (days.length > 0) {
-          datePicker.set('disable', [d => !days.includes(d.getDay())]);
-          if (autoSelect) {
-            let d = new Date();
-            for (let i = 0; i < 30; i++) {
-              if (days.includes(d.getDay())) { datePicker.setDate(new Date(d), true); break; }
-              d.setDate(d.getDate() + 1);
-            }
-          }
+        docOptions.forEach(opt => {
+          opt.style.display = (!deptId || opt.dataset.deptId === deptId) ? '' : 'none';
+        });
+        // 현재 선택된 의사가 필터링되어 사라진 경우 선택 해제
+        if (docSelect.options[docSelect.selectedIndex] && docSelect.options[docSelect.selectedIndex].style.display === 'none') {
+          docSelect.value = '';
         }
       }
 
-      deptSelect.addEventListener('change', () => { filterDoctorsOnly(); applyDoctorAvailableDays(true); });
-      docSelect.addEventListener('change', () => applyDoctorAvailableDays(true));
+      /**
+       * 특정 날짜의 예약 상태(마감/불가)를 조회하고 화면에 표시
+       */
+      async function refreshTimeSlots(silent = false) {
+        const doctorId = docSelect.value;
+        const date = dateInput.value;
+        const opts = Array.from(timeSelect.querySelectorAll('option[value]'));
 
-      const restoreDeptId = '{{#form}}{{departmentId}}{{/form}}', restoreDocId = '{{#form}}{{doctorId}}{{/form}}';
-      const restoreDate = '{{#form}}{{date}}{{/form}}', restoreTime = '{{#form}}{{time}}{{/form}}';
-      if (restoreDeptId) { deptSelect.value = restoreDeptId; filterDoctorsOnly(); }
-      if (restoreDocId) { docSelect.value = restoreDocId; applyDoctorAvailableDays(); }
-      if (restoreDate) datePicker.setDate(restoreDate);
-      await refreshTimeSlots();
-      if (restoreTime) timeSelect.value = restoreTime;
+        // 초기화: 모든 옵션 활성화 및 원본 텍스트 복구
+        opts.forEach(opt => { 
+          opt.disabled = false; 
+          opt.textContent = opt.value;
+          opt.style.color = '';
+        });
+
+        if (!doctorId || !date) return [];
+
+        try {
+          // 서버에서 해당 의사/날짜의 예약된 시간 슬롯(booked-slots)을 조회
+          const res = await fetch('/api/reservation/booked-slots?doctorId=' + doctorId + '&date=' + date);
+          if (!res.ok) throw new Error();
+          
+          // 응답이 Resp.ok() 형식이므로 .body로 접근
+          const result = await res.json();
+          const booked = result.body || [];
+
+          // 1. 이미 예약된 시간 처리 (예약불가)
+          opts.forEach(opt => { 
+            if (booked.includes(opt.value)) { 
+              opt.disabled = true; 
+              opt.textContent = opt.value + ' (예약불가)'; 
+              opt.style.color = '#cbd5e1'; // 흐릿하게 표시
+            } 
+          });
+
+          // 2. 현재 날짜라면 지난 시간 처리 (마감)
+          const todayStr = new Date().toISOString().split('T')[0];
+          if (date === todayStr) {
+            const now = new Date();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+            opts.forEach(opt => {
+              if (opt.value) {
+                const [h, m] = opt.value.split(':').map(Number);
+                if (h * 60 + m <= currentTime) { 
+                  opt.disabled = true; 
+                  opt.textContent = opt.value + ' (마감)'; 
+                  opt.style.color = '#cbd5e1';
+                }
+              }
+            });
+          }
+
+          // 자동 선택 로직 (silent 모드가 아닐 때만)
+          if (!silent) {
+            const available = opts.find(opt => !opt.disabled && opt.value);
+            timeSelect.value = available ? available.value : '';
+          }
+
+          // 현재 날짜에서 사용 가능한 슬롯이 있는지 여부 반환
+          return opts.filter(opt => !opt.disabled && opt.value);
+        } catch (e) { 
+          console.error('시간 슬롯 조회 중 오류 발생:', e); 
+          return [];
+        }
+      }
+
+      // Flatpickr 인스턴스 초기화
+      const datePicker = flatpickr(dateInput, {
+        dateFormat: 'Y-m-d',
+        minDate: 'today',
+        animate: false,
+        disable: [function() { return true; }], // 초기에는 모든 날짜 비활성화
+        onChange: function() { 
+          refreshTimeSlots(); 
+        }
+      });
+
+      /**
+       * 의사의 진료 요일에 맞춰 달력을 활성화하고 가장 빠른 가능 날짜 찾기
+       */
+      async function findAndApplyEarliestDate() {
+        const selected = docSelect.options[docSelect.selectedIndex];
+        if (!selected || !selected.value) {
+          datePicker.set('disable', [() => true]);
+          datePicker.clear();
+          return;
+        }
+
+        // 의사의 진료 요일 파싱 (데이터 속성 availableDays 사용)
+        const days = (selected.dataset.availableDays || '')
+          .split(',')
+          .map(d => DAY_MAP[d.trim()])
+          .filter(n => n !== undefined);
+
+        if (days.length === 0) {
+          // 진료 요일 설정이 없으면 모든 날짜 허용 (주말 제외 등 필요 시 추가 로직 가능)
+          datePicker.set('disable', []);
+        } else {
+          // 진료 요일에 해당하는 날짜만 활성화
+          datePicker.set('disable', [d => !days.includes(d.getDay())]);
+        }
+
+        // [핵심] 가장 빠른 가능 날짜 및 시간 자동 탐색 로직
+        let checkDate = new Date();
+        // 오늘부터 향후 14일간 탐색
+        for (let i = 0; i < 14; i++) {
+          const dayOfWeek = checkDate.getDay();
+          // 진료 요일에 해당하면 해당 날짜의 실제 슬롯 확인
+          if (days.length === 0 || days.includes(dayOfWeek)) {
+            const dateStr = checkDate.toISOString().split('T')[0];
+            datePicker.setDate(dateStr, false); // 임시 설정 (이벤트 발생 안 함)
+            
+            // 해당 날짜의 예약 가능 여부를 조용히 조회
+            const availableSlots = await refreshTimeSlots(true);
+            if (availableSlots.length > 0) {
+              // 실제 예약 가능한 시간이 있으면 해당 날짜로 최종 확정
+              datePicker.setDate(dateStr, true); // onChange 이벤트 발생시킴
+              return;
+            }
+          }
+          checkDate.setDate(checkDate.getDate() + 1);
+        }
+        
+        // 만약 14일 내에 자리가 전혀 없다면 날짜만이라도 첫 진료일로 설정
+        datePicker.clear();
+      }
+
+      // 이벤트 리스너 등록
+      deptSelect.addEventListener('change', () => { 
+        filterDoctorsOnly(); 
+        findAndApplyEarliestDate(); 
+      });
+
+      docSelect.addEventListener('change', () => {
+        findAndApplyEarliestDate();
+      });
+
+      // 초기 데이터 복원 (수정 폼이나 에러 발생 시)
+      const restoreDeptId = '{{#form}}{{departmentId}}{{/form}}';
+      const restoreDocId = '{{#form}}{{doctorId}}{{/form}}';
+      const restoreDate = '{{#form}}{{date}}{{/form}}';
+      const restoreTime = '{{#form}}{{time}}{{/form}}';
+
+      if (restoreDeptId) { 
+        deptSelect.value = restoreDeptId; 
+        filterDoctorsOnly(); 
+      }
+      if (restoreDocId) { 
+        docSelect.value = restoreDocId; 
+        if (restoreDate) {
+          datePicker.setDate(restoreDate, false);
+          await refreshTimeSlots(true);
+          if (restoreTime) timeSelect.value = restoreTime;
+        } else {
+          findAndApplyEarliestDate();
+        }
+      }
     })();
 
+    /**
+     * 연락처 및 주민번호 입력 필드 제어 (자동 포커스 이동 및 결합)
+     */
     (function() {
       const p1 = document.getElementById('phone1'), p2 = document.getElementById('phone2'), p3 = document.getElementById('phone3'), final = document.getElementById('finalPhone');
       const bDate = document.getElementById('birthDate'), gDigit = document.getElementById('genderDigit'), finalBirth = document.getElementById('finalBirthInfo');
+      
+      // 기존 값이 있으면 필드 분할하여 채우기
       const initVal = final.value.replace(/-/g, '');
       if (initVal.length >= 3) p1.value = initVal.slice(0, 3);
       if (initVal.length >= 7) p2.value = initVal.slice(3, 7);
       if (initVal.length >= 11) p3.value = initVal.slice(7, 11);
+
       function update() {
         final.value = (p1.value && p2.value && p3.value) ? `${p1.value}-${p2.value}-${p3.value}` : '';
         finalBirth.value = (bDate.value && gDigit.value) ? `${bDate.value}-${gDigit.value}` : '';
       }
-      [p1,p2,p3,bDate,gDigit].forEach(el => el.addEventListener('input', update));
+
+      [p1, p2, p3, bDate, gDigit].forEach(el => el.addEventListener('input', update));
       p1.addEventListener('input', () => { if (p1.value.length >= 3) p2.focus(); });
       p2.addEventListener('input', () => { if (p2.value.length >= 4) p3.focus(); });
       bDate.addEventListener('input', () => { if (bDate.value.length >= 6) gDigit.focus(); });

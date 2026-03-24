@@ -36,7 +36,6 @@ import lombok.RequiredArgsConstructor;
 public class ReceptionController {
 
     private final ReceptionService receptionService;
-    private static final int PAGE_SIZE = 10;
 
     @GetMapping("/list")
     public String list(
@@ -47,7 +46,6 @@ public class ReceptionController {
             @RequestParam(name = "doctorIds", required = false) List<Long> doctorIds,
             @RequestParam(name = "source", required = false) String source,
             @ModelAttribute("date") String flashDate,
-            @RequestParam(name = "page", defaultValue = "1") int page,
             Model model) {
 
         // 중복 파라미터 방어 및 변수명 명확화 (tabParam 사용)
@@ -124,12 +122,10 @@ public class ReceptionController {
             })
             .collect(Collectors.toList());
 
-        int total = filtered.size();
-        int totalPages = Math.max(1, (total + PAGE_SIZE - 1) / PAGE_SIZE);
-        int finalPage = Math.max(1, Math.min(page, totalPages));
-        int from = (finalPage - 1) * PAGE_SIZE;
-        int to = Math.min(from + PAGE_SIZE, total);
-        List<StaffReservationDto> paged = filtered.subList(from, to);
+        // [기능 추가] 목록 표시용 순번(rowNum) 부여
+        for (int i = 0; i < filtered.size(); i++) {
+            filtered.get(i).setRowNum(i + 1);
+        }
 
         // [상태 유지] 모든 검색 파라미터를 유지하기 위한 빌더
         StringBuilder keepParams = new StringBuilder();
@@ -143,12 +139,11 @@ public class ReceptionController {
         if (source != null && !source.isEmpty()) keepParams.append("&source=").append(source);
         String params = keepParams.toString();
 
-        model.addAttribute("reservations", paged);
+        model.addAttribute("reservations", filtered);
         model.addAttribute("searchDate", finalDateStr);
         model.addAttribute("isToday", selectedDate.equals(LocalDate.now()));
         model.addAttribute("currentTab", activeTab);
         model.addAttribute("query", query != null ? query : "");
-        model.addAttribute("currentPage", finalPage); // 현재 페이지 추가
         model.addAttribute("keepParams", params);
 
         // 탭 활성화 상태 전달
@@ -192,15 +187,6 @@ public class ReceptionController {
         }
         model.addAttribute("sources", sourceOptions);
 
-        model.addAttribute("currentPage", finalPage);
-        model.addAttribute("totalPages", totalPages);
-        model.addAttribute("totalCount", total);
-        model.addAttribute("hasPrev", finalPage > 1);
-        model.addAttribute("hasNext", finalPage < totalPages);
-        model.addAttribute("prevPageUrl", "/staff/reception/list?page=" + (finalPage - 1) + params);
-        model.addAttribute("nextPageUrl", "/staff/reception/list?page=" + (finalPage + 1) + params);
-        model.addAttribute("pageInfo", finalPage + " / " + totalPages);
-
         return "staff/reception-list";
     }
 
@@ -208,7 +194,6 @@ public class ReceptionController {
     public String detail(@RequestParam("id") Long id, 
                         @RequestParam(name = "tab", defaultValue = "all") String tab,
                         @RequestParam(name = "date", required = false) String date,
-                        @RequestParam(name = "page", defaultValue = "1") int page,
                         @RequestParam(name = "query", required = false) String query,
                         @RequestParam(name = "deptIds", required = false) List<Long> deptIds,
                         @RequestParam(name = "doctorIds", required = false) List<Long> doctorIds,
@@ -225,7 +210,6 @@ public class ReceptionController {
         model.addAttribute("detail", dto);
         model.addAttribute("currentTab", currentTab);
         model.addAttribute("currentDate", currentDate != null ? currentDate : "");
-        model.addAttribute("currentPage", page);
         model.addAttribute("query", query != null ? query : "");
         model.addAttribute("deptIds", deptIds);
         model.addAttribute("doctorIds", doctorIds);
@@ -253,7 +237,6 @@ public class ReceptionController {
         redirectAttributes.addFlashAttribute("message", "접수가 완료되었습니다.");
         redirectAttributes.addAttribute("tab", tab);
         redirectAttributes.addAttribute("date", request.getDate());
-        redirectAttributes.addAttribute("page", request.getPage());
         return "redirect:/staff/reception/list";
     }
 
@@ -273,13 +256,11 @@ public class ReceptionController {
                         @RequestParam(name = "reason", defaultValue = "") String reason,
                         @RequestParam(name = "date", required = false) String date,
                         @RequestParam(name = "tab", defaultValue = "all") String tab,
-                        @RequestParam(name = "page", defaultValue = "1") int page,
                         RedirectAttributes redirectAttributes) {
         receptionService.cancel(id, reason);
         redirectAttributes.addFlashAttribute("message", "예약이 취소되었습니다.");
         redirectAttributes.addAttribute("date", date);
         redirectAttributes.addAttribute("tab", tab);
-        redirectAttributes.addAttribute("page", page);
         return "redirect:/staff/reception/list";
     }
 

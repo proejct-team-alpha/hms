@@ -161,6 +161,7 @@
               <table class="w-full text-left">
                 <thead>
                   <tr class="reception-header-row bg-slate-50 border-b border-slate-100 text-[11px] font-black uppercase tracking-widest text-slate-400">
+                    <th class="px-4 py-2.5 text-center">번호</th>
                     {{#isReservedTab}}
                       <th class="px-4 py-2.5">예약시간</th>
                       <th class="px-4 py-2.5">예약경로</th>
@@ -168,9 +169,18 @@
                     {{#isReceivedTab}}
                       <th class="px-4 py-2.5">접수시간</th>
                     {{/isReceivedTab}}
-                    {{^isReservedTab}}{{^isReceivedTab}}
+                    {{#isAllTab}}
                       <th class="px-4 py-2.5">상태</th>
-                    {{/isReceivedTab}}{{/isReservedTab}}
+                    {{/isAllTab}}
+                    {{#isTreatmentStatusTab}}
+                      <th class="px-4 py-2.5">상태</th>
+                    {{/isTreatmentStatusTab}}
+                    {{#isPaidTab}}
+                      <th class="px-4 py-2.5">상태</th>
+                    {{/isPaidTab}}
+                    {{#isCancelledTab}}
+                      <th class="px-4 py-2.5">상태</th>
+                    {{/isCancelledTab}}
                     
                     <th class="px-4 py-2.5">환자등록번호</th>
                     <th class="px-4 py-2.5">이름</th>
@@ -195,10 +205,15 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                   {{#reservations}}
-                  <tr {{^canReceive}}onclick="location.href='/staff/reception/detail?id={{id}}&date={{searchDate}}&tab={{currentTab}}&page={{currentPage}}{{keepParams}}'"{{/canReceive}}
-                      class="hover:bg-slate-50/80 transition-colors group {{^canReceive}}cursor-pointer{{/canReceive}}{{#canReceive}}cursor-default{{/canReceive}}">
+                  <tr onclick="location.href='/staff/reception/detail?id={{id}}&date={{searchDate}}&tab={{currentTab}}&query={{query}}{{keepParams}}'"
+                      class="hover:bg-slate-50/80 transition-colors group cursor-pointer">
                     
-                    <!-- 1. 상태/시간 정보 (글자 크기를 전화번호와 동일한 text-xs로 조정) -->
+                    <!-- 0. 순번 (작게 표시) -->
+                    <td class="px-4 py-2.5 text-center">
+                      <span class="text-[10px] font-bold text-slate-300 group-hover:text-indigo-400 transition-colors">{{rowNum}}</span>
+                    </td>
+
+                    <!-- 1. 상태/시간 정보 -->
                     {{#isReservedTab}}
                       <td class="px-4 py-2.5 text-xs font-semibold text-slate-700">{{timeSlot}}</td>
                       <td class="px-4 py-2.5"><span class="source-badge inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-medium {{sourceBadgeClass}}">{{sourceText}}</span></td>
@@ -206,9 +221,18 @@
                     {{#isReceivedTab}}
                       <td class="px-4 py-2.5 text-xs font-semibold text-slate-700">{{#receptionTime}}{{receptionTime}}{{/receptionTime}}{{^receptionTime}}-{{/receptionTime}}</td>
                     {{/isReceivedTab}}
-                    {{^isReservedTab}}{{^isReceivedTab}}
-                      <td class="px-4 py-2.5"><span class="status-badge inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{statusBadgeClass}}">{{statusText}}</span></td>
-                    {{/isReceivedTab}}{{/isReservedTab}}
+                    {{#isAllTab}}
+                      <td class="px-4 py-4"><span class="status-badge inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{statusBadgeClass}}">{{statusText}}</span></td>
+                    {{/isAllTab}}
+                    {{#isTreatmentStatusTab}}
+                      <td class="px-4 py-4"><span class="status-badge inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{statusBadgeClass}}">{{statusText}}</span></td>
+                    {{/isTreatmentStatusTab}}
+                    {{#isPaidTab}}
+                      <td class="px-4 py-4"><span class="status-badge inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{statusBadgeClass}}">{{statusText}}</span></td>
+                    {{/isPaidTab}}
+                    {{#isCancelledTab}}
+                      <td class="px-4 py-4"><span class="status-badge inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{statusBadgeClass}}">{{statusText}}</span></td>
+                    {{/isCancelledTab}}
                     
                     <!-- 2. 공통 데이터 -->
                     <td class="px-4 py-2.5 text-xs font-medium text-slate-600">{{patientId}}</td>
@@ -233,7 +257,7 @@
                       <td class="px-4 py-2.5 text-xs font-semibold text-slate-400">{{timeSlot}}</td>
                     {{/isReceivedTab}}
                     
-                    <!-- 4. 액션 데이터 (세련된 미니멀 디자인으로 리뉴얼) -->
+                    <!-- 4. 액션 데이터 -->
                     {{^isAllTab}}{{^isTreatmentStatusTab}}{{^isCancelledTab}}
                       <td class="px-4 py-2.5 text-center" onclick="event.stopPropagation()">
                         <div class="flex justify-center gap-1.5">
@@ -250,7 +274,7 @@
                           {{/isPaidTab}}
                           
                           {{#isReservedTab}}
-                            {{#canReceive}}<a href="/staff/walkin-reception?reservationId={{id}}&name={{patientName}}&phone={{patientPhone}}&deptId={{departmentId}}&doctorId={{doctorId}}&tab={{currentTab}}&page={{currentPage}}{{keepParams}}" 
+                            {{#canReceive}}<a href="/staff/walkin-reception?reservationId={{id}}&name={{patientName}}&phone={{patientPhone}}&deptId={{departmentId}}&doctorId={{doctorId}}&tab={{currentTab}}{{keepParams}}" 
                                class="inline-flex px-2.5 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-lg hover:bg-indigo-100 transition-colors">접수</a>{{/canReceive}}
                             {{#canCancel}}<button type="button" onclick="cancelAjax({{id}})" 
                                class="inline-flex px-2.5 py-1 bg-red-50 text-red-600 text-[10px] font-bold rounded-lg hover:bg-red-100 transition-colors">취소</button>{{/canCancel}}
