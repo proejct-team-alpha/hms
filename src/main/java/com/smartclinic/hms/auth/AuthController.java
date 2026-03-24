@@ -16,10 +16,12 @@ public class AuthController {
     @GetMapping("/login")
     public String login(@RequestParam(value = "error", required = false) Boolean error,
                         @RequestParam(value = "logout", required = false) Boolean logout,
+                        @RequestParam(value = "deactivated", required = false) Boolean deactivated,
                         HttpServletRequest request,
                         Model model) {
         model.addAttribute("error", Boolean.TRUE.equals(error));
         model.addAttribute("logout", Boolean.TRUE.equals(logout));
+        model.addAttribute("deactivated", Boolean.TRUE.equals(deactivated));
         CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
         if (csrfToken != null) {
             model.addAttribute("_csrf", csrfToken);

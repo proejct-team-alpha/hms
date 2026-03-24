@@ -11,6 +11,7 @@ public record UpdateAdminStaffApiResponse(
         Long departmentId,
         String departmentName,
         boolean active,
+        String retiredAt,
         List<String> availableDays,
         String message
 ) {

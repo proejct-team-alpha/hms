@@ -49,6 +49,9 @@ public class Staff {
     @Column(length = 20)
     private String phone;
 
+    @Column(name = "retired_at")
+    private LocalDateTime retiredAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -82,5 +85,9 @@ public class Staff {
         this.name = name;
         this.department = department;
         this.active = active;
+    }
+
+    public void updateRetiredAt(LocalDateTime retiredAt) {
+        this.retiredAt = retiredAt;
     }
 }
