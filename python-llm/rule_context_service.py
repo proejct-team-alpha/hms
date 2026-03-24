@@ -49,9 +49,20 @@ _CATEGORY_MAP: dict[str, list[str]] = {
 # 검색 노이즈 단어 (키워드 추출 시 제거) — 어미 포함 형태도 매칭
 _NOISE_WORDS = {"목록", "리스트", "알려줘", "알려주세요", "뭐가", "있어",
                 "있나요", "어떤", "전부", "모두", "전체", "규칙", "규정",
-                "내용", "정보", "관련", "대해", "에대해", "문제"}
+                "내용", "정보", "관련", "대해", "에대해", "문제",
+                "대하여", "대해서", "에대하여", "에대해서", "어떻게", "무엇",
+                "알고", "싶어요", "궁금", "질문", "말해줘", "설명", "해주세요"}
 # "규칙은", "규칙을" 등 조사 붙은 형태도 노이즈로 처리
 _NOISE_STEMS = ["규칙", "규정", "목록", "리스트", "내용", "정보", "관련", "문제"]
+
+# 한국어 조사 패턴 (키워드에서 제거)
+_PARTICLE_RE = re.compile(r"(에서|에게|부터|까지|으로|에|은|는|이|가|을|를|의|로|와|과|도|만)$")
+
+
+def _strip_particle(word: str) -> str:
+    """한국어 조사 제거 (2글자 이상 유지)"""
+    result = _PARTICLE_RE.sub("", word)
+    return result if len(result) >= 2 else word
 
 
 def _is_noise_word(word: str) -> bool:
@@ -65,10 +76,18 @@ def _is_noise_word(word: str) -> bool:
 
 
 def _extract_keywords(query: str) -> list[str]:
-    """질문에서 2글자 이상 한국어/영어 키워드 추출 (노이즈 제거, 최대 8개)"""
+    """질문에서 2글자 이상 한국어/영어 키워드 추출 (조사 제거, 노이즈 제거, 최대 8개)"""
     words = re.findall(r"[가-힣a-zA-Z]{2,}", query)
-    filtered = [w for w in words if not _is_noise_word(w)]
-    return filtered[:8] if filtered else words[:8]
+    # 조사 제거 + 중복 제거
+    seen = set()
+    stripped = []
+    for w in words:
+        s = _strip_particle(w)
+        if s not in seen:
+            seen.add(s)
+            stripped.append(s)
+    filtered = [w for w in stripped if not _is_noise_word(w)]
+    return filtered[:8] if filtered else stripped[:8]
 
 
 def _detect_categories(query: str) -> list[str]:
