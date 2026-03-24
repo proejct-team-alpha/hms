@@ -116,6 +116,11 @@ static class TestSecurityConfig {
 }
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 테스트 전용 보안 설정 클래스입니다. 실제 운영 `SecurityConfig` 대신 테스트에서만 사용할 간단한 보안 규칙을 정의하고, 테스트 로그인용 더미 계정(`doctor` / `password`)을 메모리에 만들어 둡니다.
+> - **왜 이렇게 썼는지**: `@WebMvcTest`는 컨트롤러 레이어만 테스트하는 슬라이스 테스트로, 실제 `SecurityConfig`와 DB 연결 없이 동작합니다. `@TestConfiguration`으로 테스트 환경 전용 설정을 별도로 만들면 실제 코드에 영향을 주지 않고 보안 동작을 테스트할 수 있습니다. `InMemoryUserDetailsManager`는 DB 없이 메모리에서만 사용자를 관리하는 간단한 인증 도구입니다.
+> - **쉽게 말하면**: 실제 건물 보안 시스템 대신, 테스트용 모형 출입증 시스템을 설치해서 "이 문이 잠겨 있는지" 확인하는 것과 같습니다.
+
 ### LlmPageControllerTest 핵심 패턴
 
 ```java
@@ -138,6 +143,11 @@ class LlmPageControllerTest {
 }
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: `LlmPageController`만 테스트하는 슬라이스 테스트 클래스입니다. 첫 번째 테스트는 비로그인 상태로 `/llm/medical`에 접근했을 때 200 응답과 `llm/medical` 뷰가 반환되는지 확인합니다. 두 번째는 비로그인으로 `/llm/chatbot`에 접근하면 3xx 리다이렉트(로그인 페이지로 이동)가 일어나는지 확인합니다.
+> - **왜 이렇게 썼는지**: `@WebMvcTest`는 전체 스프링 컨텍스트를 실행하지 않고 컨트롤러 관련 Bean만 로드해 빠르게 테스트합니다. `mockMvc.perform()`으로 실제 HTTP 요청 없이 테스트를 시뮬레이션하고, `andExpect()`로 기대하는 결과와 비교합니다.
+> - **쉽게 말하면**: 실제 서버를 켜지 않고, "이 경로로 요청을 보내면 어떤 응답이 와야 하는가"를 가상으로 시험해 보는 것입니다.
+
 ### LLM_SERVICE_URL 환경변수 설정
 
 ```powershell
@@ -145,6 +155,11 @@ class LlmPageControllerTest {
 $env:LLM_SERVICE_URL = "http://192.168.0.73:8000"
 ./gradlew bootRun --args='--spring.profiles.active=dev'
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: Windows PowerShell에서 환경변수 `LLM_SERVICE_URL`을 Python LLM 서버의 실제 주소로 설정하고, Spring Boot 앱을 개발 프로필(`dev`)로 실행합니다.
+> - **왜 이렇게 썼는지**: `application-dev.properties`의 `llm.service.url=${LLM_SERVICE_URL:http://localhost:8000}`에서 `${LLM_SERVICE_URL:...}` 문법은 환경변수가 있으면 그 값을 쓰고 없으면 기본값(`localhost:8000`)을 씁니다. 개발자마다 LLM 서버 주소가 다를 수 있으므로 코드를 수정하지 않고 환경변수로 교체할 수 있습니다.
+> - **쉽게 말하면**: 앱을 실행하기 전에 "AI 서버 주소는 이 IP야"라고 알려주는 것으로, 코드를 건드리지 않고 서버 주소를 바꿀 수 있습니다.
 
 ### 수동 시나리오 체크리스트
 
@@ -158,6 +173,11 @@ $env:LLM_SERVICE_URL = "http://192.168.0.73:8000"
 [ ] POST /llm/chatbot/query (DOCTOR 세션) {"query":"당직 규정"} → 텍스트 응답 반환
 [ ] GET /llm/chatbot/history/1 (DOCTOR 세션) → Page<ChatbotHistoryResponse> JSON 반환
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 자동화 테스트가 아닌, 개발자가 실제 서버를 켜고 직접 눈으로 확인해야 할 시나리오 목록입니다. 각 항목은 어떤 URL로 어떤 데이터를 보내면 어떤 결과가 나와야 하는지 기술합니다.
+> - **왜 이렇게 썼는지**: JUnit 슬라이스 테스트는 Python LLM 서버 없이 Mock으로 동작하므로, 실제 AI 응답이 오는지는 자동 테스트로 확인할 수 없습니다. 수동 체크리스트로 실제 통합 동작을 사람이 직접 검증하는 단계가 필요합니다.
+> - **쉽게 말하면**: 기계 검사(자동 테스트) 후에 직접 타고 운전해 보는 시승 테스트 목록으로, AI 서버와 실제로 연결되는지 사람이 직접 눈으로 확인합니다.
 
 ---
 

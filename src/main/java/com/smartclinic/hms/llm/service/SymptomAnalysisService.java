@@ -1,14 +1,17 @@
 package com.smartclinic.hms.llm.service;
 
-import com.smartclinic.hms.common.exception.LlmServiceUnavailableException;
+import com.smartclinic.hms.domain.Department;
 import com.smartclinic.hms.llm.dto.LlmResponse;
 import com.smartclinic.hms.llm.dto.SymptomResponse;
+import com.smartclinic.hms.reservation.reservation.DepartmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,17 +22,19 @@ import java.util.regex.Pattern;
 public class SymptomAnalysisService {
 
     private final WebClient llmWebClient;
+    private final DepartmentRepository departmentRepository;
 
-    private static final Pattern DEPT_PATTERN   = Pattern.compile("진료과:\\s*(.+)");
-    private static final Pattern DOCTOR_PATTERN = Pattern.compile("전문의:\\s*(.+)");
-    private static final Pattern TIME_PATTERN   = Pattern.compile("시간:\\s*(\\d{2}:\\d{2})");
+    // "추천 진료과:", "진료과:", "추천진료과:" 등 다양한 패턴 매칭
+    private static final Pattern DEPT_PATTERN = Pattern.compile("(?:추천\\s*)?진료과\\s*[:：]\\s*(.+)");
+
+    // DB에 등록된 진료과명 직접 매칭용
+    private static final List<String> KNOWN_DEPTS = List.of("내과", "외과", "소아과", "이비인후과");
 
     public Mono<SymptomResponse> analyzeSymptom(String symptomText) {
         String prompt = """
-                다음 증상을 분석하고 아래 형식으로만 답변하세요:
+                다음 환자의 증상을 분석하고, 가장 적합한 진료과를 하나만 추천하세요.
+                반드시 아래 형식으로만 답변하세요:
                 진료과: [내과|외과|소아과|이비인후과 중 하나]
-                전문의: [해당 진료과 의사 1명]
-                시간: [09:00~15:30 사이 HH:mm]
 
                 증상: %s
                 """.formatted(symptomText);
@@ -39,27 +44,57 @@ public class SymptomAnalysisService {
                 .bodyValue(Map.of("query", prompt, "max_length", 64, "temperature", 0.1))
                 .retrieve()
                 .bodyToMono(LlmResponse.class)
-                .map(response -> parseText(response.getGeneratedText()));
+                .map(response -> extractDeptName(response.getGeneratedText()))
+                .flatMap(deptName -> Mono.fromCallable(() -> resolveDepartment(deptName))
+                        .subscribeOn(Schedulers.boundedElastic()));
     }
 
-    private SymptomResponse parseText(String text) {
-        String dept   = extract(DEPT_PATTERN, text);
-        String doctor = extract(DOCTOR_PATTERN, text);
-        String time   = extract(TIME_PATTERN, text);
+    /**
+     * LLM 응답 텍스트에서 진료과명 추출
+     * 1차: 정규식 매칭 ("진료과: 내과")
+     * 2차: 알려진 진료과명이 텍스트에 포함되어 있는지 확인
+     * 실패 시: 기본값 "내과"
+     */
+    private String extractDeptName(String text) {
+        log.info("LLM 응답 원문: {}", text);
 
-        if (dept == null || doctor == null) {
-            log.warn("LLM 응답 파싱 불완전. 원문: {}", text);
-            throw new LlmServiceUnavailableException("증상 분석 결과 파싱 실패");
+        // 1차: 정규식
+        Matcher m = DEPT_PATTERN.matcher(text);
+        if (m.find()) {
+            String raw = m.group(1).trim().replaceAll("[\\[\\]\\s]", "");
+            for (String known : KNOWN_DEPTS) {
+                if (raw.contains(known)) {
+                    log.info("정규식 매칭 진료과: {}", known);
+                    return known;
+                }
+            }
         }
 
-        String cleanDoctor = doctor.trim().replaceAll("[\\[\\]]", "");
-        String cleanTime   = (time != null) ? time.trim() : "09:00";
+        // 2차: 텍스트 내 진료과명 직접 탐색
+        for (String known : KNOWN_DEPTS) {
+            if (text.contains(known)) {
+                log.info("텍스트 탐색 매칭 진료과: {}", known);
+                return known;
+            }
+        }
 
-        return new SymptomResponse(dept.trim(), cleanDoctor, cleanTime);
+        // 기본값
+        log.warn("진료과 매칭 실패, 기본값(내과) 사용. 원문: {}", text);
+        return "내과";
     }
 
-    private String extract(Pattern pattern, String text) {
-        Matcher m = pattern.matcher(text);
-        return m.find() ? m.group(1) : null;
+    /**
+     * 진료과명으로 DB 조회하여 SymptomResponse 생성
+     */
+    private SymptomResponse resolveDepartment(String deptName) {
+        return departmentRepository.findAll().stream()
+                .filter(d -> d.getName().equals(deptName))
+                .findFirst()
+                .map(dept -> new SymptomResponse(dept.getId(), dept.getName()))
+                .orElseGet(() -> {
+                    log.warn("DB에 진료과 '{}' 없음, 첫 번째 진료과 반환", deptName);
+                    Department first = departmentRepository.findAll().get(0);
+                    return new SymptomResponse(first.getId(), first.getName());
+                });
     }
 }

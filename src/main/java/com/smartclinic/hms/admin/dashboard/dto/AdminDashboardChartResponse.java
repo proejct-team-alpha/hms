@@ -4,11 +4,15 @@ import java.time.LocalDate;
 import java.util.List;
 
 public record AdminDashboardChartResponse(
-        List<CategoryCount> categoryCounts,
+        List<ItemFlowDay> itemFlowDays,
         List<DailyPatientCount> dailyPatients) {
-    public record CategoryCount(
-            String categoryName,
-            Long totalCount) {
+
+    public record ItemFlowDay(
+            String label,
+            int inAmount,
+            int outAmount,
+            int inHeight,
+            int outHeight) {
     }
 
     public record DailyPatientCount(

@@ -7,6 +7,7 @@ public record AdminReservationListResponse(
         List<AdminReservationStatusOptionResponse> statusOptions,
         List<AdminReservationPageLinkResponse> pageLinks,
         String selectedStatus,
+        String keyword,
         long totalCount,
         int currentPage,
         int size,

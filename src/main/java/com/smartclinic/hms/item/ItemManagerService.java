@@ -168,10 +168,28 @@ public class ItemManagerService {
     }
 
     public List<ItemUsageLogDto> getTodayStaffUsageLogs() {
-        LocalDateTime start = LocalDate.now().atStartOfDay();
-        LocalDateTime end = start.plusDays(1);
-        return usageLogRepository.findByReservationIdIsNullAndUsedAtBetweenOrderByUsedAtDesc(start, end)
-                .stream().map(ItemUsageLogDto::new).toList();
+        LocalDate today = LocalDate.now();
+        return getStaffUsageLogs(today, today);
+    }
+
+    public List<ItemUsageLogDto> getStaffUsageLogs(LocalDate fromDate, LocalDate toDate) {
+        return usageLogRepository.findByReservationIdIsNullAndUsedAtGreaterThanEqualAndUsedAtLessThanOrderByUsedAtDesc(
+                        fromDate.atStartOfDay(),
+                        toDate.plusDays(1).atStartOfDay())
+                .stream()
+                .map(ItemUsageLogDto::new)
+                .toList();
+    }
+
+    public long getTotalStaffUsageAmount(LocalDate fromDate, LocalDate toDate) {
+        return usageLogRepository.sumAmountByReservationIdIsNullAndUsedAtRange(
+                fromDate.atStartOfDay(),
+                toDate.plusDays(1).atStartOfDay());
+    }
+
+    public long getTodayTotalStaffUsageAmount() {
+        LocalDate today = LocalDate.now();
+        return getTotalStaffUsageAmount(today, today);
     }
 
     public List<ItemUsageLogDto> getTodayUsageLogsByUser(String username) {
@@ -198,12 +216,35 @@ public class ItemManagerService {
                 .stream().map(ItemStockLogDto::new).toList();
     }
 
+    public List<ItemStockLogDto> getStockHistory(LocalDate fromDate, LocalDate toDate) {
+        return stockLogRepository.findByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByCreatedAtDesc(
+                        fromDate.atStartOfDay(),
+                        toDate.plusDays(1).atStartOfDay())
+                .stream()
+                .map(ItemStockLogDto::new)
+                .toList();
+    }
+
     public long getTotalInAmount() {
         return stockLogRepository.sumAmountByType(ItemStockType.IN);
     }
 
+    public long getTotalInAmount(LocalDate fromDate, LocalDate toDate) {
+        return stockLogRepository.sumAmountByTypeAndCreatedAtRange(
+                ItemStockType.IN,
+                fromDate.atStartOfDay(),
+                toDate.plusDays(1).atStartOfDay());
+    }
+
     public long getTotalOutAmount() {
         return stockLogRepository.sumAmountByType(ItemStockType.OUT);
+    }
+
+    public long getTotalOutAmount(LocalDate fromDate, LocalDate toDate) {
+        return stockLogRepository.sumAmountByTypeAndCreatedAtRange(
+                ItemStockType.OUT,
+                fromDate.atStartOfDay(),
+                toDate.plusDays(1).atStartOfDay());
     }
 
     @Transactional

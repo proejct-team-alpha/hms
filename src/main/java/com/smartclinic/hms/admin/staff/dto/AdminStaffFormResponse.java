@@ -16,7 +16,6 @@ public record AdminStaffFormResponse(
         Long selectedDepartmentId,
         boolean active,
         boolean doctorRole,
-        String specialty,
         List<AdminStaffFormOptionResponse> roleOptions,
         List<AdminStaffDepartmentOptionResponse> departmentOptions,
         List<AdminStaffFormOptionResponse> employmentStatusOptions,

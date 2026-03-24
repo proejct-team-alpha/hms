@@ -7,41 +7,78 @@
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
 </head>
-<body>
+<body class="min-h-screen flex">
   {{> common/sidebar-admin}}
 
   <div class="main-content flex-1 flex flex-col ml-64">
     {{> common/header-staff}}
 
-    <main class="content-wrapper">
+    <main class="content-wrapper flex-1 p-6">
       <div class="space-y-6 max-w-6xl mx-auto">
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
-            <p class="text-slate-500 mt-1">예약과 접수 현황을 상태별로 확인하고 관리합니다.</p>
+      
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+              <i data-feather="calendar" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
+              <p class="text-slate-500 mt-1">환자명 또는 연락처로 예약과 접수 현황을 빠르게 조회합니다.</p>
+            </div>
           </div>
-          <div class="text-sm text-slate-500">
-            총 <span class="font-semibold text-slate-700">{{model.totalCount}}</span>건
+          <div class="text-sm text-slate-500 text-right">
+            <div>총 <span class="font-semibold text-slate-700">{{model.totalCount}}</span>건</div>
           </div>
         </div>
 
-        {{#successMessage}}
-          <div class="px-4 py-3 rounded-lg border border-green-200 bg-green-50 text-green-700 text-sm">{{successMessage}}</div>
-        {{/successMessage}}
-        {{#errorMessage}}
-          <div class="px-4 py-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm">{{errorMessage}}</div>
-        {{/errorMessage}}
-
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div class="p-4 border-b border-slate-200 flex flex-wrap items-center gap-2 bg-slate-50">
-            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide mr-1">상태 필터</span>
-            {{#model.statusOptions}}
+          <form method="get" action="/admin/reservation/list" class="p-4 border-b border-slate-200 bg-slate-50">
+            <input type="hidden" name="page" value="1">
+            <input type="hidden" name="size" value="{{model.size}}">
+
+            <div class="flex flex-wrap items-end gap-3">
+              <div class="min-w-[280px] flex-1">
+                <label for="reservation-keyword" class="block text-sm font-medium text-slate-700 mb-1.5">검색</label>
+                <div class="relative">
+                  <i data-feather="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                  <input
+                    type="text"
+                    id="reservation-keyword"
+                    name="keyword"
+                    value="{{model.keyword}}"
+                    placeholder="환자명 또는 연락처 검색"
+                    class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  >
+                </div>
+              </div>
+
+              <div class="min-w-[180px]">
+                <label for="reservation-status" class="block text-sm font-medium text-slate-700 mb-1.5">상태</label>
+                <select
+                  id="reservation-status"
+                  name="status"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                >
+                  {{#model.statusOptions}}
+                    <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                  {{/model.statusOptions}}
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                조회
+              </button>
               <a
-                href="{{url}}"
-                class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors {{#selected}}bg-slate-800 text-white{{/selected}}{{^selected}}bg-white border border-slate-300 text-slate-600 hover:bg-slate-100{{/selected}}"
-              >{{label}}</a>
-            {{/model.statusOptions}}
-          </div>
+                href="/admin/reservation/list"
+                class="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
+              >
+                초기화
+              </a>
+            </div>
+          </form>
 
           <table class="w-full text-left border-collapse">
             <thead>
@@ -53,7 +90,7 @@
                 <th class="p-4 font-medium">연락처</th>
                 <th class="p-4 font-medium">진료과 / 의사</th>
                 <th class="p-4 font-medium">상태</th>
-                <th class="p-4 font-medium text-right">액션</th>
+                <th class="p-4 font-medium text-right">관리</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-200">
@@ -72,19 +109,7 @@
                     {{#cancelled}}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800">취소</span>{{/cancelled}}
                   </td>
                   <td class="p-4 text-right">
-                    {{#cancellable}}
-                      <form method="post" action="/admin/reservation/cancel" class="inline-block" onsubmit="return confirm('{{#reserved}}예약을 취소하시겠습니까?{{/reserved}}{{#received}}접수를 취소하시겠습니까?{{/received}}');">
-                        <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
-                        <input type="hidden" name="reservationId" value="{{id}}">
-                        <input type="hidden" name="page" value="{{model.currentPage}}">
-                        <input type="hidden" name="size" value="{{model.size}}">
-                        <input type="hidden" name="status" value="{{model.selectedStatus}}">
-                        <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors">취소</button>
-                      </form>
-                    {{/cancellable}}
-                    {{^cancellable}}
-                      <button type="button" class="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 text-slate-400 text-sm font-medium rounded-lg cursor-not-allowed" disabled>취소</button>
-                    {{/cancellable}}
+                    <a href="{{patientDetailUrl}}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors">환자 상세</a>
                   </td>
                 </tr>
               {{/model.reservations}}

@@ -60,6 +60,11 @@ public class LlmPageController {
 }
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: `/llm/medical` 경로로 브라우저 접근 시 `templates/llm/medical.mustache`를 HTML로 렌더링해 보여주고, `/llm/chatbot` 접근 시 `templates/llm/chatbot.mustache`를 보여줍니다.
+> - **왜 이렇게 썼는지**: `@Controller`는 HTML 뷰를 반환하는 컨트롤러입니다. 문자열 `"llm/medical"`을 반환하면 Spring MVC가 `src/main/resources/templates/llm/medical.mustache` 파일을 찾아 렌더링합니다. `@RestController`가 JSON을 반환하는 것과 달리, `@Controller`는 화면(HTML)을 직접 내려줍니다.
+> - **쉽게 말하면**: 식당에서 메뉴판 번호를 말하면 그 음식이 나오듯, URL 경로로 요청하면 해당 화면 파일을 보여주는 안내 역할입니다.
+
 - GET `/llm/medical` → `templates/llm/medical.mustache` (permitAll)
 - GET `/llm/chatbot` → `templates/llm/chatbot.mustache` (authenticated)
 
@@ -81,10 +86,20 @@ public class LlmPageController {
 cp -r ../spring-python-llm-exam-mng/python-llm ./python-llm
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: `python-llm` 디렉토리를 현재 프로젝트로 복사하는 bash 명령입니다. Docker Compose는 `./python-llm` 폴더를 빌드해서 Python AI 서버 컨테이너를 만들기 때문에 이 폴더가 필요합니다.
+> - **왜 이렇게 썼는지**: Python LLM 서버 코드는 별도 저장소(spring-python-llm-exam-mng)에 있고 이번 HMS 작업에서 직접 이식하지 않았습니다. docker-compose 실행 전에 수동으로 복사해야 합니다.
+> - **쉽게 말하면**: 조립 설명서(docker-compose.yml)가 특정 부품(python-llm 폴더)을 필요로 하는데, 그 부품이 다른 창고에 있어서 먼저 가져와야 하는 상황입니다.
+
 ## 빌드 결과
 ```
 BUILD SUCCESSFUL in 3s
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: Mustache 템플릿 파일과 Controller를 추가한 후 Spring Boot 빌드가 성공했음을 나타냅니다.
+> - **왜 이렇게 썼는지**: 템플릿 파일 추가 자체는 컴파일 대상이 아니지만, Controller 클래스가 오류 없이 컴파일되고 기존 Bean과 충돌이 없는지 확인합니다.
+> - **쉽게 말하면**: 새 메뉴(템플릿)와 안내판(Controller)을 추가하고 식당(앱) 전체가 정상 운영되는지 확인합니다.
 
 ## 특이사항
 - `medical.mustache`의 예약 버튼: `confirmBooking()` 제거 → `<a href="/reservation">` 링크로 대체.

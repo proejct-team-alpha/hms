@@ -1,20 +1,22 @@
 package com.smartclinic.hms.admin.dashboard;
 
 import com.smartclinic.hms.admin.dashboard.dto.AdminDashboardStatsResponse;
+import com.smartclinic.hms.common.AdminControllerTestSecurityConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.smartclinic.hms.common.AdminControllerTestSecurityConfig;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -51,7 +53,12 @@ class AdminDashboardControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/dashboard"))
                 .andExpect(request().attribute("model", new AdminDashboardStatsResponse(7L, 70L, 12L, 4L)))
-                .andExpect(request().attribute("pageTitle", "관리자 대시보드"));
+                .andExpect(request().attribute("pageTitle", "\uAD00\uB9AC\uC790 \uB300\uC2DC\uBCF4\uB4DC"))
+                .andExpect(content().string(containsString("\uC77C\uC77C \uD658\uC790\uC218 \uCD94\uC774")))
+                .andExpect(content().string(containsString("\uCD5C\uADFC 7\uC77C \uC785\uACE0/\uCD9C\uACE0 \uCD94\uC774")))
+                .andExpect(content().string(containsString("daily-patient-canvas")))
+                .andExpect(content().string(containsString("item-flow-chart")))
+                .andExpect(content().string(containsString("/js/pages/admin-dashboard.js")));
     }
 
     @Test

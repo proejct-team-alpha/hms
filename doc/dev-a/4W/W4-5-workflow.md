@@ -93,6 +93,11 @@ Staff staff = staffRepository.findByUsernameAndActiveTrue(auth.getName()).orElse
 Long staffId = staff.getId();
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 로그인한 직원이 누구인지 확인하는 방법을 변경합니다. 기존에는 HTTP 요청 헤더에 직접 직원 ID를 담아 보냈지만, 변환 후에는 Spring Security가 관리하는 로그인 세션 정보에서 현재 사용자 이름을 읽어 직원 ID를 조회합니다.
+> - **왜 이렇게 썼는지**: 헤더에 `X-Staff-Id`를 직접 담는 방식은 누구든 헤더를 조작해 다른 직원인 척 할 수 있어 보안에 취약합니다. `SecurityContextHolder`는 Spring이 로그인 세션에서 안전하게 관리하는 인증 정보 저장소이므로, 이를 사용하면 위조가 불가능합니다.
+> - **쉽게 말하면**: "내 이름표는 1번이야"라고 직접 말하는 것(헤더 방식)에서, 회사 출입증 시스템이 자동으로 확인하는 방식(Security 방식)으로 바꾼 것입니다.
+
 ### DoctorDto — HMS Doctor 어댑터
 
 ```java
@@ -107,6 +112,11 @@ public static DoctorDto from(Doctor doctor) {
 }
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: `Doctor` Entity를 `DoctorDto`(데이터 전달 객체)로 변환하는 팩토리 메서드입니다. HMS의 `Doctor`는 이름, 활성 여부를 직접 갖지 않고 `Staff`(직원) 엔티티를 통해 접근하므로, 이를 변환 시 처리합니다.
+> - **왜 이렇게 썼는지**: 원본(spring-llm) `Doctor`는 `getName()`, `isActive()`를 직접 가지고 있었지만, HMS `Doctor`는 `Staff`와 1:1 관계로 설계되어 있습니다. 어댑터 패턴(구조가 다른 두 시스템을 연결하는 변환기)을 적용해 이 차이를 `from()` 메서드 안에서 투명하게 처리합니다.
+> - **쉽게 말하면**: 서로 다른 규격의 플러그를 연결하는 어댑터처럼, HMS 의사 데이터 구조와 LLM이 기대하는 데이터 구조 사이의 차이를 이 메서드가 맞춰줍니다.
+
 ### DoctorRepository — 추가 쿼리
 
 ```java
@@ -114,6 +124,11 @@ public static DoctorDto from(Doctor doctor) {
        "WHERE d.department.name = :deptName AND d.staff.active = true")
 List<Doctor> findByDepartment_NameAndStaff_ActiveTrue(@Param("deptName") String deptName);
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 특정 진료과에 소속된 활성 의사 목록을 조회하는 JPQL 쿼리입니다. `JOIN FETCH`를 사용해 `Doctor`, `Staff`, `Department` 데이터를 한 번의 쿼리로 모두 가져옵니다.
+> - **왜 이렇게 썼는지**: HMS `Doctor`는 `department`가 문자열이 아닌 `Department` Entity(외래키 관계)이므로, Spring Data JPA의 메서드 이름 자동 생성이 복잡해집니다. 따라서 `@Query`로 직접 JPQL을 작성했습니다. `JOIN FETCH`는 연관된 데이터를 미리 함께 불러와 N+1 쿼리 문제(데이터를 하나씩 따로 조회하는 비효율)를 방지합니다.
+> - **쉽게 말하면**: "내과 소속이고 현재 근무 중인 의사 전원을 한 번에 가져와"라는 SQL을 Java 코드로 표현한 것입니다.
 
 ---
 

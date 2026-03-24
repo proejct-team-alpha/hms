@@ -95,6 +95,11 @@ GET  /api/reservation/slots/  → GET  /llm/reservation/slots/{doctorId}
 .requestMatchers("/llm/chatbot/**").authenticated()
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 두 가지 보안 설정을 추가합니다. 첫 번째(`ignoringRequestMatchers`)는 LLM 관련 경로에서 CSRF 토큰 검사를 생략합니다. 두 번째는 경로별 접근 권한을 설정하는데, `/llm/medical/**`과 `/llm/reservation/**`은 누구나 접근 가능(`permitAll`)하고, `/llm/chatbot/**`은 로그인한 사용자만 접근 가능(`authenticated`)하도록 합니다.
+> - **왜 이렇게 썼는지**: CSRF(사이트 간 요청 위조) 보호는 브라우저 폼 기반 요청에 필요한데, LLM 경로는 JavaScript `fetch`로 JSON을 주고받는 API 방식이므로 CSRF 토큰이 필요 없습니다. 접근 제어는 AI 증상 상담(`/llm/medical`)은 비로그인 환자도 쓸 수 있고, 병원 내부 챗봇(`/llm/chatbot`)은 직원만 쓸 수 있도록 구분합니다.
+> - **쉽게 말하면**: 정문은 누구나 통과(`permitAll`), 직원실은 사원증 필요(`authenticated`)처럼 문마다 다른 잠금장치를 설정하는 것입니다.
+
 ### Controller — Security principal 추출 패턴
 
 ```java
@@ -107,6 +112,11 @@ private Long resolveStaffId() {
             .map(Staff::getId).orElse(null);
 }
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 현재 HTTP 요청을 보낸 사람이 로그인한 직원이면 그 직원의 ID를 반환하고, 비로그인 상태면 `null`을 반환하는 헬퍼 메서드입니다.
+> - **왜 이렇게 썼는지**: `SecurityContextHolder`에서 인증 정보를 꺼내는 과정에서 비로그인(익명) 사용자인 경우를 세 단계로 방어합니다. `auth == null`, `!auth.isAuthenticated()`, `"anonymousUser"` 체크가 각각 다른 비로그인 상황을 커버합니다. 마지막에 `findByUsernameAndActiveTrue()`로 실제 DB에서 활성 직원을 확인해 ID를 가져옵니다.
+> - **쉽게 말하면**: "지금 요청한 사람이 누군지 확인하는 신분증 조회기"로, 손님이면 null, 직원이면 직원 번호를 돌려줍니다.
 
 ---
 

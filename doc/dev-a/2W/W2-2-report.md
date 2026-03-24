@@ -42,6 +42,11 @@ doctor select를 동적으로 채우도록 구현했다.
 List<Doctor> findByDepartment_Id(@Param("departmentId") Long departmentId);
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: `@Query`로 직접 JPQL 쿼리를 작성합니다. `JOIN FETCH d.staff`는 Doctor를 조회할 때 연결된 Staff 정보도 함께(즉시) 가져오도록 합니다.
+> - **왜 이렇게 썼는지**: JPA는 기본적으로 연관 데이터(staff)를 나중에 필요할 때 불러오는 지연 로딩(Lazy Loading)을 사용합니다. 트랜잭션이 끝난 후 staff에 접근하면 `LazyInitializationException`이 발생합니다. `JOIN FETCH`를 사용하면 처음부터 함께 가져오므로 이 오류를 방지합니다.
+> - **쉽게 말하면**: 의사 정보를 가져올 때 소속 직원 정보도 한 번에 같이 가져오라고 DB에 요청하는 것입니다. 나중에 다시 가져오려면 창고(DB)가 이미 닫혀서 문제가 생기기 때문입니다.
+
 ### 3. doctor/DoctorDto.java (임시 생성)
 
 ```java
@@ -50,6 +55,11 @@ public DoctorDto(Doctor doctor) {
     this.name = doctor.getStaff().getName();
 }
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: `Doctor` 엔티티 객체를 받아서 id와 이름만 추출하여 `DoctorDto` 객체를 생성하는 생성자입니다.
+> - **왜 이렇게 썼는지**: `doctor.getStaff().getName()`은 Doctor 엔티티가 직접 이름을 갖지 않고, Staff 엔티티를 통해 이름을 가져오는 구조이기 때문입니다. JOIN FETCH로 staff를 함께 로드했기 때문에 이 접근이 안전합니다.
+> - **쉽게 말하면**: 의사 파일에서 ID와 이름표(직원 파일에 있음)만 복사해 간결한 카드를 만드는 것입니다.
 
 ### 4. ReservationService.java
 
@@ -61,6 +71,11 @@ public List<DoctorDto> getDoctorsByDepartment(Long departmentId) {
 }
 ```
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 진료과 ID로 해당 과 의사 목록을 DB에서 조회하여 DTO 리스트로 변환해 반환합니다.
+> - **왜 이렇게 썼는지**: `@Transactional(readOnly = true)`는 읽기 전용 트랜잭션을 열어 Hibernate 세션을 유지합니다. 이렇게 하면 메서드 실행 중에 lazy 로딩이 필요한 경우에도 세션이 열려 있어 안전합니다. 읽기만 하므로 DB 성능도 최적화됩니다.
+> - **쉽게 말하면**: "창고 문을 열어둔 채로" 의사 목록을 꺼내고 정리하는 작업입니다. 문이 열려 있어야 필요한 추가 정보(staff)도 꺼낼 수 있습니다.
+
 ### 5. ReservationApiController.java
 
 ```java
@@ -70,6 +85,11 @@ public List<DoctorDto> getDoctors(@RequestParam("departmentId") Long departmentI
     return reservationService.getDoctorsByDepartment(departmentId);
 }
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: `/api/reservation/doctors?departmentId=1`로 GET 요청이 오면 해당 진료과 의사 목록을 JSON으로 반환하는 API 엔드포인트입니다.
+> - **왜 이렇게 썼는지**: `@RequestParam("departmentId")`처럼 이름을 명시적으로 지정한 이유는, 이 프로젝트의 컴파일러에 `-parameters` 플래그가 설정되지 않아 파라미터 이름을 자동으로 인식하지 못하기 때문입니다. 이름을 명시하지 않으면 오류가 발생합니다.
+> - **쉽게 말하면**: URL에서 "departmentId"라는 이름의 값을 꺼내 쓰는 API 창구입니다. 이름표를 명확히 붙여두어야 Spring이 찾을 수 있습니다.
 
 ### 6. direct-reservation.mustache
 
@@ -99,6 +119,11 @@ public List<DoctorDto> getDoctors(@RequestParam("departmentId") Long departmentI
 ```java
 .requestMatchers("/", "/reservation/**", "/api/reservation/**").permitAll()
 ```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: Spring Security 설정에서 `/`, `/reservation/**`, `/api/reservation/**` 경로는 로그인 없이도 누구나 접근할 수 있도록 허용합니다.
+> - **왜 이렇게 썼는지**: 예약 관련 페이지와 API는 비회원도 사용해야 하므로 인증 없이 접근을 허용해야 합니다. `/**`는 해당 경로 하위의 모든 URL을 의미합니다.
+> - **쉽게 말하면**: 병원 예약 창구는 회원 카드 없이도 누구나 이용할 수 있도록 출입 제한을 풀어두는 것입니다.
 
 ---
 

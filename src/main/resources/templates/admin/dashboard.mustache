@@ -6,6 +6,7 @@
   <title>{{pageTitle}} - MediCare+</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="min-h-screen flex">
   {{> common/sidebar-admin}}
@@ -15,7 +16,14 @@
 
     <main class="content-wrapper flex-1 p-6">
       <div class="space-y-6 max-w-6xl mx-auto">
-        <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+            <i data-feather="layout" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
+          </div>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
@@ -69,28 +77,62 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-lg font-bold text-slate-800">일별 환자 수 추이</h2>
-              <i data-feather="trending-up" class="w-5 h-5 text-indigo-500"></i>
+            <div class="flex items-start justify-between gap-4 mb-6">
+              <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                  <h2 class="text-lg font-bold text-slate-800">일일 환자수 추이</h2>
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-600">
+                    최근 7일
+                  </span>
+                </div>
+                <p class="text-sm text-slate-500">원무과 대시보드와 같은 톤으로 최근 7일 환자 흐름을 확인합니다.</p>
+              </div>
+              <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 shrink-0">
+                <i data-feather="trending-up" class="w-5 h-5"></i>
+              </div>
             </div>
-            <div class="h-[300px] w-full relative">
-              <canvas id="daily-patient-canvas" class="w-full h-full"></canvas>
-              <p id="daily-patient-error" class="hidden absolute inset-0 flex items-center justify-center text-sm text-red-500">
-                데이터를 불러오지 못했습니다.
-              </p>
+            <div class="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+              <div class="relative h-[260px] w-full">
+                <canvas id="daily-patient-canvas" class="w-full h-full"></canvas>
+                <p id="daily-patient-error" class="hidden absolute inset-0 flex items-center justify-center text-sm text-red-500">
+                  그래프 데이터를 불러오지 못했습니다.
+                </p>
+              </div>
             </div>
           </div>
 
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-lg font-bold text-slate-800">카테고리별 물품 재고 현황</h2>
-              <i data-feather="package" class="w-5 h-5 text-orange-500"></i>
+            <div class="flex items-start justify-between gap-4 mb-6">
+              <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                  <h2 class="text-lg font-bold text-slate-800">최근 7일 입고/출고 추이</h2>
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-600">
+                    최근 7일
+                  </span>
+                </div>
+                <p class="text-sm text-slate-500">물품 담당자 대시보드와 같은 기준으로 최근 7일 입고/출고 흐름을 확인합니다.</p>
+              </div>
+              <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 shrink-0">
+                <i data-feather="package" class="w-5 h-5"></i>
+              </div>
             </div>
-            <div class="h-[300px] w-full relative">
-              <canvas id="category-stock-canvas" class="w-full h-full"></canvas>
-              <p id="category-stock-error" class="hidden absolute inset-0 flex items-center justify-center text-sm text-red-500">
-                데이터를 불러오지 못했습니다.
-              </p>
+            <div class="rounded-2xl border border-slate-100 bg-slate-50/80 p-5 space-y-4">
+              <div class="flex items-center justify-end gap-4 text-xs font-medium">
+                <div class="flex items-center gap-2 text-slate-600">
+                  <span class="w-3 h-3 rounded-sm bg-indigo-500"></span>
+                  <span>입고</span>
+                </div>
+                <div class="flex items-center gap-2 text-slate-600">
+                  <span class="w-3 h-3 rounded-sm bg-slate-300"></span>
+                  <span>출고</span>
+                </div>
+              </div>
+              <div class="relative w-full">
+                <div id="item-flow-chart" class="h-[220px] w-full"></div>
+                <p id="item-flow-error" class="hidden absolute inset-0 flex items-center justify-center text-sm text-red-500">
+                  그래프 데이터를 불러오지 못했습니다.
+                </p>
+              </div>
             </div>
           </div>
         </div>

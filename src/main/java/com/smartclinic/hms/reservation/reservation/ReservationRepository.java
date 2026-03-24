@@ -1,7 +1,6 @@
 package com.smartclinic.hms.reservation.reservation;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,8 +36,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     boolean existsByDoctor_IdAndReservationDateAndTimeSlotAndStatusNot(
             Long doctorId, LocalDate reservationDate, String timeSlot, ReservationStatus status);
-
-    long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
     long countByReservationDate(LocalDate reservationDate);
 
