@@ -50,3 +50,20 @@ class FeedbackResponse(BaseModel):
     """피드백 응답"""
     status: str = "ok"
     message: str = "피드백이 저장되었습니다"
+
+
+class RuleIndexRequest(BaseModel):
+    """규칙 인덱싱 요청 (Spring → Python LLM)"""
+    rule_id: int = Field(..., description="hospital_rule 테이블의 ID")
+    title: str = Field(..., min_length=1, max_length=200)
+    content: str = Field(..., min_length=1, max_length=5000)
+    category: str = Field(..., max_length=50, description="카테고리 (한글)")
+    target: str | None = Field(default=None, max_length=100)
+    active: bool = Field(default=True)
+
+
+class RuleIndexResponse(BaseModel):
+    """규칙 인덱싱 응답"""
+    status: str = "ok"
+    message: str = "규칙이 인덱싱되었습니다"
+    rule_id: int

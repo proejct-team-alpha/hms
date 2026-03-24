@@ -11,6 +11,7 @@ import com.smartclinic.hms.admin.rule.dto.UpdateAdminRuleRequest;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.HospitalRule;
 import com.smartclinic.hms.domain.HospitalRuleCategory;
+import com.smartclinic.hms.llm.service.RuleIndexService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,6 +39,7 @@ public class AdminRuleService {
     private static final String RULE_UPDATED_MESSAGE = "규칙이 수정되었습니다.";
 
     private final HospitalRuleRepository hospitalRuleRepository;
+    private final RuleIndexService ruleIndexService;
 
     public List<AdminRuleItemResponse> getRuleList() {
         return hospitalRuleRepository.findAllByOrderByCreatedAtDesc()
@@ -100,6 +102,7 @@ public class AdminRuleService {
         );
 
         hospitalRuleRepository.save(rule);
+        ruleIndexService.indexRule(rule);
         return "규칙이 등록되었습니다.";
     }
 
@@ -113,6 +116,7 @@ public class AdminRuleService {
                 request.isActiveChecked()
         );
         hospitalRuleRepository.save(rule);
+        ruleIndexService.indexRule(rule);
         return RULE_UPDATED_MESSAGE;
     }
 
@@ -120,6 +124,7 @@ public class AdminRuleService {
     public AdminRuleDeleteResponse deleteRule(Long ruleId) {
         HospitalRule rule = findRule(ruleId);
         hospitalRuleRepository.delete(rule);
+        ruleIndexService.deleteRuleIndex(ruleId);
         return AdminRuleDeleteResponse.success(ruleId);
     }
 
