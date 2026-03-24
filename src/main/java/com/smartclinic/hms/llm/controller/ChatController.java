@@ -35,7 +35,7 @@ public class ChatController {
         String effectiveSessionId = sessionId != null ? sessionId
                 : "session-" + staffId + "-" + System.currentTimeMillis();
 
-        return chatService.callRuleLlmApi(request.getQuery())
+        return chatService.callRuleLlmApi(request.getQuery(), request.getHistory())
                 .doOnNext(answer -> {
                     if (staffId != null) {
                         try {
@@ -49,9 +49,31 @@ public class ChatController {
     }
 
     @PostMapping(value = "/query/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> handleRuleQueryStream(@RequestBody LlmRequest request) {
-        log.debug("Rule Stream 쿼리 수신 - query: {}", request.getQuery());
-        return chatService.callRuleLlmApiStream(request.getQuery());
+    public Flux<String> handleRuleQueryStream(
+            @RequestBody LlmRequest request,
+            @RequestHeader(value = "X-Session-Id", required = false) String sessionId) {
+
+        Long staffId = securityUtils.resolveStaffId();
+        log.debug("Rule Stream 쿼리 수신 - query: {}, staffId: {}, historySize: {}", request.getQuery(),
+                staffId, request.getHistory() != null ? request.getHistory().size() : 0);
+
+        String effectiveSessionId = sessionId != null ? sessionId
+                : "session-" + staffId + "-" + System.currentTimeMillis();
+
+        StringBuilder fullAnswer = new StringBuilder();
+
+        return chatService.callRuleLlmApiStream(request.getQuery(), request.getHistory())
+                .doOnNext(fullAnswer::append)
+                .doOnComplete(() -> {
+                    if (staffId != null && fullAnswer.length() > 0) {
+                        try {
+                            chatService.saveChatHistory(staffId, effectiveSessionId, request.getQuery(), fullAnswer.toString());
+                            log.info("Rule Stream Q&A 저장 완료 - staffId: {}", staffId);
+                        } catch (Exception e) {
+                            log.error("Rule Stream Q&A 히스토리 저장 실패 - staffId: {}, error: {}", staffId, e.getMessage(), e);
+                        }
+                    }
+                });
     }
 
     @GetMapping("/history/{staffId}")

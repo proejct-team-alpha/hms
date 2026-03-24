@@ -8,6 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 public interface AdminStaffRepository extends JpaRepository<Staff, Long> {
 
     long countByActiveTrue();
@@ -15,6 +18,8 @@ public interface AdminStaffRepository extends JpaRepository<Staff, Long> {
     boolean existsByUsername(String username);
 
     boolean existsByEmployeeNumber(String employeeNumber);
+
+    List<Staff> findAllByActiveTrueAndRetiredAtLessThanEqual(LocalDateTime retiredAt);
 
     @Query("""
             select

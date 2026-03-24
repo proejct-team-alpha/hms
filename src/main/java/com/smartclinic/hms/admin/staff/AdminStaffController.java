@@ -58,8 +58,11 @@ public class AdminStaffController {
     }
 
     @GetMapping("/detail")
-    public String detail(@RequestParam("staffId") Long staffId, HttpServletRequest req) {
-        req.setAttribute("model", adminStaffService.getEditForm(staffId));
+    public String detail(
+            @RequestParam("staffId") Long staffId,
+            Authentication authentication,
+            HttpServletRequest req) {
+        req.setAttribute("model", adminStaffService.getEditForm(staffId, authentication.getName()));
         return "admin/staff-form";
     }
 
@@ -80,10 +83,7 @@ public class AdminStaffController {
             redirectAttributes.addFlashAttribute("successMessage", successMessage);
             return "redirect:/admin/staff/list";
         } catch (CustomException ex) {
-            if ("VALIDATION_ERROR".equals(ex.getErrorCode())
-                    && "DOCTOR".equalsIgnoreCase(request.role())) {
-                req.setAttribute("departmentIdError", ex.getMessage());
-            }
+            applyCreateViewErrors(req, request, ex);
             req.setAttribute("errorMessage", ex.getMessage());
             req.setAttribute("model", adminStaffService.getCreateForm(request));
             return "admin/staff-form";
@@ -95,23 +95,22 @@ public class AdminStaffController {
             @Valid @ModelAttribute UpdateAdminStaffRequest request,
             BindingResult bindingResult,
             RedirectAttributes redirectAttributes,
+            Authentication authentication,
             HttpServletRequest req) {
         if (bindingResult.hasErrors()) {
             SsrValidationViewSupport.applyErrors(req, bindingResult);
-            req.setAttribute("model", adminStaffService.getEditForm(request));
+            req.setAttribute("model", adminStaffService.getEditForm(request, authentication.getName()));
             return "admin/staff-form";
         }
 
         try {
-            String successMessage = adminStaffService.updateStaff(request);
+            String successMessage = adminStaffService.updateStaff(request, authentication.getName());
             redirectAttributes.addFlashAttribute("successMessage", successMessage);
             return "redirect:/admin/staff/list";
         } catch (CustomException ex) {
-            if ("VALIDATION_ERROR".equals(ex.getErrorCode()) && ex.getMessage().contains("부서")) {
-                req.setAttribute("departmentIdError", ex.getMessage());
-            }
+            applyUpdateViewErrors(req, ex);
             req.setAttribute("errorMessage", ex.getMessage());
-            req.setAttribute("model", adminStaffService.getEditForm(request));
+            req.setAttribute("model", adminStaffService.getEditForm(request, authentication.getName()));
             return "admin/staff-form";
         }
     }
@@ -128,5 +127,52 @@ public class AdminStaffController {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
         return "redirect:/admin/staff/list";
+    }
+
+    private void applyCreateViewErrors(HttpServletRequest req, CreateAdminStaffRequest request, CustomException ex) {
+        if (!"VALIDATION_ERROR".equals(ex.getErrorCode())) {
+            return;
+        }
+
+        if ("DOCTOR".equalsIgnoreCase(request.role()) && containsDepartmentMessage(ex.getMessage())) {
+            req.setAttribute("departmentIdError", ex.getMessage());
+        }
+
+        if (containsRetiredAtMessage(ex.getMessage())) {
+            req.setAttribute("retiredAtError", ex.getMessage());
+        }
+    }
+
+    private void applyUpdateViewErrors(HttpServletRequest req, CustomException ex) {
+        if (!"VALIDATION_ERROR".equals(ex.getErrorCode())) {
+            return;
+        }
+
+        if (containsDepartmentMessage(ex.getMessage())) {
+            req.setAttribute("departmentIdError", ex.getMessage());
+        }
+
+        if (containsEmploymentStatusMessage(ex.getMessage())) {
+            req.setAttribute("activeError", ex.getMessage());
+        }
+
+        if (containsRetiredAtMessage(ex.getMessage())) {
+            req.setAttribute("retiredAtError", ex.getMessage());
+        }
+    }
+
+    private boolean containsDepartmentMessage(String message) {
+        return message != null && message.contains("부서");
+    }
+
+    private boolean containsEmploymentStatusMessage(String message) {
+        return message != null
+                && (message.contains("비활성화")
+                || message.contains("재활성화")
+                || message.contains("활성화"));
+    }
+
+    private boolean containsRetiredAtMessage(String message) {
+        return message != null && message.contains("퇴사");
     }
 }

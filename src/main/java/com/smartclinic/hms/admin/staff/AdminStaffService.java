@@ -27,10 +27,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -47,37 +52,44 @@ public class AdminStaffService {
     private static final String INACTIVE = "INACTIVE";
     private static final String DEFAULT_ROLE = "STAFF";
     private static final String NO_DEPARTMENT_LABEL = "-";
-    private static final String STAFF_CREATED_MESSAGE = "직원을 등록했습니다.";
-    private static final String STAFF_UPDATED_MESSAGE = "직원 정보를 수정했습니다.";
-    private static final String STAFF_DEACTIVATED_MESSAGE = "직원을 비활성화했습니다.";
-    private static final String INPUT_CHECK_MESSAGE = "입력값을 확인해주세요.";
-    private static final String INVALID_ROLE_MESSAGE = "유효한 역할을 선택해주세요.";
-    private static final String INVALID_DEPARTMENT_MESSAGE = "유효한 부서를 선택해주세요.";
-    private static final String DUPLICATE_USERNAME_MESSAGE = "이미 사용 중인 로그인 아이디입니다.";
-    private static final String DUPLICATE_EMPLOYEE_NUMBER_MESSAGE = "이미 사용 중인 사번입니다.";
-    private static final String STAFF_NOT_FOUND_MESSAGE = "직원을 찾을 수 없습니다.";
-    private static final String DOCTOR_NOT_FOUND_MESSAGE = "의사 상세 정보를 찾을 수 없습니다.";
-    private static final String PASSWORD_LENGTH_MESSAGE = "비밀번호는 8자 이상이어야 합니다.";
-    private static final String SELF_DEACTIVATE_MESSAGE = "본인 계정은 비활성화할 수 없습니다.";
-    private static final String ALREADY_DEACTIVATED_MESSAGE = "이미 비활성화된 직원입니다.";
+    private static final String STAFF_CREATED_MESSAGE = "?꿔꺂???????嚥싲갭큔?댁쉩???嶺???????";
+    private static final String STAFF_UPDATED_MESSAGE = "?꿔꺂??????癲ル슢???ъ쒜筌믡굥夷???쎛 ????볥궚???嶺???????";
+    private static final String STAFF_DEACTIVATED_MESSAGE = "?꿔꺂???????????嚥싲갭큔????嶺???????";
+    private static final String INPUT_CHECK_MESSAGE = "????怨몄７??醫딆┫???????⑤베鍮??癲ル슢캉????????녿뮝???ル튉??";
+    private static final String INVALID_ROLE_MESSAGE = "????ъ군???? ??? ????????뉖뤁??";
+    private static final String INVALID_DEPARTMENT_MESSAGE = "????ъ군???? ??? ?꿔꺂????壤쎻뫔?롳쭕?뼿?縕???????딅젩.";
+    private static final String DUPLICATE_USERNAME_MESSAGE = "???? ????嚥싳쉶瑗??꾧틡???汝??吏???????썹땟?㈑???됰Ŋ???????딅젩.";
+    private static final String DUPLICATE_EMPLOYEE_NUMBER_MESSAGE = "???? ????嚥싳쉶瑗??꾧틡??????????뉖뤁??";
+    private static final String STAFF_NOT_FOUND_MESSAGE = "?꿔꺂???????꿔꺂????????????ㅿ폍??????딅젩.";
+    private static final String DOCTOR_NOT_FOUND_MESSAGE = "??嶺뚮슣堉???癲ル슢???ъ쒜???꿔꺂????????????ㅿ폍??????딅젩.";
+    private static final String PASSWORD_LENGTH_MESSAGE = "?????筌??????8???????壤????ㅿ폎?????嶺뚮ㅎ????";
+    private static final String SELF_DEACTIVATE_MESSAGE = "??⑤슢?뽫춯????影??낟??? ?????嚥싲갭큔??????????ㅿ폍??????딅젩.";
+    private static final String ALREADY_DEACTIVATED_MESSAGE = "???? ?????嚥싲갭큔?????꿔꺂?????????뉖뤁??";
+    private static final String REACTIVATION_NOT_ALLOWED_MESSAGE = "???????꿔꺂?????? ????嚥싲갭큔??????????ㅿ폍??????딅젩.";
+    private static final String INACTIVE_STAFF_UPDATE_NOT_ALLOWED_MESSAGE = "\uBE44\uD65C\uC131\uD654\uB41C \uC9C1\uC6D0\uC740 \uC218\uC815\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4.";
+    private static final String RETIRED_AT_REQUIRED_MESSAGE = "\uD1F4\uC0AC \uC77C\uC2DC\uB294 \uB0A0\uC9DC\uC640 \uC2DC\uAC04\uC744 \uBAA8\uB450 \uC120\uD0DD\uD574\uC57C \uD569\uB2C8\uB2E4.";
+    private static final String INVALID_RETIRED_AT_MESSAGE = "\uD1F4\uC0AC \uC77C\uC2DC \uD615\uC2DD\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.";
+    private static final DateTimeFormatter RETIRED_AT_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+    private static final DateTimeFormatter RETIRED_AT_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter RETIRED_AT_HOUR_FORMATTER = DateTimeFormatter.ofPattern("HH");
 
     private static final Map<StaffRole, String> ROLE_LABELS = Map.of(
-            StaffRole.ADMIN, "관리자",
-            StaffRole.DOCTOR, "의사",
-            StaffRole.NURSE, "간호사",
-            StaffRole.STAFF, "직원",
-            StaffRole.ITEM_MANAGER, "물품 담당자");
+            StaffRole.ADMIN, "\uAD00\uB9AC\uC790",
+            StaffRole.DOCTOR, "\uC758\uC0AC",
+            StaffRole.NURSE, "\uAC04\uD638\uC0AC",
+            StaffRole.STAFF, "\uC9C1\uC6D0",
+            StaffRole.ITEM_MANAGER, "\uBB3C\uD488 \uB2F4\uB2F9\uC790");
 
     private static final Map<String, String> AVAILABLE_DAY_LABELS = new LinkedHashMap<>();
 
     static {
-        AVAILABLE_DAY_LABELS.put("MON", "월요일");
-        AVAILABLE_DAY_LABELS.put("TUE", "화요일");
-        AVAILABLE_DAY_LABELS.put("WED", "수요일");
-        AVAILABLE_DAY_LABELS.put("THU", "목요일");
-        AVAILABLE_DAY_LABELS.put("FRI", "금요일");
-        AVAILABLE_DAY_LABELS.put("SAT", "토요일");
-        AVAILABLE_DAY_LABELS.put("SUN", "일요일");
+        AVAILABLE_DAY_LABELS.put("MON", "\uC6D4\uC694\uC77C");
+        AVAILABLE_DAY_LABELS.put("TUE", "\uD654\uC694\uC77C");
+        AVAILABLE_DAY_LABELS.put("WED", "\uC218\uC694\uC77C");
+        AVAILABLE_DAY_LABELS.put("THU", "\uBAA9\uC694\uC77C");
+        AVAILABLE_DAY_LABELS.put("FRI", "\uAE08\uC694\uC77C");
+        AVAILABLE_DAY_LABELS.put("SAT", "\uD1A0\uC694\uC77C");
+        AVAILABLE_DAY_LABELS.put("SUN", "\uC77C\uC694\uC77C");
     }
 
     private final AdminStaffRepository adminStaffRepository;
@@ -139,7 +151,7 @@ public class AdminStaffService {
     }
 
     public AdminStaffFormResponse getCreateForm() {
-        return buildCreateFormResponse("", "", "", DEFAULT_ROLE, null, true, List.of());
+        return buildCreateFormResponse("", "", "", DEFAULT_ROLE, null, true, null, "", "", List.of());
     }
 
     public AdminStaffFormResponse getCreateForm(CreateAdminStaffRequest request) {
@@ -150,19 +162,22 @@ public class AdminStaffService {
                 request.role(),
                 request.departmentId(),
                 request.active(),
+                request.retiredAt(),
+                request.retiredAtDate(),
+                request.retiredAtHour(),
                 request.availableDays());
     }
 
-    public AdminStaffFormResponse getEditForm(Long staffId) {
+    public AdminStaffFormResponse getEditForm(Long staffId, String currentUsername) {
         Staff staff = getStaff(staffId);
         Doctor doctor = getDoctorIfNeeded(staff);
-        return buildEditFormResponse(staff, doctor, null);
+        return buildEditFormResponse(staff, doctor, null, currentUsername);
     }
 
-    public AdminStaffFormResponse getEditForm(UpdateAdminStaffRequest request) {
+    public AdminStaffFormResponse getEditForm(UpdateAdminStaffRequest request, String currentUsername) {
         Staff staff = getStaff(request.staffId());
         Doctor doctor = getDoctorIfNeeded(staff);
-        return buildEditFormResponse(staff, doctor, request);
+        return buildEditFormResponse(staff, doctor, request, currentUsername);
     }
 
     public UpdateAdminStaffApiResponse getUpdateApiResponse(Long staffId, String message) {
@@ -179,6 +194,7 @@ public class AdminStaffService {
                 doctorDepartment == null ? null : doctorDepartment.getId(),
                 doctorDepartment == null ? NO_DEPARTMENT_LABEL : doctorDepartment.getName(),
                 staff.isActive(),
+                formatRetiredAt(staff.getRetiredAt()),
                 doctor == null ? List.of() : splitAvailableDays(doctor.getAvailableDays()),
                 message
         );
@@ -202,9 +218,10 @@ public class AdminStaffService {
                 role,
                 null);
 
-        if (!request.active()) {
-            staff.update(staff.getName(), null, false);
-        }
+        LocalDateTime retiredAt = resolveRetiredAt(request.retiredAt(), request.retiredAtDate(), request.retiredAtHour());
+        boolean active = resolveActiveState(request.active(), retiredAt);
+        staff.update(staff.getName(), null, active);
+        staff.updateRetiredAt(retiredAt);
 
         adminStaffRepository.save(staff);
 
@@ -222,10 +239,23 @@ public class AdminStaffService {
 
     @Transactional
     public String updateStaff(UpdateAdminStaffRequest request) {
+        return updateStaff(request, null);
+    }
+
+    @Transactional
+    public String updateStaff(UpdateAdminStaffRequest request, String currentUsername) {
         Staff staff = getStaff(request.staffId());
+        validateInactiveStaffUpdate(staff);
         Department department = resolveDepartment(request.departmentId());
         validateDoctorDepartment(staff.getRole(), department);
-        staff.update(request.name().trim(), null, request.active());
+        validateSelfAccountUpdate(staff, request, currentUsername);
+        validateReactivation(staff, request.active());
+
+        LocalDateTime retiredAt = resolveRetiredAt(request.retiredAt(), request.retiredAtDate(), request.retiredAtHour());
+        boolean active = resolveActiveState(request.active(), retiredAt);
+
+        staff.update(request.name().trim(), null, active);
+        staff.updateRetiredAt(retiredAt);
 
         if (hasText(request.password())) {
             validatePassword(request.password());
@@ -260,6 +290,15 @@ public class AdminStaffService {
         return STAFF_DEACTIVATED_MESSAGE;
     }
 
+    @Transactional
+    public int deactivateExpiredStaffs() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Staff> expiredStaffs = adminStaffRepository.findAllByActiveTrueAndRetiredAtLessThanEqual(now);
+
+        expiredStaffs.forEach(staff -> staff.update(staff.getName(), staff.getDepartment(), false));
+        return expiredStaffs.size();
+    }
+
     public String getInputCheckMessage() {
         return INPUT_CHECK_MESSAGE;
     }
@@ -270,8 +309,8 @@ public class AdminStaffService {
         boolean selfRow = projection.getUsername().equals(currentUsername);
         boolean deactivatable = projection.isActive() && !selfRow;
         String deactivateStatusLabel = projection.isActive()
-                ? selfRow ? "본인" : ""
-                : "비활성";
+                ? selfRow ? "\uBCF8\uC778" : ""
+                : "\uBE44\uD65C\uC131";
 
         return new AdminStaffItemResponse(
                 projection.getId(),
@@ -283,7 +322,7 @@ public class AdminStaffService {
                 getRoleBadgeClass(projection.getRole()),
                 projection.getDepartmentName() == null ? NO_DEPARTMENT_LABEL : projection.getDepartmentName(),
                 projection.isActive(),
-                projection.isActive() ? "재직" : "비활성",
+                projection.isActive() ? "\uC7AC\uC9C1" : "\uBE44\uD65C\uC131",
                 projection.isActive() ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-600",
                 buildDetailUrl(projection.getId()),
                 deactivatable,
@@ -297,15 +336,20 @@ public class AdminStaffService {
             String selectedRole,
             Long selectedDepartmentId,
             boolean active,
+            LocalDateTime retiredAt,
+            String retiredAtDate,
+            String retiredAtHour,
             List<String> availableDays) {
         String normalizedRole = normalizeSelectedRole(selectedRole);
         boolean doctorRole = StaffRole.DOCTOR.name().equals(normalizedRole);
         Set<String> selectedDays = normalizeAvailableDaySet(availableDays);
+        String retiredAtDateValue = resolveRetiredAtDateForForm(retiredAt, retiredAtDate);
+        String retiredAtHourValue = resolveRetiredAtHourForForm(retiredAt, retiredAtHour);
 
         return new AdminStaffFormResponse(
-                "직원 등록",
+                "\uC9C1\uC6D0 \uB4F1\uB85D",
                 "/admin/staff/create",
-                "등록하기",
+                "\uB4F1\uB85D\uD558\uAE30",
                 false,
                 null,
                 nullToEmpty(username),
@@ -315,25 +359,55 @@ public class AdminStaffService {
                 ROLE_LABELS.getOrDefault(StaffRole.valueOf(normalizedRole), normalizedRole),
                 selectedDepartmentId,
                 active,
+                resolveRetiredAtValueForForm(retiredAt, retiredAtDateValue, retiredAtHourValue),
+                retiredAtDateValue,
+                retiredAtHourValue,
+                false,
+                false,
+                false,
+                false,
                 doctorRole,
                 buildFormRoleOptions(normalizedRole),
                 buildDepartmentOptions(selectedDepartmentId),
                 buildEmploymentStatusFormOptions(active),
+                buildRetiredAtHourOptions(retiredAtHourValue),
                 buildAvailableDayOptions(selectedDays));
     }
 
-    private AdminStaffFormResponse buildEditFormResponse(Staff staff, Doctor doctor, UpdateAdminStaffRequest request) {
-        Long selectedDepartmentId = request != null ? request.departmentId()
-                : doctor == null || doctor.getDepartment() == null ? null : doctor.getDepartment().getId();
-        String name = request != null ? request.name() : staff.getName();
-        boolean active = request != null ? request.active() : staff.isActive();
-        Set<String> selectedDays = request != null ? normalizeAvailableDaySet(request.availableDays())
-                : doctor == null ? Set.of() : normalizeAvailableDaySet(splitAvailableDays(doctor.getAvailableDays()));
+    private AdminStaffFormResponse buildEditFormResponse(
+            Staff staff,
+            Doctor doctor,
+            UpdateAdminStaffRequest request,
+            String currentUsername) {
+        boolean selfEdit = currentUsername != null && staff.getUsername().equals(currentUsername);
+        boolean readOnly = !staff.isActive();
+        Long persistedDepartmentId = doctor == null || doctor.getDepartment() == null ? null : doctor.getDepartment().getId();
+        Long selectedDepartmentId = readOnly || request == null ? persistedDepartmentId : request.departmentId();
+        String name = readOnly || request == null ? staff.getName() : request.name();
+        boolean employmentStatusLocked = selfEdit || readOnly;
+        boolean retiredAtLocked = selfEdit || readOnly;
+        boolean active = employmentStatusLocked ? staff.isActive() : request != null ? request.active() : staff.isActive();
+        LocalDateTime retiredAtSource = retiredAtLocked
+                ? staff.getRetiredAt()
+                : request != null ? request.retiredAt() : staff.getRetiredAt();
+        String retiredAtDateValue = retiredAtLocked
+                ? formatRetiredAtDate(staff.getRetiredAt())
+                : request != null
+                ? resolveRetiredAtDateForForm(request.retiredAt(), request.retiredAtDate())
+                : formatRetiredAtDate(staff.getRetiredAt());
+        String retiredAtHourValue = retiredAtLocked
+                ? formatRetiredAtHour(staff.getRetiredAt())
+                : request != null
+                ? resolveRetiredAtHourForForm(request.retiredAt(), request.retiredAtHour())
+                : formatRetiredAtHour(staff.getRetiredAt());
+        Set<String> selectedDays = readOnly || request == null
+                ? doctor == null ? Set.of() : normalizeAvailableDaySet(splitAvailableDays(doctor.getAvailableDays()))
+                : normalizeAvailableDaySet(request.availableDays());
 
         return new AdminStaffFormResponse(
-                "직원 수정",
+                "\uC9C1\uC6D0 \uC218\uC815",
                 "/admin/staff/update",
-                "수정하기",
+                "\uC218\uC815\uD558\uAE30",
                 true,
                 staff.getId(),
                 staff.getUsername(),
@@ -343,10 +417,18 @@ public class AdminStaffService {
                 ROLE_LABELS.getOrDefault(staff.getRole(), staff.getRole().name()),
                 selectedDepartmentId,
                 active,
+                resolveRetiredAtValueForForm(retiredAtSource, retiredAtDateValue, retiredAtHourValue),
+                retiredAtDateValue,
+                retiredAtHourValue,
+                selfEdit,
+                employmentStatusLocked,
+                retiredAtLocked,
+                readOnly,
                 staff.getRole() == StaffRole.DOCTOR,
                 buildFormRoleOptions(staff.getRole().name()),
                 buildDepartmentOptions(selectedDepartmentId),
                 buildEmploymentStatusFormOptions(active),
+                buildRetiredAtHourOptions(retiredAtHourValue),
                 buildAvailableDayOptions(selectedDays));
     }
 
@@ -362,7 +444,7 @@ public class AdminStaffService {
         return orderedRoles.stream()
                 .map(role -> new AdminStaffFilterOptionResponse(
                         role,
-                        ALL.equals(role) ? "전체 역할" : ROLE_LABELS.get(StaffRole.valueOf(role)),
+                        ALL.equals(role) ? "\uC804\uCCB4 \uC5ED\uD560" : ROLE_LABELS.get(StaffRole.valueOf(role)),
                         role.equals(selectedRole)))
                 .toList();
     }
@@ -394,8 +476,15 @@ public class AdminStaffService {
 
     private List<AdminStaffFormOptionResponse> buildEmploymentStatusFormOptions(boolean active) {
         return List.of(
-                new AdminStaffFormOptionResponse("true", "재직", active),
-                new AdminStaffFormOptionResponse("false", "비활성", !active));
+                new AdminStaffFormOptionResponse("true", "\uC7AC\uC9C1", active),
+                new AdminStaffFormOptionResponse("false", "\uBE44\uD65C\uC131", !active));
+    }
+
+    private List<AdminStaffFormOptionResponse> buildRetiredAtHourOptions(String selectedHour) {
+        return IntStream.rangeClosed(0, 23)
+                .mapToObj(hour -> "%02d".formatted(hour))
+                .map(hour -> new AdminStaffFormOptionResponse(hour, hour + ":00", hour.equals(selectedHour)))
+                .toList();
     }
 
     private List<AdminStaffFormOptionResponse> buildAvailableDayOptions(Set<String> selectedDays) {
@@ -409,9 +498,9 @@ public class AdminStaffService {
 
     private List<AdminStaffFilterOptionResponse> buildEmploymentStatusOptions(String selectedEmploymentStatus) {
         return List.of(
-                new AdminStaffFilterOptionResponse(ALL, "전체 상태", ALL.equals(selectedEmploymentStatus)),
-                new AdminStaffFilterOptionResponse(ACTIVE, "재직", ACTIVE.equals(selectedEmploymentStatus)),
-                new AdminStaffFilterOptionResponse(INACTIVE, "비활성", INACTIVE.equals(selectedEmploymentStatus)));
+                new AdminStaffFilterOptionResponse(ALL, "\uC804\uCCB4 \uC0C1\uD0DC", ALL.equals(selectedEmploymentStatus)),
+                new AdminStaffFilterOptionResponse(ACTIVE, "\uC7AC\uC9C1", ACTIVE.equals(selectedEmploymentStatus)),
+                new AdminStaffFilterOptionResponse(INACTIVE, "\uBE44\uD65C\uC131", INACTIVE.equals(selectedEmploymentStatus)));
     }
 
     private List<AdminStaffPageLinkResponse> buildPageLinks(
@@ -597,18 +686,124 @@ public class AdminStaffService {
         return selectedRole.trim().toUpperCase(Locale.ROOT);
     }
 
-    private String normalizeNullableText(String value) {
-        if (!hasText(value)) {
-            return null;
-        }
-        return value.trim();
-    }
-
     private String resolveDoctorSpecialty(Department department) {
         if (department == null) {
             return null;
         }
         return department.getName();
+    }
+
+    private void validateSelfAccountUpdate(Staff staff, UpdateAdminStaffRequest request, String currentUsername) {
+        if (!hasText(currentUsername) || !staff.getUsername().equals(currentUsername)) {
+            return;
+        }
+
+        boolean deactivateAttempt = staff.isActive() && !request.active();
+        LocalDateTime resolvedRetiredAt = resolveRetiredAt(request.retiredAt(), request.retiredAtDate(), request.retiredAtHour());
+        boolean retiredAtChanged = !Objects.equals(staff.getRetiredAt(), resolvedRetiredAt);
+
+        if (deactivateAttempt || retiredAtChanged) {
+            throw CustomException.badRequest("VALIDATION_ERROR", SELF_DEACTIVATE_MESSAGE);
+        }
+    }
+
+    private void validateReactivation(Staff staff, boolean requestedActive) {
+        if (!staff.isActive() && requestedActive) {
+            throw CustomException.badRequest("VALIDATION_ERROR", REACTIVATION_NOT_ALLOWED_MESSAGE);
+        }
+    }
+
+    private void validateInactiveStaffUpdate(Staff staff) {
+        if (!staff.isActive()) {
+            throw CustomException.badRequest("VALIDATION_ERROR", INACTIVE_STAFF_UPDATE_NOT_ALLOWED_MESSAGE);
+        }
+    }
+
+    private LocalDateTime resolveRetiredAt(LocalDateTime retiredAt, String retiredAtDate, String retiredAtHour) {
+        boolean hasDate = hasText(retiredAtDate);
+        boolean hasHour = hasText(retiredAtHour);
+
+        if (hasDate != hasHour) {
+            throw CustomException.badRequest("VALIDATION_ERROR", RETIRED_AT_REQUIRED_MESSAGE);
+        }
+
+        if (hasDate) {
+            try {
+                LocalDate date = LocalDate.parse(retiredAtDate.trim(), RETIRED_AT_DATE_FORMATTER);
+                int hour = Integer.parseInt(retiredAtHour.trim());
+                if (hour < 0 || hour > 23) {
+                    throw new IllegalArgumentException();
+                }
+                return date.atTime(hour, 0);
+            } catch (DateTimeParseException | IllegalArgumentException ex) {
+                throw CustomException.badRequest("VALIDATION_ERROR", INVALID_RETIRED_AT_MESSAGE);
+            }
+        }
+
+        return normalizeRetiredAt(retiredAt);
+    }
+
+    private LocalDateTime normalizeRetiredAt(LocalDateTime retiredAt) {
+        if (retiredAt == null) {
+            return null;
+        }
+        return retiredAt.withMinute(0).withSecond(0).withNano(0);
+    }
+
+    private String resolveRetiredAtDateForForm(LocalDateTime retiredAt, String retiredAtDate) {
+        if (hasText(retiredAtDate)) {
+            return retiredAtDate.trim();
+        }
+        return formatRetiredAtDate(retiredAt);
+    }
+
+    private String resolveRetiredAtHourForForm(LocalDateTime retiredAt, String retiredAtHour) {
+        if (hasText(retiredAtHour)) {
+            return retiredAtHour.trim();
+        }
+        return formatRetiredAtHour(retiredAt);
+    }
+
+    private String resolveRetiredAtValueForForm(LocalDateTime retiredAt, String retiredAtDate, String retiredAtHour) {
+        if (hasText(retiredAtDate) && hasText(retiredAtHour)) {
+            return retiredAtDate.trim() + "T" + retiredAtHour.trim() + ":00";
+        }
+        return formatRetiredAt(retiredAt);
+    }
+
+    private boolean shouldDeactivateImmediately(LocalDateTime retiredAt) {
+        return retiredAt != null && !retiredAt.isAfter(LocalDateTime.now());
+    }
+
+    private boolean resolveActiveState(boolean requestedActive, LocalDateTime retiredAt) {
+        if (!requestedActive) {
+            return false;
+        }
+        return !shouldDeactivateImmediately(retiredAt);
+    }
+
+    private String formatRetiredAt(LocalDateTime retiredAt) {
+        retiredAt = normalizeRetiredAt(retiredAt);
+        if (retiredAt == null) {
+            return "";
+        }
+        return retiredAt.format(RETIRED_AT_FORMATTER);
+    }
+
+    private String formatRetiredAtDate(LocalDateTime retiredAt) {
+        retiredAt = normalizeRetiredAt(retiredAt);
+        if (retiredAt == null) {
+            return "";
+        }
+        return retiredAt.format(RETIRED_AT_DATE_FORMATTER);
+    }
+
+    private String formatRetiredAtHour(LocalDateTime retiredAt) {
+        retiredAt = normalizeRetiredAt(retiredAt);
+        if (retiredAt == null) {
+            return "";
+        }
+        return retiredAt.format(RETIRED_AT_HOUR_FORMATTER);
     }
 
     private String nullToEmpty(String value) {
