@@ -55,6 +55,9 @@ _NOISE_WORDS = {"목록", "리스트", "알려줘", "알려주세요", "뭐가",
 # "규칙은", "규칙을" 등 조사 붙은 형태도 노이즈로 처리
 _NOISE_STEMS = ["규칙", "규정", "목록", "리스트", "내용", "정보", "관련", "문제"]
 
+# 전체/목록 요청 감지 키워드
+_BROAD_QUERY_WORDS = {"전체", "전부", "모두", "목록", "리스트", "종류", "어떤것", "뭐가"}
+
 # 한국어 조사 패턴 (키워드에서 제거)
 _PARTICLE_RE = re.compile(r"(에서|에게|부터|까지|으로|에|은|는|이|가|을|를|의|로|와|과|도|만)$")
 
@@ -88,6 +91,39 @@ def _extract_keywords(query: str) -> list[str]:
             stripped.append(s)
     filtered = [w for w in stripped if not _is_noise_word(w)]
     return filtered[:8] if filtered else stripped[:8]
+
+
+def _is_broad_query(query: str) -> bool:
+    """전체/목록/종류 등 광범위 요청인지 판단"""
+    words = set(re.findall(r"[가-힣a-zA-Z]{2,}", query))
+    stripped = {_strip_particle(w) for w in words}
+    # 광범위 키워드가 포함되고, 카테고리 키워드가 없으면 전체 조회
+    has_broad = bool(stripped & _BROAD_QUERY_WORDS)
+    has_category = any(kw in query for kw in _CATEGORY_MAP)
+    return has_broad and not has_category
+
+
+async def search_all_rules(limit: int = 30) -> list[dict]:
+    """전체 규칙 조회 (카테고리별 정렬)"""
+    try:
+        pool = await _get_pool()
+        async with pool.acquire() as conn:
+            async with conn.cursor(aiomysql.DictCursor) as cur:
+                await cur.execute(
+                    """
+                    SELECT id, category, title, content, target
+                    FROM medical_rule
+                    ORDER BY category, id
+                    LIMIT %s
+                    """,
+                    (limit,),
+                )
+                rows = await cur.fetchall()
+        logger.info("All rules search: %d results", len(rows))
+        return rows
+    except Exception as exc:
+        logger.warning("All rules search failed: %s: %s", type(exc).__name__, exc)
+        return []
 
 
 def _detect_categories(query: str) -> list[str]:
@@ -327,6 +363,7 @@ async def build_rule_context(query: str) -> str:
     사용자 질문에 대한 병원규칙 컨텍스트 빌드
 
     검색 전략:
+    0. 전체/목록 요청 시 → 전체 규칙 조회 (최대 30건)
     1. 카테고리 감지 시 → 카테고리 기반 MySQL 조회 (최대 15건)
        + 벡터 검색 병행하여 보충
     2. 카테고리 미감지 → 벡터 + MySQL 하이브리드 병행 검색
@@ -335,6 +372,23 @@ async def build_rule_context(query: str) -> str:
         settings = get_settings()
         parts = []
         top_k = settings.vector_search_top_k
+
+        # 전체/목록 요청 감지
+        if _is_broad_query(query):
+            logger.info("Broad query detected: returning all rules")
+            all_rows = await search_all_rules(limit=30)
+            for row in all_rows:
+                parts.extend(_format_rule_item(row, is_vector=False))
+            if parts:
+                parts.insert(0, "[참고: 병원 규칙 검색 결과 — 전체 목록]")
+                parts.insert(1, "")
+            context = "\n".join(parts) if parts else ""
+            max_chars = max(settings.medical_context_max_chars, 6000)
+            if len(context) > max_chars:
+                truncated = context[:max_chars]
+                last_newline = truncated.rfind("\n")
+                context = truncated[:last_newline] if last_newline > 0 else truncated
+            return context
 
         # 카테고리 감지
         detected_categories = _detect_categories(query)
