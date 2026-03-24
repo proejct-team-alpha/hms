@@ -197,4 +197,8 @@ SELECT
     DATEADD('MINUTE', -(240 + n.x), CURRENT_TIMESTAMP),
     DATEADD('MINUTE', -(240 + n.x), CURRENT_TIMESTAMP)
 FROM SYSTEM_RANGE(1, 60) n;
+
+-- [기능 추가] 환자등록번호(ID) 시작값 설정: 2026년 기준 260001번부터 시작
+ALTER TABLE patient ALTER COLUMN id RESTART WITH 260001;
+
 -- ==============================================================================
