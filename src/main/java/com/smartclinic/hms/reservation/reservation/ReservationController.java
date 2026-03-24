@@ -64,10 +64,25 @@ public class ReservationController {
         return "reservation/direct-reservation";
     }
 
-    // 예약 완료 화면 (flash attribute로 전달된 ReservationCompleteInfo DTO를 뷰에서 {{#info}}로 접근)
+    // 예약 완료 화면 (flash attribute 또는 query param으로 전달된 정보를 뷰에서 {{#info}}로 접근)
     @GetMapping("/complete")
     public String reservationComplete(HttpServletRequest request) {
         request.setAttribute("pageTitle", "예약 완료");
+
+        // flash attribute에 info가 없으면 query param으로 생성 (AJAX 예약 완료 시)
+        if (request.getAttribute("info") == null) {
+            String reservationNumber = request.getParameter("reservationNumber");
+            if (reservationNumber != null && !reservationNumber.isBlank()) {
+                request.setAttribute("info", new ReservationCompleteInfo(
+                        reservationNumber,
+                        request.getParameter("patientName"),
+                        request.getParameter("departmentName"),
+                        request.getParameter("doctorName"),
+                        request.getParameter("reservationDate"),
+                        request.getParameter("timeSlot")
+                ));
+            }
+        }
         return "reservation/reservation-complete";
     }
 

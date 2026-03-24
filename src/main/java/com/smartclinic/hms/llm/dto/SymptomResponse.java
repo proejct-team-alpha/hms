@@ -8,4 +8,5 @@ import lombok.Getter;
 public class SymptomResponse {
     private Long departmentId;
     private String departmentName;
+    private String reason;
 }
