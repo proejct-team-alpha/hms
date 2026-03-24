@@ -66,6 +66,12 @@ FILES.md에 LlmController, LlmService, ChatbotController, LlmRecommendationRepos
 
 **결정**: HMS `ChatbotHistory` 사용. `status`, `metadata` 컬럼 추가 필요 (Task 4에서 처리).
 
+> **💡 입문자 설명**
+> - **Entity 통합이란**: 두 프로젝트에 같은 역할의 테이블이 따로 존재할 때, 하나를 기준으로 합치는 작업입니다. 코드 중복을 없애고 DB 구조를 단순하게 만듭니다.
+> - **HMS 기준을 선택한 이유**: HMS가 이미 운영 중인 메인 프로젝트이므로 기존 컬럼명과 데이터를 유지해야 합니다. spring-llm의 `user_id`, `query`, `response` 같은 이름 대신 HMS의 `staff_id`, `question`, `answer`를 그대로 사용합니다.
+> - **`status`, `metadata` 추가가 필요한 이유**: spring-llm에서는 챗봇 요청이 처리 중(PENDING)인지, 완료(COMPLETED)인지, 실패(FAILED)인지 추적합니다. HMS `ChatbotHistory`에는 이 정보가 없어 추가가 필요합니다.
+> - **쉽게 말하면**: 두 팀이 각자 만든 "대화 기록 노트"를 하나로 합치되, 메인 팀(HMS) 형식을 기준으로 상대방 팀의 유용한 항목만 추가합니다.
+
 ---
 
 ### 3.2 MedicalRule vs HospitalRule
@@ -84,6 +90,11 @@ FILES.md에 LlmController, LlmService, ChatbotController, LlmRecommendationRepos
 
 **결정**: HMS `HospitalRule` 기준 사용. Python RAG는 hospital_rule 테이블 데이터를 그대로 활용.
 `target`, `start_date`, `end_date` 추가 불필요 — is_active로 활성/비활성 관리.
+
+> **💡 입문자 설명**
+> - **enum vs String**: spring-llm은 `category`를 `String(50)`(단순 문자열)으로 저장하고, HMS는 Java `enum`(미리 정해진 값 목록)을 씁니다. enum은 "내과", "외과" 같은 값을 코드에서 타입 안전하게 관리할 수 있고, 오타나 잘못된 값이 컴파일 단계에서 잡힙니다.
+> - **`target`, `start_date`, `end_date` 추가하지 않는 이유**: spring-llm은 규칙의 적용 대상과 기간을 별도 컬럼으로 관리했지만, HMS는 `is_active`(활성/비활성 플래그) 하나로 단순화했습니다. 프로젝트 요구사항에 기간별 규칙 관리가 없으므로 복잡성을 늘릴 필요가 없습니다.
+> - **쉽게 말하면**: 병원 규칙을 관리하는 "규칙집"을 통합할 때, 더 단순하고 이미 잘 동작하는 HMS 방식을 유지하고, 불필요한 기능은 추가하지 않는 결정입니다.
 
 ---
 
@@ -104,6 +115,12 @@ FILES.md에 LlmController, LlmService, ChatbotController, LlmRecommendationRepos
 **결정**: HMS `Reservation` 기준 사용. spring_llm의 start_time/end_time → HMS timeSlot으로 대체.
 spring_llm의 DoctorSchedule 기반 슬롯 조회 로직은 HMS 방식에 맞게 조정.
 
+> **💡 입문자 설명**
+> - **`start_time/end_time` vs `timeSlot`**: spring-llm은 예약 시간을 시작·종료 시각 두 개로 저장했습니다. HMS는 "09:00" 같은 고정 슬롯 문자열 하나로 관리합니다. HMS 방식은 단순하고 슬롯 기반 예약(정해진 시간대 중 선택)에 적합합니다.
+> - **`reservationNumber`**: HMS에만 있는 고유 예약 번호 필드입니다. "RES-20260319-001" 형태로 환자가 예약을 조회할 때 사용합니다. spring-llm에는 없었지만 HMS의 핵심 기능이므로 유지합니다.
+> - **`enum` 상태 관리**: spring-llm은 상태를 String으로 저장했지만, HMS는 `ReservationStatus` enum을 씁니다. 가능한 상태값이 코드에 명시되므로 잘못된 상태가 들어오는 실수를 방지합니다.
+> - **쉽게 말하면**: "예약 시스템의 중심 테이블"을 통합할 때, 예약 번호·환자 정보·부서 정보 등 HMS만의 기능을 살리고, spring-llm의 시작/종료 시각 방식은 HMS 슬롯 방식으로 대체합니다.
+
 ---
 
 ### 3.4 Doctor / Staff / DoctorSchedule
@@ -113,6 +130,10 @@ spring_llm의 DoctorSchedule 기반 슬롯 조회 로직은 HMS 방식에 맞게
 | `Doctor` | HMS 것 사용 | staff(OneToOne), availableDays 이미 존재 |
 | `Staff` | HMS 것 사용 | StaffRole enum, employeeNumber 포함 |
 | `DoctorSchedule` | **추가 불필요** | HMS는 Doctor.availableDays + Reservation.timeSlot 방식으로 관리 |
+
+> **💡 입문자 설명**
+> - **DoctorSchedule이 불필요한 이유**: spring-llm은 의사 스케줄을 별도 테이블로 정교하게 관리했습니다. HMS는 `Doctor.availableDays`(예: "월,화,수")와 `Reservation.timeSlot`(예: "09:00")의 조합으로 더 단순하게 구현합니다. 두 방식 모두 같은 기능을 달성하지만, HMS 방식이 기존 코드와의 호환성이 높아 이를 유지합니다.
+> - **쉽게 말하면**: 복잡한 스케줄 관리 테이블 대신, 의사 정보에 요일을 직접 저장하는 단순한 방식을 선택한 것입니다.
 
 ---
 

@@ -28,6 +28,13 @@
 - `POST /reservation/cancel/{id}` → `redirect:/reservation/cancel-complete`
 - `POST /reservation/modify/{id}` → `redirect:/reservation/modify-complete`
 
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 예약 처리(생성/취소/변경) 완료 후 화면에 정보를 전달하는 방식을 바꿉니다. 이전에는 URL 주소창에 이름·진료과·의사명을 직접 붙였지만, 이제 서버 내부 임시 저장소(flash)를 통해 전달합니다.
+> - **왜 `addFlashAttribute`를 선택했는지**: `addAttribute()`는 데이터를 URL 쿼리 파라미터(`?name=홍길동&...`)로 변환해 주소창에 노출합니다. 환자 이름·진료과 같은 개인정보가 브라우저 히스토리, 서버 로그, 공유 링크에 남을 수 있습니다. `addFlashAttribute()`는 데이터를 서버 세션에 딱 한 번만 저장했다가 다음 요청 후 자동 삭제합니다.
+> - **PRG 패턴이란**: POST(폼 제출) → Redirect(주소 이동) → GET(완료 화면 조회) 흐름입니다. 새로고침 시 폼이 중복 제출되는 문제를 막는 표준 방식입니다. flash attribute는 이 패턴에서 Redirect와 GET 사이에 데이터를 안전하게 전달하는 역할입니다.
+> - **다른 방법은 없는지**: 세션에 직접 저장하거나, 완료 페이지에서 DB를 다시 조회할 수도 있습니다. 하지만 flash attribute는 Spring MVC가 관리하므로 코드가 단순하고, 조회 1번 결과를 재활용할 수 있어 가장 적합합니다.
+> - **쉽게 말하면**: 정보를 "주소창에 적어" 전달하던 것을 "봉투에 넣어 한 번만 건네는" 방식으로 바꿔, 개인정보가 URL에 노출되지 않게 됩니다.
+
 ### 2. ReservationController — 전 메서드 상세 주석 추가
 
 각 메서드에 역할 설명 주석, 내부 단계별 주석 추가:
@@ -64,6 +71,19 @@
 - `id="success-view"` / `id="error-view"` + JS hidden 토글 → `{{#info}}` / `{{^info}}` Mustache 조건으로 교체
 - "예약 조회" `<button onclick=...>` → `<a href="/reservation/lookup?reservationNumber={{reservationNumber}}">` 로 교체 (JS 불필요)
 - `<script>` 블록에서 URL 파라미터 파싱 로직 전체 제거, `feather.replace()` 만 유지
+
+> **💡 입문자 설명**
+>
+> **`{{#info}}` / `{{^info}}` — Mustache 조건문**
+> - `{{#info}}...{{/info}}`는 "info 객체가 존재할 때" 블록을 렌더링합니다. `{{^info}}...{{/info}}`는 반대로 "info가 없을 때"를 의미합니다.
+> - 이전 방식은 JavaScript가 URL에서 데이터를 꺼내(`urlParams.get('name')`) DOM을 직접 조작했습니다. 서버 렌더링 방식은 서버가 HTML을 만들 때 값을 이미 채워 넣어 완성된 페이지를 보냅니다. JS 없이도 동작하고, 코드가 훨씬 단순해집니다.
+> - **다른 방법**: JavaScript `fetch()`로 API를 호출해 동적으로 그릴 수도 있지만, 이 프로젝트는 Mustache 서버 렌더링을 기본으로 하므로 이 방식이 적합합니다.
+>
+> **`<button onclick=...>` → `<a href=...>` 교체**
+> - 단순히 다른 페이지로 이동하는 기능이라면 `<button>` + JavaScript보다 `<a>` 태그가 적합합니다. 브라우저 기본 동작(우클릭 → 새 탭 열기, 링크 복사 등)을 지원하고, JavaScript가 없어도 동작합니다.
+> - `{{reservationNumber}}`를 URL에 넣는 것은 개인정보가 아닌 식별자이므로 URL 노출이 적절합니다.
+>
+> **쉽게 말하면**: 이전에는 "주소창 정보를 JavaScript로 읽어서 화면을 꾸미는" 방식이었다면, 이제는 "서버가 완성된 HTML을 그대로 보내주는" 방식입니다. 더 안전하고 간단합니다.
 
 ---
 
