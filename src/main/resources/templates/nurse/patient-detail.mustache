@@ -189,13 +189,7 @@
                 <i data-feather="package" class="w-5 h-5 text-indigo-600"></i>
                 물품 사용
               </h3>
-              {{^detail.isTreatmentCompleted}}
-              <button type="button" id="item-batch-use-btn"
-                      class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-1.5">
-                <i data-feather="plus-square" class="w-4 h-4"></i>
-                선택 물품 일괄 사용
-              </button>
-              {{/detail.isTreatmentCompleted}}
+            </div>
             </div>
             <div class="flex gap-1.5" id="item-category-btns">
               <button type="button" data-cat="" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors">전체</button>
@@ -389,38 +383,6 @@
           });
         });
       });
-
-      // 일괄 사용
-      const batchUseBtn = document.getElementById('item-batch-use-btn');
-      if (batchUseBtn) {
-        batchUseBtn.addEventListener('click', function() {
-          const requests = [];
-          const resId = "{{detail.reservationId}}";
-          const csrfToken = document.querySelector('input[name="_csrf"]').value;
-
-          document.querySelectorAll('.item-card').forEach(card => {
-            const amountInput = card.querySelector('input[name="amount"]');
-            const amount = amountInput ? amountInput.value.trim() : "";
-            if (amount && parseInt(amount) > 0) {
-              requests.push({ id: card.getAttribute('data-id'), amount: parseInt(amount) });
-            }
-          });
-
-          if (requests.length === 0) return alert('사용할 물품의 수량을 입력해주세요.');
-
-          fetch('/nurse/item/use-batch', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-            body: JSON.stringify({ reservationId: resId, requests: requests })
-          }).then(res => res.json()).then(data => {
-            if (data.successes && data.successes.length > 0) {
-              if (data.errors && data.errors.length > 0) alert('일부 물품의 재고가 부족합니다.\n\n' + data.errors.join('\n'));
-              location.reload(); 
-            } else if (data.errors && data.errors.length > 0) alert('처리에 실패했습니다:\n' + data.errors.join('\n'));
-            else if (data.error) alert('오류: ' + data.error);
-          });
-        });
-      }
 
       window.cancelUsage = function(logId) {
         if(!confirm('정말 취소하시겠습니까?')) return;

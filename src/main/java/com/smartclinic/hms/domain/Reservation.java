@@ -123,6 +123,15 @@ public class Reservation {
     }
 
     /**
+     * 접수 상세 화면에서 진료과 및 담당 의사를 변경할 때 사용한다.
+     */
+    public void updateReceptionInfo(Department department, Doctor doctor) {
+        checkPaid();
+        this.department = department;
+        this.doctor = doctor;
+    }
+
+    /**
      * 예약을 실제 접수(RECEIVED) 상태로 전이시키고 접수 시각을 기록한다.
      * Staff가 '접수' 버튼을 눌러 환자의 내원을 확인한 시점에 호출된다.
      */

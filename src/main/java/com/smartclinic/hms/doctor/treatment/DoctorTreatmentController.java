@@ -120,19 +120,6 @@ public class DoctorTreatmentController {
         }
     }
 
-    @PostMapping("/item/use-batch")
-    @ResponseBody
-    public ResponseEntity<?> useItemBatch(@org.springframework.web.bind.annotation.RequestBody Map<String, Object> body) {
-        try {
-            List<Map<String, Object>> requests = (List<Map<String, Object>>) body.get("requests");
-            Long reservationId = Long.valueOf(body.get("reservationId").toString());
-            Map<String, Object> result = itemManagerService.useItemsBatch(requests, reservationId);
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
-    }
-
     @PostMapping("/item/cancel")
     @ResponseBody
     public ResponseEntity<?> cancelItem(@RequestParam("logId") Long logId,

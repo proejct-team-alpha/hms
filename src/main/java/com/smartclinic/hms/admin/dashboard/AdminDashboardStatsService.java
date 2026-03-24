@@ -1,18 +1,21 @@
 package com.smartclinic.hms.admin.dashboard;
 
+import com.smartclinic.hms.admin.dashboard.dto.AdminDashboardChartResponse;
+import com.smartclinic.hms.admin.dashboard.dto.AdminDashboardStatsResponse;
 import com.smartclinic.hms.admin.item.ItemRepository;
 import com.smartclinic.hms.admin.reservation.AdminReservationRepository;
 import com.smartclinic.hms.admin.staff.AdminStaffRepository;
-import com.smartclinic.hms.admin.dashboard.dto.AdminDashboardChartResponse;
-import com.smartclinic.hms.admin.dashboard.dto.AdminDashboardStatsResponse;
-import com.smartclinic.hms.domain.ItemCategory;
-
+import com.smartclinic.hms.item.log.ItemStockLog;
+import com.smartclinic.hms.item.log.ItemStockLogRepository;
+import com.smartclinic.hms.item.log.ItemStockType;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,20 +25,19 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AdminDashboardStatsService {
-    // 차트 범위
-    private static final long CHART_RANGE_DAYS = 3L;
+    private static final long DAILY_PATIENT_RANGE_DAYS = 3L;
+    private static final int ITEM_FLOW_CHART_DAYS = 7;
+    private static final DateTimeFormatter ITEM_FLOW_LABEL_FORMAT = DateTimeFormatter.ofPattern("MM/dd");
 
-    // repo 선언
     private final AdminReservationRepository adminReservationRepository;
     private final AdminStaffRepository adminStaffRepository;
     private final ItemRepository itemRepository;
+    private final ItemStockLogRepository itemStockLogRepository;
 
-    // 관리자 대시보드 날짜 지정
     public AdminDashboardStatsResponse getDashboardStats() {
         return getDashboardStats(LocalDate.now());
     }
 
-    // 관리자 대시보드 통계 조회
     public AdminDashboardStatsResponse getDashboardStats(LocalDate today) {
         return new AdminDashboardStatsResponse(
                 countTodayReservations(today),
@@ -44,60 +46,91 @@ public class AdminDashboardStatsService {
                 countLowStockItems());
     }
 
-    // 관리자 대시보드 날짜 지정
     public AdminDashboardChartResponse getDashboardChart() {
         return getDashboardChart(LocalDate.now());
     }
 
-    // 관리자 대시보드 차트 조회
     public AdminDashboardChartResponse getDashboardChart(LocalDate today) {
-        LocalDate startDate = today.minusDays(CHART_RANGE_DAYS);
-        LocalDate endDate = today.plusDays(CHART_RANGE_DAYS);
+        LocalDate patientStartDate = today.minusDays(DAILY_PATIENT_RANGE_DAYS);
+        LocalDate patientEndDate = today.plusDays(DAILY_PATIENT_RANGE_DAYS);
 
         return new AdminDashboardChartResponse(
-                buildCategoryCounts(),
-                buildDailyPatients(startDate, endDate));
+                buildItemFlowDays(today),
+                buildDailyPatients(patientStartDate, patientEndDate));
     }
 
-    // 오늘 날짜의 예약 개수
     private long countTodayReservations(LocalDate today) {
         return adminReservationRepository.countByReservationDate(today);
     }
 
-    // 총 예약 수 조회
     private long countTotalReservations() {
         return adminReservationRepository.count();
     }
 
-    // 활성화된 직원 수 조회
     private long countActiveStaff() {
         return adminStaffRepository.countByActiveTrue();
     }
 
-    // 재고 수 조회
     private long countLowStockItems() {
         return itemRepository.countLowStockItems();
     }
 
-    // 카테고리별 카운트
-    private List<AdminDashboardChartResponse.CategoryCount> buildCategoryCounts() {
-        return itemRepository.findCategoryCounts()
-                .stream()
-                .map(categoryCount -> new AdminDashboardChartResponse.CategoryCount(
-                        toCategoryName(categoryCount.getCategory()),
-                        categoryCount.getTotalCount()))
+    private List<AdminDashboardChartResponse.ItemFlowDay> buildItemFlowDays(LocalDate today) {
+        LocalDateTime start = today.minusDays(ITEM_FLOW_CHART_DAYS - 1L).atStartOfDay();
+        LocalDateTime endExclusive = today.plusDays(1).atStartOfDay();
+        List<ItemStockLog> logs = itemStockLogRepository.findByCreatedAtBetweenOrderByCreatedAtAsc(start, endExclusive);
+
+        Map<LocalDate, int[]> dailyFlowMap = new LinkedHashMap<>();
+        for (int i = ITEM_FLOW_CHART_DAYS - 1; i >= 0; i--) {
+            dailyFlowMap.put(today.minusDays(i), new int[]{0, 0});
+        }
+
+        for (ItemStockLog log : logs) {
+            LocalDate logDate = log.getCreatedAt().toLocalDate();
+            if (!dailyFlowMap.containsKey(logDate)) {
+                continue;
+            }
+
+            int[] amounts = dailyFlowMap.get(logDate);
+            if (log.getType() == ItemStockType.IN) {
+                amounts[0] += log.getAmount();
+            } else {
+                amounts[1] += log.getAmount();
+            }
+        }
+
+        int maxAmount = dailyFlowMap.values().stream()
+                .mapToInt(amounts -> Math.max(amounts[0], amounts[1]))
+                .max()
+                .orElse(0);
+
+        return dailyFlowMap.entrySet().stream()
+                .map(entry -> toItemFlowDay(entry, maxAmount))
                 .toList();
     }
 
-    // 일별 환자 수
+    private AdminDashboardChartResponse.ItemFlowDay toItemFlowDay(Map.Entry<LocalDate, int[]> entry, int maxAmount) {
+        int inAmount = entry.getValue()[0];
+        int outAmount = entry.getValue()[1];
+        int inHeight = maxAmount > 0 ? (int) Math.round(inAmount * 100.0 / maxAmount) : 0;
+        int outHeight = maxAmount > 0 ? (int) Math.round(outAmount * 100.0 / maxAmount) : 0;
+
+        return new AdminDashboardChartResponse.ItemFlowDay(
+                entry.getKey().format(ITEM_FLOW_LABEL_FORMAT),
+                inAmount,
+                outAmount,
+                inHeight,
+                outHeight);
+    }
+
     private List<AdminDashboardChartResponse.DailyPatientCount> buildDailyPatients(
             LocalDate startDate,
             LocalDate endDate) {
         Map<LocalDate, Long> dailyPatientCounts = adminReservationRepository.findDailyPatientCounts(startDate, endDate)
                 .stream()
                 .collect(Collectors.toMap(
-                        projection -> projection.getDate(),
-                        projection -> projection.getPatientCount()));
+                        AdminReservationRepository.DailyPatientCountProjection::getDate,
+                        AdminReservationRepository.DailyPatientCountProjection::getPatientCount));
 
         return Stream
                 .iterate(startDate, date -> !date.isAfter(endDate), date -> date.plusDays(1))
@@ -105,13 +138,5 @@ public class AdminDashboardStatsService {
                         date,
                         dailyPatientCounts.getOrDefault(date, 0L)))
                 .toList();
-    }
-
-    private String toCategoryName(ItemCategory category) {
-        return switch (category) {
-            case MEDICAL_SUPPLIES -> "의료 소모품";
-            case MEDICAL_EQUIPMENT -> "의료 장비";
-            case GENERAL_SUPPLIES -> "일반 소모품";
-        };
     }
 }

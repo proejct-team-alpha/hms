@@ -61,7 +61,7 @@ public class AdminItemController {
             int quantity = parseQuantity(quantityStr, "재고 수량");
             int minQuantity = parseQuantity(minQuantityStr, "최소 수량");
             adminItemService.saveItem(id, name, category, quantity, minQuantity);
-            ra.addFlashAttribute("message", "물품이 등록되었습니다.");
+            ra.addFlashAttribute("message", "물품을 등록했습니다.");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", e.getMessage());
             return redirectForm;
@@ -76,7 +76,7 @@ public class AdminItemController {
         try {
             int amount = parseQuantity(amountStr, "입고 수량");
             adminItemService.restockItem(id, amount);
-            ra.addFlashAttribute("message", "물품이 입고되었습니다.");
+            ra.addFlashAttribute("message", "물품을 입고했습니다.");
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -86,34 +86,19 @@ public class AdminItemController {
     @PostMapping("/delete")
     public String delete(@RequestParam("id") Long id, RedirectAttributes ra) {
         adminItemService.deleteItem(id);
-        ra.addFlashAttribute("message", "물품이 삭제되었습니다.");
+        ra.addFlashAttribute("message", "물품을 삭제했습니다.");
         return "redirect:/admin/item/list";
     }
 
     @GetMapping("/use")
-    public String itemUsePage(@RequestParam(name = "fromDate", required = false) String fromDate,
-                              @RequestParam(name = "toDate", required = false) String toDate,
-                              Model model) {
-        DateRange dateRange = resolveDateRange(fromDate, toDate);
-        List<ItemUsageLogDto> usageLogs = List.of();
-        long totalUsedAmount = 0L;
-
-        if (!dateRange.hasError()) {
-            usageLogs = itemManagerService.getStaffUsageLogs(dateRange.parsedFromDate(), dateRange.parsedToDate());
-            totalUsedAmount = itemManagerService.getTotalStaffUsageAmount(
-                    dateRange.parsedFromDate(),
-                    dateRange.parsedToDate());
-        }
+    public String itemUsePage(Model model) {
+        List<ItemUsageLogDto> usageLogs = itemManagerService.getTodayStaffUsageLogs();
+        long totalUsedAmount = itemManagerService.getTodayTotalStaffUsageAmount();
 
         model.addAttribute("items", itemManagerService.getItemList(null));
         model.addAttribute("todayLogs", usageLogs);
         model.addAttribute("todayLogCount", usageLogs.size());
         model.addAttribute("todayTotalUsedAmount", totalUsedAmount);
-        model.addAttribute("fromDate", dateRange.fromDate());
-        model.addAttribute("toDate", dateRange.toDate());
-        if (dateRange.hasError()) {
-            model.addAttribute("dateError", dateRange.errorMessage());
-        }
         model.addAttribute("pageTitle", "물품 출고");
         model.addAttribute("isAdminItemList", true);
         model.addAttribute("isAdminItemUse", true);
@@ -123,25 +108,21 @@ public class AdminItemController {
     @PostMapping("/use")
     @ResponseBody
     public ResponseEntity<?> useItem(@RequestParam("id") Long id,
-                                     @RequestParam("amount") String amountStr,
-                                     @RequestParam(name = "fromDate", required = false) String fromDate,
-                                     @RequestParam(name = "toDate", required = false) String toDate) {
+                                     @RequestParam("amount") String amountStr) {
         try {
             long parsed = Long.parseLong(amountStr.trim());
             if (parsed <= 0 || parsed > Integer.MAX_VALUE) {
                 return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해 주세요."));
             }
 
-            DateRange dateRange = resolveDateRange(fromDate, toDate);
-            if (dateRange.hasError()) {
-                return ResponseEntity.badRequest().body(Map.of("error", dateRange.errorMessage()));
-            }
-
             int newQuantity = itemManagerService.useItem(id, (int) parsed, null);
-            List<ItemUsageLogDto> logs = itemManagerService.getStaffUsageLogs(
-                    dateRange.parsedFromDate(),
-                    dateRange.parsedToDate());
-            return ResponseEntity.ok(Map.of("quantity", newQuantity, "logs", logs));
+            List<ItemUsageLogDto> logs = itemManagerService.getTodayStaffUsageLogs();
+            long totalUsedAmount = itemManagerService.getTodayTotalStaffUsageAmount();
+            return ResponseEntity.ok(Map.of(
+                    "quantity", newQuantity,
+                    "logs", logs,
+                    "todayLogCount", logs.size(),
+                    "todayTotalUsedAmount", totalUsedAmount));
         } catch (NumberFormatException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해 주세요."));
         } catch (Exception e) {
@@ -196,7 +177,7 @@ public class AdminItemController {
             LocalDate parsedToDate = LocalDate.parse(resolvedToDate);
 
             if (parsedFromDate.isAfter(parsedToDate)) {
-                return DateRange.error(resolvedFromDate, resolvedToDate, "시작일은 종료일보다 늦을 수 없습니다.");
+                return DateRange.error(resolvedFromDate, resolvedToDate, "시작일이 종료일보다 늦을 수 없습니다.");
             }
 
             return DateRange.success(resolvedFromDate, resolvedToDate, parsedFromDate, parsedToDate);

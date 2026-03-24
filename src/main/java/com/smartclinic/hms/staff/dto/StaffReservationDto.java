@@ -4,12 +4,14 @@ import com.smartclinic.hms.domain.Reservation;
 import com.smartclinic.hms.domain.ReservationStatus;
 import com.smartclinic.hms.domain.ReservationSource;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 public class StaffReservationDto {
 
     private final Long id;
-    private final Long patientId; // [신규 추가] 환자 고유 번호 (ID)
+    private final Long patientId; 
     private final String reservationNumber;
     private final String patientName;
     private final String patientPhone;
@@ -22,51 +24,39 @@ public class StaffReservationDto {
     private final String departmentName;
     private final Long doctorId;
     private final String doctorName;
-    private final String statusText;
-    private final String statusBadgeClass;
+    private String statusText;
+    private String statusBadgeClass;
     private final String sourceText;
     private final String sourceBadgeClass;
+    private final String ageGender; 
+    private final String birthInfo; 
+    private final String birthDatePart; 
+    private final String genderDigitPart; 
+    private final String visitReason; 
     private final String cancellationReason;
+    private final String actualReceptionDate; 
+    private final String receptionTime; 
+    private final boolean treatmentCompleted; 
+    private final boolean paid; 
     private final boolean canReceive;
     private final boolean canCancel;
-
-    // ==========================================
-    // [신규 추가] 팀 프로젝트 - 환자 초재진 정보
-    // ==========================================
-    
-    /**
-     * 초진 여부 (true: 초진, false: 재진)
-     * 진료 완료된 이력이 0건이면 초진으로 표시됩니다.
-     */
+    /* [기능 구현] 최종 진료과, 담당 의사, 내원 사유의 수정 가능 여부 판단 플래그 */
+    private final boolean canEditReceptionInfo;
     private final boolean isFirstVisit;
-
-    /**
-     * 총 진료 완료 횟수
-     */
     private final long visitCount;
-
-    /**
-     * 과거 진료 이력 목록 (최신순)
-     */
     private final java.util.List<com.smartclinic.hms.domain.PatientHistoryDto> history;
 
     public StaffReservationDto(Reservation r) {
-        this(r, 0L, new java.util.ArrayList<>()); // 기본값 처리
+        this(r, 0L, new java.util.ArrayList<>()); 
     }
 
     public StaffReservationDto(Reservation r, long completedCount) {
-        this(r, completedCount, new java.util.ArrayList<>()); // 히스토리 없이 생성하는 경우
+        this(r, completedCount, new java.util.ArrayList<>()); 
     }
 
-    /**
-     * 초재진 정보를 포함한 상세 생성자
-     * @param r 예약 엔티티
-     * @param completedCount 해당 환자의 진료 완료된 예약 건수
-     * @param history 과거 전체 히스토리 목록
-     */
     public StaffReservationDto(Reservation r, long completedCount, java.util.List<com.smartclinic.hms.domain.PatientHistoryDto> history) {
         this.id = r.getId();
-        this.patientId = r.getPatient().getId(); // [주석] 환자 엔티티의 고유 ID를 가져옵니다.
+        this.patientId = r.getPatient().getId(); 
         this.reservationNumber = r.getReservationNumber();
         this.patientName = r.getPatient().getName();
         this.patientPhone = r.getPatient().getPhone();
@@ -79,23 +69,36 @@ public class StaffReservationDto {
         this.departmentName = r.getDepartment().getName();
         this.doctorId = r.getDoctor().getId();
         this.doctorName = r.getDoctor().getStaff().getName();
-        this.cancellationReason = r.getCancellationReason();
+        this.cancellationReason = r.getCancellationReason() != null ? r.getCancellationReason() : "-";
         this.history = history;
 
-        this.statusText = switch (r.getStatus()) {
-            case RESERVED -> "접수 대기";
-            case RECEIVED -> "진료 대기";
-            case IN_TREATMENT -> "진료중";
-            case COMPLETED -> "진료 완료";
-            case CANCELLED -> "취소됨";
-        };
-        this.statusBadgeClass = switch (r.getStatus()) {
-            case RESERVED -> "bg-indigo-100 text-indigo-700";
-            case RECEIVED -> "bg-orange-100 text-orange-700";
-            case IN_TREATMENT -> "bg-indigo-100 text-indigo-800";
-            case COMPLETED -> "bg-green-100 text-green-700";
-            case CANCELLED -> "bg-slate-100 text-slate-500";
-        };
+        String bInfo = r.getPatient().getBirthInfo();
+        String ageGen = "-";
+        if (bInfo != null && bInfo.contains("-") && bInfo.length() >= 8) {
+            try {
+                String[] parts = bInfo.split("-");
+                int birthYear2Digit = Integer.parseInt(parts[0].substring(0, 2));
+                String genderDigit = parts[1];
+                int currentYear = java.time.LocalDate.now().getYear();
+                int fullBirthYear = (genderDigit.equals("1") || genderDigit.equals("2")) ? 1900 + birthYear2Digit : 2000 + birthYear2Digit;
+                int age = currentYear - fullBirthYear + 1;
+                String gender = (genderDigit.equals("1") || genderDigit.equals("3")) ? "M" : "F";
+                ageGen = gender + " / " + age + " 세";
+            } catch (Exception e) { ageGen = "-"; }
+        }
+        this.ageGender = ageGen;
+        this.birthInfo = bInfo != null ? bInfo : "";
+        
+        if (this.birthInfo != null && this.birthInfo.contains("-")) {
+            String[] parts = this.birthInfo.split("-");
+            this.birthDatePart = (parts.length > 0) ? parts[0] : "";
+            this.genderDigitPart = (parts.length > 1) ? parts[1] : "";
+        } else {
+            this.birthDatePart = (this.birthInfo != null) ? this.birthInfo : "";
+            this.genderDigitPart = "";
+        }
+
+        this.visitReason = r.getPatient().getVisitReason() != null ? r.getPatient().getVisitReason() : "";
         this.sourceText = switch (r.getSource()) {
             case ONLINE -> "온라인";
             case PHONE -> "전화";
@@ -106,12 +109,51 @@ public class StaffReservationDto {
             case PHONE -> "bg-purple-100 text-purple-800";
             case WALKIN -> "bg-orange-100 text-orange-800";
         };
-        this.canReceive = r.getStatus() == ReservationStatus.RESERVED;
-        this.canCancel = r.getStatus() == ReservationStatus.RESERVED
-                || r.getStatus() == ReservationStatus.RECEIVED;
 
-        // 초재진 판별 로직 적용
+        this.canReceive = r.getStatus() == ReservationStatus.RESERVED;
+        this.canCancel = r.getStatus() == ReservationStatus.RESERVED || r.getStatus() == ReservationStatus.RECEIVED;
+        this.treatmentCompleted = r.isTreatmentCompleted();
+        this.paid = r.isPaid();
+        this.canEditReceptionInfo = !this.paid && !this.treatmentCompleted && 
+                                   (r.getStatus() == ReservationStatus.RESERVED || r.getStatus() == ReservationStatus.RECEIVED);
         this.visitCount = completedCount;
         this.isFirstVisit = (completedCount == 0);
+
+        if (r.getReceptionTime() != null) {
+            this.actualReceptionDate = r.getReceptionTime().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            this.receptionTime = r.getReceptionTime().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+        } else {
+            this.actualReceptionDate = null;
+            this.receptionTime = null;
+        }
+
+        // [핵심수정] 상태 텍스트 및 배지 클래스를 '단 한 번'만 할당하도록 통합
+        if (this.paid) {
+            this.statusText = "수납 완료";
+            this.statusBadgeClass = "bg-green-100 text-green-800";
+        } else if (this.treatmentCompleted) {
+            this.statusText = "처치 완료";
+            this.statusBadgeClass = "bg-purple-100 text-purple-700";
+        } else {
+            this.statusText = switch (r.getStatus()) {
+                case RESERVED -> "예약";
+                case RECEIVED -> "진료 대기";
+                case IN_TREATMENT -> "진료중";
+                case COMPLETED -> "진료 완료";
+                case CANCELLED -> "취소됨";
+            };
+            this.statusBadgeClass = switch (r.getStatus()) {
+                case RESERVED -> "bg-indigo-100 text-indigo-700";
+                case RECEIVED -> "bg-orange-100 text-orange-700";
+                case IN_TREATMENT -> "bg-indigo-100 text-indigo-800";
+                case COMPLETED -> "bg-green-100 text-green-700";
+                case CANCELLED -> "bg-slate-100 text-slate-500";
+            };
+        }
     }
+
+    public String getActualReceptionDate() { return actualReceptionDate; }
+    public String getReceptionTime() { return receptionTime; }
+    public boolean isTreatmentCompleted() { return treatmentCompleted; }
+    public boolean isPaid() { return paid; }
 }

@@ -1,7 +1,6 @@
 package com.smartclinic.hms.config;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
@@ -12,12 +11,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/error")
 public class ErrorPageController {
 
-    @GetMapping("/403")
+    @RequestMapping("/403")
     public String forbidden() {
         return "error/403";
     }
 
-    @GetMapping("/404")
+    @RequestMapping("/404")
     public String notFound() {
         return "error/404";
     }
