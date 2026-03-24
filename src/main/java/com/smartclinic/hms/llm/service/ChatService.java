@@ -39,7 +39,7 @@ public class ChatService {
 
         return llmWebClient.post()
                 .uri("/infer/rule")
-                .bodyValue(Map.of("query", query, "max_length", 512, "temperature", 0.3))
+                .bodyValue(Map.of("query", query, "max_length", 1024, "temperature", 0.3))
                 .retrieve()
                 .bodyToMono(LlmResponse.class)
                 .map(LlmResponse::getGeneratedText)
@@ -58,7 +58,7 @@ public class ChatService {
 
         return llmWebClient.post()
                 .uri("/infer/rule/stream")
-                .bodyValue(Map.of("query", query, "max_length", 512, "temperature", 0.3))
+                .bodyValue(Map.of("query", query, "max_length", 1024, "temperature", 0.3))
                 .accept(MediaType.TEXT_EVENT_STREAM)
                 .retrieve()
                 .bodyToFlux(String.class)
