@@ -101,6 +101,8 @@ class AdminDashboardStatsServiceTest {
         assertThat(response.dailyPatients().get(1).patientCount()).isEqualTo(3L);
         assertThat(response.dailyPatients().get(3).date()).isEqualTo(today);
         assertThat(response.dailyPatients().get(3).patientCount()).isEqualTo(4L);
+        assertThat(response.dailyPatients().get(4).date()).isEqualTo(today.plusDays(1));
+        assertThat(response.dailyPatients().get(4).patientCount()).isEqualTo(1L);
         assertThat(response.dailyPatients().get(6).date()).isEqualTo(today.plusDays(3));
         assertThat(response.dailyPatients().get(6).patientCount()).isEqualTo(0L);
 

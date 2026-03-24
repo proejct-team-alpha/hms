@@ -6,9 +6,12 @@ package com.smartclinic.hms.reservation.reservation;
 import java.time.LocalDate;
 import java.util.List;
 
+import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,6 +38,14 @@ public class ReservationApiController {
     @GetMapping("/doctors")
     public ResponseEntity<Resp<List<DoctorDto>>> getDoctors(@RequestParam("departmentId") Long departmentId) {
         return Resp.ok(reservationService.getDoctorsByDepartment(departmentId));
+    }
+
+    // 예약 생성 API (증상 분석 예약 AJAX용 — JSON 요청/응답)
+    @PostMapping("/create")
+    public ResponseEntity<Resp<ReservationCompleteInfo>> createReservation(
+            @Valid @RequestBody CreateReservationRequest form) {
+        ReservationCompleteInfo info = reservationService.createReservation(form);
+        return Resp.ok(info);
     }
 
     // 예약된 시간 슬롯 조회 (Flatpickr 비활성화용, excludeId 있으면 변경 중인 예약 제외)
