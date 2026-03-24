@@ -187,6 +187,11 @@ public class ItemManagerService {
                 toDate.plusDays(1).atStartOfDay());
     }
 
+    public long getTodayTotalStaffUsageAmount() {
+        LocalDate today = LocalDate.now();
+        return getTotalStaffUsageAmount(today, today);
+    }
+
     public List<ItemUsageLogDto> getTodayUsageLogsByUser(String username) {
         LocalDateTime start = LocalDate.now().atStartOfDay();
         LocalDateTime end = start.plusDays(1);

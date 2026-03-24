@@ -10,6 +10,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.Map;
 
 import java.util.List;
@@ -140,13 +142,85 @@ public class ItemManagerController {
     }
 
     @GetMapping("/item-history")
-    public String itemHistory(Model model) {
-        var histories = itemService.getStockHistory();
+    public String itemHistory(@RequestParam(name = "fromDate", required = false) String fromDate,
+                              @RequestParam(name = "toDate", required = false) String toDate,
+                              Model model) {
+        DateRange dateRange = resolveDateRange(fromDate, toDate);
+        List<?> histories = List.of();
+        long totalIn = 0L;
+        long totalOut = 0L;
+
+        if (!dateRange.hasError()) {
+            histories = itemService.getStockHistory(dateRange.parsedFromDate(), dateRange.parsedToDate());
+            totalIn = itemService.getTotalInAmount(dateRange.parsedFromDate(), dateRange.parsedToDate());
+            totalOut = itemService.getTotalOutAmount(dateRange.parsedFromDate(), dateRange.parsedToDate());
+        }
+
+        model.addAttribute("fromDate", dateRange.fromDate());
+        model.addAttribute("toDate", dateRange.toDate());
+        if (dateRange.hasError()) {
+            model.addAttribute("dateError", dateRange.errorMessage());
+        }
         model.addAttribute("histories", histories);
         model.addAttribute("hasHistories", !histories.isEmpty());
-        model.addAttribute("totalIn", itemService.getTotalInAmount());
-        model.addAttribute("totalOut", itemService.getTotalOutAmount());
-        model.addAttribute("pageTitle", "입출고 내역");
+        model.addAttribute("totalCount", histories.size());
+        model.addAttribute("totalIn", totalIn);
+        model.addAttribute("totalOut", totalOut);
+        model.addAttribute("pageTitle", "물품 입출고 내역");
+        model.addAttribute("isItemHistory", true);
         return "item-manager/item-history";
+    }
+
+    private DateRange resolveDateRange(String fromDate, String toDate) {
+        LocalDate today = LocalDate.now();
+        boolean fromBlank = isBlank(fromDate);
+        boolean toBlank = isBlank(toDate);
+        boolean useTodayDefault = fromBlank && toBlank;
+        String resolvedFromDate = useTodayDefault ? today.toString() : normalizeDateValue(fromDate);
+        String resolvedToDate = useTodayDefault ? today.toString() : normalizeDateValue(toDate);
+
+        if (fromBlank != toBlank) {
+            return DateRange.error(resolvedFromDate, resolvedToDate, "시작일과 종료일을 모두 입력해 주세요.");
+        }
+
+        try {
+            LocalDate parsedFromDate = LocalDate.parse(resolvedFromDate);
+            LocalDate parsedToDate = LocalDate.parse(resolvedToDate);
+
+            if (parsedFromDate.isAfter(parsedToDate)) {
+                return DateRange.error(resolvedFromDate, resolvedToDate, "시작일이 종료일보다 늦을 수 없습니다.");
+            }
+
+            return DateRange.success(resolvedFromDate, resolvedToDate, parsedFromDate, parsedToDate);
+        } catch (DateTimeParseException e) {
+            return DateRange.error(resolvedFromDate, resolvedToDate, "날짜 형식이 올바르지 않습니다.");
+        }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private String normalizeDateValue(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private record DateRange(String fromDate,
+                             String toDate,
+                             LocalDate parsedFromDate,
+                             LocalDate parsedToDate,
+                             String errorMessage) {
+
+        private static DateRange success(String fromDate, String toDate, LocalDate parsedFromDate, LocalDate parsedToDate) {
+            return new DateRange(fromDate, toDate, parsedFromDate, parsedToDate, null);
+        }
+
+        private static DateRange error(String fromDate, String toDate, String errorMessage) {
+            return new DateRange(fromDate, toDate, null, null, errorMessage);
+        }
+
+        private boolean hasError() {
+            return errorMessage != null;
+        }
     }
 }
