@@ -45,6 +45,9 @@ public class PhoneReservationController {
 
         // 1. DTO 검증 실패 처리
         if (bindingResult.hasErrors()) {
+            java.util.List<String> errors = new java.util.ArrayList<>();
+            bindingResult.getAllErrors().forEach(e -> errors.add(e.getDefaultMessage()));
+            model.addAttribute("message", String.join(", ", errors));
             model.addAttribute("form", request);
             model.addAttribute("departments", receptionService.getAllDepartments());
             model.addAttribute("doctors", receptionService.getAllDoctors());

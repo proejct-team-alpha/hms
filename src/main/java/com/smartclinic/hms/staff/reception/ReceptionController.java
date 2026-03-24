@@ -45,6 +45,7 @@ public class ReceptionController {
             @RequestParam(name = "deptIds", required = false) List<Long> deptIds,
             @RequestParam(name = "doctorIds", required = false) List<Long> doctorIds,
             @RequestParam(name = "source", required = false) String source,
+            @RequestParam(name = "page", defaultValue = "0") int page,
             @ModelAttribute("date") String flashDate,
             Model model) {
 
@@ -122,9 +123,30 @@ public class ReceptionController {
             })
             .collect(Collectors.toList());
 
-        // [기능 추가] 목록 표시용 순번(rowNum) 부여
+        // [기능 추가] 목록 표시용 순번(rowNum) 부여 (전체 기준)
         for (int i = 0; i < filtered.size(); i++) {
             filtered.get(i).setRowNum(i + 1);
+        }
+
+        // 페이징 처리 (10개 단위)
+        int pageSize   = 10;
+        int totalCount = filtered.size();
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalCount / pageSize));
+        page = Math.max(0, Math.min(page, totalPages - 1));
+        int fromIndex = page * pageSize;
+        int toIndex   = Math.min(fromIndex + pageSize, totalCount);
+        List<StaffReservationDto> paged = new ArrayList<>(filtered.subList(fromIndex, toIndex));
+
+        // 페이지 링크 목록 생성 (최대 10개 표시)
+        int startPage = Math.max(0, page - 4);
+        int endPage   = Math.min(totalPages - 1, startPage + 9);
+        List<Map<String, Object>> pageLinks = new ArrayList<>();
+        for (int i = startPage; i <= endPage; i++) {
+            Map<String, Object> link = new HashMap<>();
+            link.put("num",    i);
+            link.put("label",  i + 1);
+            link.put("active", i == page);
+            pageLinks.add(link);
         }
 
         // [상태 유지] 모든 검색 파라미터를 유지하기 위한 빌더
@@ -139,7 +161,15 @@ public class ReceptionController {
         if (source != null && !source.isEmpty()) keepParams.append("&source=").append(source);
         String params = keepParams.toString();
 
-        model.addAttribute("reservations", filtered);
+        model.addAttribute("reservations", paged);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages",  totalPages);
+        model.addAttribute("totalCount",  totalCount);
+        model.addAttribute("hasPrev",     page > 0);
+        model.addAttribute("hasNext",     page < totalPages - 1);
+        model.addAttribute("prevPage",    page - 1);
+        model.addAttribute("nextPage",    page + 1);
+        model.addAttribute("pageLinks",   pageLinks);
         model.addAttribute("searchDate", finalDateStr);
         model.addAttribute("isToday", selectedDate.equals(LocalDate.now()));
         model.addAttribute("currentTab", activeTab);

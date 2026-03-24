@@ -61,9 +61,15 @@ public class AdminStaffController {
     public String detail(
             @RequestParam("staffId") Long staffId,
             Authentication authentication,
-            HttpServletRequest req) {
-        req.setAttribute("model", adminStaffService.getEditForm(staffId, authentication.getName()));
-        return "admin/staff-form";
+            HttpServletRequest req,
+            org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        try {
+            req.setAttribute("model", adminStaffService.getEditForm(staffId, authentication.getName()));
+            return "admin/staff-form";
+        } catch (CustomException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            return "redirect:/admin/staff/list";
+        }
     }
 
     @PostMapping("/create")
