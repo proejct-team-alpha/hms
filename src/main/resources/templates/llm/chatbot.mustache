@@ -292,7 +292,7 @@
           var response = await fetch(FALLBACK_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query: query }),
+            body: JSON.stringify({ query: query, history: chatHistory.slice(-6) }),
           });
           if (!response.ok) {
             var err = await response.json().catch(function () { return {}; });
