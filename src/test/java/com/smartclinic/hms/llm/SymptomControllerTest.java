@@ -35,7 +35,7 @@ class SymptomControllerTest {
     @DisplayName("POST /llm/symptom/analyze - 비인증 200 (permitAll)")
     void analyze_비인증_200() throws Exception {
         given(symptomAnalysisService.analyzeSymptom(anyString()))
-                .willReturn(Mono.just(new SymptomResponse(1L, "내과")));
+                .willReturn(Mono.just(new SymptomResponse(1L, "내과", null)));
 
         MvcResult result = mockMvc.perform(post("/llm/symptom/analyze")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -51,7 +51,7 @@ class SymptomControllerTest {
     @DisplayName("POST /llm/symptom/analyze - 응답 구조 확인 (departmentId, departmentName)")
     void analyze_응답구조() throws Exception {
         given(symptomAnalysisService.analyzeSymptom(anyString()))
-                .willReturn(Mono.just(new SymptomResponse(3L, "소아과")));
+                .willReturn(Mono.just(new SymptomResponse(3L, "소아과", "아이의 발열 증상은 소아과 진료가 적합합니다.")));
 
         MvcResult result = mockMvc.perform(post("/llm/symptom/analyze")
                         .contentType(MediaType.APPLICATION_JSON)

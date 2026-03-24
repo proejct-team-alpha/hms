@@ -484,16 +484,14 @@ async def infer_rule(request: Request, body: InferRequest) -> InferResponse:
         logger.warning("Rule context build skipped: %s", exc)
     logger.info("Rule context: %d chars", len(rule_context))
 
-    # 검색 결과가 없으면 LLM 호출 없이 안내 메시지 반환
+    # 검색 결과가 없어도 LLM을 통해 자연스러운 응답 생성
     if not rule_context:
-        no_result_msg = "해당 내용이 등록되어 있지 않습니다. 관리자에게 문의 바랍니다."
-        if corrected_query != body.query:
-            no_result_msg = (
-                f"'{body.query}'을(를) '{corrected_query}'(으)로 검색했으나, "
-                "해당 내용이 등록되어 있지 않습니다. 관리자에게 문의 바랍니다."
-            )
-        logger.info("Rule infer: no context found, returning fallback message")
-        return InferResponse(generated_text=no_result_msg)
+        rule_context = (
+            "[참고: 병원 규칙 검색 결과]\n"
+            "검색된 규칙이 없습니다. 사용자의 질문에 대해 일반적인 안내를 제공하되, "
+            "정확한 내용은 관리자에게 확인하도록 안내해 주세요."
+        )
+        logger.info("Rule infer: no context found, using fallback context for LLM")
 
     messages = _build_rule_messages(corrected_query, rule_context, body.history)
 
@@ -532,21 +530,14 @@ async def infer_rule_stream(request: Request, body: InferRequest):
         logger.warning("Rule context build skipped (stream): %s", exc)
     logger.info("Rule context (stream): %d chars", len(rule_context))
 
-    # 검색 결과가 없으면 안내 메시지 스트리밍 반환
+    # 검색 결과가 없어도 LLM을 통해 자연스러운 응답 생성
     if not rule_context:
-        no_result_msg = "해당 내용이 등록되어 있지 않습니다. 관리자에게 문의 바랍니다."
-        if corrected_query != body.query:
-            no_result_msg = (
-                f"'{body.query}'을(를) '{corrected_query}'(으)로 검색했으나, "
-                "해당 내용이 등록되어 있지 않습니다. 관리자에게 문의 바랍니다."
-            )
-
-        async def no_result_sse():
-            data = json.dumps({"token": no_result_msg}, ensure_ascii=False)
-            yield f"data: {data}\n\n"
-            yield "data: [DONE]\n\n"
-
-        return _streaming_response(no_result_sse)
+        rule_context = (
+            "[참고: 병원 규칙 검색 결과]\n"
+            "검색된 규칙이 없습니다. 사용자의 질문에 대해 일반적인 안내를 제공하되, "
+            "정확한 내용은 관리자에게 확인하도록 안내해 주세요."
+        )
+        logger.info("Rule stream: no context found, using fallback context for LLM")
 
     messages = _build_rule_messages(corrected_query, rule_context, body.history)
     chat_stream_fn = _get_chat_stream_fn()
