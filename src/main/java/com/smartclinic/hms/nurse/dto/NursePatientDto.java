@@ -25,6 +25,7 @@ public class NursePatientDto {
     private final String statusText;
     private final boolean canReceive;
     private final boolean canUseItem;
+    private final boolean isConsultationCompleted; // [기능 추가] 의사 진료 완료 여부
     private final boolean isTreatmentCompleted;
     
     // 의사 화면과 동일한 필드 추가
@@ -69,13 +70,39 @@ public class NursePatientDto {
         this.canUseItem = r.getStatus() == ReservationStatus.RECEIVED
                        || r.getStatus() == ReservationStatus.IN_TREATMENT
                        || r.getStatus() == ReservationStatus.COMPLETED; 
+        this.isConsultationCompleted = r.getStatus() == ReservationStatus.COMPLETED; // [기능 추가] 진료 완료 여부 판단
         this.isTreatmentCompleted = r.isTreatmentCompleted();
         this.isFirstVisit = isFirstVisit;
         
         // 의사 화면용 데이터 추가
         this.reservationDate = r.getReservationDate().toString();
         this.visitReason = p.getVisitReason() != null ? p.getVisitReason() : "-";
-        this.genderAge = p.getBirthInfo() != null ? p.getBirthInfo() : "-"; // 보통 생년월일이나 성별/나이 정보를 담음
+        
+        // [기능 교정] 주민번호(940101-2)를 성별/나이(여/31세)로 변환
+        String birthInfo = p.getBirthInfo();
+        String formattedGenderAge = "-";
+        if (birthInfo != null && birthInfo.matches("\\d{6}-[1-4]")) {
+            try {
+                String birthStr = birthInfo.substring(0, 6);
+                char genderCode = birthInfo.charAt(7);
+                
+                // 1. 성별 판별 (M/F로 변경)
+                String gender = (genderCode == '1' || genderCode == '3') ? "M" : "F";
+                
+                // 2. 나이 계산 (한국식 세는 나이 기준)
+                int birthYear = Integer.parseInt(birthStr.substring(0, 2));
+                int currentYear = java.time.LocalDate.now().getYear();
+                int century = (genderCode == '1' || genderCode == '2') ? 1900 : 2000;
+                int fullBirthYear = century + birthYear;
+                int age = currentYear - fullBirthYear + 1;
+                
+                formattedGenderAge = gender + " / " + age + "세";
+            } catch (Exception e) {
+                formattedGenderAge = "-";
+            }
+        }
+        this.genderAge = formattedGenderAge;
+        
         this.sourceText = toSourceText(r.getSource());
         this.sourceBadgeClass = toSourceBadgeClass(r.getSource());
     }

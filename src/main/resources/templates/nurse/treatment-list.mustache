@@ -22,10 +22,10 @@
     .btn-today { width: 100%; padding: 0.6rem; background-color: #f8fafc; border: 1px solid #e2e8f0; color: #64748b; font-size: 11px; font-weight: 700; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; }
     .btn-today:hover { background-color: #4f46e5; color: white; border-color: #4f46e5; }
 
-    /* [디자인 통일] 리스트 행 디자인 최적화 */
+    /* [디자인 통일] 리스트 행 디자인 최적화 (8열로 분리) */
     .emr-row {
       display: grid;
-      grid-template-columns: 50px 140px 120px 1fr 110px 110px 100px;
+      grid-template-columns: 100px 130px 110px 120px 100px 120px 110px 70px;
       align-items: center;
       padding: 0.6rem 1.5rem;
       border-bottom: 1px solid #f1f5f9;
@@ -123,11 +123,6 @@
                 검색
               </button>
             </form>
-
-            <button onclick="location.reload()" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 text-sm font-bold rounded-2xl hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2">
-              <i data-feather="refresh-cw" class="w-4 h-4 text-indigo-600"></i>
-              새로고침
-            </button>
           </div>
         </div>
 
@@ -154,7 +149,7 @@
               </div>
               <div id="calendarDays" class="calendar-container"></div>
               <div class="mt-4 pt-3 border-t border-slate-100">
-                <button onclick="location.href='/nurse/treatment-list?tab={{currentTab}}&query={{query}}{{#departments}}{{#selected}}&deptIds={{id}}{{/selected}}{{/departments}}{{#doctors}}{{#selected}}&doctorIds={{id}}{{/selected}}{{/doctors}}'" class="btn-today">
+                <button onclick="location.href='/nurse/treatment-list?tab={{currentTab}}'" class="btn-today">
                   <i data-feather="calendar" class="w-3.5 h-3.5 text-indigo-500"></i>
                   오늘로 이동
                 </button>
@@ -164,20 +159,21 @@
 
           <div class="flex-1 space-y-4 min-w-0">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex">
-              <a href="/nurse/treatment-list?date={{searchDate}}&tab=pending{{#query}}&query={{query}}{{/query}}" 
+              <a href="/nurse/treatment-list?date={{searchDate}}&tab=pending" 
                  class="tab-btn flex-1 {{#isPendingTab}}active{{/isPendingTab}}">처치 대기</a>
-              <a href="/nurse/treatment-list?date={{searchDate}}&tab=completed{{#query}}&query={{query}}{{/query}}" 
+              <a href="/nurse/treatment-list?date={{searchDate}}&tab=completed" 
                  class="tab-btn flex-1 {{#isCompletedTab}}active{{/isCompletedTab}}">처치 완료</a>
-              <a href="/nurse/treatment-list?date={{searchDate}}&tab=all{{#query}}&query={{query}}{{/query}}" 
+              <a href="/nurse/treatment-list?date={{searchDate}}&tab=all" 
                  class="tab-btn flex-1 {{#isAllTab}}active{{/isAllTab}}">전체</a>
             </div>
 
             <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
               <div class="emr-row bg-slate-50 border-b border-slate-100 text-[11px] font-black text-slate-400 uppercase tracking-widest">
-                <div>순번</div>
+                <div>환자등록번호</div>
                 <div>이름</div>
                 <div>성별 / 나이</div>
-                <div>담당 의료진</div>
+                <div>진료과</div>
+                <div>의사명</div>
                 <div>상태</div>
                 <div>방문 시간</div>
                 <div class="text-right pr-4">액션</div>
@@ -185,15 +181,16 @@
 
               <div id="treatment-list-body" class="divide-y divide-slate-100">
                 {{#patients}}
-                  <div class="emr-row clickable group" onclick="location.href='/nurse/patient-detail?id={{id}}{{keepParams}}'">
-                    <div class="text-xs font-bold text-slate-400">{{sequence}}</div>
+                  <div class="emr-row clickable group" onclick="location.href='/nurse/patient-detail?id={{id}}&menu=treatment{{keepParams}}'">
+                    <div class="text-xs font-bold text-slate-400">{{patientId}}</div>
                     <div class="flex items-center gap-2">
                       {{#isFirstVisit}}<span class="w-4 h-4 inline-flex items-center justify-center rounded-full bg-indigo-50 text-indigo-500 text-[10px] font-bold" style="transform: scale(0.85); flex-shrink: 0;">초</span>{{/isFirstVisit}}
                       {{^isFirstVisit}}<span class="w-4 h-4 inline-flex items-center justify-center rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold" style="transform: scale(0.85); flex-shrink: 0;">재</span>{{/isFirstVisit}}
                       <span class="text-[13px] font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{{patientName}}</span>
                     </div>
                     <div class="text-xs font-medium text-slate-600">{{genderAge}}</div>
-                    <div class="text-xs font-medium text-slate-700">{{doctorName}} ({{departmentName}})</div>
+                    <div class="text-xs font-medium text-slate-700">{{departmentName}}</div>
+                    <div class="text-xs font-medium text-slate-700">{{doctorName}}</div>
                     <div>
                       <span class="status-badge inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{statusBadgeClass}}">{{statusText}}</span>
                     </div>
@@ -202,9 +199,14 @@
                       {{timeSlot}}
                     </div>
                     <div class="text-right pr-4">
+                      {{^treatmentCompleted}}
                       <a href="/nurse/patient-detail?id={{id}}{{keepParams}}" class="inline-flex px-2.5 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-lg hover:bg-indigo-100 transition-colors">
                         처치
                       </a>
+                      {{/treatmentCompleted}}
+                      {{#treatmentCompleted}}
+                      <span class="text-slate-300 pr-2">-</span>
+                      {{/treatmentCompleted}}
                     </div>
                   </div>
                 {{/patients}}

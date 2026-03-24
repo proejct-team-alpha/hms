@@ -40,7 +40,7 @@
     {{> common/header-staff}}
 
     <main class="content-wrapper flex-1 p-8">
-      <div class="max-w-[1650px] mx-auto space-y-8">
+      <div class="max-w-7xl mx-auto space-y-8">
         
         <!-- 상단 헤더 섹션 -->
         <div class="flex items-center justify-between">
@@ -113,11 +113,6 @@
                 검색
               </button>
             </form>
-
-            <button onclick="location.reload()" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 text-sm font-bold rounded-2xl hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2">
-              <i data-feather="refresh-cw" class="w-4 h-4 text-indigo-600"></i>
-              새로고침
-            </button>
           </div>
         </div>
 
@@ -155,7 +150,7 @@
               </div>
               <div id="calendarDays" class="calendar-container"></div>
               <div class="mt-4 pt-3 border-t border-slate-100">
-                <button onclick="location.href='/nurse/reception-list?tab={{currentTab}}&query={{query}}{{#departments}}{{#selected}}&deptIds={{id}}{{/selected}}{{/departments}}{{#doctors}}{{#selected}}&doctorIds={{id}}{{/selected}}{{/doctors}}'" class="btn-today">
+                <button onclick="location.href='/nurse/reception-list?tab={{currentTab}}'" class="btn-today">
                   <i data-feather="calendar" class="w-3.5 h-3.5 text-indigo-500"></i>
                   오늘로 이동
                 </button>
@@ -165,19 +160,19 @@
 
           <div class="flex-1 min-w-0 space-y-4">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex">
-              <a href="/nurse/reception-list?date={{searchDate}}&tab=all&query={{query}}{{#departments}}{{#selected}}&deptIds={{id}}{{/selected}}{{/departments}}{{#doctors}}{{#selected}}&doctorIds={{id}}{{/selected}}{{/doctors}}" 
+              <a href="/nurse/reception-list?date={{searchDate}}&tab=all" 
                  class="tab-btn flex-1 {{#isAllTab}}active{{/isAllTab}}">전체</a>
-              <a href="/nurse/reception-list?date={{searchDate}}&tab=reserved&query={{query}}{{#departments}}{{#selected}}&deptIds={{id}}{{/selected}}{{/departments}}{{#doctors}}{{#selected}}&doctorIds={{id}}{{/selected}}{{/doctors}}" 
+              <a href="/nurse/reception-list?date={{searchDate}}&tab=reserved" 
                  class="tab-btn flex-1 {{#isReservedTab}}active{{/isReservedTab}}">예약</a>
-              <a href="/nurse/reception-list?date={{searchDate}}&tab=received&query={{query}}{{#departments}}{{#selected}}&deptIds={{id}}{{/selected}}{{/departments}}{{#doctors}}{{#selected}}&doctorIds={{id}}{{/selected}}{{/doctors}}" 
+              <a href="/nurse/reception-list?date={{searchDate}}&tab=received" 
                  class="tab-btn flex-1 {{#isReceivedTab}}active{{/isReceivedTab}}">진료대기</a>
-              <a href="/nurse/reception-list?date={{searchDate}}&tab=in_treatment&query={{query}}{{#departments}}{{#selected}}&deptIds={{id}}{{/selected}}{{/departments}}{{#doctors}}{{#selected}}&doctorIds={{id}}{{/selected}}{{/doctors}}" 
+              <a href="/nurse/reception-list?date={{searchDate}}&tab=in_treatment" 
                  class="tab-btn flex-1 {{#isInTreatmentTab}}active{{/isInTreatmentTab}}">진료 중</a>
-              <a href="/nurse/reception-list?date={{searchDate}}&tab=completed&query={{query}}{{#departments}}{{#selected}}&deptIds={{id}}{{/selected}}{{/departments}}{{#doctors}}{{#selected}}&doctorIds={{id}}{{/selected}}{{/doctors}}" 
+              <a href="/nurse/reception-list?date={{searchDate}}&tab=completed" 
                  class="tab-btn flex-1 {{#isCompletedTab}}active{{/isCompletedTab}}">진료완료</a>
-              <a href="/nurse/reception-list?date={{searchDate}}&tab=treatment_done&query={{query}}{{#departments}}{{#selected}}&deptIds={{id}}{{/selected}}{{/departments}}{{#doctors}}{{#selected}}&doctorIds={{id}}{{/selected}}{{/doctors}}" 
+              <a href="/nurse/reception-list?date={{searchDate}}&tab=treatment_done" 
                  class="tab-btn flex-1 {{#isTreatmentDoneTab}}active{{/isTreatmentDoneTab}}">처치완료</a>
-              <a href="/nurse/reception-list?date={{searchDate}}&tab=paid&query={{query}}{{#departments}}{{#selected}}&deptIds={{id}}{{/selected}}{{/departments}}{{#doctors}}{{#selected}}&doctorIds={{id}}{{/selected}}{{/doctors}}" 
+              <a href="/nurse/reception-list?date={{searchDate}}&tab=paid" 
                  class="tab-btn flex-1 {{#isPaidTab}}active{{/isPaidTab}} text-emerald-600">수납완료</a>
             </div>
 
@@ -185,69 +180,57 @@
               <table class="w-full text-left">
                 <thead>
                   <tr class="reception-header-row bg-slate-50 border-b border-slate-100 text-[11px] font-black uppercase tracking-widest text-slate-400">
-                    <th class="px-6 py-2.5">방문 시간</th>
-                    <th class="px-6 py-2.5">환자 정보</th>
-                    <th class="px-6 py-2.5">진료 정보</th>
                     <th class="px-6 py-2.5">상태</th>
-                    <th class="px-6 py-2.5 text-center">액션</th>
+                    <th class="px-6 py-2.5">접수 시간</th>
+                    <th class="px-6 py-2.5">환자등록번호</th>
+                    <th class="px-6 py-2.5">이름</th>
+                    <th class="px-6 py-2.5">성별/나이</th>
+                    <th class="px-6 py-2.5">전화번호</th>
+                    <th class="px-6 py-2.5">진료과</th>
+                    <th class="px-6 py-2.5">의사명</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                   {{#reservations}}
-                  <tr class="hover:bg-slate-50/80 transition-colors group">
-                    <td class="px-6 py-2.5 text-xs font-semibold text-slate-700">
-                      <div class="flex items-center gap-2">
-                        <i data-feather="clock" class="w-3.5 h-3.5 text-slate-300"></i>
-                        {{timeSlot}}
-                      </div>
-                    </td>
-                    <td class="px-6 py-2.5">
-                      <div class="flex items-center gap-2">
-                        {{#isFirstVisit}}<span class="w-4 h-4 inline-flex items-center justify-center rounded-full bg-indigo-50 text-indigo-500 text-[10px] font-bold" style="transform: scale(0.85); flex-shrink: 0;">초</span>{{/isFirstVisit}}
-                        {{^isFirstVisit}}<span class="w-4 h-4 inline-flex items-center justify-center rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold" style="transform: scale(0.85); flex-shrink: 0;">재</span>{{/isFirstVisit}}
-                        <a href="/nurse/patient-detail?id={{id}}{{keepParams}}" class="text-[13px] font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">
-                          {{patientName}}
-                        </a>
-                        <span class="text-xs text-slate-400 font-medium ml-1">{{patientPhone}}</span>
-                      </div>
-                    </td>
-                    <td class="px-6 py-2.5">
-                      <div class="flex items-center gap-3">
-                        <span class="text-xs font-semibold text-slate-700">{{departmentName}}</span>
-                        <span class="text-xs text-slate-500">{{doctorName}}</span>
-                      </div>
-                    </td>
+                  <tr class="hover:bg-indigo-50/30 transition-colors group cursor-pointer" 
+                      onclick="location.href='/nurse/patient-detail?id={{id}}&menu=reception{{keepParams}}'">
                     <td class="px-6 py-2.5">
                       <span class="status-badge inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{statusBadgeClass}}">
                         {{statusText}}
                       </span>
                     </td>
-                    <td class="px-6 py-2.5 text-center">
-                      <div class="flex justify-center gap-2">
-                        {{#canReceive}}
-                        <form method="post" action="/nurse/reservation/receive">
-                          <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
-                          <input type="hidden" name="id" value="{{id}}">
-                          <input type="hidden" name="date" value="{{searchDate}}">
-                          <input type="hidden" name="tab" value="{{currentTab}}">
-                          <input type="hidden" name="query" value="{{query}}">
-                          {{#departments}}{{#selected}}<input type="hidden" name="deptIds" value="{{id}}">{{/selected}}{{/departments}}
-                          {{#doctors}}{{#selected}}<input type="hidden" name="doctorIds" value="{{id}}">{{/selected}}{{/doctors}}
-                          <button type="submit" class="inline-flex px-2.5 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-lg hover:bg-indigo-100 transition-colors">
-                            현장 접수
-                          </button>
-                        </form>
-                        {{/canReceive}}
-                        <a href="/nurse/patient-detail?id={{id}}{{keepParams}}" class="inline-flex px-2.5 py-1 bg-slate-50 text-slate-600 text-[10px] font-bold rounded-lg hover:bg-slate-100 transition-colors">
-                          상세 보기
-                        </a>
+                    <td class="px-6 py-2.5 text-xs font-semibold text-indigo-600">
+                      {{receptionTime}}
+                    </td>
+                    <td class="px-6 py-2.5 text-xs font-bold text-slate-400">
+                      {{patientId}}
+                    </td>
+                    <td class="px-6 py-2.5">
+                      <div class="flex items-center gap-2">
+                        {{#isFirstVisit}}<span class="w-4 h-4 inline-flex items-center justify-center rounded-full bg-indigo-50 text-indigo-500 text-[10px] font-bold" style="transform: scale(0.85); flex-shrink: 0;">초</span>{{/isFirstVisit}}
+                        {{^isFirstVisit}}<span class="w-4 h-4 inline-flex items-center justify-center rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold" style="transform: scale(0.85); flex-shrink: 0;">재</span>{{/isFirstVisit}}
+                        <span class="text-[13px] font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">
+                          {{patientName}}
+                        </span>
                       </div>
+                    </td>
+                    <td class="px-6 py-2.5 text-xs font-semibold text-slate-600">
+                      {{genderAge}}
+                    </td>
+                    <td class="px-6 py-2.5 text-xs font-medium text-slate-500">
+                      {{patientPhone}}
+                    </td>
+                    <td class="px-6 py-2.5 text-xs font-semibold text-slate-700">
+                      {{departmentName}}
+                    </td>
+                    <td class="px-6 py-2.5 text-xs font-medium text-slate-500">
+                      {{doctorName}}
                     </td>
                   </tr>
                   {{/reservations}}
                   {{^reservations}}
                   <tr>
-                    <td colspan="5" class="px-6 py-16 text-center text-slate-400">
+                    <td colspan="8" class="px-6 py-16 text-center text-slate-400">
                       <p class="text-xs font-bold">조회된 환자가 없습니다.</p>
                     </td>
                   </tr>

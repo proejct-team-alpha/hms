@@ -17,6 +17,7 @@ public class NursePatientStatusDto {
     private final String patientName;
     private final String patientPhone;
     private final String timeSlot;
+    private final String receptionTime; // [기능 추가] 실제 접수 시간 필드
     private final String doctorName;
     private final String departmentName;
     private final String statusText;
@@ -65,6 +66,10 @@ public class NursePatientStatusDto {
         this.patientName = r.getPatient().getName();
         this.patientPhone = r.getPatient().getPhone();
         this.timeSlot = r.getTimeSlot();
+        // [기능 추가] 실제 접수 시간 포맷팅
+        this.receptionTime = (r.getReceptionTime() != null) 
+                ? r.getReceptionTime().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")) 
+                : "-";
         this.doctorName = r.getDoctor().getStaff().getName();
         this.departmentName = r.getDepartment().getName();
         this.treatmentCompleted = r.isTreatmentCompleted();
@@ -87,8 +92,8 @@ public class NursePatientStatusDto {
                 String genderPart = parts[1];
 
                 String gender = "미상";
-                if ("1".equals(genderPart) || "3".equals(genderPart)) gender = "남";
-                else if ("2".equals(genderPart) || "4".equals(genderPart)) gender = "여";
+                if ("1".equals(genderPart) || "3".equals(genderPart)) gender = "M";
+                else if ("2".equals(genderPart) || "4".equals(genderPart)) gender = "F";
 
                 int birthYear = Integer.parseInt(birthPart.substring(0, 2));
                 int birthMonth = Integer.parseInt(birthPart.substring(2, 4));
@@ -100,7 +105,7 @@ public class NursePatientStatusDto {
                 LocalDate birthDate = LocalDate.of(birthYear, birthMonth, birthDay);
                 int age = Period.between(birthDate, LocalDate.now()).getYears();
                 
-                parsedGenderAge = gender + " / " + age;
+                parsedGenderAge = gender + " / " + age + "세";
             } catch (Exception e) {
                 // 파싱 에러 시 기본값 "-" 유지
             }
@@ -117,7 +122,7 @@ public class NursePatientStatusDto {
         if (r.isTreatmentCompleted()) return "처치 완료";
         
         return switch (r.getStatus()) {
-            case RESERVED -> "예약됨";
+            case RESERVED -> "예약";
             case RECEIVED -> "진료 대기";
             case IN_TREATMENT -> "진료중";
             case COMPLETED -> "진료 완료";
