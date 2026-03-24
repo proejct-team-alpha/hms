@@ -15,18 +15,18 @@ import java.util.Optional;
 
 public interface NursePatientStatusRepository extends JpaRepository<Reservation, Long> {
 
-       @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date AND r.status <> :excluded ORDER BY r.timeSlot")
+       @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date AND r.status <> :excluded ORDER BY r.receptionTime ASC")
        List<Reservation> findTodayNonCancelled(@Param("date") LocalDate date,
                      @Param("excluded") ReservationStatus excluded);
 
-       @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date AND r.status = :status ORDER BY r.timeSlot")
+       @Query("SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date AND r.status = :status ORDER BY r.receptionTime ASC")
        List<Reservation> findTodayByStatus(@Param("date") LocalDate date, @Param("status") ReservationStatus status);
 
-       @Query(value = "SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date AND r.status <> :excluded ORDER BY r.timeSlot", countQuery = "SELECT count(r) FROM Reservation r WHERE r.reservationDate = :date AND r.status <> :excluded")
+       @Query(value = "SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date AND r.status <> :excluded ORDER BY r.receptionTime ASC", countQuery = "SELECT count(r) FROM Reservation r WHERE r.reservationDate = :date AND r.status <> :excluded")
        Page<Reservation> findTodayNonCancelledPage(@Param("date") LocalDate date,
                      @Param("excluded") ReservationStatus excluded, Pageable pageable);
 
-       @Query(value = "SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date AND r.status = :status ORDER BY r.timeSlot", countQuery = "SELECT count(r) FROM Reservation r WHERE r.reservationDate = :date AND r.status = :status")
+       @Query(value = "SELECT r FROM Reservation r JOIN FETCH r.patient JOIN FETCH r.doctor d JOIN FETCH d.staff JOIN FETCH r.department WHERE r.reservationDate = :date AND r.status = :status ORDER BY r.receptionTime ASC", countQuery = "SELECT count(r) FROM Reservation r WHERE r.reservationDate = :date AND r.status = :status")
        Page<Reservation> findTodayByStatusPage(@Param("date") LocalDate date, @Param("status") ReservationStatus status,
                      Pageable pageable);
 
@@ -38,7 +38,7 @@ public interface NursePatientStatusRepository extends JpaRepository<Reservation,
                      "AND (:deptId IS NULL OR dep.id = :deptId) " +
                      "AND (:doctorId IS NULL OR d.id = :doctorId) " +
                      "AND (:source IS NULL OR r.source = :source) " +
-                     "ORDER BY r.timeSlot", countQuery = "SELECT count(r) FROM Reservation r JOIN r.patient p JOIN r.doctor d JOIN d.staff s JOIN r.department dep "
+                     "ORDER BY r.receptionTime ASC", countQuery = "SELECT count(r) FROM Reservation r JOIN r.patient p JOIN r.doctor d JOIN d.staff s JOIN r.department dep "
                                    +
                                    "WHERE r.reservationDate = :date AND r.status <> :excluded " +
                                    "AND (:query IS NULL OR :query = '' OR p.name LIKE %:query% OR p.phone LIKE %:query% OR s.name LIKE %:query% OR dep.name LIKE %:query%) "
@@ -63,7 +63,7 @@ public interface NursePatientStatusRepository extends JpaRepository<Reservation,
                      "AND (:deptIds IS NULL OR dep.id IN :deptIds) " +
                      "AND (:doctorIds IS NULL OR d.id IN :doctorIds) " +
                      "AND (:source IS NULL OR r.source = :source) " +
-                     "ORDER BY r.timeSlot", countQuery = "SELECT count(r) FROM Reservation r JOIN r.patient p JOIN r.doctor d JOIN d.staff s JOIN r.department dep "
+                     "ORDER BY r.receptionTime ASC", countQuery = "SELECT count(r) FROM Reservation r JOIN r.patient p JOIN r.doctor d JOIN d.staff s JOIN r.department dep "
                                    +
                                    "WHERE r.reservationDate = :date AND r.status = :status " +
                                    "AND (:query IS NULL OR :query = '' OR p.name LIKE %:query% OR p.phone LIKE %:query% OR s.name LIKE %:query% OR dep.name LIKE %:query%) "
@@ -88,7 +88,7 @@ public interface NursePatientStatusRepository extends JpaRepository<Reservation,
                      "AND (:deptIds IS NULL OR dep.id IN :deptIds) " +
                      "AND (:doctorIds IS NULL OR d.id IN :doctorIds) " +
                      "AND (:source IS NULL OR r.source = :source) " +
-                     "ORDER BY r.timeSlot", countQuery = "SELECT count(r) FROM Reservation r JOIN r.patient p JOIN r.doctor d JOIN d.staff s JOIN r.department dep "
+                     "ORDER BY r.receptionTime ASC", countQuery = "SELECT count(r) FROM Reservation r JOIN r.patient p JOIN r.doctor d JOIN d.staff s JOIN r.department dep "
                                    +
                                    "WHERE r.reservationDate = :date AND r.status <> :excluded " +
                                    "AND (:query IS NULL OR :query = '' OR p.name LIKE %:query% OR p.phone LIKE %:query% OR s.name LIKE %:query% OR dep.name LIKE %:query%) "

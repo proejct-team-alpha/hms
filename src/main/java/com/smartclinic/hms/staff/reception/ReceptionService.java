@@ -317,25 +317,19 @@ public class ReceptionService {
                 })
                 .collect(Collectors.toList());
 
-        // 시간대별 통계 생성 (09시 ~ 18시)
+        // [기능 수정] 시간대별 통계 생성 (09시 ~ 18시): 예약/접수 개별 카운트 대신 전체 방문 환자 합계 중심으로 단순화
         java.util.List<com.smartclinic.hms.staff.dto.StaffHourlyStatDto> hourlyStats = new java.util.ArrayList<>();
         for (int hour = 9; hour <= 18; hour++) {
             String label = String.format("%02d:00", hour);
             final int h = hour;
 
-            long resCount = all.stream()
+            // 해당 시간대에 배정된 취소되지 않은 모든 예약(접수 포함) 건수를 합산
+            long totalCountForHour = all.stream()
                     .filter(r -> r.getTimeSlot().startsWith(String.format("%02d:", h)))
-                    .filter(r -> r.getStatus() == ReservationStatus.RESERVED)
                     .count();
 
-            long recCount = all.stream()
-                    .filter(r -> r.getTimeSlot().startsWith(String.format("%02d:", h)))
-                    .filter(r -> r.getStatus() != ReservationStatus.RESERVED)
-                    .count();
-
-            int totalCount = (int) (resCount + recCount);
-            hourlyStats.add(new com.smartclinic.hms.staff.dto.StaffHourlyStatDto(label, (int) resCount, (int) recCount,
-                    totalCount));
+            // 차트 표시를 위해 totalCount 중심으로 DTO 생성 (기존 호환성 유지를 위해 res/rec는 0으로 처리하거나 단순화 가능)
+            hourlyStats.add(new com.smartclinic.hms.staff.dto.StaffHourlyStatDto(label, 0, 0, (int) totalCountForHour));
         }
 
         return new StaffDashboardDto(total, waiting, received, paid, recent, hourlyStats);

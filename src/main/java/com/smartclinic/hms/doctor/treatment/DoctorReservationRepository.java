@@ -14,19 +14,19 @@ import java.util.Optional;
 
 public interface DoctorReservationRepository extends JpaRepository<Reservation, Long> {
 
-    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status <> :excluded ORDER BY r.timeSlot")
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status <> :excluded ORDER BY r.receptionTime ASC")
     List<Reservation> findTodayActiveByDoctor(
             @Param("username") String username,
             @Param("date") LocalDate date,
             @Param("excluded") ReservationStatus excluded);
 
-    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status = :status ORDER BY r.timeSlot DESC")
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status = :status ORDER BY r.receptionTime ASC")
     List<Reservation> findTodayByDoctorAndStatus(
             @Param("username") String username,
             @Param("date") LocalDate date,
             @Param("status") ReservationStatus status);
 
-    @Query(value = "SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status <> :excluded ORDER BY r.timeSlot",
+    @Query(value = "SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status <> :excluded ORDER BY r.receptionTime ASC",
            countQuery = "SELECT count(r) FROM Reservation r WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status <> :excluded")
     Page<Reservation> findTodayActiveByDoctorPage(
             @Param("username") String username,
@@ -34,7 +34,7 @@ public interface DoctorReservationRepository extends JpaRepository<Reservation, 
             @Param("excluded") ReservationStatus excluded,
             Pageable pageable);
 
-    @Query("SELECT r FROM Reservation r WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status = :status ORDER BY r.timeSlot ASC")
+    @Query("SELECT r FROM Reservation r WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status = :status ORDER BY r.receptionTime ASC")
     Page<Reservation> findTodayByDoctorAndStatusPage(
             @Param("username") String username,
             @Param("date") LocalDate date,
@@ -49,7 +49,7 @@ public interface DoctorReservationRepository extends JpaRepository<Reservation, 
            "AND r.reservationDate = :date " +
            "AND r.status = :status " +
            "AND r.patient.name LIKE %:query% " +
-           "ORDER BY r.timeSlot ASC")
+           "ORDER BY r.receptionTime ASC")
     Page<Reservation> findTodayByDoctorAndStatusAndPatientNamePage(
             @Param("username") String username,
             @Param("date") LocalDate date,
@@ -57,7 +57,7 @@ public interface DoctorReservationRepository extends JpaRepository<Reservation, 
             @Param("query") String query,
             Pageable pageable);
 
-    @Query(value = "SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status IN :statuses ORDER BY r.timeSlot DESC",
+    @Query(value = "SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status IN :statuses ORDER BY r.receptionTime ASC",
            countQuery = "SELECT count(r) FROM Reservation r WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status IN :statuses")
     Page<Reservation> findTodayByDoctorAndStatusesPage(
             @Param("username") String username,
@@ -65,13 +65,13 @@ public interface DoctorReservationRepository extends JpaRepository<Reservation, 
             @Param("statuses") List<ReservationStatus> statuses,
             Pageable pageable);
 
-    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status IN :statuses ORDER BY r.timeSlot DESC")
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status IN :statuses ORDER BY r.receptionTime ASC")
     List<Reservation> findTodayByDoctorAndStatuses(
             @Param("username") String username,
             @Param("date") LocalDate date,
             @Param("statuses") List<ReservationStatus> statuses);
 
-    @Query(value = "SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status IN :statuses AND r.patient.name LIKE %:query% ORDER BY r.timeSlot DESC",
+    @Query(value = "SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status IN :statuses AND r.patient.name LIKE %:query% ORDER BY r.receptionTime ASC",
            countQuery = "SELECT count(r) FROM Reservation r WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status IN :statuses AND r.patient.name LIKE %:query%")
     Page<Reservation> findTodayByDoctorAndStatusesAndPatientNamePage(
             @Param("username") String username,
@@ -80,7 +80,7 @@ public interface DoctorReservationRepository extends JpaRepository<Reservation, 
             @Param("query") String query,
             Pageable pageable);
 
-    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status IN :statuses AND r.patient.name LIKE %:query% ORDER BY r.timeSlot DESC")
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.patient WHERE r.doctor.staff.username = :username AND r.reservationDate = :date AND r.status IN :statuses AND r.patient.name LIKE %:query% ORDER BY r.receptionTime ASC")
     List<Reservation> findTodayByDoctorAndStatusesAndPatientName(
             @Param("username") String username,
             @Param("date") LocalDate date,

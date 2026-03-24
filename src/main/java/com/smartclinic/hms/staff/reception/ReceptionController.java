@@ -67,9 +67,15 @@ public class ReceptionController {
 
         model.addAttribute("isStaffReception", true);
         
-        LocalDate selectedDate = (searchDateStr == null || searchDateStr.isEmpty()) 
-            ? LocalDate.now() 
-            : LocalDate.parse(searchDateStr);
+        LocalDate selectedDate;
+        try {
+            selectedDate = (searchDateStr == null || searchDateStr.isEmpty()) 
+                ? LocalDate.now() 
+                : LocalDate.parse(searchDateStr);
+        } catch (Exception e) {
+            // [방어 로직] 날짜 형식이 잘못된 경우 에러를 내지 않고 오늘 날짜를 기본값으로 사용
+            selectedDate = LocalDate.now();
+        }
         String finalDateStr = selectedDate.toString();
 
         String dayOfWeek = selectedDate.getDayOfWeek().getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.KOREAN);
