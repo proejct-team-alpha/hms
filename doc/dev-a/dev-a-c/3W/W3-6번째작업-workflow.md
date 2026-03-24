@@ -1,107 +1,179 @@
 # W3-6번째작업 Workflow — 간호사 환자 정보관리 물품 사용(출고) 기능
 
-## 작업 개요
-
-- **목표:** 간호사 patient-detail 페이지 하단에 물품 사용 섹션 추가 (RECEIVED 환자만 표시, 사용 내역은 항상 표시)
-- **담당:** dev-a-c
-- **날짜:** 2026-03-17
+> **작성일**: 3W
+> **목표**: 간호사 patient-detail 페이지 하단에 물품 사용 섹션 추가 (RECEIVED 환자만 표시, 사용 내역은 항상 표시)
 
 ---
 
-## 변경 파일 목록
+## 전체 흐름
 
-| 파일 | 변경 유형 |
-|------|----------|
-| `nurse/dto/NursePatientDto.java` | 수정 (canUseItem 필드 추가) |
-| `nurse/NurseReceptionController.java` | 수정 (items·usageLogs 모델 추가, POST /nurse/item/use 추가) |
-| `templates/nurse/patient-detail.mustache` | 수정 (물품 사용 섹션 + 사용 내역 추가) |
+```
+NursePatientDto에 canUseItem 필드 추가
+  → NurseReceptionController 수정 (items·usageLogs 모델, AJAX 엔드포인트)
+  → patient-detail.mustache 하단에 사용 물품 내역 + 물품 사용 섹션 추가
+```
+
+---
+
+## 인터뷰 결과
+
+| 항목 | 내용 |
+|------|------|
+| 요청 | 간호사 환자 상세 페이지 하단에 물품 사용 기능 추가 |
+| 물품 사용 표시 조건 | `canUseItem=true` (RECEIVED 상태 환자)일 때만 표시 |
+| 사용 이력 표시 | 항상 표시 (상태 무관) |
+| 카테고리 필터·검색 | W3-5(의사)와 동일 구조 재사용 |
+| 서비스 재사용 | `ItemManagerService.useItem()`, `getItemList()`, `getUsageLogs()` 그대로 재사용 |
+
+---
+
+## 실행 흐름
+
+```
+GET /nurse/patient/{id}
+  → NurseReceptionController: items, usageLogs 모델 추가
+  → patient-detail.mustache 렌더링
+    - 사용 물품 내역 (항상 표시)
+    - {{#detail.canUseItem}} 물품 사용 섹션 표시
+
+사용 버튼 클릭 (AJAX)
+  → fetch POST /nurse/item/use (itemId, amount, reservationId)
+  → ItemManagerService.useItem() → 재고 차감 + ItemUsageLog 저장
+  → 성공: {"quantity": N} / 재고 부족: 400 + {"error": "..."}
+```
+
+---
+
+## UI Mockup
+
+```
+┌────────────────────────────────────────────┐
+│ [환자 정보 폼]                              │
+├────────────────────────────────────────────┤
+│ 사용 물품 내역 (항상 표시)                   │
+│ ┌──────────┬──────┬──────┐                 │
+│ │ 물품명    │ 수량  │ 시간  │                 │
+│ │ 붕대      │  2개  │ 09:15 │                 │
+│ └──────────┴──────┴──────┘                 │
+├────────────────────────────────────────────┤
+│ 물품 사용 (RECEIVED 상태만 표시)             │
+│ [전체] [의료소모품] [의료기기] [사무비품]     │
+│ [검색: 물품명 입력...]                      │
+│ 물품 카드 그리드 (4열)                       │
+└────────────────────────────────────────────┘
+```
 
 ---
 
 ## 작업 목록
 
+1. `NursePatientDto` — `canUseItem` 필드 추가 (`RECEIVED` 상태 여부)
+2. `NurseReceptionController` — `ItemManagerService` 주입, items·usageLogs 모델 추가, `POST /nurse/item/use` 엔드포인트 추가
+3. `patient-detail.mustache` — 사용 물품 내역 섹션 + 물품 사용 섹션 추가
+
+---
+
+## 작업 진행내용
+
+- [x] NursePatientDto `canUseItem` 필드 추가
+- [x] NurseReceptionController `ItemManagerService` 주입
+- [x] `patientDetail()` items·usageLogs 모델 추가
+- [x] `POST /nurse/item/use` AJAX 엔드포인트 추가
+- [x] patient-detail.mustache 사용 물품 내역 섹션 추가 (항상 표시)
+- [x] patient-detail.mustache 물품 사용 섹션 추가 (RECEIVED만 표시)
+
+---
+
+## 실행 흐름에 대한 코드
+
 ### 1. NursePatientDto — canUseItem 필드 추가
 
 ```java
-// TODO [W3-6]: canUseItem 필드 추가
-// private final boolean canUseItem;
-// this.canUseItem = r.getStatus() == ReservationStatus.RECEIVED;
+// NursePatientDto 생성자 또는 팩토리 메서드에서
+private final boolean canUseItem;
+
+// 예약 상태가 RECEIVED일 때만 물품 사용 폼 표시
+this.canUseItem = r.getStatus() == ReservationStatus.RECEIVED;
 ```
 
 > **💡 입문자 설명**
-> - **이 코드가 하는 일**: 간호사 환자 정보 DTO(데이터 전달 객체)에 `canUseItem`이라는 boolean 필드를 추가합니다. 예약 상태가 `RECEIVED`(접수 완료)일 때만 `true`가 됩니다.
-> - **왜 이렇게 썼는지**: 뷰 템플릿에서 물품 사용 폼 표시 여부를 조건부로 제어할 때, 비즈니스 로직(상태 비교)을 DTO 생성 시점에 처리하면 템플릿은 단순히 `canUseItem` 값만 참조하면 됩니다. 뷰에서 상태 비교 로직을 직접 쓰는 것보다 깔끔합니다.
-> - **쉽게 말하면**: 환자가 접수된 상태일 때만 물품 사용 버튼이 보이도록, "물품 사용 가능 여부"를 참/거짓으로 저장하는 필드입니다.
+> - **이 코드가 하는 일**: 간호사 환자 정보 DTO에 `canUseItem`이라는 boolean 필드를 추가합니다. 예약 상태가 `RECEIVED`일 때만 `true`가 됩니다.
+> - **왜 이렇게 썼는지**: Mustache는 Java 코드 표현식을 쓸 수 없으므로, 서비스나 DTO에서 미리 계산한 boolean을 `{{#detail.canUseItem}}`처럼 씁니다.
+> - **쉽게 말하면**: "물품 사용 가능 여부"를 참/거짓으로 저장하는 필드입니다.
 
-### 2. NurseReceptionController — 수정
+### 2. NurseReceptionController — AJAX 엔드포인트 추가
 
 ```java
-// TODO [W3-6]: ItemManagerService 주입
-
-// TODO [W3-6]: patientDetail()에 items, usageLogs 모델 추가
-// model.addAttribute("items", itemManagerService.getItemList(null));
-// model.addAttribute("usageLogs", itemManagerService.getUsageLogs(id));
-
-// TODO [W3-6]: POST /nurse/item/use AJAX 엔드포인트 추가
-// - @RequestParam("id") Long id (itemId)
-// - @RequestParam("amount") String amountStr
-// - @RequestParam(required = false) Long reservationId
-// - 검증: 음수·소수·문자 차단
-// - 성공: {"quantity": N}
-// - 재고 부족·오류: 400 + {"error": "..."}
+// POST /nurse/item/use — 물품 사용 AJAX 엔드포인트
+@PostMapping("/item/use")
+@ResponseBody
+public ResponseEntity<?> useItem(
+        @RequestParam(name = "id") Long itemId,
+        @RequestParam(name = "amount") String amountStr,
+        @RequestParam(name = "reservationId", required = false) Long reservationId) {
+    try {
+        int amount = Integer.parseInt(amountStr.trim());
+        if (amount < 1) throw new IllegalArgumentException("수량 오류");
+        int newQty = itemManagerService.useItem(itemId, amount, reservationId);
+        return ResponseEntity.ok(Map.of("quantity", newQty));
+    } catch (IllegalStateException e) {
+        return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+    } catch (Exception e) {
+        return ResponseEntity.badRequest().body(Map.of("error", "처리 중 오류가 발생했습니다."));
+    }
+}
 ```
 
 > **💡 입문자 설명**
-> - **이 코드가 하는 일**: 간호사 환자 상세 페이지 컨트롤러에 물품 목록(`items`)과 해당 환자의 물품 사용 이력(`usageLogs`)을 전달하고, 물품 사용 AJAX 엔드포인트를 추가합니다. `required = false`는 해당 파라미터가 없어도 오류 없이 동작한다는 의미입니다.
-> - **왜 이렇게 썼는지**: `reservationId`는 선택적 파라미터(`required = false`)로 지정해서, 예약과 연결할 수 있는 경우에만 이력에 기록되도록 합니다. 간호사와 의사 모두 동일한 `itemManagerService`를 재사용하여 중복 코드를 줄입니다.
-> - **쉽게 말하면**: 간호사 화면에서도 물품을 사용할 수 있도록 서버 쪽에 기능을 추가하는 코드입니다.
+> - **이 코드가 하는 일**: 간호사 화면에서 물품 사용 버튼을 눌렀을 때 재고를 차감하는 AJAX 엔드포인트입니다. `required = false`는 `reservationId`가 없어도 오류 없이 동작한다는 의미입니다.
+> - **왜 이렇게 썼는지**: 간호사와 의사 모두 동일한 `ItemManagerService.useItem()`을 재사용해 중복 코드를 줄입니다. 역할마다 URL(`/nurse/item/use`, `/doctor/item/use`)이 다르므로 별도 엔드포인트가 필요합니다.
+> - **쉽게 말하면**: 간호사 화면에서도 물품을 사용할 수 있도록 서버에 창구를 추가한 코드입니다.
 
-### 3. patient-detail.mustache — 물품 사용 섹션 + 사용 내역 추가
+### 3. patient-detail.mustache — 두 섹션 추가
 
 ```html
-<!-- TODO [W3-6]: 환자 정보 폼 닫는 </div> 아래, footer 위에 추가 -->
-
 <!-- 사용 물품 내역 (항상 표시) -->
-<!-- {{#usageLogs}} 있으면 테이블, {{^usageLogs}} 없으면 "없습니다." -->
+<section class="mt-6">
+  <h3 class="font-bold text-slate-700 mb-3">사용 물품 내역</h3>
+  {{#usageLogs}}
+  <table>...</table>
+  {{/usageLogs}}
+  {{^usageLogs}}
+  <p class="text-slate-400 text-sm">사용된 물품이 없습니다.</p>
+  {{/usageLogs}}
+</section>
 
-<!-- 물품 사용 섹션 ({{#detail.canUseItem}}만 표시) -->
-<!-- 카테고리 필터 버튼 (전체/의료소모품/의료기기/사무비품) -->
-<!-- 초성·영문 검색 입력 -->
-<!-- 물품 카드 그리드 4열: 물품명 | 카테고리 | 재고 | 수량입력 + 사용 버튼 -->
-<!-- AJAX: 성공 → 재고 갱신 / 재고 부족 → alert -->
+<!-- 물품 사용 섹션 (RECEIVED 상태만) -->
+{{#detail.canUseItem}}
+<section class="mt-6">
+  <!-- 카테고리 필터, 검색, 물품 카드 그리드, AJAX JS -->
+</section>
+{{/detail.canUseItem}}
 ```
 
 > **💡 입문자 설명**
-> - **이 코드가 하는 일**: 간호사 환자 상세 페이지 하단에 두 가지 섹션을 추가합니다. 첫 번째는 어떤 상태의 환자든 항상 표시되는 "사용 물품 내역"이고, 두 번째는 접수 완료(`RECEIVED`) 상태일 때만 보이는 "물품 사용 섹션"입니다.
-> - **왜 이렇게 썼는지**: `{{#usageLogs}}`는 목록이 있을 때, `{{^usageLogs}}`는 없을 때 렌더링하는 Mustache 문법입니다. 물품 사용 폼은 접수 완료 환자에게만 의미가 있으므로 `canUseItem` 조건으로 분리합니다.
-> - **쉽게 말하면**: 항상 보이는 "어떤 물품을 썼나요" 내역과, 접수된 환자일 때만 보이는 "물품 사용하기" 폼을 화면 아래에 추가합니다.
+> - **이 코드가 하는 일**: 환자 상세 페이지 하단에 두 섹션을 추가합니다. 첫 번째는 항상 표시되는 사용 이력, 두 번째는 RECEIVED 상태일 때만 보이는 물품 사용 폼입니다.
+> - **왜 이렇게 썼는지**: `{{#usageLogs}}`는 목록이 있을 때, `{{^usageLogs}}`는 없을 때 렌더링하는 Mustache 문법입니다.
+> - **쉽게 말하면**: "어떤 물품을 썼나요" 내역과 "물품 사용하기" 폼을 화면 아래에 추가합니다.
 
 ---
 
-## 상세 구현 계획
+## 테스트 진행
 
-### canUseItem 조건
-- `RECEIVED` 상태일 때만 물품 사용 폼 표시
-- 사용 내역(usageLogs)은 상태 관계없이 항상 표시
-
-### 레이아웃
-1. 기존 환자 정보 카드 (변경 없음)
-2. **사용 물품 내역** — 항상 표시 (카드 바깥, 별도 섹션)
-3. **물품 사용 섹션** — `{{#detail.canUseItem}}`만 표시
-
-### 재사용
-- `ItemManagerService.useItem()`, `getItemList()`, `getUsageLogs()` — 기존 그대로
-- AJAX JS 패턴, 카테고리 필터, 초성 검색 — doctor treatment-detail과 동일 구조
-
-### AJAX 엔드포인트
-- URL: `POST /nurse/item/use`
-- 파라미터: `id` (itemId), `amount`, `reservationId`
-- 응답: `{"quantity": N}` or `{"error": "..."}`
+| 케이스 | 조건 | 기대 결과 |
+|--------|------|-----------|
+| RECEIVED 환자 | 상세 페이지 접속 | 물품 사용 섹션 + 사용 내역 모두 표시 |
+| 다른 상태 환자 | 상세 페이지 접속 | 사용 물품 내역만 표시 |
+| 물품 사용 성공 | 유효한 수량 입력 | 재고 즉시 갱신 |
+| 재고 부족 | 재고 초과 수량 입력 | alert 팝업 |
+| 카테고리 필터·검색 | 탭 버튼·검색 입력 | 필터링 정상 동작 |
 
 ---
 
-## 금지 사항 체크
+## 완료 기준
 
+- [x] RECEIVED 환자: 물품 사용 섹션 + 사용 내역 모두 표시
+- [x] 다른 상태 환자: 사용 물품 내역만 표시
+- [x] 카테고리 필터·초성 검색·AJAX 출고 정상 작동
 - [x] `config/`, `domain/` 수정 없음
-- [x] `admin/**` 수정 없음
 - [x] `doctor/**` 수정 없음

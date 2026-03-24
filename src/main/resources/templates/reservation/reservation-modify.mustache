@@ -175,6 +175,10 @@
                     <option value="14:30">14:30</option>
                     <option value="15:00">15:00</option>
                     <option value="15:30">15:30</option>
+                    <option value="16:00">16:00</option>
+                    <option value="16:30">16:30</option>
+                    <option value="17:00">17:00</option>
+                    <option value="17:30">17:30</option>
                   </select>
                 </div>
               </div>
@@ -249,7 +253,7 @@
             `/api/reservation/booked-slots?doctorId=${doctorId}&date=${dateStr}&excludeId=${excludeId}`
           );
           if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
-          const booked = await res.json();
+          const booked = (await res.json()).body;
 
           // 오늘 날짜 여부 판단 (로컬 날짜 기준, UTC 오차 방지)
           const today = new Date();
@@ -313,6 +317,7 @@
 
       fetch(`/api/reservation/doctors?departmentId=${departmentId}`)
         .then(res => res.json())
+        .then(data => data.body)
         .then(doctors => {
           doctors.forEach(doctor => {
             const option = document.createElement('option');
