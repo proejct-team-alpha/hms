@@ -479,7 +479,7 @@ async def infer_rule(request: Request, body: InferRequest) -> InferResponse:
     rule_context = ""
     try:
         from rule_context_service import build_rule_context
-        rule_context = await build_rule_context(corrected_query)
+        rule_context = await build_rule_context(corrected_query, history=body.history)
     except Exception as exc:
         logger.warning("Rule context build skipped: %s", exc)
     logger.info("Rule context: %d chars", len(rule_context))
@@ -525,7 +525,7 @@ async def infer_rule_stream(request: Request, body: InferRequest):
     rule_context = ""
     try:
         from rule_context_service import build_rule_context
-        rule_context = await build_rule_context(corrected_query)
+        rule_context = await build_rule_context(corrected_query, history=body.history)
     except Exception as exc:
         logger.warning("Rule context build skipped (stream): %s", exc)
     logger.info("Rule context (stream): %d chars", len(rule_context))
