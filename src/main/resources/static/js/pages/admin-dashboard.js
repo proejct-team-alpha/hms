@@ -88,6 +88,8 @@
 
     const labels = dailyPatients.map((item) => formatDateLabel(item.date));
     const values = dailyPatients.map((item) => Number(item.patientCount) || 0);
+    const todayKey = getLocalDateKey();
+    const todayIndex = dailyPatients.findIndex((item) => item.date === todayKey);
 
     if (values.length === 0) {
       destroyDailyPatientChart();
@@ -113,11 +115,27 @@
             borderWidth: 3,
             fill: true,
             tension: 0.32,
-            pointRadius: 0,
-            pointHoverRadius: 6,
-            pointHoverBackgroundColor: DAILY_PATIENT_COLORS.border,
-            pointHoverBorderColor: '#ffffff',
-            pointHoverBorderWidth: 3
+            // Keep the point markers visible so each day's position is readable at a glance.
+            pointRadius(context) {
+              return context.dataIndex === todayIndex ? 5 : 3;
+            },
+            pointHoverRadius(context) {
+              return context.dataIndex === todayIndex ? 7 : 6;
+            },
+            pointBackgroundColor(context) {
+              return context.dataIndex === todayIndex ? '#ffffff' : DAILY_PATIENT_COLORS.border;
+            },
+            pointBorderColor: DAILY_PATIENT_COLORS.border,
+            pointBorderWidth(context) {
+              return context.dataIndex === todayIndex ? 3 : 2;
+            },
+            pointHoverBackgroundColor(context) {
+              return context.dataIndex === todayIndex ? '#ffffff' : DAILY_PATIENT_COLORS.border;
+            },
+            pointHoverBorderColor: DAILY_PATIENT_COLORS.border,
+            pointHoverBorderWidth(context) {
+              return context.dataIndex === todayIndex ? 3 : 2;
+            }
           }
         ]
       },
@@ -174,12 +192,14 @@
             ticks: {
               color: DAILY_PATIENT_COLORS.tick,
               maxRotation: 0,
+              minRotation: 0,
+              autoSkip: false,
               font: {
                 family: "'Pretendard', sans-serif",
                 size: 11
               },
-              callback(value, index) {
-                return index % 2 === 0 ? this.getLabelForValue(value) : '';
+              callback(value) {
+                return this.getLabelForValue(value);
               }
             },
             grid: {
@@ -311,6 +331,14 @@
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return month + '/' + day;
+  }
+
+  function getLocalDateKey() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   function showError(elementId) {
