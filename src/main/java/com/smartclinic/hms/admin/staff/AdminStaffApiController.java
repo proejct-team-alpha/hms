@@ -7,6 +7,7 @@ import com.smartclinic.hms.common.util.Resp;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,17 +24,21 @@ public class AdminStaffApiController {
     @PostMapping("/{id}")
     public ResponseEntity<Resp<UpdateAdminStaffApiResponse>> updateStaff(
             @PathVariable("id") Long staffId,
-            @Valid @RequestBody UpdateAdminStaffApiRequest request) {
+            @Valid @RequestBody UpdateAdminStaffApiRequest request,
+            Authentication authentication) {
         UpdateAdminStaffRequest serviceRequest = new UpdateAdminStaffRequest(
                 staffId,
                 request.name(),
                 request.departmentId(),
                 request.password(),
                 request.active(),
+                request.retiredAt(),
+                request.retiredAtDate(),
+                request.retiredAtHour(),
                 request.availableDays()
         );
 
-        String successMessage = adminStaffService.updateStaff(serviceRequest);
+        String successMessage = adminStaffService.updateStaff(serviceRequest, authentication.getName());
         UpdateAdminStaffApiResponse response = adminStaffService.getUpdateApiResponse(staffId, successMessage);
 
         return Resp.ok(response);

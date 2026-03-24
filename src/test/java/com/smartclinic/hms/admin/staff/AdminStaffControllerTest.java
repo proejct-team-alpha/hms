@@ -22,8 +22,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -47,10 +49,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(AdminControllerTestSecurityConfig.class)
 class AdminStaffControllerTest {
 
-    private static final String STAFF_CREATED_MESSAGE = "직원이 등록되었습니다.";
-    private static final String STAFF_UPDATED_MESSAGE = "직원 정보를 수정했습니다.";
-    private static final String STAFF_DEACTIVATED_MESSAGE = "직원을 비활성화했습니다.";
-    private static final String INVALID_DEPARTMENT_MESSAGE = "유효한 부서를 선택해 주세요.";
+    private static final String STAFF_CREATED_MESSAGE = "staff created";
+    private static final String STAFF_UPDATED_MESSAGE = "staff updated";
+    private static final String STAFF_DEACTIVATED_MESSAGE = "staff deactivated";
+    private static final String INVALID_DEPARTMENT_MESSAGE = "department is required";
+    private static final String SELF_DEACTIVATE_MESSAGE = "self deactivate is not allowed";
+    private static final String INACTIVE_UPDATE_NOT_ALLOWED_MESSAGE = "\uBE44\uD65C\uC131\uD654\uB41C \uC9C1\uC6D0\uC740 \uC218\uC815\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4.";
+    private static final String READ_ONLY_MESSAGE = "\uBE44\uD65C\uC131\uD654\uB41C \uC9C1\uC6D0\uC785\uB2C8\uB2E4. \uC870\uD68C\uB9CC \uAC00\uB2A5\uD569\uB2C8\uB2E4.";
+    private static final String RETIRED_AT_REQUIRED_MESSAGE = "\uD1F4\uC0AC \uC77C\uC2DC\uB294 \uB0A0\uC9DC\uC640 \uC2DC\uAC04\uC744 \uBAA8\uB450 \uC120\uD0DD\uD574\uC57C \uD569\uB2C8\uB2E4.";
 
     @Autowired
     private MockMvc mockMvc;
@@ -59,7 +65,7 @@ class AdminStaffControllerTest {
     private AdminStaffService adminStaffService;
 
     @Test
-    @DisplayName("직원 등록 화면을 렌더링한다")
+    @DisplayName("new form renders staff form view")
     void newForm_rendersStaffFormView() throws Exception {
         AdminStaffFormResponse response = createFormResponse();
         given(adminStaffService.getCreateForm()).willReturn(response);
@@ -75,9 +81,15 @@ class AdminStaffControllerTest {
     }
 
     @Test
-    @DisplayName("의사 등록 폼은 부서 select를 노출하고 전문분야 입력은 제거한다")
-    void newForm_doctorCreateForm_rendersDepartmentSelectWithoutSpecialty() throws Exception {
-        AdminStaffFormResponse response = createDoctorCreateFormResponse("doctor-new", "신규의사", "D-NEW-001", 1L, true);
+    @DisplayName("new doctor form renders retiredAt date and hour inputs")
+    void newForm_doctorCreateForm_rendersDepartmentAndRetiredAtFields() throws Exception {
+        AdminStaffFormResponse response = createDoctorCreateFormResponse(
+                "doctor-new",
+                "doctor name",
+                "D-NEW-001",
+                1L,
+                true,
+                "2026-03-31T18:00");
         given(adminStaffService.getCreateForm()).willReturn(response);
 
         mockMvc.perform(get("/admin/staff/new")
@@ -86,14 +98,21 @@ class AdminStaffControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/staff-form"))
                 .andExpect(content().string(containsString("name=\"departmentId\"")))
-                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("name=\"specialty\""))));
+                .andExpect(content().string(containsString("id=\"staff-retired-at-date\"")))
+                .andExpect(content().string(containsString("name=\"retiredAtDate\"")))
+                .andExpect(content().string(containsString("value=\"2026-03-31\"")))
+                .andExpect(content().string(containsString("id=\"staff-retired-at-hour\"")))
+                .andExpect(content().string(containsString("<option value=\"18\" selected>18:00</option>")))
+                .andExpect(content().string(containsString("id=\"staff-retired-at-hidden\"")))
+                .andExpect(content().string(containsString("name=\"retiredAt\" value=\"2026-03-31T18:00\"")))
+                .andExpect(content().string(not(containsString("id=\"staff-retired-at\""))));
     }
 
     @Test
-    @DisplayName("직원 수정 화면을 렌더링한다")
+    @DisplayName("detail renders edit form view")
     void detail_rendersEditFormView() throws Exception {
-        AdminStaffFormResponse response = createEditFormResponse();
-        given(adminStaffService.getEditForm(1L)).willReturn(response);
+        AdminStaffFormResponse response = createEditFormResponse(false, true, false, "");
+        given(adminStaffService.getEditForm(1L, "admin")).willReturn(response);
 
         mockMvc.perform(get("/admin/staff/detail")
                         .param("staffId", "1")
@@ -105,24 +124,58 @@ class AdminStaffControllerTest {
     }
 
     @Test
-    @DisplayName("의사 수정 폼은 현재 부서를 select로 보여주고 전문분야 입력은 제거한다")
-    void detail_doctorEditForm_rendersDepartmentSelectWithoutSpecialty() throws Exception {
-        AdminStaffFormResponse response = createEditFormResponse();
-        given(adminStaffService.getEditForm(1L)).willReturn(response);
+    @DisplayName("edit form renders retiredAt date and hour inputs")
+    void detail_editMode_rendersRetiredAtDateAndHourInputs() throws Exception {
+        AdminStaffFormResponse response = createEditFormResponse(false, true, false, "2026-03-31T18:00");
+        given(adminStaffService.getEditForm(1L, "admin")).willReturn(response);
 
         mockMvc.perform(get("/admin/staff/detail")
                         .param("staffId", "1")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(view().name("admin/staff-form"))
-                .andExpect(content().string(containsString("name=\"departmentId\"")))
-                .andExpect(content().string(containsString("selected")))
-                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("name=\"specialty\""))));
+                .andExpect(content().string(containsString("id=\"staff-retired-at-date\"")))
+                .andExpect(content().string(containsString("name=\"retiredAtDate\"")))
+                .andExpect(content().string(containsString("value=\"2026-03-31\"")))
+                .andExpect(content().string(containsString("id=\"staff-retired-at-hour\"")))
+                .andExpect(content().string(containsString("<option value=\"18\" selected>18:00</option>")))
+                .andExpect(content().string(containsString("id=\"staff-retired-at-hidden\"")))
+                .andExpect(content().string(containsString("name=\"retiredAt\" value=\"2026-03-31T18:00\"")));
     }
 
     @Test
-    @DisplayName("직원 목록은 model과 pageTitle을 함께 렌더링한다")
+    @DisplayName("inactive detail renders read only form")
+    void detail_inactiveStaff_rendersReadOnlyForm() throws Exception {
+        AdminStaffFormResponse response = createEditFormResponse(false, false, false, "2026-03-31T18:00");
+        given(adminStaffService.getEditForm(1L, "admin")).willReturn(response);
+
+        mockMvc.perform(get("/admin/staff/detail")
+                        .param("staffId", "1")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(READ_ONLY_MESSAGE)))
+                .andExpect(content().string(not(containsString("data-feather=\"save\""))))
+                .andExpect(content().string(containsString("disabled")));
+    }
+
+    @Test
+    @DisplayName("self edit keeps active and retiredAt hidden values")
+    void detail_selfEdit_locksEmploymentStatusAndRetiredAt() throws Exception {
+        AdminStaffFormResponse response = createEditFormResponse(true, true, true, "2026-03-31T18:00");
+        given(adminStaffService.getEditForm(1L, "doctor01")).willReturn(response);
+
+        mockMvc.perform(get("/admin/staff/detail")
+                        .param("staffId", "1")
+                        .with(user("doctor01").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("name=\"active\" value=\"true\"")))
+                .andExpect(content().string(containsString("name=\"retiredAt\" value=\"2026-03-31T18:00\"")));
+    }
+
+    @Test
+    @DisplayName("list uses default paging and renders view")
     void list_usesDefaultPagingAndRendersView() throws Exception {
         AdminStaffListResponse response = createListResponse("ALL", "ALL", "");
         given(adminStaffService.getStaffList(1, 10, null, null, null, "admin")).willReturn(response);
@@ -137,18 +190,19 @@ class AdminStaffControllerTest {
     }
 
     @Test
-    @DisplayName("직원 등록 성공 시 목록으로 리다이렉트한다")
+    @DisplayName("create success redirects to list")
     void create_success_redirectsToList() throws Exception {
         given(adminStaffService.createStaff(any())).willReturn(STAFF_CREATED_MESSAGE);
 
         mockMvc.perform(post("/admin/staff/create")
                         .param("username", "doctor-new")
                         .param("password", "password123")
-                        .param("name", "신규의사")
+                        .param("name", "doctor name")
                         .param("employeeNumber", "D-NEW-001")
                         .param("role", "DOCTOR")
                         .param("departmentId", "1")
                         .param("active", "true")
+                        .param("retiredAt", "2026-03-31T18:00")
                         .param("availableDays", "MON")
                         .param("availableDays", "WED")
                         .with(user("admin").roles("ADMIN"))
@@ -159,9 +213,15 @@ class AdminStaffControllerTest {
     }
 
     @Test
-    @DisplayName("의사 등록 시 부서를 선택하지 않으면 같은 화면에서 부서 에러를 보여준다")
+    @DisplayName("create validation failure without doctor department renders form")
     void create_validationFailure_withoutDoctorDepartment_rendersStaffFormView() throws Exception {
-        AdminStaffFormResponse response = createDoctorCreateFormResponse("doctor-new", "신규의사", "D-NEW-001", null, true);
+        AdminStaffFormResponse response = createDoctorCreateFormResponse(
+                "doctor-new",
+                "doctor name",
+                "D-NEW-001",
+                null,
+                true,
+                "2026-03-31T18:00");
         given(adminStaffService.createStaff(any()))
                 .willThrow(CustomException.badRequest("VALIDATION_ERROR", INVALID_DEPARTMENT_MESSAGE));
         given(adminStaffService.getCreateForm(any())).willReturn(response);
@@ -169,63 +229,36 @@ class AdminStaffControllerTest {
         mockMvc.perform(post("/admin/staff/create")
                         .param("username", "doctor-new")
                         .param("password", "password123")
-                        .param("name", "신규의사")
+                        .param("name", "doctor name")
                         .param("employeeNumber", "D-NEW-001")
                         .param("role", "DOCTOR")
                         .param("active", "true")
+                        .param("retiredAt", "2026-03-31T18:00")
                         .param("availableDays", "MON")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/staff-form"))
                 .andExpect(request().attribute("errorMessage", INVALID_DEPARTMENT_MESSAGE))
-                .andExpect(request().attribute("departmentIdError", INVALID_DEPARTMENT_MESSAGE))
-                .andExpect(request().attribute("model", response))
-                .andExpect(content().string(containsString("doctor-new")))
-                .andExpect(content().string(containsString("D-NEW-001")));
+                .andExpect(request().attribute("model", response));
 
         then(adminStaffService).should().createStaff(any());
         then(adminStaffService).should().getCreateForm(any());
     }
 
     @Test
-    @DisplayName("직원 등록 검증 실패 시 공백 로그인 아이디를 필드 에러로 처리한다")
-    void create_validationFailure_withBlankUsername_rendersStaffFormView() throws Exception {
-        AdminStaffFormResponse response = createDoctorCreateFormResponse("", "신규의사", "D-NEW-001", 1L, true);
-        given(adminStaffService.getCreateForm(any())).willReturn(response);
-
-        mockMvc.perform(post("/admin/staff/create")
-                        .param("username", "   ")
-                        .param("password", "password123")
-                        .param("name", "신규의사")
-                        .param("employeeNumber", "D-NEW-001")
-                        .param("role", "DOCTOR")
-                        .param("departmentId", "1")
-                        .param("active", "true")
-                        .param("availableDays", "MON")
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(view().name("admin/staff-form"))
-                .andExpect(request().attribute("errorMessage", SsrValidationViewSupport.INPUT_CHECK_MESSAGE))
-                .andExpect(request().attribute("usernameError", notNullValue()))
-                .andExpect(request().attribute("model", response));
-
-        then(adminStaffService).should().getCreateForm(any());
-        then(adminStaffService).shouldHaveNoMoreInteractions();
-    }
-
-    @Test
-    @DisplayName("직원 수정 성공 시 목록으로 리다이렉트한다")
+    @DisplayName("update success redirects to list")
     void update_success_redirectsToList() throws Exception {
-        given(adminStaffService.updateStaff(any(UpdateAdminStaffRequest.class))).willReturn(STAFF_UPDATED_MESSAGE);
+        given(adminStaffService.updateStaff(any(UpdateAdminStaffRequest.class), eq("admin")))
+                .willReturn(STAFF_UPDATED_MESSAGE);
 
         mockMvc.perform(post("/admin/staff/update")
                         .param("staffId", "1")
-                        .param("name", "수정직원")
+                        .param("name", "updated staff")
                         .param("departmentId", "2")
                         .param("password", "")
                         .param("active", "true")
+                        .param("retiredAt", "2026-03-31T18:00")
                         .param("availableDays", "MON")
                         .param("availableDays", "WED")
                         .with(user("admin").roles("ADMIN"))
@@ -236,39 +269,120 @@ class AdminStaffControllerTest {
     }
 
     @Test
-    @DisplayName("직원 수정 검증 실패 시 필드 에러와 입력값을 유지한다")
+    @DisplayName("update validation failure renders edit form")
     void update_validationFailure_rendersStaffFormView() throws Exception {
-        AdminStaffFormResponse response = createEditFormResponse("수정직원", null, true);
-        given(adminStaffService.updateStaff(any(UpdateAdminStaffRequest.class)))
+        AdminStaffFormResponse response = createEditFormResponse(false, true, false, "2026-03-31T18:00");
+        given(adminStaffService.updateStaff(any(UpdateAdminStaffRequest.class), eq("admin")))
                 .willThrow(CustomException.badRequest("VALIDATION_ERROR", INVALID_DEPARTMENT_MESSAGE));
-        given(adminStaffService.getEditForm(any(UpdateAdminStaffRequest.class))).willReturn(response);
+        given(adminStaffService.getEditForm(any(UpdateAdminStaffRequest.class), eq("admin"))).willReturn(response);
 
         mockMvc.perform(post("/admin/staff/update")
                         .param("staffId", "1")
-                        .param("name", "수정직원")
+                        .param("name", "updated staff")
                         .param("password", "")
                         .param("active", "true")
+                        .param("retiredAt", "2026-03-31T18:00")
                         .param("availableDays", "MON")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/staff-form"))
                 .andExpect(request().attribute("errorMessage", INVALID_DEPARTMENT_MESSAGE))
-                .andExpect(request().attribute("departmentIdError", notNullValue()))
-                .andExpect(request().attribute("model", response))
-                .andExpect(content().string(containsString("수정직원")))
-                .andExpect(content().string(containsString("doctor01")));
+                .andExpect(request().attribute("model", response));
 
-        then(adminStaffService).should().updateStaff(any(UpdateAdminStaffRequest.class));
-        then(adminStaffService).should().getEditForm(any(UpdateAdminStaffRequest.class));
-        then(adminStaffService).shouldHaveNoMoreInteractions();
+        then(adminStaffService).should().updateStaff(any(UpdateAdminStaffRequest.class), eq("admin"));
+        then(adminStaffService).should().getEditForm(any(UpdateAdminStaffRequest.class), eq("admin"));
     }
 
     @Test
-    @DisplayName("직원 수정 검증 실패 시 빈 이름을 필드 에러로 처리한다")
-    void update_validationFailure_withEmptyName_rendersStaffFormView() throws Exception {
-        AdminStaffFormResponse response = createEditFormResponse("", 1L, true);
-        given(adminStaffService.getEditForm(any(UpdateAdminStaffRequest.class))).willReturn(response);
+    @DisplayName("self deactivate attempt renders edit form")
+    void update_selfDeactivateAttempt_rendersStaffFormView() throws Exception {
+        AdminStaffFormResponse response = createEditFormResponse(true, true, true, "2026-03-31T18:00");
+        given(adminStaffService.updateStaff(any(UpdateAdminStaffRequest.class), eq("doctor01")))
+                .willThrow(CustomException.badRequest("VALIDATION_ERROR", SELF_DEACTIVATE_MESSAGE));
+        given(adminStaffService.getEditForm(any(UpdateAdminStaffRequest.class), eq("doctor01"))).willReturn(response);
+
+        mockMvc.perform(post("/admin/staff/update")
+                        .param("staffId", "1")
+                        .param("name", "updated staff")
+                        .param("departmentId", "1")
+                        .param("password", "")
+                        .param("active", "false")
+                        .param("retiredAt", "2026-03-31T18:00")
+                        .param("availableDays", "MON")
+                        .with(user("doctor01").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/staff-form"))
+                .andExpect(request().attribute("errorMessage", SELF_DEACTIVATE_MESSAGE))
+                .andExpect(request().attribute("model", response));
+
+        then(adminStaffService).should().updateStaff(any(UpdateAdminStaffRequest.class), eq("doctor01"));
+        then(adminStaffService).should().getEditForm(any(UpdateAdminStaffRequest.class), eq("doctor01"));
+    }
+
+    @Test
+    @DisplayName("inactive staff update attempt renders read only form")
+    void update_inactiveStaffAttempt_rendersStaffFormView() throws Exception {
+        AdminStaffFormResponse response = createEditFormResponse(false, false, false, "");
+        given(adminStaffService.updateStaff(any(UpdateAdminStaffRequest.class), eq("admin")))
+                .willThrow(CustomException.badRequest("VALIDATION_ERROR", INACTIVE_UPDATE_NOT_ALLOWED_MESSAGE));
+        given(adminStaffService.getEditForm(any(UpdateAdminStaffRequest.class), eq("admin"))).willReturn(response);
+
+        mockMvc.perform(post("/admin/staff/update")
+                        .param("staffId", "1")
+                        .param("name", "inactive staff")
+                        .param("departmentId", "1")
+                        .param("password", "")
+                        .param("active", "true")
+                        .param("retiredAt", "")
+                        .param("availableDays", "MON")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/staff-form"))
+                .andExpect(request().attribute("errorMessage", INACTIVE_UPDATE_NOT_ALLOWED_MESSAGE))
+                .andExpect(request().attribute("model", response));
+
+        then(adminStaffService).should().updateStaff(any(UpdateAdminStaffRequest.class), eq("admin"));
+        then(adminStaffService).should().getEditForm(any(UpdateAdminStaffRequest.class), eq("admin"));
+    }
+
+    @Test
+    @DisplayName("update retiredAt pair validation failure renders retiredAt error")
+    void update_retiredAtPairValidationFailure_rendersRetiredAtError() throws Exception {
+        AdminStaffFormResponse response = createEditFormResponse(false, true, false, "");
+        given(adminStaffService.updateStaff(any(UpdateAdminStaffRequest.class), eq("admin")))
+                .willThrow(CustomException.badRequest("VALIDATION_ERROR", RETIRED_AT_REQUIRED_MESSAGE));
+        given(adminStaffService.getEditForm(any(UpdateAdminStaffRequest.class), eq("admin"))).willReturn(response);
+
+        mockMvc.perform(post("/admin/staff/update")
+                        .param("staffId", "1")
+                        .param("name", "updated staff")
+                        .param("departmentId", "1")
+                        .param("password", "")
+                        .param("active", "true")
+                        .param("retiredAtDate", "2026-03-31")
+                        .param("retiredAtHour", "")
+                        .param("retiredAt", "")
+                        .param("availableDays", "MON")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/staff-form"))
+                .andExpect(request().attribute("errorMessage", RETIRED_AT_REQUIRED_MESSAGE))
+                .andExpect(request().attribute("retiredAtError", RETIRED_AT_REQUIRED_MESSAGE))
+                .andExpect(request().attribute("model", response));
+
+        then(adminStaffService).should().updateStaff(any(UpdateAdminStaffRequest.class), eq("admin"));
+        then(adminStaffService).should().getEditForm(any(UpdateAdminStaffRequest.class), eq("admin"));
+    }
+
+    @Test
+    @DisplayName("binding failure with empty name renders edit form")
+    void update_bindingFailure_withEmptyName_rendersStaffFormView() throws Exception {
+        AdminStaffFormResponse response = createEditFormResponse(false, true, false, "");
+        given(adminStaffService.getEditForm(any(UpdateAdminStaffRequest.class), eq("admin"))).willReturn(response);
 
         mockMvc.perform(post("/admin/staff/update")
                         .param("staffId", "1")
@@ -276,6 +390,7 @@ class AdminStaffControllerTest {
                         .param("departmentId", "1")
                         .param("password", "")
                         .param("active", "true")
+                        .param("retiredAt", "")
                         .param("availableDays", "MON")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
@@ -285,12 +400,12 @@ class AdminStaffControllerTest {
                 .andExpect(request().attribute("nameError", notNullValue()))
                 .andExpect(request().attribute("model", response));
 
-        then(adminStaffService).should().getEditForm(any(UpdateAdminStaffRequest.class));
+        then(adminStaffService).should().getEditForm(any(UpdateAdminStaffRequest.class), eq("admin"));
         then(adminStaffService).shouldHaveNoMoreInteractions();
     }
 
     @Test
-    @DisplayName("직원 비활성화 성공 시 목록으로 리다이렉트한다")
+    @DisplayName("deactivate success redirects to list")
     void deactivate_success_redirectsToList() throws Exception {
         given(adminStaffService.deactivateStaff(2L, "admin")).willReturn(STAFF_DEACTIVATED_MESSAGE);
 
@@ -307,22 +422,22 @@ class AdminStaffControllerTest {
         return new AdminStaffListResponse(
                 List.of(new AdminStaffItemResponse(
                         2L,
-                        "김직원",
+                        "staff name",
                         "staff01",
                         "S-001",
                         "STAFF",
-                        "직원",
+                        "staff",
                         "bg-purple-100 text-purple-800",
                         "-",
                         true,
-                        "재직",
+                        "active",
                         "bg-green-100 text-green-800",
                         "/admin/staff/detail?staffId=2",
                         true,
                         ""
                 )),
-                List.of(new AdminStaffFilterOptionResponse("ALL", "전체 역할", "ALL".equals(selectedRole))),
-                List.of(new AdminStaffFilterOptionResponse("ALL", "전체 상태", "ALL".equals(selectedEmploymentStatus))),
+                List.of(new AdminStaffFilterOptionResponse("ALL", "all roles", "ALL".equals(selectedRole))),
+                List.of(new AdminStaffFilterOptionResponse("ALL", "all statuses", "ALL".equals(selectedEmploymentStatus))),
                 List.of(new AdminStaffPageLinkResponse(1, "/admin/staff/list?page=1&size=10&role=ALL&employmentStatus=ALL", true)),
                 keyword,
                 selectedRole,
@@ -340,22 +455,30 @@ class AdminStaffControllerTest {
 
     private AdminStaffFormResponse createFormResponse() {
         return new AdminStaffFormResponse(
-                "직원 등록",
+                "staff create",
                 "/admin/staff/create",
-                "등록하기",
+                "submit",
                 false,
                 null,
                 "",
                 "",
                 "",
                 "STAFF",
-                "직원",
+                "staff",
                 null,
                 true,
+                "",
+                "",
+                "",
                 false,
-                List.of(new AdminStaffFormOptionResponse("STAFF", "직원", true)),
-                List.of(new AdminStaffDepartmentOptionResponse(1L, "내과", false)),
-                List.of(new AdminStaffFormOptionResponse("true", "재직", true)),
+                false,
+                false,
+                false,
+                false,
+                List.of(new AdminStaffFormOptionResponse("STAFF", "staff", true)),
+                List.of(new AdminStaffDepartmentOptionResponse(1L, "dept", false)),
+                List.of(new AdminStaffFormOptionResponse("true", "active", true)),
+                List.of(),
                 List.of()
         );
     }
@@ -365,57 +488,100 @@ class AdminStaffControllerTest {
             String name,
             String employeeNumber,
             Long selectedDepartmentId,
-            boolean active) {
+            boolean active,
+            String retiredAt
+    ) {
         return new AdminStaffFormResponse(
-                "직원 등록",
+                "staff create",
                 "/admin/staff/create",
-                "등록하기",
+                "submit",
                 false,
                 null,
                 username,
                 name,
                 employeeNumber,
                 "DOCTOR",
-                "의사",
+                "doctor",
                 selectedDepartmentId,
                 active,
+                retiredAt,
+                extractRetiredAtDate(retiredAt),
+                extractRetiredAtHour(retiredAt),
+                false,
+                false,
+                false,
+                false,
                 true,
-                List.of(new AdminStaffFormOptionResponse("DOCTOR", "의사", true)),
-                List.of(new AdminStaffDepartmentOptionResponse(1L, "가정의학과", selectedDepartmentId != null && selectedDepartmentId.equals(1L))),
+                List.of(new AdminStaffFormOptionResponse("DOCTOR", "doctor", true)),
+                List.of(new AdminStaffDepartmentOptionResponse(1L, "family", selectedDepartmentId != null && selectedDepartmentId.equals(1L))),
                 List.of(
-                        new AdminStaffFormOptionResponse("true", "재직", active),
-                        new AdminStaffFormOptionResponse("false", "비활성", !active)
+                        new AdminStaffFormOptionResponse("true", "active", active),
+                        new AdminStaffFormOptionResponse("false", "inactive", !active)
                 ),
-                List.of(new AdminStaffFormOptionResponse("MON", "월요일", true))
+                buildRetiredAtHourOptions(extractRetiredAtHour(retiredAt)),
+                List.of(new AdminStaffFormOptionResponse("MON", "mon", true))
         );
     }
 
-    private AdminStaffFormResponse createEditFormResponse() {
-        return createEditFormResponse("김의사", 1L, true);
-    }
-
-    private AdminStaffFormResponse createEditFormResponse(String name, Long selectedDepartmentId, boolean active) {
+    private AdminStaffFormResponse createEditFormResponse(
+            boolean selfEdit,
+            boolean active,
+            boolean retiredAtLocked,
+            String retiredAt
+    ) {
+        boolean readOnly = !active;
+        boolean employmentStatusLocked = selfEdit || readOnly;
+        boolean effectiveRetiredAtLocked = retiredAtLocked || readOnly;
         return new AdminStaffFormResponse(
-                "직원 수정",
+                "staff edit",
                 "/admin/staff/update",
-                "수정하기",
+                "submit",
                 true,
                 1L,
                 "doctor01",
-                name,
+                "doctor name",
                 "D-001",
                 "DOCTOR",
-                "의사",
-                selectedDepartmentId,
+                "doctor",
+                1L,
                 active,
+                retiredAt,
+                extractRetiredAtDate(retiredAt),
+                extractRetiredAtHour(retiredAt),
+                selfEdit,
+                employmentStatusLocked,
+                effectiveRetiredAtLocked,
+                readOnly,
                 true,
-                List.of(new AdminStaffFormOptionResponse("DOCTOR", "의사", true)),
-                List.of(new AdminStaffDepartmentOptionResponse(1L, "내과", selectedDepartmentId != null && selectedDepartmentId.equals(1L))),
+                List.of(new AdminStaffFormOptionResponse("DOCTOR", "doctor", true)),
+                List.of(new AdminStaffDepartmentOptionResponse(1L, "dept", true)),
                 List.of(
-                        new AdminStaffFormOptionResponse("true", "재직", active),
-                        new AdminStaffFormOptionResponse("false", "비활성", !active)
+                        new AdminStaffFormOptionResponse("true", "active", active),
+                        new AdminStaffFormOptionResponse("false", "inactive", !active)
                 ),
-                List.of(new AdminStaffFormOptionResponse("MON", "월요일", true))
+                buildRetiredAtHourOptions(extractRetiredAtHour(retiredAt)),
+                List.of(new AdminStaffFormOptionResponse("MON", "mon", true))
         );
+    }
+
+    private String extractRetiredAtDate(String retiredAt) {
+        if (retiredAt == null || retiredAt.isBlank()) {
+            return "";
+        }
+        return retiredAt.substring(0, 10);
+    }
+
+    private String extractRetiredAtHour(String retiredAt) {
+        if (retiredAt == null || retiredAt.isBlank()) {
+            return "";
+        }
+        return retiredAt.substring(11, 13);
+    }
+
+    private List<AdminStaffFormOptionResponse> buildRetiredAtHourOptions(String selectedHour) {
+        if (selectedHour == null || selectedHour.isBlank()) {
+            return List.of();
+        }
+        return List.of(new AdminStaffFormOptionResponse(selectedHour, selectedHour + ":00", true));
     }
 }
