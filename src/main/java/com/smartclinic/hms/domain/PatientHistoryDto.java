@@ -33,7 +33,7 @@ public class PatientHistoryDto {
             case RECEIVED -> "진료 대기";
             case IN_TREATMENT -> "진료중";
             case COMPLETED -> "진료 완료";
-            case CANCELLED -> "취소됨";
+            case CANCELLED -> "취소";
         };
         this.statusBadgeClass = switch (r.getStatus()) {
             case RESERVED -> "bg-indigo-100 text-indigo-700";

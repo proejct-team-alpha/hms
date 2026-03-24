@@ -11,7 +11,7 @@ import lombok.Setter;
 public class StaffReservationDto {
 
     private final Long id;
-    private final Long patientId; 
+    private final Long patientId;
     private final String reservationNumber;
     private final String patientName;
     private final String patientPhone;
@@ -28,16 +28,16 @@ public class StaffReservationDto {
     private String statusBadgeClass;
     private final String sourceText;
     private final String sourceBadgeClass;
-    private final String ageGender; 
-    private final String birthInfo; 
-    private final String birthDatePart; 
-    private final String genderDigitPart; 
-    private final String visitReason; 
+    private final String ageGender;
+    private final String birthInfo;
+    private final String birthDatePart;
+    private final String genderDigitPart;
+    private final String visitReason;
     private final String cancellationReason;
-    private final String actualReceptionDate; 
-    private final String receptionTime; 
-    private final boolean treatmentCompleted; 
-    private final boolean paid; 
+    private final String actualReceptionDate;
+    private final String receptionTime;
+    private final boolean treatmentCompleted;
+    private final boolean paid;
     private final boolean canReceive;
     private final boolean canCancel;
     /* [기능 구현] 최종 진료과, 담당 의사, 내원 사유의 수정 가능 여부 판단 플래그 */
@@ -47,16 +47,17 @@ public class StaffReservationDto {
     private final java.util.List<com.smartclinic.hms.domain.PatientHistoryDto> history;
 
     public StaffReservationDto(Reservation r) {
-        this(r, 0L, new java.util.ArrayList<>()); 
+        this(r, 0L, new java.util.ArrayList<>());
     }
 
     public StaffReservationDto(Reservation r, long completedCount) {
-        this(r, completedCount, new java.util.ArrayList<>()); 
+        this(r, completedCount, new java.util.ArrayList<>());
     }
 
-    public StaffReservationDto(Reservation r, long completedCount, java.util.List<com.smartclinic.hms.domain.PatientHistoryDto> history) {
+    public StaffReservationDto(Reservation r, long completedCount,
+            java.util.List<com.smartclinic.hms.domain.PatientHistoryDto> history) {
         this.id = r.getId();
-        this.patientId = r.getPatient().getId(); 
+        this.patientId = r.getPatient().getId();
         this.reservationNumber = r.getReservationNumber();
         this.patientName = r.getPatient().getName();
         this.patientPhone = r.getPatient().getPhone();
@@ -80,15 +81,18 @@ public class StaffReservationDto {
                 int birthYear2Digit = Integer.parseInt(parts[0].substring(0, 2));
                 String genderDigit = parts[1];
                 int currentYear = java.time.LocalDate.now().getYear();
-                int fullBirthYear = (genderDigit.equals("1") || genderDigit.equals("2")) ? 1900 + birthYear2Digit : 2000 + birthYear2Digit;
+                int fullBirthYear = (genderDigit.equals("1") || genderDigit.equals("2")) ? 1900 + birthYear2Digit
+                        : 2000 + birthYear2Digit;
                 int age = currentYear - fullBirthYear + 1;
                 String gender = (genderDigit.equals("1") || genderDigit.equals("3")) ? "M" : "F";
-                ageGen = gender + " / " + age + " 세";
-            } catch (Exception e) { ageGen = "-"; }
+                ageGen = gender + " / " + age + "세";
+            } catch (Exception e) {
+                ageGen = "-";
+            }
         }
         this.ageGender = ageGen;
         this.birthInfo = bInfo != null ? bInfo : "";
-        
+
         if (this.birthInfo != null && this.birthInfo.contains("-")) {
             String[] parts = this.birthInfo.split("-");
             this.birthDatePart = (parts.length > 0) ? parts[0] : "";
@@ -114,13 +118,14 @@ public class StaffReservationDto {
         this.canCancel = r.getStatus() == ReservationStatus.RESERVED || r.getStatus() == ReservationStatus.RECEIVED;
         this.treatmentCompleted = r.isTreatmentCompleted();
         this.paid = r.isPaid();
-        this.canEditReceptionInfo = !this.paid && !this.treatmentCompleted && 
-                                   (r.getStatus() == ReservationStatus.RESERVED || r.getStatus() == ReservationStatus.RECEIVED);
+        this.canEditReceptionInfo = !this.paid && !this.treatmentCompleted &&
+                (r.getStatus() == ReservationStatus.RESERVED || r.getStatus() == ReservationStatus.RECEIVED);
         this.visitCount = completedCount;
         this.isFirstVisit = (completedCount == 0);
 
         if (r.getReceptionTime() != null) {
-            this.actualReceptionDate = r.getReceptionTime().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            this.actualReceptionDate = r.getReceptionTime()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             this.receptionTime = r.getReceptionTime().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
         } else {
             this.actualReceptionDate = null;
@@ -140,7 +145,7 @@ public class StaffReservationDto {
                 case RECEIVED -> "진료 대기";
                 case IN_TREATMENT -> "진료중";
                 case COMPLETED -> "진료 완료";
-                case CANCELLED -> "취소됨";
+                case CANCELLED -> "취소";
             };
             this.statusBadgeClass = switch (r.getStatus()) {
                 case RESERVED -> "bg-indigo-100 text-indigo-700";
@@ -152,8 +157,19 @@ public class StaffReservationDto {
         }
     }
 
-    public String getActualReceptionDate() { return actualReceptionDate; }
-    public String getReceptionTime() { return receptionTime; }
-    public boolean isTreatmentCompleted() { return treatmentCompleted; }
-    public boolean isPaid() { return paid; }
+    public String getActualReceptionDate() {
+        return actualReceptionDate;
+    }
+
+    public String getReceptionTime() {
+        return receptionTime;
+    }
+
+    public boolean isTreatmentCompleted() {
+        return treatmentCompleted;
+    }
+
+    public boolean isPaid() {
+        return paid;
+    }
 }

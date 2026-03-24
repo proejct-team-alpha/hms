@@ -51,7 +51,7 @@ class ChatControllerTest {
     @Test
     @DisplayName("POST /llm/chatbot/query - DOCTOR 인증 200")
     void query_인증_200() throws Exception {
-        given(chatService.callRuleLlmApi(anyString())).willReturn(Mono.just("당직 규정 응답"));
+        given(chatService.callRuleLlmApi(anyString(), any())).willReturn(Mono.just("당직 규정 응답"));
 
         MvcResult result = mockMvc.perform(post("/llm/chatbot/query")
                         .with(user("doctor").roles("DOCTOR"))
@@ -67,7 +67,7 @@ class ChatControllerTest {
     @Test
     @DisplayName("POST /llm/chatbot/query/stream - DOCTOR 인증 SSE 200")
     void queryStream_인증_200() throws Exception {
-        given(chatService.callRuleLlmApiStream(anyString())).willReturn(Flux.just("token1", "token2"));
+        given(chatService.callRuleLlmApiStream(anyString(), any())).willReturn(Flux.just("token1", "token2"));
 
         MvcResult result = mockMvc.perform(post("/llm/chatbot/query/stream")
                         .with(user("doctor").roles("DOCTOR"))

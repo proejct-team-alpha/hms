@@ -25,10 +25,12 @@
     .tab-btn.active { color: #4f46e5; }
     .tab-btn.active::after { content: ''; position: absolute; bottom: 0; left: 15%; right: 15%; height: 3px; background-color: #4f46e5; border-radius: 10px 10px 0 0; }
     .tab-btn:hover:not(.active) { color: #334155; background-color: #f8fafc; }
-    .reception-header-row th { padding-top: 1.1rem !important; padding-bottom: 1.1rem !important; }
-
-    /* [기능 구현] 취소 사유 열의 너비를 150px로 제한하고 넘칠 경우 말줄임표(...) 처리 */
+    
+    .reception-header-row th { padding-top: 0.6rem !important; padding-bottom: 0.6rem !important; }
     .reason-cell { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    
+    /* [디자인 보정] 배지 텍스트가 브라우저 최소 크기 제한에 걸려 삐져나오지 않도록 처리 */
+    .status-badge, .source-badge { line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
   </style>
 </head>
 <body class="min-h-screen flex bg-[#f8fafc] text-slate-900">
@@ -60,7 +62,6 @@
               <input type="hidden" name="date" value="{{searchDate}}">
               <input type="hidden" name="tab" value="{{currentTab}}">
               
-              <!-- [기능 개선] 간호사 화면과 동일한 다중 선택 진료과 필터 -->
               <div class="relative group" id="dept-dropdown">
                 <button type="button" onclick="toggleDropdown('dept-options')" 
                         class="px-4 py-2.5 w-48 bg-white border border-slate-200 rounded-2xl text-xs font-bold text-slate-600 hover:border-indigo-500 transition-all shadow-sm flex items-center justify-between">
@@ -81,7 +82,6 @@
                 </div>
               </div>
 
-              <!-- [기능 개선] 간호사 화면과 동일한 다중 선택 의사 필터 -->
               <div class="relative group" id="doctor-dropdown">
                 <button type="button" onclick="toggleDropdown('doctor-options')" 
                         class="px-4 py-2.5 w-48 bg-white border border-slate-200 rounded-2xl text-xs font-bold text-slate-600 hover:border-indigo-500 transition-all shadow-sm flex items-center justify-between">
@@ -120,13 +120,30 @@
           <div class="sidebar-fixed">
             <div class="calendar-card">
               <div class="flex items-center justify-between mb-4 px-1">
-                <button type="button" id="prevMonth" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400"><i data-feather="chevron-left" class="w-4 h-4"></i></button>
+                <button type="button" id="prevMonth" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
+                  <i data-feather="chevron-left" class="w-4 h-4"></i>
+                </button>
                 <h3 id="currentMonthYear" class="text-slate-700"></h3>
-                <button type="button" id="nextMonth" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400"><i data-feather="chevron-right" class="w-4 h-4"></i></button>
+                <button type="button" id="nextMonth" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
+                  <i data-feather="chevron-right" class="w-4 h-4"></i>
+                </button>
+              </div>
+              <div class="calendar-container">
+                <div class="calendar-day-header sun">일</div>
+                <div class="calendar-day-header">월</div>
+                <div class="calendar-day-header">화</div>
+                <div class="calendar-day-header">수</div>
+                <div class="calendar-day-header">목</div>
+                <div class="calendar-day-header">금</div>
+                <div class="calendar-day-header">토</div>
               </div>
               <div id="calendarDays" class="calendar-container"></div>
-              <!-- [기능 구현] '오늘로 이동' 클릭 시 기존 필터링 조건(tab, deptIds, doctorIds, query 등) 유지 -->
-              <button type="button" onclick="location.href='/staff/reception/list?tab={{currentTab}}{{keepParams}}'" class="btn-today mt-4">오늘로 이동</button>
+              <div class="mt-4 pt-3 border-t border-slate-100">
+                <button type="button" onclick="location.href='/staff/reception/list?tab={{currentTab}}{{keepParams}}'" class="btn-today">
+                  <i data-feather="calendar" class="w-3.5 h-3.5 text-indigo-500"></i>
+                  오늘로 이동
+                </button>
+              </div>
             </div>
           </div>
 
@@ -144,40 +161,35 @@
               <table class="w-full text-left">
                 <thead>
                   <tr class="reception-header-row bg-slate-50 border-b border-slate-100 text-[11px] font-black uppercase tracking-widest text-slate-400">
-                    <!-- 1. 상태/시간 정보 -->
                     {{#isReservedTab}}
-                      <th class="px-4 py-5">예약시간</th>
-                      <th class="px-4 py-5">예약경로</th>
+                      <th class="px-4 py-2.5">예약시간</th>
+                      <th class="px-4 py-2.5">예약경로</th>
                     {{/isReservedTab}}
                     {{#isReceivedTab}}
-                      <th class="px-4 py-5">접수시간</th>
+                      <th class="px-4 py-2.5">접수시간</th>
                     {{/isReceivedTab}}
                     {{^isReservedTab}}{{^isReceivedTab}}
-                      <th class="px-4 py-5">상태</th>
+                      <th class="px-4 py-2.5">상태</th>
                     {{/isReceivedTab}}{{/isReservedTab}}
                     
-                    <!-- 2. 공통 정보 -->
-                    <th class="px-4 py-5">환자등록번호</th>
-                    <th class="px-4 py-5">이름</th>
-                    <th class="px-4 py-5">나이/성별</th>
-                    <th class="px-4 py-5">전화번호</th>
-                    <th class="px-4 py-5">진료과</th>
-                    <th class="px-4 py-5">의사</th>
+                    <th class="px-4 py-2.5">환자등록번호</th>
+                    <th class="px-4 py-2.5">이름</th>
+                    <th class="px-4 py-2.5">성별/나이</th>
+                    <th class="px-4 py-2.5">전화번호</th>
+                    <th class="px-4 py-2.5">진료과</th>
+                    <th class="px-4 py-2.5">의사</th>
                     
-                    <!-- [기능 구현] 취소 탭 전용 취소사유 헤더 추가 -->
                     {{#isCancelledTab}}
-                      <th class="px-4 py-5">취소사유</th>
+                      <th class="px-4 py-2.5">취소사유</th>
                     {{/isCancelledTab}}
                     
-                    <!-- 3. 대기 탭 전용 정보 -->
                     {{#isReceivedTab}}
-                      <th class="px-4 py-5">예약경로</th>
-                      <th class="px-4 py-5">예약시간</th>
+                      <th class="px-4 py-2.5">예약경로</th>
+                      <th class="px-4 py-2.5">예약시간</th>
                     {{/isReceivedTab}}
 
-                    <!-- 4. 액션 (취소 탭에서는 숨김) -->
                     {{^isAllTab}}{{^isTreatmentStatusTab}}{{^isCancelledTab}}
-                      <th class="px-4 py-5 text-center">액션</th>
+                      <th class="px-4 py-2.5 text-center">액션</th>
                     {{/isCancelledTab}}{{/isTreatmentStatusTab}}{{/isAllTab}}
                   </tr>
                 </thead>
@@ -186,67 +198,68 @@
                   <tr {{^canReceive}}onclick="location.href='/staff/reception/detail?id={{id}}&date={{searchDate}}&tab={{currentTab}}&page={{currentPage}}{{keepParams}}'"{{/canReceive}}
                       class="hover:bg-slate-50/80 transition-colors group {{^canReceive}}cursor-pointer{{/canReceive}}{{#canReceive}}cursor-default{{/canReceive}}">
                     
-                    <!-- 1. 상태/시간 데이터 -->
+                    <!-- 1. 상태/시간 정보 (글자 크기를 전화번호와 동일한 text-xs로 조정) -->
                     {{#isReservedTab}}
-                      <td class="px-4 py-6 text-sm font-bold text-indigo-600">{{timeSlot}}</td>
-                      <td class="px-4 py-6"><span class="inline-flex items-center px-2 py-1 rounded-lg text-[10px] font-bold {{sourceBadgeClass}}">{{sourceText}}</span></td>
+                      <td class="px-4 py-2.5 text-xs font-semibold text-slate-700">{{timeSlot}}</td>
+                      <td class="px-4 py-2.5"><span class="source-badge inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-medium {{sourceBadgeClass}}">{{sourceText}}</span></td>
                     {{/isReservedTab}}
                     {{#isReceivedTab}}
-                      <td class="px-4 py-6 text-sm font-bold text-orange-600">{{#receptionTime}}{{receptionTime}}{{/receptionTime}}{{^receptionTime}}-{{/receptionTime}}</td>
+                      <td class="px-4 py-2.5 text-xs font-semibold text-slate-700">{{#receptionTime}}{{receptionTime}}{{/receptionTime}}{{^receptionTime}}-{{/receptionTime}}</td>
                     {{/isReceivedTab}}
                     {{^isReservedTab}}{{^isReceivedTab}}
-                      <td class="px-4 py-6"><span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold {{statusBadgeClass}}">{{statusText}}</span></td>
+                      <td class="px-4 py-2.5"><span class="status-badge inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{statusBadgeClass}}">{{statusText}}</span></td>
                     {{/isReceivedTab}}{{/isReservedTab}}
                     
                     <!-- 2. 공통 데이터 -->
-                    <td class="px-4 py-6 text-sm font-bold text-slate-600">{{patientId}}</td>
-                    <td class="px-4 py-6">
+                    <td class="px-4 py-2.5 text-xs font-medium text-slate-600">{{patientId}}</td>
+                    <td class="px-4 py-2.5">
                       <div class="flex items-center gap-2">
-                        {{#isFirstVisit}}<span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[9px] font-bold">초</span>{{/isFirstVisit}}
-                        {{^isFirstVisit}}<span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-500 text-[9px] font-bold">재</span>{{/isFirstVisit}}
-                        <span class="text-sm font-black text-slate-800 group-hover:text-indigo-600">{{patientName}}</span>
+                        {{#isFirstVisit}}<span class="w-4 h-4 inline-flex items-center justify-center rounded-full bg-indigo-50 text-indigo-500 text-[10px] font-bold" style="transform: scale(0.85); flex-shrink: 0;">초</span>{{/isFirstVisit}}
+                        {{^isFirstVisit}}<span class="w-4 h-4 inline-flex items-center justify-center rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold" style="transform: scale(0.85); flex-shrink: 0;">재</span>{{/isFirstVisit}}
+                        <span class="text-[13px] font-bold text-slate-800 group-hover:text-indigo-600">{{patientName}}</span>
                       </div>
                     </td>
-                    <td class="px-4 py-6 text-sm font-bold text-slate-600">{{ageGender}}</td>
-                    <td class="px-4 py-6 text-sm font-bold text-slate-500">{{patientPhone}}</td>
-                    <td class="px-4 py-6 text-sm font-bold text-slate-700">{{departmentName}}</td>
-                    <td class="px-4 py-6 text-sm font-bold text-slate-600">{{doctorName}}</td>
+                    <td class="px-4 py-2.5 text-xs font-medium text-slate-600">{{ageGender}}</td>
+                    <td class="px-4 py-2.5 text-xs font-medium text-slate-500">{{patientPhone}}</td>
+                    <td class="px-4 py-2.5 text-xs font-semibold text-slate-700">{{departmentName}}</td>
+                    <td class="px-4 py-2.5 text-xs font-semibold text-slate-600">{{doctorName}}</td>
                     
-                    <!-- [기능 구현] 취소 탭 전용 취소사유 데이터 출력 (말줄임표 적용) -->
                     {{#isCancelledTab}}
-                      <td class="px-4 py-6 text-sm font-medium text-red-600 reason-cell">{{cancellationReason}}</td>
+                      <td class="px-4 py-2.5 text-xs font-normal text-red-600 reason-cell">{{cancellationReason}}</td>
                     {{/isCancelledTab}}
 
-                    <!-- 3. 대기 탭 전용 데이터 -->
                     {{#isReceivedTab}}
-                      <td class="px-4 py-6"><span class="inline-flex items-center px-2 py-1 rounded-lg text-[10px] font-bold {{sourceBadgeClass}}">{{sourceText}}</span></td>
-                      <td class="px-4 py-6 text-sm font-bold text-slate-400">{{timeSlot}}</td>
+                      <td class="px-4 py-2.5"><span class="source-badge inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-medium {{sourceBadgeClass}}">{{sourceText}}</span></td>
+                      <td class="px-4 py-2.5 text-xs font-semibold text-slate-400">{{timeSlot}}</td>
                     {{/isReceivedTab}}
                     
-                    <!-- 4. 액션 데이터 (취소 탭에서는 숨김) -->
+                    <!-- 4. 액션 데이터 (세련된 미니멀 디자인으로 리뉴얼) -->
                     {{^isAllTab}}{{^isTreatmentStatusTab}}{{^isCancelledTab}}
-                      <td class="px-4 py-6 text-center" onclick="event.stopPropagation()">
-                        <div class="flex justify-center gap-2">
+                      <td class="px-4 py-2.5 text-center" onclick="event.stopPropagation()">
+                        <div class="flex justify-center gap-1.5">
                           {{#isPaidTab}}
                             {{#isPaid}}
-                              <span class="text-slate-400">-</span>
+                              <span class="text-slate-300 text-[10px] font-medium">-</span>
                             {{/isPaid}}
                             {{^isPaid}}
                               <button type="button" onclick="payAjax({{id}})" 
-                                 class="inline-flex px-4 py-2 bg-indigo-600 text-white text-[11px] font-bold rounded-xl hover:bg-indigo-700 transition-colors">
+                                 class="inline-flex px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-lg hover:bg-emerald-100 transition-colors">
                                 수납
                               </button>
                             {{/isPaid}}
                           {{/isPaidTab}}
                           
                           {{#isReservedTab}}
-                            {{#canReceive}}<a href="/staff/walkin-reception?reservationId={{id}}&name={{patientName}}&phone={{patientPhone}}&deptId={{departmentId}}&doctorId={{doctorId}}" class="inline-flex px-4 py-2 bg-indigo-600 text-white text-[11px] font-bold rounded-xl">접수</a>{{/canReceive}}
-                            {{#canCancel}}<button type="button" onclick="cancelAjax({{id}})" class="px-4 py-2 bg-white border border-red-200 text-red-600 text-[11px] font-bold rounded-xl">취소</button>{{/canCancel}}
+                            {{#canReceive}}<a href="/staff/walkin-reception?reservationId={{id}}&name={{patientName}}&phone={{patientPhone}}&deptId={{departmentId}}&doctorId={{doctorId}}&tab={{currentTab}}&page={{currentPage}}{{keepParams}}" 
+                               class="inline-flex px-2.5 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-lg hover:bg-indigo-100 transition-colors">접수</a>{{/canReceive}}
+                            {{#canCancel}}<button type="button" onclick="cancelAjax({{id}})" 
+                               class="inline-flex px-2.5 py-1 bg-red-50 text-red-600 text-[10px] font-bold rounded-lg hover:bg-red-100 transition-colors">취소</button>{{/canCancel}}
                           {{/isReservedTab}}
                           {{#isReceivedTab}}
-                            {{#canCancel}}<button type="button" onclick="cancelAjax({{id}})" class="px-4 py-2 bg-white border border-red-200 text-red-600 text-[11px] font-bold rounded-xl">취소</button>{{/canCancel}}
+                            {{#canCancel}}<button type="button" onclick="cancelAjax({{id}})" 
+                               class="inline-flex px-2.5 py-1 bg-red-50 text-red-600 text-[10px] font-bold rounded-lg hover:bg-red-100 transition-colors">취소</button>{{/canCancel}}
                           {{/isReceivedTab}}
-                          {{#isCancelledTab}}<span class="text-[10px] text-red-400 italic">취소됨</span>{{/isCancelledTab}}
+                          {{#isCancelledTab}}<span class="text-[10px] text-red-300 italic font-medium">취소</span>{{/isCancelledTab}}
                         </div>
                       </td>
                     {{/isCancelledTab}}{{/isTreatmentStatusTab}}{{/isAllTab}}
@@ -254,8 +267,8 @@
                   {{/reservations}}
                   {{^reservations}}
                   <tr>
-                    <td colspan="12" class="px-6 py-32 text-center text-slate-400">
-                      <p class="text-sm font-bold">조회된 환자가 없습니다.</p>
+                    <td colspan="12" class="px-6 py-16 text-center text-slate-400">
+                      <p class="text-xs font-bold">조회된 환자가 없습니다.</p>
                     </td>
                   </tr>
                   {{/reservations}}
@@ -273,68 +286,36 @@
     function toggleDropdown(id) {
       const el = document.getElementById(id);
       const isHidden = el.classList.contains('hidden');
-      
-      // 다른 드롭다운 닫기
-      document.querySelectorAll('[id$="-options"]').forEach(dropdown => {
-        dropdown.classList.add('hidden');
-      });
-
-      if (isHidden) {
-        el.classList.remove('hidden');
-      }
+      document.querySelectorAll('[id$="-options"]').forEach(dropdown => { dropdown.classList.add('hidden'); });
+      if (isHidden) { el.classList.remove('hidden'); }
     }
-
-    // 외부 클릭 시 드롭다운 닫기
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.group')) {
-        document.querySelectorAll('[id$="-options"]').forEach(dropdown => {
-          dropdown.classList.add('hidden');
-        });
+        document.querySelectorAll('[id$="-options"]').forEach(dropdown => { dropdown.classList.add('hidden'); });
       }
     });
-
-    // 필터 텍스트 동기화 및 의사 목록 필터링
     function syncFilters() {
-      // 1. 진료과 텍스트 업데이트
       const deptChecks = document.querySelectorAll('input[name="deptIds"]:checked');
       const deptBtnText = document.getElementById('dept-btn-text');
-      if (deptChecks.length === 0) {
-        deptBtnText.textContent = "진료과 선택";
-      } else if (deptChecks.length === 1) {
-        deptBtnText.textContent = deptChecks[0].dataset.name;
-      } else {
-        deptBtnText.textContent = `${deptChecks[0].dataset.name} 외 ${deptChecks.length - 1}건`;
-      }
+      if (deptChecks.length === 0) { deptBtnText.textContent = "진료과 선택"; } 
+      else if (deptChecks.length === 1) { deptBtnText.textContent = deptChecks[0].dataset.name; } 
+      else { deptBtnText.textContent = `${deptChecks[0].dataset.name} 외 ${deptChecks.length - 1}건`; }
 
-      // 2. 진료과 선택에 따른 의사 목록 필터링
       const selectedDeptIds = Array.from(deptChecks).map(cb => cb.value);
       const doctorItems = document.querySelectorAll('.doctor-item');
-      
       doctorItems.forEach(item => {
         const itemDeptId = item.dataset.deptId;
-        if (selectedDeptIds.length === 0 || selectedDeptIds.includes(itemDeptId)) {
-          item.style.display = 'flex';
-        } else {
-          item.style.display = 'none';
-        }
+        if (selectedDeptIds.length === 0 || selectedDeptIds.includes(itemDeptId)) { item.style.display = 'flex'; } 
+        else { item.style.display = 'none'; }
       });
 
-      // 3. 의사 텍스트 업데이트
       const docChecks = document.querySelectorAll('input[name="doctorIds"]:checked');
       const docBtnText = document.getElementById('doctor-btn-text');
-      if (docChecks.length === 0) {
-        docBtnText.textContent = "의사 선택";
-      } else if (docChecks.length === 1) {
-        docBtnText.textContent = docChecks[0].dataset.name;
-      } else {
-        docBtnText.textContent = `${docChecks[0].dataset.name} 외 ${docChecks.length - 1}건`;
-      }
+      if (docChecks.length === 0) { docBtnText.textContent = "의사 선택"; } 
+      else if (docChecks.length === 1) { docBtnText.textContent = docChecks[0].dataset.name; } 
+      else { docBtnText.textContent = `${docChecks[0].dataset.name} 외 ${docChecks.length - 1}건`; }
     }
-
-    // 초기 로드 시 실행
-    document.addEventListener('DOMContentLoaded', () => {
-      syncFilters();
-    });
+    document.addEventListener('DOMContentLoaded', () => { syncFilters(); });
 
     (function() {
       const calendarDays = document.getElementById('calendarDays');
@@ -384,7 +365,6 @@
       } catch (e) { alert('에러 발생'); }
     }
 
-    // [기능 개선] 수납 즉시 처리 AJAX 함수 (확인창 생략)
     async function payAjax(id) {
       try {
         const response = await fetch('/staff/reception/pay-ajax', {
@@ -393,15 +373,9 @@
           body: JSON.stringify({ id: id })
         });
         const data = await response.json();
-        if (data.success) { 
-          location.reload(); 
-        } else {
-          alert(data.message || '수납 처리 중 오류가 발생했습니다.');
-        }
-      } catch (e) { 
-        console.error(e);
-        alert('에러 발생'); 
-      }
+        if (data.success) { location.reload(); } 
+        else { alert(data.message || '수납 처리 중 오류가 발생했습니다.'); }
+      } catch (e) { alert('에러 발생'); }
     }
   </script>
 </body>

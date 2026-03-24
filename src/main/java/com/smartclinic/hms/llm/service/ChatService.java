@@ -34,12 +34,20 @@ public class ChatService {
     private final ChatbotHistoryRepository chatbotHistoryRepository;
     private final StaffRepository staffRepository;
 
-    public Mono<String> callRuleLlmApi(String query) {
-        log.debug("Rule LLM API 호출 시작 - query: {}", query);
+    public Mono<String> callRuleLlmApi(String query, java.util.List<Map<String, String>> history) {
+        log.debug("Rule LLM API 호출 시작 - query: {}, historySize: {}", query, history != null ? history.size() : 0);
+
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("query", query);
+        body.put("max_length", 1024);
+        body.put("temperature", 0.3);
+        if (history != null && !history.isEmpty()) {
+            body.put("history", history.subList(Math.max(0, history.size() - 6), history.size()));
+        }
 
         return llmWebClient.post()
                 .uri("/infer/rule")
-                .bodyValue(Map.of("query", query, "max_length", 512, "temperature", 0.3))
+                .bodyValue(body)
                 .retrieve()
                 .bodyToMono(LlmResponse.class)
                 .map(LlmResponse::getGeneratedText)
@@ -53,12 +61,20 @@ public class ChatService {
                         new LlmTimeoutException("Rule LLM 응답 시간 초과", e));
     }
 
-    public Flux<String> callRuleLlmApiStream(String query) {
-        log.debug("Rule LLM Stream API 호출 시작 - query: {}", query);
+    public Flux<String> callRuleLlmApiStream(String query, java.util.List<Map<String, String>> history) {
+        log.debug("Rule LLM Stream API 호출 시작 - query: {}, historySize: {}", query, history != null ? history.size() : 0);
+
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("query", query);
+        body.put("max_length", 1024);
+        body.put("temperature", 0.3);
+        if (history != null && !history.isEmpty()) {
+            body.put("history", history.subList(Math.max(0, history.size() - 6), history.size()));
+        }
 
         return llmWebClient.post()
                 .uri("/infer/rule/stream")
-                .bodyValue(Map.of("query", query, "max_length", 512, "temperature", 0.3))
+                .bodyValue(body)
                 .accept(MediaType.TEXT_EVENT_STREAM)
                 .retrieve()
                 .bodyToFlux(String.class)

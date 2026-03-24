@@ -12,6 +12,7 @@ public class DoctorReservationDto {
     private final String patientName;
     private final String patientPhone;
     private final String timeSlot;
+    private final String receptionTime; // [기능 추가] 환자 접수 시간 필드
     private final String visitReason;
     private final String genderAge; // 예: "F / 30세"
     private final String statusText;
@@ -49,6 +50,10 @@ public class DoctorReservationDto {
         this.patientName = r.getPatient().getName();
         this.patientPhone = r.getPatient().getPhone();
         this.timeSlot = r.getTimeSlot();
+        // [기능 추가] 접수 시간 포맷팅 (데이터가 없으면 "-" 처리)
+        this.receptionTime = (r.getReceptionTime() != null) 
+                ? r.getReceptionTime().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")) 
+                : "-";
         this.visitReason = (r.getPatient().getVisitReason() != null && !r.getPatient().getVisitReason().isBlank()) 
                 ? r.getPatient().getVisitReason() : "-";
         this.isFirstVisit = isFirstVisit;

@@ -55,6 +55,9 @@ _NOISE_WORDS = {"목록", "리스트", "알려줘", "알려주세요", "뭐가",
 # "규칙은", "규칙을" 등 조사 붙은 형태도 노이즈로 처리
 _NOISE_STEMS = ["규칙", "규정", "목록", "리스트", "내용", "정보", "관련", "문제"]
 
+# 전체/목록 요청 감지 키워드
+_BROAD_QUERY_WORDS = {"전체", "전부", "모두", "목록", "리스트", "종류", "어떤것", "뭐가"}
+
 # 한국어 조사 패턴 (키워드에서 제거)
 _PARTICLE_RE = re.compile(r"(에서|에게|부터|까지|으로|에|은|는|이|가|을|를|의|로|와|과|도|만)$")
 
@@ -88,6 +91,39 @@ def _extract_keywords(query: str) -> list[str]:
             stripped.append(s)
     filtered = [w for w in stripped if not _is_noise_word(w)]
     return filtered[:8] if filtered else stripped[:8]
+
+
+def _is_broad_query(query: str) -> bool:
+    """전체/목록/종류 등 광범위 요청인지 판단"""
+    words = set(re.findall(r"[가-힣a-zA-Z]{2,}", query))
+    stripped = {_strip_particle(w) for w in words}
+    # 광범위 키워드가 포함되고, 카테고리 키워드가 없으면 전체 조회
+    has_broad = bool(stripped & _BROAD_QUERY_WORDS)
+    has_category = any(kw in query for kw in _CATEGORY_MAP)
+    return has_broad and not has_category
+
+
+async def search_all_rules(limit: int = 30) -> list[dict]:
+    """전체 규칙 조회 (카테고리별 정렬)"""
+    try:
+        pool = await _get_pool()
+        async with pool.acquire() as conn:
+            async with conn.cursor(aiomysql.DictCursor) as cur:
+                await cur.execute(
+                    """
+                    SELECT id, category, title, content, target
+                    FROM medical_rule
+                    ORDER BY category, id
+                    LIMIT %s
+                    """,
+                    (limit,),
+                )
+                rows = await cur.fetchall()
+        logger.info("All rules search: %d results", len(rows))
+        return rows
+    except Exception as exc:
+        logger.warning("All rules search failed: %s: %s", type(exc).__name__, exc)
+        return []
 
 
 def _detect_categories(query: str) -> list[str]:
@@ -322,28 +358,100 @@ def _deduplicate_results(vector_items: list[dict], mysql_rows: list[dict]) -> tu
     return deduped_vector, deduped_mysql
 
 
-async def build_rule_context(query: str) -> str:
+def _is_followup_query(query: str) -> bool:
+    """후속 질문인지 판단 (대명사, 짧은 질문, 추가 요청 패턴)"""
+    followup_patterns = [
+        "그거", "그것", "그건", "거기", "이거", "저거",
+        "더 자세히", "자세하게", "더 알려", "추가로", "보충",
+        "다른 건", "다른건", "또 뭐", "또 있", "그 외",
+        "아까", "방금", "위에서", "말한", "언급한",
+    ]
+    stripped = query.strip()
+    # 짧은 질문 (10자 이하)이면 후속 질문 가능성 높음
+    if len(stripped) <= 10:
+        return True
+    for pattern in followup_patterns:
+        if pattern in stripped:
+            return True
+    return False
+
+
+def _expand_query_from_history(query: str, history: list | None) -> str:
+    """
+    후속 질문일 때 이전 대화에서 키워드를 추출하여 RAG 검색 쿼리를 확장.
+    history 형식: [{"role": "user"|"assistant", "content": "..."}]
+    """
+    if not history:
+        return query
+    if not _is_followup_query(query):
+        return query
+
+    # 이전 user 메시지에서 키워드 추출 (최근 2턴)
+    prev_keywords = []
+    user_msgs = [m for m in history if (m.get("role") or getattr(m, "role", None)) == "user"]
+    for msg in user_msgs[-2:]:
+        content = msg.get("content") or getattr(msg, "content", "")
+        prev_keywords.extend(_extract_keywords(content))
+
+    if not prev_keywords:
+        return query
+
+    # 현재 쿼리에 이미 포함된 키워드 제외
+    current_keywords = set(_extract_keywords(query))
+    new_keywords = [kw for kw in prev_keywords if kw not in current_keywords]
+
+    if not new_keywords:
+        return query
+
+    # 최대 4개 키워드로 확장
+    expanded = query + " " + " ".join(new_keywords[:4])
+    logger.info("Query expanded for followup: '%s' -> '%s'", query, expanded)
+    return expanded
+
+
+async def build_rule_context(query: str, history: list | None = None) -> str:
     """
     사용자 질문에 대한 병원규칙 컨텍스트 빌드
 
     검색 전략:
+    0. 전체/목록 요청 시 → 전체 규칙 조회 (최대 30건)
     1. 카테고리 감지 시 → 카테고리 기반 MySQL 조회 (최대 15건)
        + 벡터 검색 병행하여 보충
     2. 카테고리 미감지 → 벡터 + MySQL 하이브리드 병행 검색
     """
     try:
+        # 후속 질문이면 이전 대화에서 키워드를 추출하여 RAG 검색 쿼리 확장
+        search_query = _expand_query_from_history(query, history)
+
         settings = get_settings()
         parts = []
         top_k = settings.vector_search_top_k
 
+        # 전체/목록 요청 감지
+        if _is_broad_query(search_query):
+            logger.info("Broad query detected: returning all rules")
+            all_rows = await search_all_rules(limit=30)
+            for row in all_rows:
+                parts.extend(_format_rule_item(row, is_vector=False))
+            if parts:
+                parts.insert(0, "[참고: 병원 규칙 검색 결과 — 전체 목록]")
+                parts.insert(1, "")
+            context = "\n".join(parts) if parts else ""
+            max_chars = max(settings.medical_context_max_chars, 6000)
+            if len(context) > max_chars:
+                truncated = context[:max_chars]
+                last_newline = truncated.rfind("\n")
+                context = truncated[:last_newline] if last_newline > 0 else truncated
+            return context
+
         # 카테고리 감지
-        detected_categories = _detect_categories(query)
+        detected_categories = _detect_categories(search_query)
 
         if detected_categories:
             # 카테고리 감지됨: 카테고리 기반 검색 + 벡터 검색 병행
             logger.info("Category detected: %s", detected_categories)
             cat_task = search_medical_rule_by_categories(detected_categories, limit=15)
-            vector_task = search_rule_vector_store(query, top_k=top_k)
+            vector_task = search_rule_vector_store(search_query, top_k=top_k)
             category_rows, vector_results = await asyncio.gather(cat_task, vector_task)
 
             # 카테고리 결과 먼저, 벡터 결과로 보충 (중복 제거)
@@ -360,8 +468,8 @@ async def build_rule_context(query: str) -> str:
                     parts.extend(_format_rule_item(item, is_vector=True))
         else:
             # 카테고리 미감지: 벡터 + MySQL 하이브리드 병행 검색
-            vector_task = search_rule_vector_store(query, top_k=top_k)
-            mysql_task = search_medical_rule_mysql(query, limit=top_k)
+            vector_task = search_rule_vector_store(search_query, top_k=top_k)
+            mysql_task = search_medical_rule_mysql(search_query, limit=top_k)
             vector_results, mysql_rows = await asyncio.gather(vector_task, mysql_task)
 
             # 중복 제거 후 병합 (벡터 결과 우선)

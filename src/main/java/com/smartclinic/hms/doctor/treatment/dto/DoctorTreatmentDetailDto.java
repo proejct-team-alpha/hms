@@ -9,11 +9,13 @@ import lombok.Getter;
 public class DoctorTreatmentDetailDto {
 
     private final Long reservationId;
+    private final Long patientId; // [기능 추가] 환자 등록 번호 필드
     private final String patientName;
     private final String patientPhone;
     private final String visitReason;
     private final String genderAge;
     private final String timeSlot;
+    private final String receptionTime; // [기능 추가] 실제 접수 시간 필드
     private final String reservationDate;
     private final String statusText;
     private final boolean canComplete;
@@ -53,11 +55,16 @@ public class DoctorTreatmentDetailDto {
                                    java.util.List<com.smartclinic.hms.staff.dto.StaffDepartmentOptionDto> filterDepartments,
                                    java.util.List<com.smartclinic.hms.staff.dto.StaffDoctorOptionDto> filterDoctors) {
         this.reservationId = r.getId();
+        this.patientId = r.getPatient().getId(); // [기능 추가] 환자 ID 할당
         this.patientName = r.getPatient().getName();
         this.patientPhone = r.getPatient().getPhone();
         this.visitReason = (r.getPatient().getVisitReason() != null && !r.getPatient().getVisitReason().isBlank()) 
                 ? r.getPatient().getVisitReason() : "-";
         this.timeSlot = r.getTimeSlot();
+        // [기능 추가] 접수 시간 포맷팅
+        this.receptionTime = (r.getReceptionTime() != null) 
+                ? r.getReceptionTime().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")) 
+                : "-";
         this.reservationDate = r.getReservationDate().toString();
         this.isFirstVisit = isFirstVisit;
         this.history = history;

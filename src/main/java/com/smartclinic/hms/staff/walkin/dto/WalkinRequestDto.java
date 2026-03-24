@@ -61,4 +61,12 @@ public class WalkinRequestDto {
     private String time;
 
     private String notes;
+
+    // [기능 추가] 목록 화면 필터 유지를 위한 파라미터들
+    private String query;
+    private java.util.List<Long> deptIds;
+    private java.util.List<Long> doctorIds;
+    private String source;
+    private String tab;
+    private Integer page;
 }
