@@ -1,99 +1,166 @@
 # W3-4번째작업 Workflow — 관리자 물품 메뉴 3개 구성
 
-## 작업 개요
-
-- **목표:** 관리자 사이드바 "물품 관리" 1개를 물품 목록 / 물품 등록 / 입출고 내역 3개로 교체, 각 페이지 admin 레이아웃으로 구성
-- **담당:** dev-a-c
-- **날짜:** 2026-03-17
+> **작성일**: 3W
+> **목표**: 관리자 사이드바 "물품 관리" 1개를 물품 목록 / 물품 등록 / 입출고 내역 3개로 교체, 각 페이지 admin 레이아웃으로 구성
 
 ---
 
-## 변경 파일 목록
+## 전체 흐름
 
-| 파일 | 변경 유형 |
-|------|----------|
-| `templates/common/sidebar-admin.mustache` | 수정 (메뉴 1개 → 3개 교체) |
-| `admin/item/AdminItemController.java` | 수정 (엔드포인트 확장 + active 플래그 추가) |
-| `admin/item/AdminItemService.java` | 수정 (메서드 추가) |
-| `templates/admin/item-list.mustache` | 수정 (카테고리 필터 + 입고 + 수정/삭제) |
-| `templates/admin/item-form.mustache` | 수정 (등록/수정 통합) |
-| `templates/admin/item-history.mustache` | 신규 (입출고 내역 placeholder) |
+```
+사이드바 메뉴 교체 → 서비스 메서드 추가 → 컨트롤러 엔드포인트 확장
+  → item-list.mustache 전면 개편 → item-form.mustache 등록/수정 통합
+  → item-history.mustache 신규 생성 (placeholder)
+```
+
+---
+
+## 인터뷰 결과
+
+| 항목 | 내용 |
+|------|------|
+| 요청 | "물품 관리" 1개 메뉴 → 물품 목록 / 물품 등록 / 입출고 내역 3개로 분리 |
+| 활성 플래그 | `isAdminItemList`, `isAdminItemForm`, `isAdminItemHistory` |
+| 카테고리 필터 | 물품 목록 페이지에 카테고리별 필터 버튼 |
+| 등록/수정 통합 | `id` 유무로 등록/수정 구분, 하나의 폼 페이지에서 처리 |
+| 입출고 내역 | SQL 미연동 → "준비 중" placeholder 먼저 생성 |
+
+---
+
+## 실행 흐름
+
+```
+관리자 사이드바 → 물품 목록 클릭 → GET /admin/item/list?category=...
+  → AdminItemService.getItemList(category) → 카테고리 필터 목록 + 물품 목록
+  → admin/item-list.mustache 렌더링
+
+물품 등록 클릭 → GET /admin/item/form?id=(없으면 신규)
+  → AdminItemService.getItemForm(id) → ItemFormDto
+  → admin/item-form.mustache 렌더링
+
+물품 저장 → POST /admin/item/form/save → redirect /admin/item/list
+
+입출고 내역 클릭 → GET /admin/item/history
+  → admin/item-history.mustache ("준비 중" placeholder)
+```
+
+---
+
+## UI Mockup
+
+```
+[사이드바]          [물품 목록 페이지]
+물품 목록 ←활성     카테고리: [전체] [의료소모품] [의료기기] [사무비품]
+물품 등록           ┌──────┬──────┬──────┬──────┬──────┬──────┬──────┐
+입출고 내역          │물품명│카테고리│최소재고│현재재고│입고│수정│삭제│
+                    ├──────┼──────┼──────┼──────┼──────┼──────┼──────┤
+                    │붕대  │의료소모│  10  │  25  │[5][입고]│[수정]│[삭제]│
+                    └──────┴──────┴──────┴──────┴──────┴──────┴──────┘
+```
 
 ---
 
 ## 작업 목록
 
-### 1. sidebar-admin.mustache — 메뉴 교체
-
-```html
-<!-- TODO: 기존 "물품 관리" 1개 → 3개로 교체 -->
-<!-- 물품 목록: isAdminItemList 플래그 -->
-<!-- 물품 등록: isAdminItemForm 플래그 -->
-<!-- 입출고 내역: isAdminItemHistory 플래그 -->
-```
-
-> **💡 입문자 설명**
-> - **이 코드가 하는 일**: 관리자 사이드바에서 "물품 관리" 메뉴 1개를 물품 목록 / 물품 등록 / 입출고 내역 3개로 교체합니다. 각 메뉴에는 현재 해당 페이지에 있을 때 메뉴를 강조 표시하기 위한 플래그(`isAdminItemList` 등)가 사용됩니다.
-> - **왜 이렇게 썼는지**: 사이드바에서 현재 활성화된 페이지를 강조하려면 각 메뉴마다 boolean 플래그가 필요합니다. Mustache 템플릿에서 `{{#isAdminItemList}}active{{/isAdminItemList}}` 방식으로 조건부 스타일을 적용할 수 있습니다.
-> - **쉽게 말하면**: 왼쪽 메뉴를 1개에서 3개로 늘리고, 지금 어느 메뉴에 있는지를 표시하기 위한 표시판(플래그)을 함께 추가하는 코드입니다.
-
-### 2. AdminItemService — 메서드 추가
-
-```java
-// TODO: 추가 메서드
-// - getItemList(String category): 카테고리 필터 조회
-// - getCategoryFilters(String selected): 카테고리 필터 목록
-// - getItemForm(Long id): 등록/수정 폼 데이터
-// - saveItem(Long id, String name, String category, int quantity, int minQuantity)
-// - restockItem(Long id, int amount)
-// - deleteItem(Long id)
-```
-
-> **💡 입문자 설명**
-> - **이 코드가 하는 일**: 관리자 물품 관리에 필요한 서비스 메서드들을 나열합니다. 카테고리별 조회, 폼 데이터 조회, 물품 저장/입고/삭제 기능을 각각 별도 메서드로 분리합니다.
-> - **왜 이렇게 썼는지**: 서비스(Service) 계층은 비즈니스 로직을 담당하는 곳으로, 컨트롤러와 데이터베이스 사이에서 동작합니다. 각 기능을 별도 메서드로 나누면 코드의 재사용성이 높아지고 테스트하기도 쉬워집니다.
-> - **쉽게 말하면**: 관리자가 물품을 조회하고, 등록하고, 수정하고, 삭제할 수 있도록 각각의 처리 기능을 만드는 목록입니다.
-
-### 3. AdminItemController — 엔드포인트 확장
-
-```java
-// TODO: 수정/추가
-// GET  /list   → isAdminItemList=true, 카테고리 필터 지원
-// GET  /form   → isAdminItemForm=true, id 파라미터(수정) 지원
-// POST /form   → id 파라미터로 등록/수정 통합
-// POST /restock → 입고 처리 후 redirect /admin/item/list
-// POST /delete  → 삭제 후 redirect /admin/item/list
-// GET  /history → isAdminItemHistory=true
-```
-
-> **💡 입문자 설명**
-> - **이 코드가 하는 일**: 관리자 물품 관련 URL 요청들을 처리할 컨트롤러 메서드들을 정의합니다. `GET`은 페이지 조회, `POST`는 데이터 변경 요청입니다. `redirect`는 처리 후 다른 URL로 이동시키는 것입니다.
-> - **왜 이렇게 썼는지**: POST 요청 후 바로 페이지를 반환하면 브라우저 새로고침 시 중복 제출이 발생할 수 있습니다. `redirect`를 통해 GET 페이지로 이동(PRG 패턴)하면 이 문제를 방지할 수 있습니다. `id` 파라미터 유무로 등록과 수정을 하나의 엔드포인트에서 처리합니다.
-> - **쉽게 말하면**: 관리자가 물품 목록 보기, 등록하기, 수정하기, 입고 처리, 삭제, 내역 보기를 할 때 각각 어느 URL로 연결할지를 정의한 목록입니다.
-
-### 4. admin/item-list.mustache — 전면 개편
-
-- 카테고리 필터 버튼 추가
-- 입고 컬럼 추가 (현재 재고 / 입고 분리)
-- 수정(edit-2 아이콘) / 삭제(trash-2 아이콘) 관리 컬럼 추가
-- 빈 행 colspan 7로 조정
-- item-manager/item-list.mustache 스타일 기준
-
-### 5. admin/item-form.mustache — 등록/수정 통합
-
-- hidden id 필드 추가
-- 카테고리 selected 상태 처리
-- quantity / minQuantity 기존 값 표시
-
-### 6. admin/item-history.mustache — 신규
-
-- admin 사이드바 레이아웃
-- isAdminItemHistory=true
-- 입출고 내역 SQL 미연동 상태 → "준비 중" placeholder
+1. `sidebar-admin.mustache` — "물품 관리" 1개 → 물품 목록·물품 등록·입출고 내역 3개로 교체
+2. `AdminItemService` — `getItemList()`, `getCategoryFilters()`, `getItemForm()`, `saveItem()`, `restockItem()`, `deleteItem()` 메서드 추가
+3. `ItemRepository` — `findByCategoryOrderByNameAsc()` 메서드 추가
+4. `AdminItemController` — GET/POST 엔드포인트 전면 확장
+5. `admin/item-list.mustache` — 카테고리 필터 + 입고 + 수정/삭제 컬럼 추가
+6. `admin/item-form.mustache` — 등록/수정 통합 폼
+7. `admin/item-history.mustache` — 신규 생성 (준비 중 placeholder)
 
 ---
 
-## 금지 사항 체크
+## 작업 진행내용
 
+- [x] 사이드바 메뉴 3개로 교체, 각 활성 플래그 적용
+- [x] AdminItemService 메서드 추가
+- [x] ItemRepository `findByCategoryOrderByNameAsc()` 추가
+- [x] AdminItemController 엔드포인트 전면 확장
+- [x] admin/item-list.mustache 전면 개편
+- [x] admin/item-form.mustache 등록/수정 통합
+- [x] admin/item-history.mustache 신규 생성
+
+---
+
+## 실행 흐름에 대한 코드
+
+### 1. sidebar-admin.mustache — 메뉴 교체
+
+```html
+<!-- 기존 "물품 관리" 1개 → 3개로 교체 -->
+<a href="/admin/item/list"
+   class="... {{#isAdminItemList}}bg-indigo-50 text-indigo-700{{/isAdminItemList}}{{^isAdminItemList}}text-slate-600 hover:bg-slate-100{{/isAdminItemList}}">
+  <i data-feather="list" class="w-5 h-5"></i> 물품 목록
+</a>
+<a href="/admin/item/form"
+   class="... {{#isAdminItemForm}}bg-indigo-50 text-indigo-700{{/isAdminItemForm}}{{^isAdminItemForm}}text-slate-600 hover:bg-slate-100{{/isAdminItemForm}}">
+  <i data-feather="plus-circle" class="w-5 h-5"></i> 물품 등록
+</a>
+<a href="/admin/item/history"
+   class="... {{#isAdminItemHistory}}bg-indigo-50 text-indigo-700{{/isAdminItemHistory}}{{^isAdminItemHistory}}text-slate-600 hover:bg-slate-100{{/isAdminItemHistory}}">
+  <i data-feather="file-text" class="w-5 h-5"></i> 입출고 내역
+</a>
+```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 관리자 사이드바에서 "물품 관리" 메뉴 1개를 물품 목록·물품 등록·입출고 내역 3개로 교체합니다. 각 메뉴에 현재 페이지 강조를 위한 플래그(`isAdminItemList` 등)를 사용합니다.
+> - **왜 이렇게 썼는지**: `{{#isAdminItemList}}active{{/isAdminItemList}}`는 Mustache 조건 문법입니다. 서버에서 해당 플래그를 `true`로 전달하면 이 블록 안의 CSS 클래스가 적용되어 메뉴가 강조됩니다.
+> - **쉽게 말하면**: 왼쪽 메뉴를 1개에서 3개로 늘리고, 현재 어느 메뉴에 있는지 표시하는 표지판을 함께 추가한 것입니다.
+
+### 2. AdminItemController — 엔드포인트 구성
+
+```java
+// GET /admin/item/list — 물품 목록 (카테고리 필터)
+@GetMapping("/list")
+public String itemList(@RequestParam(name = "category", required = false) String category, Model model) {
+    model.addAttribute("items", adminItemService.getItemList(category));
+    model.addAttribute("categories", adminItemService.getCategoryFilters(category));
+    model.addAttribute("isAdminItemList", true);
+    return "admin/item-list";
+}
+
+// GET /admin/item/form — 등록/수정 통합 폼
+@GetMapping("/form")
+public String itemForm(@RequestParam(name = "id", required = false) Long id, Model model) {
+    model.addAttribute("item", adminItemService.getItemForm(id));
+    model.addAttribute("isAdminItemForm", true);
+    return "admin/item-form";
+}
+
+// POST /admin/item/form/save — 저장 (등록/수정 통합)
+@PostMapping("/form/save")
+public String saveItem(/* @RequestParam 필드들 */) {
+    adminItemService.saveItem(...);
+    return "redirect:/admin/item/list";
+}
+```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 관리자 물품 관련 URL 요청들을 처리할 컨트롤러 메서드들을 정의합니다. `GET`은 페이지 조회, `POST`는 데이터 변경 요청입니다.
+> - **왜 이렇게 썼는지**: POST 요청 후 `redirect`를 통해 GET 페이지로 이동(PRG 패턴)하면 브라우저 새로고침 시 중복 제출 문제를 방지할 수 있습니다. `id` 파라미터 유무로 등록과 수정을 하나의 엔드포인트에서 처리합니다.
+> - **쉽게 말하면**: 물품 목록 보기, 등록/수정하기, 삭제하기, 내역 보기를 각각 어느 URL로 연결할지 정의한 목록입니다.
+
+---
+
+## 테스트 진행
+
+| 케이스 | 조건 | 기대 결과 |
+|--------|------|-----------|
+| 물품 목록 접속 | `/admin/item/list` | 목록 표시 + 사이드바 "물품 목록" 활성화 |
+| 카테고리 필터 | `?category=MEDICAL_SUPPLIES` | 해당 카테고리 물품만 표시 |
+| 물품 등록 | `/admin/item/form` | 빈 폼 + 사이드바 "물품 등록" 활성화 |
+| 물품 수정 | `/admin/item/form?id=1` | 기존 값 pre-fill + 카테고리 selected |
+| 물품 저장 | POST 후 | 목록 페이지로 redirect |
+| 입출고 내역 | `/admin/item/history` | "준비 중" placeholder + 활성화 |
+
+---
+
+## 완료 기준
+
+- [x] 관리자 사이드바 물품 메뉴 3개 정상 표시 및 활성 상태 강조
+- [x] 물품 목록: 카테고리 필터, 입고, 수정, 삭제 기능 정상 작동
+- [x] 물품 등록/수정: 통합 폼 정상 작동
+- [x] 입출고 내역: 준비 중 placeholder 표시
 - [x] `config/`, `domain/` 수정 없음
-- [x] item-manager/** 수정 없음
