@@ -11,6 +11,7 @@ import com.smartclinic.hms.admin.rule.dto.UpdateAdminRuleRequest;
 import com.smartclinic.hms.common.exception.CustomException;
 import com.smartclinic.hms.domain.HospitalRule;
 import com.smartclinic.hms.domain.HospitalRuleCategory;
+import com.smartclinic.hms.llm.service.RuleIndexService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,6 +39,7 @@ public class AdminRuleService {
     private static final String RULE_UPDATED_MESSAGE = "규칙이 수정되었습니다.";
 
     private final HospitalRuleRepository hospitalRuleRepository;
+    private final RuleIndexService ruleIndexService;
 
     public List<AdminRuleItemResponse> getRuleList() {
         return hospitalRuleRepository.findAllByOrderByCreatedAtDesc()
@@ -47,6 +49,9 @@ public class AdminRuleService {
     }
 
     public AdminRuleListResponse getRuleList(int page, int size, String category, String active, String keyword) {
+        // 리스트 페이지 진입 시 전체 규칙 비동기 인덱싱 (기존 데이터 챗봇 RAG 반영)
+        ruleIndexService.indexAllRules(hospitalRuleRepository.findAll());
+
         int safePage = page < 1 ? DEFAULT_PAGE : page;
         int safeSize = size < 1 ? DEFAULT_SIZE : size;
         String normalizedCategory = normalizeCategory(category);
@@ -100,6 +105,7 @@ public class AdminRuleService {
         );
 
         hospitalRuleRepository.save(rule);
+        ruleIndexService.indexRule(rule);
         return "규칙이 등록되었습니다.";
     }
 
@@ -113,6 +119,7 @@ public class AdminRuleService {
                 request.isActiveChecked()
         );
         hospitalRuleRepository.save(rule);
+        ruleIndexService.indexRule(rule);
         return RULE_UPDATED_MESSAGE;
     }
 
@@ -120,6 +127,7 @@ public class AdminRuleService {
     public AdminRuleDeleteResponse deleteRule(Long ruleId) {
         HospitalRule rule = findRule(ruleId);
         hospitalRuleRepository.delete(rule);
+        ruleIndexService.deleteRuleIndex(ruleId);
         return AdminRuleDeleteResponse.success(ruleId);
     }
 
