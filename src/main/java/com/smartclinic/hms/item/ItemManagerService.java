@@ -268,48 +268,6 @@ public class ItemManagerService {
         return java.util.Map.of("itemId", itemId, "quantity", newQuantity);
     }
 
-    /**
-     * 여러 물품을 일괄 사용 처리 (부분 성공 허용)
-     */
-    public java.util.Map<String, Object> useItemsBatch(List<java.util.Map<String, Object>> requests, Long reservationId) {
-        List<java.util.Map<String, Object>> successResults = new ArrayList<>();
-        List<String> errorMessages = new ArrayList<>();
-
-        for (java.util.Map<String, Object> req : requests) {
-            Long itemId = Long.valueOf(req.get("id").toString());
-            int amount = Integer.parseInt(req.get("amount").toString());
-            
-            try {
-                int newQty = useItemInBatch(itemId, amount, reservationId);
-                successResults.add(java.util.Map.of("itemId", itemId, "quantity", newQty));
-            } catch (Exception e) {
-                Item item = itemRepository.findById(itemId).orElse(null);
-                String itemName = (item != null) ? item.getName() : "ID:" + itemId;
-                errorMessages.add(itemName + ": " + e.getMessage());
-            }
-        }
-
-        return java.util.Map.of(
-            "successes", successResults,
-            "errors", errorMessages,
-            "logs", getUsageLogs(reservationId)
-        );
-    }
-
-    @Transactional
-    protected int useItemInBatch(Long id, int amount, Long reservationId) {
-        Item item = itemRepository.findById(id)
-                .orElseThrow(() -> CustomException.notFound("물품을 찾을 수 없습니다. ID: " + id));
-        int newQuantity = item.getQuantity() - amount;
-        if (newQuantity < 0) {
-            throw new RuntimeException("재고 부족 (현재: " + item.getQuantity() + "개)");
-        }
-        item.updateQuantity(newQuantity);
-        usageLogRepository.save(ItemUsageLog.of(reservationId, id, item.getName(), amount, getCurrentActorName()));
-        stockLogRepository.save(ItemStockLog.of(id, item.getName(), ItemStockType.OUT, amount, getCurrentActorName()));
-        return newQuantity;
-    }
-
     @Transactional
     public void deleteItem(Long id) {
         itemRepository.deleteById(id);

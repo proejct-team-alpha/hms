@@ -18,24 +18,30 @@
     <main class="content-wrapper flex-1 p-6">
       <div class="max-w-2xl mx-auto">
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-          <div class="flex items-center gap-3 mb-8">
-            <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600">
-              <i data-feather="phone-call" class="w-6 h-6"></i>
+          <!-- [기능 구현] 상단 타이틀(제목 + 설명) 및 목록 돌아가기 버튼 정렬 개선 -->
+          <div class="flex items-start justify-between mb-8">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 shrink-0">
+                <i data-feather="phone-call" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <h1 class="text-2xl font-bold text-slate-800">예약</h1>
+                <p class="text-slate-500 mt-1 text-sm">환자의 예약 정보를 등록합니다.</p>
+              </div>
             </div>
-            <div>
-              <h1 class="text-2xl font-bold text-slate-800">전화 예약 등록</h1>
-              <p class="text-slate-500 mt-1">전화로 인입된 환자의 예약을 등록합니다.</p>
-            </div>
+            <!-- 우측 상단 목록가기 링크 -->
+            <a href="/staff/reception/list" class="mt-2 text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center gap-1 transition-colors">
+              <i data-feather="arrow-left" class="w-4 h-4"></i>
+              목록으로 돌아가기
+            </a>
           </div>
-
-
 
           <form method="post" action="/staff/reservation/create" class="space-y-6">
             <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">환자 성함</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">이름</label>
                 <div class="relative">
                   <i data-feather="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
                   <input type="text" name="name" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="홍길동" value="{{#form}}{{name}}{{/form}}" />
@@ -43,32 +49,39 @@
               </div>
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">연락처</label>
-                <div class="relative">
-                  <i data-feather="phone" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input 
-                    type="tel" 
-                    id="phoneInput"
-                    name="phone" 
-                    pattern="\d{3}-\d{4}-\d{4}" 
-                    maxlength="13" 
-                    required 
-                    class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" 
-                    placeholder="010-1234-5678" 
-                    value="{{#form}}{{phone}}{{/form}}" 
-                  />
+                <!-- [기능 구현] 연락처를 3-4-4 형태의 세 칸으로 분리하여 입력받음 -->
+                <div class="flex items-center gap-2">
+                  <input type="text" id="phone1" maxlength="3" class="w-20 text-center py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="010" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                  <span class="text-slate-400">-</span>
+                  <input type="text" id="phone2" maxlength="4" class="w-24 text-center py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="1234" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                  <span class="text-slate-400">-</span>
+                  <input type="text" id="phone3" maxlength="4" class="w-24 text-center py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="5678" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                  <!-- 서버 전송을 위한 최종 합쳐진 번호 -->
+                  <input type="hidden" name="phone" id="finalPhone" value="{{#form}}{{phone}}{{/form}}">
                 </div>
-                <p class="mt-2 text-xs text-slate-500 flex items-center gap-1.5 ml-1">
-                  <i data-feather="info" class="w-3.5 h-3.5"></i>
-                  숫자만 입력하시면 하이픈(-)이 자동으로 추가됩니다.
-                </p>
               </div>
             </div>
 
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">이메일 (선택)</label>
-              <div class="relative">
-                <i data-feather="mail" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                <input type="email" name="email" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="example@email.com" value="{{#form}}{{email}}{{/form}}" />
+            <!-- [기능 구현] 주민번호(선택)와 이메일(선택)을 한 줄에 배치 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">주민번호 (선택)</label>
+                <div class="flex items-center gap-2">
+                  <input type="text" id="birthDate" maxlength="6" class="w-24 text-center py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="YYMMDD" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                  <span class="text-slate-400">-</span>
+                  <div class="flex items-center gap-1">
+                    <input type="text" id="genderDigit" maxlength="1" class="w-12 text-center py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="G" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                    <span class="text-slate-400 font-bold tracking-widest ml-1">******</span>
+                  </div>
+                  <input type="hidden" name="birthInfo" id="finalBirthInfo">
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">이메일 (선택)</label>
+                <div class="relative">
+                  <i data-feather="mail" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                  <input type="email" name="email" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="example@email.com" value="{{#form}}{{email}}{{/form}}" />
+                </div>
               </div>
             </div>
 
@@ -132,8 +145,8 @@
 
             <div class="space-y-4">
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">증상</label>
-                <textarea name="symptoms" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none min-h-24 resize-none" placeholder="환자가 호소하는 주요 증상을 입력하세요.">{{#form}}{{symptoms}}{{/form}}</textarea>
+                <label class="block text-sm font-medium text-slate-700 mb-2">예약 사유</label>
+                <textarea name="visitReason" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none min-h-24 resize-none" placeholder="환자의 예약 사유를 입력하세요.">{{#form}}{{visitReason}}{{/form}}</textarea>
               </div>
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">메모 (특이사항)</label>
@@ -340,22 +353,70 @@ if (firstAvailable) {
 
 
 <script>
-const phoneInput = document.getElementById('phoneInput');
+/* [기능 구현] 연락처 세 칸 입력 및 자동 포커스 이동 로직 */
+(function() {
+  const p1 = document.getElementById('phone1');
+  const p2 = document.getElementById('phone2');
+  const p3 = document.getElementById('phone3');
+  const final = document.getElementById('finalPhone');
 
-// 하이픈 자동 삽입
-phoneInput.addEventListener('input', function (e) {
-  let value = e.target.value.replace(/\D/g, '');
+  // [주석] 기존 값이 있을 경우(수정 시) 세 칸에 나눠서 뿌려줌
+  const initialValue = final.value.replace(/-/g, '');
+  if (initialValue.length >= 3) p1.value = initialValue.slice(0, 3);
+  if (initialValue.length >= 7) p2.value = initialValue.slice(3, 7);
+  if (initialValue.length >= 11) p3.value = initialValue.slice(7, 11);
 
-  if (value.length <= 3) {
-    value = value;
-  } else if (value.length <= 7) {
-    value = value.slice(0, 3) + '-' + value.slice(3);
-  } else {
-    value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+  function updateFinal() {
+    if (p1.value && p2.value && p3.value) {
+      final.value = `${p1.value}-${p2.value}-${p3.value}`;
+    } else {
+      final.value = '';
+    }
   }
 
-  e.target.value = value;
-});
+  function handleInput(e, nextEl) {
+    const el = e.target;
+    if (el.value.length >= el.maxLength && nextEl) {
+      nextEl.focus();
+    }
+    updateFinal();
+  }
+
+  function handleKeyDown(e, prevEl) {
+    if (e.key === 'Backspace' && e.target.value.length === 0 && prevEl) {
+      prevEl.focus();
+    }
+  }
+
+  p1.addEventListener('input', (e) => handleInput(e, p2));
+  p2.addEventListener('input', (e) => handleInput(e, p3));
+  p3.addEventListener('input', (e) => handleInput(e, null));
+
+  p2.addEventListener('keydown', (e) => handleKeyDown(e, p1));
+  p3.addEventListener('keydown', (e) => handleKeyDown(e, p2));
+
+  /* [기능 구현] 주민번호 자동 포커스 및 데이터 합치기 */
+  const bDate = document.getElementById('birthDate');
+  const gDigit = document.getElementById('genderDigit');
+  const finalBirth = document.getElementById('finalBirthInfo');
+
+  function updateBirthInfo() {
+    if (bDate.value && gDigit.value) {
+      finalBirth.value = `${bDate.value}-${gDigit.value}`;
+    } else {
+      finalBirth.value = '';
+    }
+  }
+
+  bDate.addEventListener('input', () => {
+    if (bDate.value.length >= 6) gDigit.focus();
+    updateBirthInfo();
+  });
+  gDigit.addEventListener('input', updateBirthInfo);
+  gDigit.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' && gDigit.value.length === 0) bDate.focus();
+  });
+})();
 </script>
 
 </body>
