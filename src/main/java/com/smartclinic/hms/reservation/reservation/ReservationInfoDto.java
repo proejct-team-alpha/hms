@@ -41,7 +41,7 @@ public class ReservationInfoDto {
             case RECEIVED     -> "접수완료";
             case IN_TREATMENT -> "진료중";
             case COMPLETED    -> "진료완료";
-            case CANCELLED    -> "취소됨";
+            case CANCELLED    -> "취소";
         };
     }
 }

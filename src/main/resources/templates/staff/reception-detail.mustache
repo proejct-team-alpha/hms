@@ -7,46 +7,20 @@
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/feather.min.js"></script>
   <!-- 카카오 주소 API -->
-  <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+  <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
   <style>
-    .info-input {
-      width: 100%;
-      padding: 0.65rem 0.9rem;
-      background-color: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 0.85rem;
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: #1e293b;
-      transition: all 0.2s;
+    .info-input { width: 100%; padding: 0.5rem 0.8rem; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; font-size: 0.85rem; font-weight: 600; color: #1e293b; transition: all 0.2s; }
+    .info-input:focus { background-color: white; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); outline: none; }
+    .info-label { display: block; font-size: 0.65rem; font-weight: 800; color: #94a3b8; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .read-only-text { font-size: 0.85rem; font-weight: 700; color: #334155; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 3rem; }
+    /* [반응형 대응] 주민번호 입력칸 너비 최적화 */
+    .birth-input-date { width: 85px !important; text-align: center; flex-shrink: 0; }
+    .birth-input-gender { width: 38px !important; text-align: center; flex-shrink: 0; }
+    
+    @media (max-width: 1024px) {
+      .detail-grid { grid-template-columns: 1fr; gap: 2rem; }
     }
-    .info-input:focus {
-      background-color: white;
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-      outline: none;
-    }
-    .info-label {
-      display: block;
-      font-size: 0.7rem;
-      font-weight: 800;
-      color: #94a3b8;
-      margin-bottom: 0.4rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .read-only-text {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: #334155;
-    }
-    .detail-grid {
-      display: grid;
-      grid-template-columns: 1fr 2fr;
-      gap: 4rem;
-    }
-    .birth-input-date { width: 100px !important; text-align: center; }
-    .birth-input-gender { width: 45px !important; text-align: center; }
   </style>
 </head>
 <body class="min-h-screen flex bg-[#f8fafc]">
@@ -55,131 +29,81 @@
   <div class="main-content flex-1 flex flex-col ml-64">
     {{> common/header-staff}}
 
-    <main class="content-wrapper flex-1 p-8">
-      <div class="max-w-6xl mx-auto space-y-6">
+    <main class="content-wrapper flex-1 p-5">
+      <div class="max-w-6xl mx-auto space-y-4">
         
-        <!-- 상단 헤더 -->
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-4">
-            <a href="/staff/reception/list?date={{currentDate}}&tab={{currentTab}}&page={{currentPage}}&query={{query}}{{#deptIds}}&deptIds={{.}}{{/deptIds}}{{#doctorIds}}&doctorIds={{.}}{{/doctorIds}}&source={{source}}" class="p-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors text-slate-400 shadow-sm">
-              <i data-feather="arrow-left" class="w-5 h-5"></i>
+          <div class="flex items-center gap-3">
+            <a href="/staff/reception/list?date={{currentDate}}&tab={{currentTab}}&page={{currentPage}}&query={{query}}{{#deptIds}}&deptIds={{.}}{{/deptIds}}{{#doctorIds}}&doctorIds={{.}}{{/doctorIds}}&source={{source}}" class="p-1.5 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-slate-400 shadow-sm">
+              <i data-feather="arrow-left" class="w-4 h-4"></i>
             </a>
-            <h1 class="text-2xl font-black text-slate-800 tracking-tight">환자 정보</h1>
+            <h1 class="text-xl font-black text-slate-800 tracking-tight">환자 상세 정보</h1>
           </div>
         </div>
 
-        <div id="detailCard" class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
-          <!-- 환자 헤더 고정 영역 -->
-          <div class="bg-indigo-50 border-b border-indigo-100 p-8 flex items-center justify-between">
-            <div class="flex items-center gap-6">
-              <div class="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100">
-                <i data-feather="user" class="w-10 h-10"></i>
+        <div id="detailCard" class="bg-white rounded-[1.5rem] border border-slate-200 shadow-sm overflow-hidden">
+          <div class="bg-indigo-50 border-b border-indigo-100 p-5 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100">
+                <i data-feather="user" class="w-7 h-7"></i>
               </div>
-              <div class="space-y-2">
-                <div>
-                  <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">환자등록번호: {{detail.patientId}}</span>
-                </div>
-                <div class="flex items-center gap-3">
-                  {{#detail.isFirstVisit}}
-                  <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[9px] font-black shrink-0">초</span>
-                  {{/detail.isFirstVisit}}
-                  {{^detail.isFirstVisit}}
-                  <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-indigo-600 text-white text-[9px] font-black shrink-0">재</span>
-                  {{/detail.isFirstVisit}}
+              <div class="space-y-1">
+                <div><span class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">환자등록번호: {{detail.patientId}}</span></div>
+                <div class="flex items-center gap-2">
+                  {{#detail.isFirstVisit}}<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-500 text-[9px] font-black shrink-0">초</span>{{/detail.isFirstVisit}}
+                  {{^detail.isFirstVisit}}<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[9px] font-black shrink-0">재</span>{{/detail.isFirstVisit}}
                   <div class="flex items-baseline gap-2">
-                    <h2 class="text-2xl font-black text-slate-800">{{detail.patientName}}</h2>
-                    <span class="text-sm font-bold text-slate-500">({{detail.ageGender}})</span>
+                    <h2 class="text-xl font-black text-slate-800">{{detail.patientName}}</h2>
+                    <span class="text-xs font-bold text-slate-500">({{detail.ageGender}})</span>
                   </div>
                 </div>
-                <div class="flex items-center gap-1.5 text-sm text-slate-500 font-bold">
-                  <i data-feather="phone" class="w-3.5 h-3.5 opacity-50"></i>
-                  {{detail.patientPhone}}
-                </div>
+                <div class="flex items-center gap-1.5 text-xs text-slate-500 font-bold"><i data-feather="phone" class="w-3 h-3 opacity-50"></i>{{detail.patientPhone}}</div>
               </div>
             </div>
             <div class="text-right">
-              <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-black shadow-sm {{detail.statusBadgeClass}}">
-                <i data-feather="activity" class="w-3.5 h-3.5"></i>
-                {{detail.statusText}}
+              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black shadow-sm {{detail.statusBadgeClass}}">
+                <i data-feather="activity" class="w-3 h-3"></i>{{detail.statusText}}
               </span>
             </div>
           </div>
 
-          <div class="p-10">
+          <div class="p-6">
             <div class="detail-grid">
-              
-              <!-- 좌측: 예약 내역 (참조용) -->
-              <div class="space-y-8 py-4">
-                <div class="space-y-6">
-                  <div class="space-y-1">
-                    <label class="info-label">예약번호</label>
-                    <div class="read-only-text text-indigo-600">{{detail.reservationNumber}}</div>
-                  </div>
-                  <div class="space-y-1">
-                    <label class="info-label">예약 구분</label>
-                    <div class="read-only-text">{{detail.sourceText}}</div>
-                  </div>
+              <div class="space-y-5">
+                <div class="space-y-4">
+                  <div class="space-y-0.5"><label class="info-label">예약번호</label><div class="read-only-text text-indigo-600">{{detail.reservationNumber}}</div></div>
+                  <div class="space-y-0.5"><label class="info-label">예약 구분</label><div class="read-only-text">{{detail.sourceText}}</div></div>
                   <div class="grid grid-cols-2 gap-2">
-                    <div class="space-y-1">
-                      <label class="info-label">날짜</label>
-                      <div class="read-only-text">{{detail.reservationDate}}</div>
-                    </div>
-                    <div class="space-y-1">
-                      <label class="info-label">시간</label>
-                      <div class="read-only-text">{{detail.timeSlot}}</div>
-                    </div>
+                    <div class="space-y-0.5"><label class="info-label">날짜</label><div class="read-only-text">{{detail.reservationDate}}</div></div>
+                    <div class="space-y-0.5"><label class="info-label">시간</label><div class="read-only-text">{{detail.timeSlot}}</div></div>
                   </div>
-                  <div class="space-y-1">
-                    <label class="info-label">최초 예약 정보</label>
-                    <div class="read-only-text leading-relaxed">
-                      {{detail.departmentName}}<br>
-                      {{detail.doctorName}} 전문의
-                    </div>
-                  </div>
+                  <div class="space-y-0.5"><label class="info-label">최초 예약 정보</label><div class="read-only-text leading-tight">{{detail.departmentName}} / {{detail.doctorName}} 전문의</div></div>
                 </div>
-
                 {{#detail.cancellationReason}}
-                <div class="bg-red-50 p-5 rounded-2xl border border-red-100 space-y-2">
-                  <label class="text-[10px] font-black text-red-400 uppercase tracking-widest">취소 사유</label>
-                  <p class="text-xs font-bold text-red-600 leading-relaxed">{{detail.cancellationReason}}</p>
+                <div class="bg-red-50 p-4 rounded-xl border border-red-100 space-y-1">
+                  <label class="text-[9px] font-black text-red-400 uppercase tracking-widest">취소 사유</label>
+                  <p class="text-[11px] font-bold text-red-600 leading-snug">{{detail.cancellationReason}}</p>
                 </div>
                 {{/detail.cancellationReason}}
               </div>
 
-              <!-- 우측: 접수 및 인적 사항 (상시 수정) -->
-              <div class="space-y-8 py-4">
-                <div class="space-y-6">
-                  <!-- [주석] 접수 정보: 실제 시스템에 기록된 접수 시각 데이터를 표시 -->
-                  <div class="grid grid-cols-2 gap-6">
-                    <div>
-                      <label class="info-label">접수 날짜</label>
-                      <div class="read-only-text py-2 border-b border-slate-100">
-                        {{#detail.actualReceptionDate}}{{detail.actualReceptionDate}}{{/detail.actualReceptionDate}}
-                        {{^detail.actualReceptionDate}}-{{/detail.actualReceptionDate}}
-                      </div>
-                    </div>
-                    <div>
-                      <label class="info-label">접수 시간</label>
-                      <div class="read-only-text py-2 border-b border-slate-100 text-indigo-600">
-                        {{#detail.receptionTime}}{{detail.receptionTime}}{{/detail.receptionTime}}
-                        {{^detail.receptionTime}}-{{/detail.receptionTime}}
-                      </div>
-                    </div>
+              <div class="space-y-5">
+                <div class="space-y-4">
+                  <div class="grid grid-cols-2 gap-4">
+                    <div><label class="info-label">접수 날짜</label><div class="read-only-text py-1 border-b border-slate-100">{{#detail.actualReceptionDate}}{{detail.actualReceptionDate}}{{/detail.actualReceptionDate}}{{^detail.actualReceptionDate}}-{{/detail.actualReceptionDate}}</div></div>
+                    <div><label class="info-label">접수 시간</label><div class="read-only-text py-1 border-b border-slate-100 text-indigo-600">{{#detail.receptionTime}}{{detail.receptionTime}}{{/detail.receptionTime}}{{^detail.receptionTime}}-{{/detail.receptionTime}}</div></div>
                   </div>
 
-                  <!-- [기능 구현] 최종 진료과/의사: 수정 가능 상태(예약/대기)일 때만 드롭다운 표시, 그 외엔 텍스트 표시 -->
-                  <div class="grid grid-cols-2 gap-6">
+                  <div class="grid grid-cols-2 gap-4">
                     <div>
                       <label class="info-label">최종 진료과</label>
                       {{#detail.canEditReceptionInfo}}
                       <select id="receptionDept" class="info-input" onchange="filterDoctors(this.value)">
-                        {{#departments}}
-                        <option value="{{id}}" {{#selected}}selected{{/selected}}>{{name}}</option>
-                        {{/departments}}
+                        {{#departments}}<option value="{{id}}" {{#selected}}selected{{/selected}}>{{name}}</option>{{/departments}}
                       </select>
                       {{/detail.canEditReceptionInfo}}
                       {{^detail.canEditReceptionInfo}}
-                      <div class="read-only-text py-2 border-b border-slate-100">{{detail.departmentName}}</div>
+                      <div class="read-only-text py-1 border-b border-slate-100">{{detail.departmentName}}</div>
                       <input type="hidden" id="receptionDept" value="{{detail.departmentId}}">
                       {{/detail.canEditReceptionInfo}}
                     </div>
@@ -187,104 +111,70 @@
                       <label class="info-label">담당 의사</label>
                       {{#detail.canEditReceptionInfo}}
                       <select id="receptionDoctor" class="info-input">
-                        {{#doctors}}
-                        <option value="{{id}}" data-dept-id="{{deptId}}" {{#selected}}selected{{/selected}}>{{name}}</option>
-                        {{/doctors}}
+                        {{#doctors}}<option value="{{id}}" data-dept-id="{{deptId}}" {{#selected}}selected{{/selected}}>{{name}}</option>{{/doctors}}
                       </select>
                       {{/detail.canEditReceptionInfo}}
                       {{^detail.canEditReceptionInfo}}
-                      <div class="read-only-text py-2 border-b border-slate-100">{{detail.doctorName}} 전문의</div>
+                      <div class="read-only-text py-1 border-b border-slate-100">{{detail.doctorName}} 전문의</div>
                       <input type="hidden" id="receptionDoctor" value="{{detail.doctorId}}">
                       {{/detail.canEditReceptionInfo}}
                     </div>
                   </div>
 
-                  <div class="grid grid-cols-2 gap-6">
+                  <!-- [레이아웃 수정] 주민번호와 이메일을 항상 한 줄에 배치 -->
+                  <div class="grid grid-cols-2 gap-4">
                     <div>
                       <label class="info-label">주민번호</label>
-                      <div class="flex items-center gap-2">
-                        <input type="text" id="birthDate" value="{{detail.birthDatePart}}" maxlength="6" class="info-input birth-input-date" placeholder="YYMMDD">
+                      <div class="flex items-center gap-1 flex-nowrap">
+                        <input type="text" id="birthDate" value="{{detail.birthDatePart}}" maxlength="6" class="info-input birth-input-date" style="width: 80px !important;" placeholder="YYMMDD">
                         <span class="text-slate-300">-</span>
-                        <div class="flex items-center gap-1">
-                          <input type="text" id="genderDigit" value="{{detail.genderDigitPart}}" maxlength="1" class="info-input birth-input-gender" placeholder="G">
-                          <span class="text-slate-400 font-bold tracking-widest ml-1">******</span>
+                        <div class="flex items-center gap-1 flex-nowrap">
+                          <input type="text" id="genderDigit" value="{{detail.genderDigitPart}}" maxlength="1" class="info-input birth-input-gender" style="width: 35px !important;" placeholder="G">
+                          <span class="text-slate-400 font-bold ml-0.5 text-[10px] whitespace-nowrap">******</span>
                         </div>
                       </div>
                     </div>
-                    <div>
-                      <label class="info-label">이메일</label>
-                      <input type="email" id="patientEmail" value="{{detail.patientEmail}}" class="info-input">
-                    </div>
+                    <div><label class="info-label">이메일</label><input type="email" id="patientEmail" value="{{detail.patientEmail}}" class="info-input"></div>
                   </div>
 
-                  <!-- [주석] 주소 입력 영역: 우편번호, 기본주소, 상세주소 3줄 구조로 최적화 -->
-                  <div class="space-y-3">
+                  <div class="space-y-2">
                     <label class="info-label">주소</label>
-                    
-                    <!-- [주석] 1행: 우편번호 입력 및 주소 검색 버튼 -->
                     <div class="flex gap-2">
-                      <input type="text" id="postcode" class="info-input w-32" placeholder="우편번호" readonly>
-                      <button type="button" onclick="execDaumPostcode()" class="px-4 py-2 bg-slate-800 text-white text-xs font-black rounded-xl hover:bg-slate-900 transition-all flex-shrink-0">주소 찾기</button>
+                      <input type="text" id="postcode" class="info-input w-28" placeholder="우편번호" readonly>
+                      <button type="button" onclick="execDaumPostcode()" class="px-3 py-1.5 bg-slate-800 text-white text-[10px] font-black rounded-lg hover:bg-slate-900 transition-all flex-shrink-0">주소 찾기</button>
                     </div>
-                    
-                    <!-- [주석] 2행: 검색된 기본 주소 표시 (전체 너비) -->
-                    <input type="text" id="basicAddress" value="{{detail.patientAddress}}" class="info-input w-full" placeholder="기본 주소" readonly>
-                    
-                    <!-- [주석] 3행: 상세 주소 직접 입력 (전체 너비) -->
-                    <input type="text" id="detailAddress" class="info-input w-full" placeholder="상세 주소 입력">
+                    <input type="text" id="basicAddress" value="{{detail.patientAddress}}" class="info-input w-full bg-white" placeholder="주소를 입력하세요 (상세주소 포함)">
                   </div>
 
-                  <div>
-                    <label class="info-label">내원 사유</label>
-                    {{#detail.canEditReceptionInfo}}
-                    <textarea id="visitReason" rows="2" class="info-input resize-none">{{detail.visitReason}}</textarea>
-                    {{/detail.canEditReceptionInfo}}
-                    {{^detail.canEditReceptionInfo}}
-                    <div class="read-only-text py-2 border-b border-slate-100 leading-relaxed">{{detail.visitReason}}</div>
-                    <input type="hidden" id="visitReason" value="{{detail.visitReason}}">
-                    {{/detail.canEditReceptionInfo}}
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div><label class="info-label">내원 사유</label><textarea id="visitReason" rows="2" class="info-input resize-none">{{detail.visitReason}}</textarea></div>
+                    <div><label class="info-label">특이사항</label><textarea id="noteInput" rows="2" class="info-input resize-none">{{detail.patientNote}}</textarea></div>
                   </div>
 
-                  <div>
-                    <label class="info-label">특이사항</label>
-                    <textarea id="noteInput" rows="3" class="info-input resize-none">{{detail.patientNote}}</textarea>
-                  </div>
-
-                  <div class="pt-2">
-                    <button type="button" onclick="saveAllInfo()" class="w-full py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2">
-                      <i data-feather="save" class="w-4 h-4"></i>
-                      저장
+                  <div class="pt-1">
+                    <button type="button" onclick="saveAllInfo()" class="w-full py-3 bg-indigo-600 text-white font-black rounded-xl hover:bg-indigo-700 transition-all shadow-md flex items-center justify-center gap-2 text-sm">
+                      <i data-feather="save" class="w-4 h-4"></i>저장
                     </button>
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
 
-        <div class="flex justify-center pt-4">
-          <a href="/staff/reception/list?date={{currentDate}}&tab={{currentTab}}&page={{currentPage}}&query={{query}}{{#deptIds}}&deptIds={{.}}{{/deptIds}}{{#doctorIds}}&doctorIds={{.}}{{/doctorIds}}&source={{source}}" class="text-sm font-bold text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-2">
-            <i data-feather="list" class="w-4 h-4"></i>
-            목록으로 돌아가기
+        <div class="flex justify-center pt-2">
+          <a href="/staff/reception/list?date={{currentDate}}&tab={{currentTab}}&page={{currentPage}}&query={{query}}{{#deptIds}}&deptIds={{.}}{{/deptIds}}{{#doctorIds}}&doctorIds={{.}}{{/doctorIds}}&source={{source}}" class="text-xs font-bold text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-1.5">
+            <i data-feather="list" class="w-3.5 h-3.5"></i>목록으로 돌아가기
           </a>
         </div>
       </div>
     </main>
-
     {{> common/footer-staff}}
   </div>
 
   <script>
     feather.replace();
-
-    // [주석] 주민번호 앞자리 6자 입력 시 뒷자리로 자동 포커스 이동
-    document.getElementById('birthDate').addEventListener('input', function() {
-      if (this.value.length >= 6) {
-        document.getElementById('genderDigit').focus();
-      }
-    });
-
+    document.getElementById('birthDate').addEventListener('input', function() { if (this.value.length >= 6) document.getElementById('genderDigit').focus(); });
     function filterDoctors(deptId) {
       const doctorSelect = document.getElementById('receptionDoctor');
       const options = doctorSelect.querySelectorAll('option');
@@ -293,65 +183,60 @@
         if (opt.getAttribute('data-dept-id') === deptId) {
           opt.style.display = 'block';
           if (!firstVisible) firstVisible = opt.value;
-        } else {
-          opt.style.display = 'none';
-        }
+        } else opt.style.display = 'none';
       });
       if (firstVisible) doctorSelect.value = firstVisible;
     }
-
     document.addEventListener('DOMContentLoaded', () => {
-      filterDoctors(document.getElementById('receptionDept').value);
-      const fullAddr = document.getElementById('basicAddress').value;
-      if (fullAddr.startsWith('[')) {
-        const match = fullAddr.match(/\[(\d+)\]\s*(.*)/);
-        if (match) {
-          document.getElementById('postcode').value = match[1];
-          document.getElementById('basicAddress').value = match[2];
-        }
+      const deptEl = document.getElementById('receptionDept');
+      if (deptEl) filterDoctors(deptEl.value);
+      const basicAddrEl = document.getElementById('basicAddress');
+      if (basicAddrEl && basicAddrEl.value.startsWith('[')) {
+        const match = basicAddrEl.value.match(/\[(\d+)\]\s*(.*)/);
+        if (match) { document.getElementById('postcode').value = match[1]; basicAddrEl.value = match[2]; }
       }
     });
-
     function execDaumPostcode() {
+      if (typeof daum === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+        script.onload = () => { openDaumPostcode(); };
+        document.head.appendChild(script);
+      } else { openDaumPostcode(); }
+    }
+    function openDaumPostcode() {
       new daum.Postcode({
         oncomplete: function(data) {
-          let addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress;
-          if (data.userSelectedType === 'R' && data.bname !== '' && /[동|로|가]$/g.test(data.bname)) addr += ' (' + data.bname + ')';
+          let addr = (data.userSelectedType === 'R') ? data.roadAddress : data.jibunAddress;
+          let extraAddr = '';
+          if(data.userSelectedType === 'R'){
+            if(data.bname !== '' && /[동|로|가]$/g.test(data.bname)) extraAddr += data.bname;
+            if(data.buildingName !== '' && data.apartment === 'Y') extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
+            if(extraAddr !== '') addr += ' (' + extraAddr + ')';
+          }
           document.getElementById('postcode').value = data.zonecode;
-          document.getElementById('basicAddress').value = addr;
-          document.getElementById('detailAddress').focus();
+          const addrInput = document.getElementById('basicAddress');
+          addrInput.value = addr;
+          addrInput.focus();
         }
       }).open();
     }
-
     async function saveAllInfo() {
-      const reservationId = "{{detail.id}}";
       const birthDate = document.getElementById('birthDate').value;
       const genderDigit = document.getElementById('genderDigit').value;
-
-      // [주석] 주민번호 필수 입력 검증 (앞 6자리, 뒤 1자리)
-      if (!birthDate || birthDate.length < 6 || !genderDigit) {
-        alert('주민번호를 정확히 입력해 주세요. (앞 6자리 및 뒤 1자리 필수)');
-        return;
-      }
-
-      const birthInfo = birthDate + '-' + genderDigit;
+      if (!birthDate || birthDate.length < 6 || !genderDigit) { alert('주민번호를 정확히 입력해 주세요.'); return; }
       const postcode = document.getElementById('postcode').value;
       const basicAddr = document.getElementById('basicAddress').value;
-      const detailAddr = document.getElementById('detailAddress').value;
-      const fullAddress = postcode ? `[${postcode}] ${basicAddr} ${detailAddr}`.trim() : basicAddr;
-
       const payload = {
-        reservationId: reservationId,
+        reservationId: "{{detail.id}}",
         deptId: document.getElementById('receptionDept').value,
         doctorId: document.getElementById('receptionDoctor').value,
-        birthInfo: birthInfo,
+        birthInfo: birthDate + '-' + genderDigit,
         email: document.getElementById('patientEmail').value,
-        address: fullAddress,
+        address: postcode ? `[${postcode}] ${basicAddr}`.trim() : basicAddr,
         visitReason: document.getElementById('visitReason').value,
         note: document.getElementById('noteInput').value
       };
-
       try {
         const response = await fetch('/staff/reception/update-patient-info', {
           method: 'POST',
@@ -360,30 +245,9 @@
         });
         const result = await response.json();
         if (result.success) {
-          // [주석] 저장 성공 시 모든 필터링 상태를 유지하며 목록으로 이동
-          const params = new URLSearchParams();
-          params.set('date', '{{currentDate}}');
-          params.set('tab', '{{currentTab}}');
-          params.set('page', '{{currentPage}}');
-          
-          const queryValue = '{{query}}';
-          if (queryValue) params.set('query', queryValue);
-          
-          const sourceValue = '{{source}}';
-          if (sourceValue) params.set('source', sourceValue);
-          
-          // [주석] Mustache 리스트 반복을 통해 여러 개의 deptIds와 doctorIds를 추가
-          {{#deptIds}}params.append('deptIds', '{{.}}');{{/deptIds}}
-          {{#doctorIds}}params.append('doctorIds', '{{.}}');{{/doctorIds}}
-          
-          location.href = `/staff/reception/list?${params.toString()}`;
-        } else {
-          alert('저장 실패: ' + (result.message || ''));
-        }
-      } catch (e) {
-        console.error(e);
-        alert('서버와 통신 중 오류가 발생했습니다.');
-      }
+          location.href = `/staff/reception/list?date={{currentDate}}&tab={{currentTab}}&page={{currentPage}}&query={{query}}{{#deptIds}}&deptIds={{.}}{{/deptIds}}{{#doctorIds}}&doctorIds={{.}}{{/doctorIds}}&source={{source}}`;
+        } else alert('저장 실패: ' + result.message);
+      } catch (e) { alert('서버 오류 발생'); }
     }
   </script>
 </body>
