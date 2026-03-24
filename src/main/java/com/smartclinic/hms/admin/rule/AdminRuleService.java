@@ -49,6 +49,9 @@ public class AdminRuleService {
     }
 
     public AdminRuleListResponse getRuleList(int page, int size, String category, String active, String keyword) {
+        // 리스트 페이지 진입 시 전체 규칙 비동기 인덱싱 (기존 데이터 챗봇 RAG 반영)
+        ruleIndexService.indexAllRules(hospitalRuleRepository.findAll());
+
         int safePage = page < 1 ? DEFAULT_PAGE : page;
         int safeSize = size < 1 ? DEFAULT_SIZE : size;
         String normalizedCategory = normalizeCategory(category);

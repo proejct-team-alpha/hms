@@ -4,9 +4,11 @@ import com.smartclinic.hms.domain.HospitalRule;
 import com.smartclinic.hms.domain.HospitalRuleCategory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -49,6 +51,36 @@ public class RuleIndexService {
                         res -> log.info("규칙 인덱싱 완료 - ruleId: {}", rule.getId()),
                         err -> log.error("규칙 인덱싱 실패 - ruleId: {}, error: {}", rule.getId(), err.getMessage())
                 );
+    }
+
+    /**
+     * 전체 규칙 일괄 인덱싱 (비동기 — 리스트 페이지 진입 시 호출)
+     */
+    @Async
+    public void indexAllRules(List<HospitalRule> rules) {
+        log.info("전체 규칙 인덱싱 시작 - {}건", rules.size());
+        for (HospitalRule rule : rules) {
+            if (!rule.isActive()) continue;
+            String category = CATEGORY_LABEL.getOrDefault(rule.getCategory(), "기타");
+            try {
+                llmWebClient.post()
+                        .uri("/index/rule")
+                        .bodyValue(Map.of(
+                                "rule_id", rule.getId(),
+                                "title", rule.getTitle(),
+                                "content", rule.getContent(),
+                                "category", category,
+                                "target", rule.getTarget() != null ? rule.getTarget() : "",
+                                "active", rule.isActive()
+                        ))
+                        .retrieve()
+                        .bodyToMono(String.class)
+                        .block();
+            } catch (Exception e) {
+                log.warn("규칙 인덱싱 실패 - ruleId: {}, error: {}", rule.getId(), e.getMessage());
+            }
+        }
+        log.info("전체 규칙 인덱싱 완료 - {}건", rules.size());
     }
 
     /**
