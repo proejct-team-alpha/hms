@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -23,78 +23,30 @@
             </div>
             <div>
               <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
-              <p class="text-slate-500 mt-1">날짜 범위를 지정해 출고 내역을 조회하고 바로 출고를 처리합니다.</p>
+              <p class="text-slate-500 mt-1">오늘 출고를 처리하고 오늘 출고 내역을 바로 확인합니다.</p>
             </div>
           </div>
           <div class="text-sm text-slate-500 text-right">
-            <div>총 <span class="font-semibold text-slate-700">{{todayLogCount}}</span>건</div>
+            <div>총 <span id="page-total-log-count" class="font-semibold text-slate-700">{{todayLogCount}}</span>건</div>
           </div>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <form method="get" action="/admin/item/use" class="p-4 border-b border-slate-200 bg-slate-50" id="use-date-form">
-            <input type="hidden" name="keyword" id="use-hidden-keyword" value="">
-            <input type="hidden" name="category" id="use-hidden-category" value="">
-
-            <div class="flex flex-wrap items-end gap-3">
-              <div class="min-w-[180px]">
-                <label for="use-from-date" class="block text-sm font-medium text-slate-700 mb-1.5">시작일</label>
-                <input
-                  type="date"
-                  id="use-from-date"
-                  name="fromDate"
-                  value="{{fromDate}}"
-                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                >
-              </div>
-
-              <div class="min-w-[180px]">
-                <label for="use-to-date" class="block text-sm font-medium text-slate-700 mb-1.5">종료일</label>
-                <input
-                  type="date"
-                  id="use-to-date"
-                  name="toDate"
-                  value="{{toDate}}"
-                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                >
-              </div>
-
-              <button
-                type="submit"
-                class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                조회
-              </button>
-              <a
-                href="/admin/item/use"
-                class="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
-              >
-                초기화
-              </a>
-            </div>
-          </form>
-
-          {{#dateError}}
-          <div class="px-4 py-3 border-b border-red-200 bg-red-50 text-sm text-red-700">
-            {{dateError}}
-          </div>
-          {{/dateError}}
-
           <div class="grid grid-cols-2 gap-4 p-4 border-b border-slate-200 bg-white">
             <div class="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
-              <div class="text-xs font-medium text-indigo-700">출고 건수</div>
-              <div class="mt-1 text-xl font-bold text-indigo-800">{{todayLogCount}}<span class="ml-1 text-sm font-normal text-indigo-600">건</span></div>
+              <div class="text-xs font-medium text-indigo-700">오늘 출고 건수</div>
+              <div class="mt-1 text-xl font-bold text-indigo-800"><span id="today-log-count-text">{{todayLogCount}}</span><span class="ml-1 text-sm font-normal text-indigo-600">건</span></div>
             </div>
             <div class="rounded-xl border border-orange-200 bg-orange-50 p-4">
-              <div class="text-xs font-medium text-orange-700">총 출고 수량</div>
-              <div class="mt-1 text-xl font-bold text-orange-800">{{todayTotalUsedAmount}}<span class="ml-1 text-sm font-normal text-orange-600">개</span></div>
+              <div class="text-xs font-medium text-orange-700">오늘 총 출고 수량</div>
+              <div class="mt-1 text-xl font-bold text-orange-800"><span id="today-total-used-amount-text">{{todayTotalUsedAmount}}</span><span class="ml-1 text-sm font-normal text-orange-600">개</span></div>
             </div>
           </div>
 
           <div class="p-6 space-y-3 border-b border-slate-200 bg-white">
             <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
               <i data-feather="list" class="w-5 h-5 text-indigo-600"></i>
-              출고 내역
+              오늘 출고 내역
             </h3>
             <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
               <table class="w-full text-xs">
@@ -114,7 +66,7 @@
                   </tr>
                   {{/todayLogs}}
                   {{^todayLogs}}
-                  <tr id="today-log-empty"><td colspan="3" class="px-3 py-2 text-xs text-slate-400">조회된 출고 물품이 없습니다.</td></tr>
+                  <tr id="today-log-empty"><td colspan="3" class="px-3 py-2 text-xs text-slate-400">오늘 출고 내역이 없습니다.</td></tr>
                   {{/todayLogs}}
                 </tbody>
               </table>
@@ -164,8 +116,6 @@
                 <form action="/admin/item/use" method="post" class="flex items-center gap-1">
                   <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
                   <input type="hidden" name="id" value="{{id}}">
-                  <input type="hidden" name="fromDate" value="{{fromDate}}">
-                  <input type="hidden" name="toDate" value="{{toDate}}">
                   <input type="number" name="amount" min="1" placeholder="수량"
                          class="flex-1 w-0 px-2 py-1 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-1 focus:ring-indigo-400">
                   <button type="submit" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap">
@@ -222,15 +172,15 @@
 
       const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
       window.history.replaceState({}, '', nextUrl);
+    }
 
-      const hiddenKeyword = document.getElementById('use-hidden-keyword');
-      const hiddenCategory = document.getElementById('use-hidden-category');
-      if (hiddenKeyword) {
-        hiddenKeyword.value = keyword;
-      }
-      if (hiddenCategory) {
-        hiddenCategory.value = currentCategory;
-      }
+    function setActiveCategoryButton(activeCategory) {
+      document.querySelectorAll('.item-cat-btn').forEach((button) => {
+        button.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors';
+        if (button.dataset.cat === activeCategory) {
+          button.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors';
+        }
+      });
     }
 
     function applyInitialState() {
@@ -240,31 +190,22 @@
         searchInput.value = params.get('keyword') || '';
       }
       currentCategory = params.get('category') || '';
-
-      const targetButton = Array.from(document.querySelectorAll('.item-cat-btn')).find((button) => button.dataset.cat === currentCategory)
-        || document.querySelector('.item-cat-btn[data-cat=""]');
-      if (targetButton) {
-        document.querySelectorAll('.item-cat-btn').forEach((button) => {
-          button.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors';
-        });
-        targetButton.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors';
-      }
-
+      setActiveCategoryButton(currentCategory);
       syncStateToUrl();
     }
 
-    function getChosung(str) {
-      return str.split('').map((ch) => {
-        const code = ch.charCodeAt(0);
-        if (code >= 0xAC00 && code <= 0xD7A3) {
-          return CHOSUNG[Math.floor((code - 0xAC00) / 588)];
+    function getChosung(value) {
+      return value.split('').map((character) => {
+        const code = character.charCodeAt(0);
+        if (code >= 0xac00 && code <= 0xd7a3) {
+          return CHOSUNG[Math.floor((code - 0xac00) / 588)];
         }
-        return ch;
+        return character.toLowerCase();
       }).join('');
     }
 
-    function isChosungOnly(str) {
-      return /^[ㄱ-ㅎ]+$/.test(str);
+    function isChosungOnly(value) {
+      return /^[ㄱ-ㅎ]+$/.test(value);
     }
 
     function itemMatches(name, query) {
@@ -278,8 +219,8 @@
       return name.toLowerCase().includes(loweredQuery);
     }
 
-    function buildTodayLogPageNumbers(current, total) {
-      const container = document.getElementById('today-log-page-numbers');
+    function buildPageButtons(containerId, current, total, onClick) {
+      const container = document.getElementById(containerId);
       if (!container) {
         return;
       }
@@ -300,10 +241,7 @@
         button.textContent = page;
         button.className = 'px-2 py-1 text-xs rounded-lg border transition-colors ' +
           (page === current ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 text-slate-600 hover:bg-slate-100');
-        button.addEventListener('click', () => {
-          todayLogPage = page;
-          renderTodayLog();
-        });
+        button.addEventListener('click', () => onClick(page));
         return button;
       };
 
@@ -359,82 +297,88 @@
       if (info) {
         info.textContent = `${total}건 / ${totalPages}페이지`;
       }
-
-      buildTodayLogPageNumbers(todayLogPage, totalPages);
       if (prev) {
         prev.disabled = todayLogPage <= 1;
       }
       if (next) {
         next.disabled = todayLogPage >= totalPages;
       }
+
+      buildPageButtons('today-log-page-numbers', todayLogPage, totalPages, (page) => {
+        todayLogPage = page;
+        renderTodayLog();
+      });
     }
 
-    function buildCardPageNumbers(current, total) {
-      const container = document.getElementById('card-grid-page-numbers');
-      if (!container) {
-        return;
+    function refreshUsageSummary(logCount, totalUsedAmount) {
+      const pageTotal = document.getElementById('page-total-log-count');
+      const countNode = document.getElementById('today-log-count-text');
+      const totalNode = document.getElementById('today-total-used-amount-text');
+
+      if (pageTotal) {
+        pageTotal.textContent = logCount;
       }
-      container.innerHTML = '';
-      if (total <= 1) {
+      if (countNode) {
+        countNode.textContent = logCount;
+      }
+      if (totalNode) {
+        totalNode.textContent = totalUsedAmount;
+      }
+    }
+
+    function refreshTodayLog(logs) {
+      const tbody = document.getElementById('today-log-tbody');
+      if (!tbody) {
         return;
       }
 
-      let start = Math.max(1, current - 2);
-      let end = Math.min(total, start + 4);
-      if (end - start < 4) {
-        start = Math.max(1, end - 4);
-      }
+      Array.from(tbody.querySelectorAll('tr:not(#today-log-empty)')).forEach((row) => {
+        row.remove();
+      });
 
-      const makeButton = (page) => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.textContent = page;
-        button.className = 'px-2 py-1 text-xs rounded-lg border transition-colors ' +
-          (page === current ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 text-slate-600 hover:bg-slate-100');
-        button.addEventListener('click', () => {
-          cardPage = page;
-          applyFilter();
+      let emptyRow = document.getElementById('today-log-empty');
+      if (logs && logs.length > 0) {
+        if (emptyRow) {
+          emptyRow.style.display = 'none';
+        }
+
+        logs.forEach((log) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td class="px-3 py-2 text-slate-700 font-medium">${log.itemName}</td>
+            <td class="px-3 py-2 text-right text-slate-600">${log.amount}개</td>
+            <td class="px-3 py-2 text-right text-slate-400">${log.usedAt}</td>
+          `;
+          tbody.appendChild(row);
         });
-        return button;
-      };
-
-      const makeDots = () => {
-        const span = document.createElement('span');
-        span.textContent = '...';
-        span.className = 'px-1 text-xs text-slate-400';
-        return span;
-      };
-
-      if (start > 1) {
-        container.appendChild(makeButton(1));
-        if (start > 2) {
-          container.appendChild(makeDots());
+      } else {
+        if (!emptyRow) {
+          emptyRow = document.createElement('tr');
+          emptyRow.id = 'today-log-empty';
+          emptyRow.innerHTML = '<td colspan="3" class="px-3 py-2 text-xs text-slate-400">오늘 출고 내역이 없습니다.</td>';
+          tbody.appendChild(emptyRow);
         }
+        emptyRow.style.display = '';
       }
 
-      for (let page = start; page <= end; page += 1) {
-        container.appendChild(makeButton(page));
-      }
-
-      if (end < total) {
-        if (end < total - 1) {
-          container.appendChild(makeDots());
-        }
-        container.appendChild(makeButton(total));
-      }
+      todayLogPage = 1;
+      renderTodayLog();
     }
 
-    function applyFilter() {
+    function buildFilteredCards() {
       const searchInput = document.getElementById('item-search');
       const query = searchInput ? searchInput.value.trim() : '';
-      const allCards = Array.from(document.querySelectorAll('#item-use-grid .item-card'));
-      const filtered = allCards.filter((card) => {
+      return Array.from(document.querySelectorAll('#item-use-grid .item-card')).filter((card) => {
         const categoryOk = !currentCategory || card.dataset.category === currentCategory;
         const itemName = card.querySelector('.item-name')?.textContent || '';
         const nameOk = itemMatches(itemName, query);
         return categoryOk && nameOk;
       });
+    }
 
+    function applyFilter() {
+      const allCards = Array.from(document.querySelectorAll('#item-use-grid .item-card'));
+      const filtered = buildFilteredCards();
       const totalPages = Math.max(1, Math.ceil(filtered.length / CARD_PAGE_SIZE));
       cardPage = Math.min(Math.max(1, cardPage), totalPages);
       const start = (cardPage - 1) * CARD_PAGE_SIZE;
@@ -456,7 +400,6 @@
           bar.style.removeProperty('display');
         }
       }
-      buildCardPageNumbers(cardPage, totalPages);
       if (prev) {
         prev.disabled = cardPage <= 1;
       }
@@ -464,6 +407,10 @@
         next.disabled = cardPage >= totalPages;
       }
 
+      buildPageButtons('card-grid-page-numbers', cardPage, totalPages, (page) => {
+        cardPage = page;
+        applyFilter();
+      });
       syncStateToUrl();
     }
 
@@ -480,8 +427,7 @@
     const todayLogNext = document.getElementById('today-log-next');
     if (todayLogNext) {
       todayLogNext.addEventListener('click', () => {
-        const rows = document.querySelectorAll('#today-log-tbody tr:not(#today-log-empty)');
-        const totalPages = Math.max(1, Math.ceil(rows.length / TODAY_LOG_PAGE_SIZE));
+        const totalPages = Math.max(1, Math.ceil(document.querySelectorAll('#today-log-tbody tr:not(#today-log-empty)').length / TODAY_LOG_PAGE_SIZE));
         if (todayLogPage < totalPages) {
           todayLogPage += 1;
           renderTodayLog();
@@ -500,10 +446,7 @@
     document.querySelectorAll('.item-cat-btn').forEach((button) => {
       button.addEventListener('click', () => {
         currentCategory = button.dataset.cat || '';
-        document.querySelectorAll('.item-cat-btn').forEach((target) => {
-          target.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors';
-        });
-        button.className = 'item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors';
+        setActiveCategoryButton(currentCategory);
         cardPage = 1;
         applyFilter();
       });
@@ -522,15 +465,7 @@
     const cardNext = document.getElementById('card-grid-next');
     if (cardNext) {
       cardNext.addEventListener('click', () => {
-        const searchInput = document.getElementById('item-search');
-        const query = searchInput ? searchInput.value.trim() : '';
-        const filtered = Array.from(document.querySelectorAll('#item-use-grid .item-card')).filter((card) => {
-          const categoryOk = !currentCategory || card.dataset.category === currentCategory;
-          const itemName = card.querySelector('.item-name')?.textContent || '';
-          const nameOk = itemMatches(itemName, query);
-          return categoryOk && nameOk;
-        });
-        const totalPages = Math.max(1, Math.ceil(filtered.length / CARD_PAGE_SIZE));
+        const totalPages = Math.max(1, Math.ceil(buildFilteredCards().length / CARD_PAGE_SIZE));
         if (cardPage < totalPages) {
           cardPage += 1;
           applyFilter();
@@ -538,97 +473,54 @@
       });
     }
 
-    function refreshTodayLog(logs) {
-      const tbody = document.getElementById('today-log-tbody');
-      if (!tbody) {
-        return;
-      }
-
-      Array.from(tbody.querySelectorAll('tr:not(#today-log-empty)')).forEach((row) => {
-        row.remove();
-      });
-
-      const emptyRow = document.getElementById('today-log-empty');
-      if (logs && logs.length > 0) {
-        if (emptyRow) {
-          emptyRow.style.display = 'none';
-        }
-        logs.forEach((log) => {
-          const row = document.createElement('tr');
-          const nameCell = document.createElement('td');
-          const amountCell = document.createElement('td');
-          const timeCell = document.createElement('td');
-
-          nameCell.className = 'px-3 py-2 text-slate-700 font-medium';
-          nameCell.textContent = log.itemName;
-          amountCell.className = 'px-3 py-2 text-right text-slate-600';
-          amountCell.textContent = `${log.amount}개`;
-          timeCell.className = 'px-3 py-2 text-right text-slate-400';
-          timeCell.textContent = log.usedAt;
-
-          row.appendChild(nameCell);
-          row.appendChild(amountCell);
-          row.appendChild(timeCell);
-          tbody.appendChild(row);
-        });
-      } else if (emptyRow) {
-        emptyRow.style.display = '';
-      }
-
-      todayLogPage = 1;
-      renderTodayLog();
-    }
-
     document.querySelectorAll('form[action$="/admin/item/use"]').forEach((form) => {
-      form.addEventListener('submit', (event) => {
+      form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const input = form.querySelector('input[name="amount"]');
         const value = input.value.trim();
         const amount = Number(value);
+
         if (value === '' || Number.isNaN(amount) || !Number.isInteger(amount) || amount <= 0) {
           alert('올바른 수량을 입력해 주세요. (1 이상 정수)');
           return;
         }
 
         const id = form.querySelector('input[name="id"]').value;
-        const csrfInput = form.querySelector('input[type="hidden"][name="_csrf"]')
-          || form.querySelector('input[type="hidden"]:not([name="id"]):not([name="fromDate"]):not([name="toDate"])');
+        const csrfInput = form.querySelector('input[type="hidden"]:not([name="id"])');
+        if (!csrfInput) {
+          alert('보안 토큰을 찾을 수 없습니다. 화면을 새로고침한 뒤 다시 시도해 주세요.');
+          return;
+        }
         const params = new URLSearchParams();
-        const currentParams = new URLSearchParams(window.location.search);
         params.append('id', id);
         params.append('amount', value);
-        if (currentParams.has('fromDate')) params.append('fromDate', currentParams.get('fromDate'));
-        if (currentParams.has('toDate')) params.append('toDate', currentParams.get('toDate'));
         params.append(csrfInput.name, csrfInput.value);
 
-        fetch('/admin/item/use', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: params.toString()
-        })
-          .then((response) => {
-            if (!response.ok) {
-              return response.json().then((data) => {
-                alert(data.error || '서버 오류가 발생했습니다.');
-                throw new Error('server error');
-              });
-            }
-            return response.json();
-          })
-          .then((data) => {
-            if (data.quantity !== undefined) {
-              form.closest('.item-card').querySelector('.quantity-span').textContent = data.quantity;
-              input.value = '';
-              refreshTodayLog(data.logs || []);
-            } else if (data.error) {
-              alert(data.error);
-            }
-          })
-          .catch((error) => {
-            if (error.message !== 'server error') {
-              alert('오류가 발생했습니다. 다시 시도해 주세요.');
-            }
+        try {
+          const response = await fetch('/admin/item/use', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
           });
+          const data = await response.json();
+
+          if (!response.ok) {
+            alert(data.error || '서버 오류가 발생했습니다.');
+            return;
+          }
+
+          if (data.quantity !== undefined) {
+            const quantitySpan = form.closest('.item-card').querySelector('.quantity-span');
+            if (quantitySpan) {
+              quantitySpan.textContent = data.quantity;
+            }
+            input.value = '';
+            refreshTodayLog(data.logs || []);
+            refreshUsageSummary(data.todayLogCount ?? 0, data.todayTotalUsedAmount ?? 0);
+          }
+        } catch (error) {
+          alert('오류가 발생했습니다. 다시 시도해 주세요.');
+        }
       });
     });
 

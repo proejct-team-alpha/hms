@@ -305,4 +305,24 @@ class ItemManagerServiceTest {
                 fromDate.atStartOfDay(),
                 toDate.plusDays(1).atStartOfDay());
     }
+
+    @Test
+    @DisplayName("getTodayTotalStaffUsageAmount uses today range")
+    void getTodayTotalStaffUsageAmount_usesTodayRange() {
+        // given
+        LocalDate today = LocalDate.now();
+        given(usageLogRepository.sumAmountByReservationIdIsNullAndUsedAtRange(
+                today.atStartOfDay(),
+                today.plusDays(1).atStartOfDay()))
+                .willReturn(11L);
+
+        // when
+        long result = itemService.getTodayTotalStaffUsageAmount();
+
+        // then
+        assertThat(result).isEqualTo(11L);
+        then(usageLogRepository).should().sumAmountByReservationIdIsNullAndUsedAtRange(
+                today.atStartOfDay(),
+                today.plusDays(1).atStartOfDay());
+    }
 }
