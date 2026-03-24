@@ -109,6 +109,7 @@ public List<DoctorDto> getDoctors(@RequestParam("departmentId") Long departmentI
 | 2 | `DoctorRepository.java` | `LazyInitializationException` | `staff`가 LAZY 로딩인데 트랜잭션 밖에서 접근 | `JOIN FETCH d.staff` 쿼리로 즉시 로딩 |
 | 3 | `ReservationApiController.java` | `IllegalArgumentException` | `@RequestParam` 이름 미명시 + 컴파일러 `-parameters` 플래그 없음 | `@RequestParam("departmentId")` 명시 |
 | 4 | `DoctorRepository.java` | 트랜잭션 충돌 위험 | `jakarta.transaction.@Transactional`을 interface에 잘못 추가 | 제거 후 Spring `@Query` 방식으로 교체 |
+| 5 | `direct-reservation.mustache` | 의사 드롭다운 미표시 | API가 `Resp<List<DoctorDto>>` 래핑으로 변경됐으나 JS에서 `.body` 없이 배열로 직접 접근 | `await res.json()` → `(await res.json()).body` (AI 추천 자동 선택·진료과 change 이벤트 2곳) |
 
 ---
 
@@ -134,6 +135,7 @@ public List<DoctorDto> getDoctors(@RequestParam("departmentId") Long departmentI
 - [x] `GET /api/reservation/doctors?departmentId=1` → JSON 배열 응답
 - [x] sql_test.sql에 진료과 4개 + 의사 5명 샘플 데이터 존재
 - [x] 비로그인 상태에서 `/api/reservation/doctors` 호출 시 정상 응답
+- [x] 예약 시간 슬롯 16:00 ~ 17:30 추가 (기존 15:30까지 → 17:30까지 확장)
 
 ---
 

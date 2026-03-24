@@ -8,20 +8,23 @@
   <link rel="stylesheet" href="/css/flatpickr.min.css">
   <script src="/js/feather.min.js"></script>
   <script src="/js/flatpickr.min.js"></script>
+  <style>
+    .split-input { text-align: center; padding: 0.75rem 0.5rem !important; }
+  </style>
 </head>
-<body class="min-h-screen flex">
+<body class="min-h-screen flex bg-[#f8fafc]">
   {{> common/sidebar-staff}}
 
   <div class="main-content flex-1 flex flex-col ml-64">
     {{> common/header-staff}}
 
     <main class="content-wrapper flex-1 p-6">
-      <div class="max-w-2xl mx-auto">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-          <!-- [기능 구현] 상단 타이틀(제목 + 설명) 및 목록 돌아가기 버튼 정렬 개선 -->
-          <div class="flex items-start justify-between mb-8">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 shrink-0">
+      <div class="max-w-5xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-10">
+          
+          <div class="flex items-center justify-between mb-10 pb-6 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600">
                 <i data-feather="phone-call" class="w-6 h-6"></i>
               </div>
               <div>
@@ -29,134 +32,130 @@
                 <p class="text-slate-500 mt-1 text-sm">환자의 예약 정보를 등록합니다.</p>
               </div>
             </div>
-            <!-- 우측 상단 목록가기 링크 -->
-            <a href="/staff/reception/list" class="mt-2 text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center gap-1 transition-colors">
+            <a href="/staff/reception/list" class="text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center gap-1 transition-colors">
               <i data-feather="arrow-left" class="w-4 h-4"></i>
               목록으로 돌아가기
             </a>
           </div>
 
-          <form method="post" action="/staff/reservation/create" class="space-y-6">
+          <form method="post" action="/staff/reservation/create" class="space-y-10">
             <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">이름</label>
-                <div class="relative">
-                  <i data-feather="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input type="text" name="name" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="홍길동" value="{{#form}}{{name}}{{/form}}" />
+            <!-- [디자인 수정] 단 사이 간격을 60px로 조정하여 적절한 여백 확보 -->
+            <div class="flex flex-col md:flex-row" style="column-gap: 60px;">
+              
+              <!-- 왼쪽 단: 환자 기본 정보 -->
+              <div class="flex-1 space-y-6">
+                <div class="flex items-center gap-2 mb-4 text-purple-600">
+                  <i data-feather="user" class="w-4 h-4"></i>
+                  <h3 class="text-xs font-bold uppercase tracking-widest">환자 기본 정보</h3>
                 </div>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">연락처</label>
-                <!-- [기능 구현] 연락처를 3-4-4 형태의 세 칸으로 분리하여 입력받음 -->
-                <div class="flex items-center gap-2">
-                  <input type="text" id="phone1" maxlength="3" class="w-20 text-center py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="010" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                  <span class="text-slate-400">-</span>
-                  <input type="text" id="phone2" maxlength="4" class="w-24 text-center py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="1234" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                  <span class="text-slate-400">-</span>
-                  <input type="text" id="phone3" maxlength="4" class="w-24 text-center py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="5678" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                  <!-- 서버 전송을 위한 최종 합쳐진 번호 -->
-                  <input type="hidden" name="phone" id="finalPhone" value="{{#form}}{{phone}}{{/form}}">
-                </div>
-              </div>
-            </div>
 
-            <!-- [기능 구현] 주민번호(선택)와 이메일(선택)을 한 줄에 배치 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">주민번호 (선택)</label>
-                <div class="flex items-center gap-2">
-                  <input type="text" id="birthDate" maxlength="6" class="w-24 text-center py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="YYMMDD" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                  <span class="text-slate-400">-</span>
-                  <div class="flex items-center gap-1">
-                    <input type="text" id="genderDigit" maxlength="1" class="w-12 text-center py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="G" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                    <span class="text-slate-400 font-bold tracking-widest ml-1">******</span>
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2 ml-1">이름</label>
+                  <div class="relative">
+                    <i data-feather="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                    <input type="text" name="name" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none text-sm" placeholder="홍길동" value="{{#form}}{{name}}{{/form}}" />
                   </div>
-                  <input type="hidden" name="birthInfo" id="finalBirthInfo">
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2 ml-1">연락처</label>
+                  <div class="flex items-center gap-1.5">
+                    <input type="text" id="phone1" maxlength="3" class="split-input w-16 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 text-sm" placeholder="010" required />
+                    <span class="text-slate-400 font-bold">-</span>
+                    <input type="text" id="phone2" maxlength="4" class="split-input w-20 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 text-sm" placeholder="1234" required />
+                    <span class="text-slate-400 font-bold">-</span>
+                    <input type="text" id="phone3" maxlength="4" class="split-input w-20 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 text-sm" placeholder="5678" required />
+                    <input type="hidden" name="phone" id="finalPhone" value="{{#form}}{{phone}}{{/form}}">
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2 ml-1">주민번호 (선택)</label>
+                  <div class="flex items-center gap-1.5">
+                    <input type="text" id="birthDate" maxlength="6" class="split-input w-20 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 text-sm" placeholder="940101" />
+                    <span class="text-slate-400 font-bold">-</span>
+                    <div class="flex items-center gap-1">
+                      <input type="text" id="genderDigit" maxlength="1" class="split-input w-10 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 text-sm" placeholder="1" />
+                      <span class="text-slate-400 font-bold tracking-widest ml-1 text-sm">******</span>
+                    </div>
+                    <input type="hidden" name="birthInfo" id="finalBirthInfo">
+                  </div>
                 </div>
               </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">이메일 (선택)</label>
-                <div class="relative">
-                  <i data-feather="mail" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input type="email" name="email" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="example@email.com" value="{{#form}}{{email}}{{/form}}" />
+
+              <!-- 오른쪽 단: 예약 정보 설정 -->
+              <div class="flex-1 space-y-6">
+                <div class="flex items-center gap-2 mb-4 text-purple-600">
+                  <i data-feather="calendar" class="w-4 h-4"></i>
+                  <h3 class="text-xs font-bold uppercase tracking-widest">예약 정보 설정</h3>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2 ml-1">진료과</label>
+                    <select name="departmentId" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none bg-white text-sm">
+                      <option value="">선택해주세요</option>
+                      {{#departments}}
+                      <option value="{{id}}">{{name}}</option>
+                      {{/departments}}
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2 ml-1">전문의</label>
+                    <select name="doctorId" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none bg-white text-sm">
+                      <option value="">선택해주세요</option>
+                      {{#doctors}}
+                      <option value="{{id}}" data-dept-id="{{departmentId}}" data-available-days="{{availableDays}}">{{displayName}}</option>
+                      {{/doctors}}
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2 ml-1">예약 날짜</label>
+                    <div class="relative">
+                      <i data-feather="calendar" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                      <input type="text" name="date" id="dateInput" required readonly placeholder="날짜 선택" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none text-sm" />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2 ml-1">예약 시간</label>
+                    <div class="relative">
+                      <i data-feather="clock" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                      <select name="time" id="timeSelect" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none bg-white text-sm">
+                        <option value="">선택해주세요</option>
+                        <optgroup label="오전">
+                          <option value="09:00">09:00</option><option value="09:30">09:30</option><option value="10:00">10:00</option>
+                          <option value="10:30">10:30</option><option value="11:00">11:00</option><option value="11:30">11:30</option>
+                        </optgroup>
+                        <optgroup label="오후">
+                          <option value="14:00">14:00</option><option value="14:30">14:30</option><option value="15:00">15:00</option>
+                          <option value="15:30">15:30</option><option value="16:00">16:00</option><option value="16:30">16:30</option>
+                          <option value="17:00">17:00</option><option value="17:30">17:30</option>
+                        </optgroup>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2 ml-1">예약 사유</label>
+                  <input type="text" name="visitReason" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none text-sm" placeholder="감기, 건강검진 등" value="{{#form}}{{visitReason}}{{/form}}" />
                 </div>
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">진료과</label>
-                <select name="departmentId" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none bg-white">
-                  <option value="">선택해주세요</option>
-                  {{#departments}}
-                  <option value="{{id}}">{{name}}</option>
-                  {{/departments}}
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">전문의</label>
-                <select name="doctorId" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none bg-white">
-                  <option value="">선택해주세요</option>
-                  {{#doctors}}
-                  <option value="{{id}}" data-dept-id="{{departmentId}}" data-available-days="{{availableDays}}">{{displayName}}</option>
-                  {{/doctors}}
-                </select>
-              </div>
+            <div class="pt-6">
+              <label class="block text-sm font-medium text-slate-700 mb-2 ml-1">특이사항 및 메모</label>
+              <textarea name="notes" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none h-32 resize-none text-sm" placeholder="환자의 특이사항이나 메모를 입력하세요.">{{#form}}{{notes}}{{/form}}</textarea>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">예약 날짜</label>
-                <div class="relative">
-                  <i data-feather="calendar" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <input type="text" name="date" id="dateInput" required readonly placeholder="날짜 선택" class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" />
-                </div>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">예약 시간</label>
-                <div class="relative">
-                  <i data-feather="clock" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                  <select name="time" id="timeSelect" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none bg-white">
-                    <option value="">선택해주세요</option>
-                    <optgroup label="오전">
-                      <option value="09:00">09:00</option>
-                      <option value="09:30">09:30</option>
-                      <option value="10:00">10:00</option>
-                      <option value="10:30">10:30</option>
-                      <option value="11:00">11:00</option>
-                      <option value="11:30">11:30</option>
-                    </optgroup>
-                    <optgroup label="오후">
-                      <option value="14:00">14:00</option>
-                      <option value="14:30">14:30</option>
-                      <option value="15:00">15:00</option>
-                      <option value="15:30">15:30</option>
-                      <option value="16:00">16:00</option>
-                      <option value="16:30">16:30</option>
-                      <option value="17:00">17:00</option>
-                      <option value="17:30">17:30</option>
-                    </optgroup>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">예약 사유</label>
-                <textarea name="visitReason" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none min-h-24 resize-none" placeholder="환자의 예약 사유를 입력하세요.">{{#form}}{{visitReason}}{{/form}}</textarea>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">메모 (특이사항)</label>
-                <textarea name="notes" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none min-h-20 resize-none" placeholder="기타 참고할 메모 사항을 입력하세요.">{{#form}}{{notes}}{{/form}}</textarea>
-              </div>
-            </div>
-
-            <div class="pt-6 border-t border-slate-200">
-              <button type="submit" class="w-full py-4 bg-purple-600 text-white rounded-xl font-medium text-lg hover:bg-purple-700 transition-colors shadow-sm">
-                예약 등록하기
+            <div class="pt-8 flex justify-end">
+              <button type="submit" class="w-full md:w-72 py-4 bg-purple-600 text-white rounded-xl font-bold text-lg hover:bg-purple-700 transition-all shadow-lg active:scale-[0.98]">
+                등록
               </button>
             </div>
           </form>
@@ -168,9 +167,8 @@
   </div>
 
   <script>feather.replace();</script>
-  {{#message}}
-  <script>alert("{{message}}");</script>
-  {{/message}}
+  {{#message}}<script>alert("{{message}}");</script>{{/message}}
+  
   <script>
     (async function () {
       const deptSelect = document.querySelector('select[name="departmentId"]');
@@ -178,246 +176,90 @@
       const dateInput  = document.getElementById('dateInput');
       const timeSelect = document.getElementById('timeSelect');
       const docOptions = Array.from(docSelect.querySelectorAll('option[data-dept-id]'));
-
       const DAY_MAP = { SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6 };
 
-      // 진료과 → 의사 필터
       function filterDoctorsOnly() {
         const deptId = deptSelect.value;
-        docOptions.forEach(function(opt) {
-          opt.style.display = (!deptId || opt.dataset.deptId === deptId) ? '' : 'none';
-        });
-        if (docSelect.options[docSelect.selectedIndex] &&
-            docSelect.options[docSelect.selectedIndex].style.display === 'none') {
-          docSelect.value = '';
-        }
+        docOptions.forEach(opt => opt.style.display = (!deptId || opt.dataset.deptId === deptId) ? '' : 'none');
+        if (docSelect.options[docSelect.selectedIndex] && docSelect.options[docSelect.selectedIndex].style.display === 'none') docSelect.value = '';
       }
 
-      // booked-slots API 호출 → 예약 불가 시간 비활성화
       async function refreshTimeSlots() {
-  const doctorId = docSelect.value;
-  const date     = dateInput.value;
-  const opts     = Array.from(timeSelect.querySelectorAll('option[value]'));
-
-  // 1. 초기화
-  opts.forEach(function(opt) {
-    opt.disabled = false;
-    opt.textContent = opt.value;
-  });
-
-  if (!doctorId || !date) return;
-
-  try {
-    const res = await fetch('/api/reservation/booked-slots?doctorId=' + doctorId + '&date=' + date);
-    if (!res.ok) throw new Error();
-
-    const booked = await res.json();
-
-    // 2. 예약 불가 처리
-    opts.forEach(function(opt) {
-      if (booked.includes(opt.value)) {
-        opt.disabled = true;
-        opt.textContent = opt.value + ' (예약불가)';
+        const doctorId = docSelect.value;
+        const date = dateInput.value;
+        const opts = Array.from(timeSelect.querySelectorAll('option[value]'));
+        opts.forEach(opt => { opt.disabled = false; opt.textContent = opt.value; });
+        if (!doctorId || !date) return;
+        try {
+          const res = await fetch('/api/reservation/booked-slots?doctorId=' + doctorId + '&date=' + date);
+          if (!res.ok) throw new Error();
+          const booked = await res.json();
+          opts.forEach(opt => { if (booked.includes(opt.value)) { opt.disabled = true; opt.textContent = opt.value + ' (불가)'; } });
+          const today = new Date().toISOString().slice(0, 10);
+          if (date === today) {
+            const now = new Date();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+            opts.forEach(opt => {
+              const [h, m] = opt.value.split(':').map(Number);
+              if (h * 60 + m <= currentTime) { opt.disabled = true; opt.textContent = opt.value + ' (마감)'; }
+            });
+          }
+          timeSelect.value = '';
+          const first = opts.find(opt => !opt.disabled && opt.value);
+          if (first) timeSelect.value = first.value;
+        } catch (e) { console.error('슬롯 조회 실패'); }
       }
-    });
 
-    // 3. 오늘 기준 마감 처리
-    const today = new Date().toISOString().slice(0, 10);
-
-    if (date === today) {
-      const now = new Date();
-      const currentTime = now.getHours() * 60 + now.getMinutes();
-
-      opts.forEach(function(opt) {
-        const [hour, minute] = opt.value.split(':').map(Number);
-        const optionTime = hour * 60 + minute;
-
-        if (optionTime <= currentTime) {
-          opt.disabled = true;
-          opt.textContent = opt.value + ' (마감)';
-        }
-      });
-    }
-
-    
-
-    // 5. 자동 추천 (가장 빠른 시간 선택)
-    timeSelect.value = ''; // 기존 선택 초기화
-
-const firstAvailable = opts.find(opt => !opt.disabled && opt.value);
-
-if (firstAvailable) {
-  timeSelect.value = firstAvailable.value;
-}
-
-  } catch (e) {
-    console.error('슬롯 조회 실패');
-  }
-}
-
-      // Flatpickr 초기화 (의사 선택 전: 전체 날짜 비활성)
       const datePicker = flatpickr(dateInput, {
-        dateFormat: 'Y-m-d',
-        minDate: 'today',
-        animate: false,
+        dateFormat: 'Y-m-d', minDate: 'today', animate: false,
         disable: [function() { return true; }],
         onChange: function() { refreshTimeSlots(); }
       });
 
-      // 의사 availableDays → Flatpickr 갱신
       async function applyDoctorAvailableDays(autoSelect = false) {
-        const selectedOption   = docSelect.options[docSelect.selectedIndex];
-        
-        if (!selectedOption || !selectedOption.value) {
-          datePicker.set('disable', [function() { return true; }]);
-          datePicker.clear();
-          Array.from(timeSelect.querySelectorAll('option[value]')).forEach(function(opt) {
-            opt.disabled = false;
-            opt.textContent = opt.value;
-          });
-          timeSelect.value = '';
-          return;
-        }
-
-        const availableDaysStr = selectedOption.dataset.availableDays || '';
-        const availableDayNums = availableDaysStr
-          .split(',')
-          .map(function(d) { return DAY_MAP[d.trim()]; })
-          .filter(function(n) { return n !== undefined; });
-
-        if (availableDayNums.length > 0) {
-          datePicker.set('disable', [
-            function(date) { return !availableDayNums.includes(date.getDay()); }
-          ]);
-
+        const selected = docSelect.options[docSelect.selectedIndex];
+        if (!selected || !selected.value) { datePicker.set('disable', [() => true]); datePicker.clear(); return; }
+        const days = (selected.dataset.availableDays || '').split(',').map(d => DAY_MAP[d.trim()]).filter(n => n !== undefined);
+        if (days.length > 0) {
+          datePicker.set('disable', [d => !days.includes(d.getDay())]);
           if (autoSelect) {
-            // 가장 빠른 예약 가능 날짜 찾기
             let d = new Date();
-            const now = new Date();
-            const currentMinutes = now.getHours() * 60 + now.getMinutes();
-            const lastSlotMinutes = 17 * 60 + 30; // 마지막 슬롯 17:30
-
-            let foundDate = null;
             for (let i = 0; i < 30; i++) {
-              if (availableDayNums.includes(d.getDay())) {
-                if (i === 0 && currentMinutes >= lastSlotMinutes) {
-                  // 오늘 마감 시간 지남
-                } else {
-                  foundDate = new Date(d);
-                  break;
-                }
-              }
+              if (days.includes(d.getDay())) { datePicker.setDate(new Date(d), true); break; }
               d.setDate(d.getDate() + 1);
             }
-
-            if (foundDate) {
-              datePicker.setDate(foundDate, true); // onChange 트리거 -> refreshTimeSlots 호출됨
-              return;
-            } else {
-              datePicker.clear();
-            }
           }
-        } else {
-          datePicker.set('disable', [function() { return true; }]);
-          datePicker.clear();
         }
-
-        // 시간 슬롯 초기화 (수동 선택 시)
-        Array.from(timeSelect.querySelectorAll('option[value]')).forEach(function(opt) {
-          opt.disabled = false;
-          opt.textContent = opt.value;
-        });
-        timeSelect.value = '';
       }
 
-      deptSelect.addEventListener('change', function() { filterDoctorsOnly(); applyDoctorAvailableDays(true); });
-      docSelect.addEventListener('change', function() { applyDoctorAvailableDays(true); });
+      deptSelect.addEventListener('change', () => { filterDoctorsOnly(); applyDoctorAvailableDays(true); });
+      docSelect.addEventListener('change', () => applyDoctorAvailableDays(true));
 
-      // 폼 오류 복원
-      const restoreDeptId = '{{#form}}{{departmentId}}{{/form}}';
-      const restoreDocId  = '{{#form}}{{doctorId}}{{/form}}';
-      const restoreDate   = '{{#form}}{{date}}{{/form}}';
-      const restoreTime   = '{{#form}}{{time}}{{/form}}';
-
-      if (restoreDeptId) deptSelect.value = restoreDeptId;
-      filterDoctorsOnly();
-      if (restoreDocId) docSelect.value = restoreDocId;
-      applyDoctorAvailableDays();
+      const restoreDeptId = '{{#form}}{{departmentId}}{{/form}}', restoreDocId = '{{#form}}{{doctorId}}{{/form}}';
+      const restoreDate = '{{#form}}{{date}}{{/form}}', restoreTime = '{{#form}}{{time}}{{/form}}';
+      if (restoreDeptId) { deptSelect.value = restoreDeptId; filterDoctorsOnly(); }
+      if (restoreDocId) { docSelect.value = restoreDocId; applyDoctorAvailableDays(); }
       if (restoreDate) datePicker.setDate(restoreDate);
       await refreshTimeSlots();
       if (restoreTime) timeSelect.value = restoreTime;
     })();
 
-    
+    (function() {
+      const p1 = document.getElementById('phone1'), p2 = document.getElementById('phone2'), p3 = document.getElementById('phone3'), final = document.getElementById('finalPhone');
+      const bDate = document.getElementById('birthDate'), gDigit = document.getElementById('genderDigit'), finalBirth = document.getElementById('finalBirthInfo');
+      const initVal = final.value.replace(/-/g, '');
+      if (initVal.length >= 3) p1.value = initVal.slice(0, 3);
+      if (initVal.length >= 7) p2.value = initVal.slice(3, 7);
+      if (initVal.length >= 11) p3.value = initVal.slice(7, 11);
+      function update() {
+        final.value = (p1.value && p2.value && p3.value) ? `${p1.value}-${p2.value}-${p3.value}` : '';
+        finalBirth.value = (bDate.value && gDigit.value) ? `${bDate.value}-${gDigit.value}` : '';
+      }
+      [p1,p2,p3,bDate,gDigit].forEach(el => el.addEventListener('input', update));
+      p1.addEventListener('input', () => { if (p1.value.length >= 3) p2.focus(); });
+      p2.addEventListener('input', () => { if (p2.value.length >= 4) p3.focus(); });
+      bDate.addEventListener('input', () => { if (bDate.value.length >= 6) gDigit.focus(); });
+    })();
   </script>
-
-
-<script>
-/* [기능 구현] 연락처 세 칸 입력 및 자동 포커스 이동 로직 */
-(function() {
-  const p1 = document.getElementById('phone1');
-  const p2 = document.getElementById('phone2');
-  const p3 = document.getElementById('phone3');
-  const final = document.getElementById('finalPhone');
-
-  // [주석] 기존 값이 있을 경우(수정 시) 세 칸에 나눠서 뿌려줌
-  const initialValue = final.value.replace(/-/g, '');
-  if (initialValue.length >= 3) p1.value = initialValue.slice(0, 3);
-  if (initialValue.length >= 7) p2.value = initialValue.slice(3, 7);
-  if (initialValue.length >= 11) p3.value = initialValue.slice(7, 11);
-
-  function updateFinal() {
-    if (p1.value && p2.value && p3.value) {
-      final.value = `${p1.value}-${p2.value}-${p3.value}`;
-    } else {
-      final.value = '';
-    }
-  }
-
-  function handleInput(e, nextEl) {
-    const el = e.target;
-    if (el.value.length >= el.maxLength && nextEl) {
-      nextEl.focus();
-    }
-    updateFinal();
-  }
-
-  function handleKeyDown(e, prevEl) {
-    if (e.key === 'Backspace' && e.target.value.length === 0 && prevEl) {
-      prevEl.focus();
-    }
-  }
-
-  p1.addEventListener('input', (e) => handleInput(e, p2));
-  p2.addEventListener('input', (e) => handleInput(e, p3));
-  p3.addEventListener('input', (e) => handleInput(e, null));
-
-  p2.addEventListener('keydown', (e) => handleKeyDown(e, p1));
-  p3.addEventListener('keydown', (e) => handleKeyDown(e, p2));
-
-  /* [기능 구현] 주민번호 자동 포커스 및 데이터 합치기 */
-  const bDate = document.getElementById('birthDate');
-  const gDigit = document.getElementById('genderDigit');
-  const finalBirth = document.getElementById('finalBirthInfo');
-
-  function updateBirthInfo() {
-    if (bDate.value && gDigit.value) {
-      finalBirth.value = `${bDate.value}-${gDigit.value}`;
-    } else {
-      finalBirth.value = '';
-    }
-  }
-
-  bDate.addEventListener('input', () => {
-    if (bDate.value.length >= 6) gDigit.focus();
-    updateBirthInfo();
-  });
-  gDigit.addEventListener('input', updateBirthInfo);
-  gDigit.addEventListener('keydown', (e) => {
-    if (e.key === 'Backspace' && gDigit.value.length === 0) bDate.focus();
-  });
-})();
-</script>
-
 </body>
 </html>

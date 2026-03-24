@@ -40,10 +40,10 @@ class SymptomAnalysisServiceTest {
     }
 
     @Test
-    @DisplayName("정상 LLM 응답 - 진료과명 추출 및 DB 매칭 성공")
+    @DisplayName("정상 LLM 응답 - 진료과명 및 이유 추출, DB 매칭 성공")
     void analyzeSymptom_정상응답_매칭성공() {
         // given
-        String llmText = "진료과: 내과\n증상 분석 결과 소화기 문제로 판단됩니다.";
+        String llmText = "진료과: 내과\n이유: 소화기 관련 증상으로 내과 진료가 적합합니다.";
         given(llmWebClient.post().uri(anyString()).bodyValue(any()).retrieve()
                 .bodyToMono(LlmResponse.class))
                 .willReturn(Mono.just(new LlmResponse(llmText)));
@@ -57,6 +57,7 @@ class SymptomAnalysisServiceTest {
         // then
         assertThat(response).isNotNull();
         assertThat(response.getDepartmentName()).isEqualTo("내과");
+        assertThat(response.getReason()).isEqualTo("소화기 관련 증상으로 내과 진료가 적합합니다.");
     }
 
     @Test

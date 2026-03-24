@@ -116,10 +116,13 @@ public class SecurityConfig {
                         .contentSecurityPolicy(csp -> csp
                                 .policyDirectives(
                                         "default-src 'self'; " +
-                                                "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
+                                                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://t1.daumcdn.net https://t1.kakaocdn.net; " +
                                                 "style-src 'self' 'unsafe-inline'; " +
-                                                "img-src 'self' data:; " +
+                                                "img-src 'self' data: https://t1.daumcdn.net https://t1.kakaocdn.net; " +
+                                                "connect-src 'self' https://postcode.map.daum.net https://postcode.map.kakao.com http://postcode.map.kakao.com; " +
                                                 "font-src 'self'; " +
+                                                "frame-src 'self' https://postcode.map.daum.net https://postcode.map.kakao.com http://postcode.map.kakao.com; " +
+                                                "child-src 'self' https://postcode.map.daum.net https://postcode.map.kakao.com http://postcode.map.kakao.com; " +
                                                 "frame-ancestors 'self'"))
                         .httpStrictTransportSecurity(hsts -> hsts
                                 .maxAgeInSeconds(31536000)

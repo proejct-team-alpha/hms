@@ -157,4 +157,12 @@ GET /api/reservation/booked-slots?doctorId=&date=[&excludeId=]
 ## 특이사항
 - `@Pattern` 정규식에 `^$|` 접두사 추가 — `@NotBlank`와 분리하여 단일 에러 메시지 보장
 - Hibernate nullable Long JPQL 바인딩 이슈로 repository 메서드 2개 분리 (설계 문서 반영)
+
+---
+
+## 후속 수정 (2026-03-24)
+
+| 파일 | 버그 | 원인 | 수정 |
+|------|------|------|------|
+| `direct-reservation.mustache` | Flatpickr 날짜 선택 시 예약 불가 슬롯 비활성화 미동작 | `/api/reservation/booked-slots` 응답이 `Resp<List<String>>` 래핑이지만 JS에서 `.body` 없이 배열로 직접 접근 → `booked.includes()` 오류 | `await res.json()` → `(await res.json()).body` |
 - `data-original-text` 패턴으로 슬롯 텍스트 반복 변형 방지 (날짜 재선택 시 "(예약불가)(예약불가)" 중복 방지)
