@@ -99,164 +99,232 @@
             </div>
           </div>
 
-          <!-- 하단: 진료 기록 작성 or 완료된 기록 (전체 너비) -->
-          <div class="w-full bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col">
-            <div class="p-6 border-b border-slate-200 flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <i data-feather="file-text" class="w-5 h-5 text-indigo-600"></i>
-                <h2 class="text-lg font-bold text-slate-800">진료 기록</h2>
+          <!-- 하단: 진료 영역 (좌우 2:1 분할) -->
+          <div class="grid grid-cols-3 gap-6 items-start">
+            <!-- 왼쪽: 진료 기록 작성 or 완료된 기록 (2/3 너비) -->
+            <div class="col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col min-h-[650px]">
+              <div class="p-6 border-b border-slate-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i data-feather="file-text" class="w-5 h-5 text-indigo-600"></i>
+                  <h2 class="text-lg font-bold text-slate-800">진료 기록</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                  {{#detail.canComplete}}
+                    {{#detail.canStartTreatment}}
+                      <form method="post" action="/doctor/treatment/start">
+                        <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                        <input type="hidden" name="id" value="{{detail.reservationId}}">
+                        <button type="submit"
+                                class="px-4 py-2 text-sm font-medium rounded-lg shadow-sm flex items-center gap-1.5 transition-colors hover:opacity-90"
+                                style="background-color:#ea580c;color:#fff;">
+                          <i data-feather="play" class="w-4 h-4"></i>
+                          진료 시작
+                        </button>
+                      </form>
+                    {{/detail.canStartTreatment}}
+                    <button type="submit"
+                            form="complete-form"
+                            formaction="/doctor/treatment/save"
+                            class="px-4 py-2 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-900 transition-colors shadow-sm flex items-center gap-1.5">
+                      <i data-feather="save" class="w-4 h-4"></i>
+                      저장
+                    </button>
+                  {{/detail.canComplete}}
+                </div>
               </div>
-              <div class="flex items-center gap-2">
-                {{#detail.canComplete}}
-                  {{#detail.canStartTreatment}}
-                    <form method="post" action="/doctor/treatment/start">
-                      <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
-                      <input type="hidden" name="id" value="{{detail.reservationId}}">
-                      <button type="submit"
-                              class="px-4 py-2 text-sm font-medium rounded-lg shadow-sm flex items-center gap-1.5 transition-colors hover:opacity-90"
-                              style="background-color:#ea580c;color:#fff;">
-                        <i data-feather="play" class="w-4 h-4"></i>
-                        진료 시작
-                      </button>
-                    </form>
-                  {{/detail.canStartTreatment}}
-                  <button type="submit"
-                          form="complete-form"
-                          formaction="/doctor/treatment/save"
-                          class="px-4 py-2 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-900 transition-colors shadow-sm flex items-center gap-1.5">
-                    <i data-feather="save" class="w-4 h-4"></i>
-                    저장
+
+              {{#detail.canComplete}}
+                <!-- 진료 기록 작성 폼 -->
+                <form id="complete-form" action="/doctor/treatment/complete" method="post" class="flex-1 flex flex-col">
+                  <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                  <input type="hidden" name="id" value="{{detail.reservationId}}">
+
+                  <div class="p-6 flex-1 flex flex-col gap-5">
+                    <div class="flex flex-col">
+                      <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">진단명</label>
+                      <textarea
+                        name="diagnosis"
+                        required
+                        rows="2"
+                        class="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-slate-700 leading-relaxed shadow-sm"
+                        placeholder="진단명을 입력해주세요."
+                      >{{#detail.diagnosis}}{{detail.diagnosis}}{{/detail.diagnosis}}</textarea>
+                    </div>
+                    
+                    <div class="flex-1 flex flex-col">
+                      <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">진료 소견 (SOAP)</label>
+                      <textarea
+                        name="remark"
+                        required
+                        class="flex-1 w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-slate-700 leading-relaxed shadow-sm"
+                        placeholder="진료 소견(SOAP)을 입력해주세요."
+                      >{{#detail.remark}}{{detail.remark}}{{/detail.remark}}</textarea>
+                    </div>
+
+                    <div class="flex flex-col">
+                      <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">처방 내역</label>
+                      <textarea
+                        name="prescription"
+                        required
+                        rows="3"
+                        class="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-slate-700 leading-relaxed shadow-sm"
+                        placeholder="처방 내역을 입력해주세요."
+                      >{{#detail.prescription}}{{detail.prescription}}{{/detail.prescription}}</textarea>
+                    </div>
+                  </div>
+                </form>
+
+                <!-- 푸터: 진료 완료 버튼 -->
+                <div class="p-6 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex justify-end items-center">
+                  <button
+                    type="submit"
+                    form="complete-form"
+                    class="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2"
+                  >
+                    <i data-feather="check-circle" class="w-5 h-5"></i>
+                    진료 완료
                   </button>
-                {{/detail.canComplete}}
-              </div>
+                </div>
+              {{/detail.canComplete}}
+
+              {{^detail.canComplete}}
+                <!-- 완료된 진료 기록 조회 -->
+                <div class="p-6 flex-1 flex flex-col gap-6">
+                  {{#detail.diagnosis}}
+                    <div class="space-y-6">
+                      <div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">진단명</h3>
+                        <div class="bg-slate-50 text-slate-700 p-4 rounded-xl text-sm border border-slate-100 leading-relaxed whitespace-pre-wrap font-semibold">{{detail.diagnosis}}</div>
+                      </div>
+                      <div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">진료 소견 (SOAP)</h3>
+                        <div class="bg-slate-50 text-slate-700 p-4 rounded-xl text-sm border border-slate-100 leading-relaxed whitespace-pre-wrap">{{detail.remark}}</div>
+                      </div>
+                      <div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">처방 내역</h3>
+                        <div class="bg-indigo-50 text-indigo-900 p-4 rounded-xl text-sm border border-indigo-100 leading-relaxed whitespace-pre-wrap">{{detail.prescription}}</div>
+                      </div>
+                    </div>
+                  {{/detail.diagnosis}}
+                  {{^detail.diagnosis}}
+                    <div class="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
+                      <i data-feather="inbox" class="w-12 h-12 opacity-20"></i>
+                      <p>기록된 진료 내용이 없습니다.</p>
+                    </div>
+                  {{/detail.diagnosis}}
+
+                  <div class="space-y-3 pt-4 border-t border-slate-100">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">사용한 물품 내역</h3>
+                    <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+                      <table class="w-full text-xs">
+                        <thead class="bg-slate-100 text-slate-500">
+                          <tr>
+                            <th class="px-3 py-2 text-left font-medium">물품명</th>
+                            <th class="px-3 py-2 text-left font-medium">사용자</th>
+                            <th class="px-3 py-2 text-right font-medium">수량</th>
+                            <th class="px-3 py-2 text-right font-medium">시간</th>
+                          </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                          {{#usageLogs}}
+                          <tr>
+                            <td class="px-3 py-2 text-slate-700 font-medium">{{itemName}}</td>
+                            <td class="px-3 py-2 text-slate-500">{{usedBy}}</td>
+                            <td class="px-3 py-2 text-right text-slate-600">{{amount}}개</td>
+                            <td class="px-3 py-2 text-right text-slate-400">{{usedAt}}</td>
+                          </tr>
+                          {{/usageLogs}}
+                          {{^usageLogs}}
+                          <tr><td colspan="4" class="px-3 py-2 text-xs text-slate-400 text-center">사용한 물품이 없습니다.</td></tr>
+                          {{/usageLogs}}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="p-6 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex items-center justify-between">
+                  <span class="text-sm font-medium text-green-600 flex items-center gap-1">
+                    <i data-feather="check-circle" class="w-4 h-4"></i>
+                    진료 완료됨
+                  </span>
+                  <a href="/doctor/treatment-list?date={{detail.reservationDate}}&tab=completed" class="text-sm font-bold text-indigo-600 hover:text-indigo-800">
+                    목록으로 돌아가기
+                  </a>
+                </div>
+              {{/detail.canComplete}}
             </div>
 
-            {{#detail.canComplete}}
-              <!-- 진료 기록 작성 폼 -->
-              <form id="complete-form" action="/doctor/treatment/complete" method="post" class="flex-1 flex flex-col">
-                <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
-                <input type="hidden" name="id" value="{{detail.reservationId}}">
-
-                <div class="p-6 flex-1 flex flex-col gap-5">
-                  <div class="flex flex-col">
-                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">진단명</label>
-                    <textarea
-                      name="diagnosis"
-                      required
-                      rows="2"
-                      class="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-slate-700 leading-relaxed shadow-sm"
-                      placeholder="진단명을 입력해주세요."
-                    >{{#detail.diagnosis}}{{detail.diagnosis}}{{/detail.diagnosis}}</textarea>
+            <!-- 오른쪽: 과거 진료 이력 (1/3 너비) -->
+            <div class="col-span-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col min-h-[650px] max-h-[650px]">
+              <div class="p-6 border-b border-slate-200 bg-slate-50 flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <i data-feather="clock" class="w-5 h-5 text-indigo-600"></i>
+                    <h2 class="text-lg font-bold text-slate-800">과거 진료 이력</h2>
                   </div>
                   
-                  <div class="flex-1 flex flex-col">
-                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">진료 소견 (SOAP)</label>
-                    <textarea
-                      name="remark"
-                      required
-                      class="flex-1 w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-slate-700 leading-relaxed shadow-sm"
-                      placeholder="진료 소견(SOAP)을 입력해주세요."
-                    >{{#detail.remark}}{{detail.remark}}{{/detail.remark}}</textarea>
-                  </div>
-
-                  <div class="flex flex-col">
-                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">처방 내역</label>
-                    <textarea
-                      name="prescription"
-                      required
-                      rows="3"
-                      class="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-slate-700 leading-relaxed shadow-sm"
-                      placeholder="처방 내역을 입력해주세요."
-                    >{{#detail.prescription}}{{detail.prescription}}{{/detail.prescription}}</textarea>
+                  <!-- 페이징 컨트롤 -->
+                  <div id="history-pagination" class="flex items-center gap-2" style="display: none;">
+                    <button type="button" id="history-prev" class="p-1 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-indigo-600 disabled:opacity-30 transition-all">
+                      <i data-feather="chevron-left" class="w-4 h-4"></i>
+                    </button>
+                    <span class="text-[10px] font-bold text-slate-500">
+                      <span id="history-current-page" class="text-indigo-600">1</span>/<span id="history-total-pages">1</span>
+                    </span>
+                    <button type="button" id="history-next" class="p-1 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-indigo-600 disabled:opacity-30 transition-all">
+                      <i data-feather="chevron-right" class="w-4 h-4"></i>
+                    </button>
                   </div>
                 </div>
-              </form>
-
-              <!-- 푸터: 진료 완료 버튼 -->
-              <div class="p-6 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex justify-end items-center">
-                <button
-                  type="submit"
-                  form="complete-form"
-                  class="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2"
-                >
-                  <i data-feather="check-circle" class="w-5 h-5"></i>
-                  진료 완료
-                </button>
+                
+                <div class="flex flex-col gap-2">
+                  <select id="filter-dept" class="text-[11px] border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                    <option value="">전체 진료과</option>
+                    {{#detail.filterDepartments}}
+                    <option value="{{id}}">{{name}}</option>
+                    {{/detail.filterDepartments}}
+                  </select>
+                  <select id="filter-doctor" class="text-[11px] border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                    <option value="">전체 의사</option>
+                    {{#detail.filterDoctors}}
+                    <option value="{{id}}" data-dept-id="{{departmentId}}">{{displayName}}</option>
+                    {{/detail.filterDoctors}}
+                  </select>
+                </div>
               </div>
-            {{/detail.canComplete}}
-
-            {{^detail.canComplete}}
-              <!-- 완료된 진료 기록 조회 -->
-              <div class="p-6 flex-1 flex flex-col gap-6">
-                {{#detail.diagnosis}}
-                  <div class="space-y-6">
-                    <div>
-                      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">진단명</h3>
-                      <div class="bg-slate-50 text-slate-700 p-4 rounded-xl text-sm border border-slate-100 leading-relaxed whitespace-pre-wrap font-semibold">{{detail.diagnosis}}</div>
-                    </div>
-                    <div>
-                      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">진료 소견 (SOAP)</h3>
-                      <div class="bg-slate-50 text-slate-700 p-4 rounded-xl text-sm border border-slate-100 leading-relaxed whitespace-pre-wrap">{{detail.remark}}</div>
-                    </div>
-                    <div>
-                      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">처방 내역</h3>
-                      <div class="bg-indigo-50 text-indigo-900 p-4 rounded-xl text-sm border border-indigo-100 leading-relaxed whitespace-pre-wrap">{{detail.prescription}}</div>
-                    </div>
+              
+              <div class="p-4 flex-1 overflow-y-auto custom-scrollbar bg-white">
+                {{#detail.history.size}}
+                  <div id="history-list-container" class="space-y-4 relative before:absolute before:inset-0 before:left-3 before:w-0.5 before:bg-slate-50 before:content-['']">
+                    {{#detail.history}}
+                      <div class="history-item relative pl-8 transition-all duration-300" data-dept-id="{{deptId}}" data-doctor-id="{{doctorId}}">
+                        <div class="absolute left-2 top-1.5 w-2 h-2 rounded-full bg-white border-2 border-indigo-500 shadow-sm"></div>
+                        <div class="bg-slate-50/50 rounded-xl p-4 border border-slate-100 space-y-3 transition-all hover:border-indigo-200 hover:bg-white">
+                          <div class="flex justify-between items-start">
+                            <div class="text-[11px] font-bold text-slate-800">{{date}}</div>
+                            <div class="text-[9px] text-slate-400 font-medium">{{deptName}}·{{doctorName}}</div>
+                          </div>
+                          <div class="text-xs font-bold text-slate-700 leading-tight">{{diagnosis}}</div>
+                          <div class="text-[10px] text-slate-500 bg-white/80 p-2 rounded-lg border border-slate-50 line-clamp-2 overflow-hidden">{{prescription}}</div>
+                        </div>
+                      </div>
+                    {{/detail.history}}
                   </div>
-                {{/detail.diagnosis}}
-                {{^detail.diagnosis}}
+                {{/detail.history.size}}
+                {{^detail.history.size}}
                   <div class="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
-                    <i data-feather="inbox" class="w-12 h-12 opacity-20"></i>
-                    <p>기록된 진료 내용이 없습니다.</p>
+                    <i data-feather="folder" class="w-8 h-8 opacity-20"></i>
+                    <p class="text-[11px] font-medium">과거 진료 기록이 없습니다.</p>
                   </div>
-                {{/detail.diagnosis}}
-
-                <div class="space-y-3 pt-4 border-t border-slate-100">
-                  <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">사용한 물품 내역</h3>
-                  <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
-                    <table class="w-full text-xs">
-                      <thead class="bg-slate-100 text-slate-500">
-                        <tr>
-                          <th class="px-3 py-2 text-left font-medium">물품명</th>
-                          <th class="px-3 py-2 text-left font-medium">사용자</th>
-                          <th class="px-3 py-2 text-right font-medium">수량</th>
-                          <th class="px-3 py-2 text-right font-medium">시간</th>
-                        </tr>
-                      </thead>
-                      <tbody class="divide-y divide-slate-100">
-                        {{#usageLogs}}
-                        <tr>
-                          <td class="px-3 py-2 text-slate-700 font-medium">{{itemName}}</td>
-                          <td class="px-3 py-2 text-slate-500">{{usedBy}}</td>
-                          <td class="px-3 py-2 text-right text-slate-600">{{amount}}개</td>
-                          <td class="px-3 py-2 text-right text-slate-400">{{usedAt}}</td>
-                        </tr>
-                        {{/usageLogs}}
-                        {{^usageLogs}}
-                        <tr><td colspan="4" class="px-3 py-2 text-xs text-slate-400 text-center">사용한 물품이 없습니다.</td></tr>
-                        {{/usageLogs}}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                {{/detail.history.size}}
               </div>
-
-              <div class="p-6 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex items-center justify-between">
-                <span class="text-sm font-medium text-green-600 flex items-center gap-1">
-                  <i data-feather="check-circle" class="w-4 h-4"></i>
-                  진료 완료됨
-                </span>
-                <a href="/doctor/treatment-list?date={{detail.reservationDate}}&tab=completed" class="text-sm font-bold text-indigo-600 hover:text-indigo-800">
-                  목록으로 돌아가기
-                </a>
-              </div>
-            {{/detail.canComplete}}
+            </div>
           </div>
-        </div>
 
-        {{#detail.canComplete}}
-        <!-- 물품 사용 섹션 -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+          {{#detail.canComplete}}
+          <!-- 물품 사용 섹션 (작성 시 하단 전체 너비 유지) -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
           <div class="flex items-center gap-4">
             <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
               <i data-feather="package" class="w-5 h-5 text-indigo-600"></i>
