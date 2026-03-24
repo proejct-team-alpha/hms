@@ -27,7 +27,7 @@ from medical_context_service import build_medical_context, close_pool, get_pool
 from prompt_loader import load_prompt
 from response_cleaner import NON_KOREAN_CJK_PATTERN, SPECIAL_TOKEN_PATTERN, clean_llm_response
 import aiomysql
-from schemas import InferRequest, InferResponse, FeedbackRequest, FeedbackResponse
+from schemas import InferRequest, InferResponse, FeedbackRequest, FeedbackResponse, RuleIndexRequest, RuleIndexResponse
 from typo_corrector import correct_typos_async
 
 # 로깅 설정
@@ -594,6 +594,123 @@ async def feedback_stats():
     except Exception as exc:
         logger.error("Failed to get feedback stats: %s", exc)
         raise HTTPException(status_code=500, detail="통계 조회에 실패했습니다")
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# 규칙 인덱싱 API (Spring Admin → Python LLM)
+# ════════════════════════════════════════════════════════════════════════════
+
+@app.post("/index/rule", response_model=RuleIndexResponse)
+async def index_rule(request: Request, body: RuleIndexRequest) -> RuleIndexResponse:
+    """
+    병원규칙 단건 인덱싱: medical_rule 테이블 upsert + ChromaDB 벡터 인덱싱
+    Spring AdminRuleService에서 규칙 생성/수정 시 호출
+    """
+    logger.info("Rule index request: rule_id=%d, title=%s", body.rule_id, body.title)
+
+    try:
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            async with conn.cursor(aiomysql.DictCursor) as cur:
+                # medical_rule 테이블에 upsert (hospital_rule.id를 source_id로 매핑)
+                await cur.execute(
+                    "SELECT id FROM medical_rule WHERE source_id = %s",
+                    (body.rule_id,),
+                )
+                existing = await cur.fetchone()
+
+                if existing:
+                    await cur.execute(
+                        """
+                        UPDATE medical_rule
+                        SET category = %s, title = %s, content = %s, target = %s
+                        WHERE source_id = %s
+                        """,
+                        (body.category, body.title, body.content, body.target or "", body.rule_id),
+                    )
+                    medical_rule_id = existing["id"]
+                    logger.info("Rule updated in medical_rule: source_id=%d, id=%d", body.rule_id, medical_rule_id)
+                else:
+                    await cur.execute(
+                        """
+                        INSERT INTO medical_rule (category, title, content, target, source_id, created_at)
+                        VALUES (%s, %s, %s, %s, %s, NOW())
+                        """,
+                        (body.category, body.title, body.content, body.target or "", body.rule_id),
+                    )
+                    medical_rule_id = cur.lastrowid
+                    logger.info("Rule inserted to medical_rule: source_id=%d, id=%d", body.rule_id, medical_rule_id)
+
+            await conn.commit()
+
+        # ChromaDB 벡터 인덱싱
+        if body.active:
+            from embedding_service import get_embedding
+            from rule_context_service import add_rule_documents
+
+            text = f"카테고리: {body.category}\n규칙명: {body.title}\n내용: {body.content}"
+            embedding = await get_embedding(text)
+            add_rule_documents(
+                ids=[f"rule_{medical_rule_id}"],
+                documents=[text],
+                embeddings=[embedding],
+                metadatas=[{
+                    "type": "rule",
+                    "category": body.category,
+                    "title": body.title,
+                    "target": body.target or "",
+                    "source_id": str(body.rule_id),
+                }],
+            )
+            logger.info("Rule indexed to ChromaDB: rule_%d", medical_rule_id)
+
+        return RuleIndexResponse(rule_id=body.rule_id, message="규칙이 인덱싱되었습니다")
+
+    except Exception as exc:
+        logger.error("Rule indexing failed: %s: %s", type(exc).__name__, exc)
+        raise HTTPException(status_code=500, detail=f"규칙 인덱싱 실패: {exc}")
+
+
+@app.delete("/index/rule/{rule_id}", response_model=RuleIndexResponse)
+async def delete_rule_index(request: Request, rule_id: int) -> RuleIndexResponse:
+    """
+    병원규칙 인덱스 삭제: medical_rule 삭제 + ChromaDB 벡터 삭제
+    Spring AdminRuleService에서 규칙 삭제 시 호출
+    """
+    logger.info("Rule delete index request: rule_id=%d", rule_id)
+
+    try:
+        pool = await get_pool()
+        medical_rule_id = None
+
+        async with pool.acquire() as conn:
+            async with conn.cursor(aiomysql.DictCursor) as cur:
+                await cur.execute(
+                    "SELECT id FROM medical_rule WHERE source_id = %s",
+                    (rule_id,),
+                )
+                existing = await cur.fetchone()
+                if existing:
+                    medical_rule_id = existing["id"]
+                    await cur.execute("DELETE FROM medical_rule WHERE source_id = %s", (rule_id,))
+                    logger.info("Rule deleted from medical_rule: source_id=%d", rule_id)
+            await conn.commit()
+
+        # ChromaDB에서 삭제
+        if medical_rule_id:
+            try:
+                from rule_context_service import _get_collection
+                col = _get_collection()
+                col.delete(ids=[f"rule_{medical_rule_id}"])
+                logger.info("Rule deleted from ChromaDB: rule_%d", medical_rule_id)
+            except Exception as vec_exc:
+                logger.warning("ChromaDB delete failed (non-critical): %s", vec_exc)
+
+        return RuleIndexResponse(rule_id=rule_id, message="규칙 인덱스가 삭제되었습니다")
+
+    except Exception as exc:
+        logger.error("Rule index delete failed: %s: %s", type(exc).__name__, exc)
+        raise HTTPException(status_code=500, detail=f"규칙 인덱스 삭제 실패: {exc}")
 
 
 if __name__ == "__main__":

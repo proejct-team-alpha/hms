@@ -40,6 +40,9 @@ class AdminRuleServiceTest {
     @Mock
     private HospitalRuleRepository hospitalRuleRepository;
 
+    @Mock
+    private com.smartclinic.hms.llm.service.RuleIndexService ruleIndexService;
+
     @InjectMocks
     private AdminRuleService adminRuleService;
 
