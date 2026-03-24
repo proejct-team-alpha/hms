@@ -172,7 +172,7 @@
                 {{#detail.isConsultationCompleted}}
                   {{^detail.isTreatmentCompleted}}
                   <button type="submit" form="nurse-note-form" class="px-4 py-2 bg-white text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 shadow-sm">
-                    <i data-feather="save" class="w-3.5 h-3.5"></i> 메모 저장
+                    <i data-feather="save" class="w-3.5 h-3.5"></i> 저장
                   </button>
                   <form action="/nurse/treatment/complete" method="post">
                     <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
