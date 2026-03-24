@@ -52,7 +52,7 @@
                 <div class="flex items-center gap-2">
                   {{#detail.isFirstVisit}}<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-500 text-[9px] font-black shrink-0">초</span>{{/detail.isFirstVisit}}
                   {{^detail.isFirstVisit}}<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[9px] font-black shrink-0">재</span>{{/detail.isFirstVisit}}
-                  <div class="flex items-baseline gap-2">
+                  <div class="flex items-center gap-2">
                     <h2 class="text-xl font-black text-slate-800">{{detail.patientName}}</h2>
                     <span class="text-xs font-bold text-slate-500">({{detail.ageGender}})</span>
                   </div>
@@ -126,10 +126,10 @@
                     <div>
                       <label class="info-label">주민번호</label>
                       <div class="flex items-center gap-1 flex-nowrap">
-                        <input type="text" id="birthDate" value="{{detail.birthDatePart}}" maxlength="6" class="info-input birth-input-date" style="width: 80px !important;" placeholder="YYMMDD">
+                        <input type="text" id="birthDate" value="{{detail.birthDatePart}}" maxlength="6" class="info-input birth-input-date" style="width: 80px !important;" placeholder="940101">
                         <span class="text-slate-300">-</span>
                         <div class="flex items-center gap-1 flex-nowrap">
-                          <input type="text" id="genderDigit" value="{{detail.genderDigitPart}}" maxlength="1" class="info-input birth-input-gender" style="width: 35px !important;" placeholder="G">
+                          <input type="text" id="genderDigit" value="{{detail.genderDigitPart}}" maxlength="1" class="info-input birth-input-gender" style="width: 35px !important;" placeholder="1">
                           <span class="text-slate-400 font-bold ml-0.5 text-[10px] whitespace-nowrap">******</span>
                         </div>
                       </div>
