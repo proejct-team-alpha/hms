@@ -39,7 +39,12 @@ public class StaffItemController {
             }
             int newQuantity = itemManagerService.useItem(id, (int) parsed, null);
             List<ItemUsageLogDto> logs = itemManagerService.getTodayUsageLogsByUser(auth.getName());
-            return ResponseEntity.ok(Map.of("quantity", newQuantity, "logs", logs));
+            
+            // [기능 구현] 개별 출고 시에도 전체 물품 리스트(items)를 반환하여 실시간 재고 동기화 지원
+            return ResponseEntity.ok(Map.of(
+                "items", itemManagerService.getItemList(null), 
+                "logs", logs
+            ));
         } catch (NumberFormatException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
         } catch (Exception e) {
@@ -47,20 +52,24 @@ public class StaffItemController {
         }
     }
 
-    @PostMapping("/restock")
+    @PostMapping("/cancel")
     @ResponseBody
-    public ResponseEntity<?> restockItem(@RequestParam("id") Long id,
-                                         @RequestParam("amount") String amountStr) {
+    public ResponseEntity<?> cancelItem(Authentication auth,
+                                        @RequestParam("logId") Long logId) {
         try {
-            long parsed = Long.parseLong(amountStr.trim());
-            if (parsed <= 0 || parsed > Integer.MAX_VALUE) {
-                return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
-            }
-            int newQuantity = itemManagerService.restockItemAndGetQuantity(id, (int) parsed);
-            return ResponseEntity.ok(Map.of("quantity", newQuantity));
-        } catch (NumberFormatException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "올바른 수량을 입력해주세요."));
+            // 특정 사용 로그 ID를 기반으로 출고를 취소하고 재고를 복구함
+            itemManagerService.cancelItemUsage(logId);
+            
+            // 취소 후 갱신된 사용자의 오늘 출고 내역 조회
+            List<ItemUsageLogDto> logs = itemManagerService.getTodayUsageLogsByUser(auth.getName());
+            
+            // 취소 후 복구된 최신 재고 상태를 포함하여 반환
+            return ResponseEntity.ok(Map.of(
+                "logs", logs,
+                "items", itemManagerService.getItemList(null)
+            ));
         } catch (Exception e) {
+            // 예외 발생 시 에러 메시지 반환
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }

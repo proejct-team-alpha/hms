@@ -58,9 +58,23 @@ public class ReceptionService {
                     request.getName(),
                     phone,
                     request.getEmail());
+            // [기능 구현] 신규 환자 생성 시 주민번호 정보가 있으면 저장
+            if (request.getBirthInfo() != null && !request.getBirthInfo().isBlank()) {
+                patient.updateMedicalInfo(request.getBirthInfo(), request.getVisitReason());
+            }
             patientRepository.save(patient);
-        } else if (!patient.getName().equals(request.getName())) {
-            nameMismatch = true;
+        } else {
+            // [기능 구현] 기존 환자라도 전화 예약 시 입력된 내원 사유 및 주민번호(정보가 있을 때만)를 최신 정보로 업데이트
+            if (!patient.getName().equals(request.getName())) {
+                nameMismatch = true;
+            }
+            String finalBirth = (request.getBirthInfo() != null && !request.getBirthInfo().isBlank())
+                    ? request.getBirthInfo()
+                    : patient.getBirthInfo();
+            String finalReason = (request.getVisitReason() != null && !request.getVisitReason().isBlank())
+                    ? request.getVisitReason()
+                    : patient.getVisitReason();
+            patient.updateMedicalInfo(finalBirth, finalReason);
         }
 
         // 3️ 의사 조회
@@ -112,19 +126,53 @@ public class ReceptionService {
         reservation.receive();
     }
 
-    // 환자 정보 수정
+    // [주석] 환자 상세 정보 업데이트 (예약 및 환자 엔티티 모두 반영)
     @Transactional
     public void updatePatientInfo(PatientInfoUpdateRequest request) {
+        // 1. 예약 정보 조회
         Reservation reservation = reservationRepository.findById(request.getReservationId())
                 .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
+
+        // 2. 환자 정보 조회 및 업데이트
         Patient patient = reservation.getPatient();
-        patient.updateAddressAndNote(request.getAddress(), request.getNote());
+
+        // [기능 구현] 수정 가능 상태 여부 판단 (예약/대기 중일 때만 핵심 진료 정보 수정 가능)
+        boolean canEditReception = !reservation.isPaid() && !reservation.isTreatmentCompleted() &&
+                (reservation.getStatus() == ReservationStatus.RESERVED
+                        || reservation.getStatus() == ReservationStatus.RECEIVED);
+
+        // [주석] 환자의 기본 정보(이메일, 주소, 메모)는 항상 업데이트 가능
+        patient.updateInfo(patient.getName(), patient.getPhone(), request.getEmail(), request.getAddress(),
+                request.getNote());
+
+        // [기능 구현] 내원 사유는 수정 가능할 때만 업데이트, 주민번호는 항상 업데이트 허용
+        String finalVisitReason = canEditReception ? request.getVisitReason() : patient.getVisitReason();
+        patient.updateMedicalInfo(request.getBirthInfo(), finalVisitReason);
+
+        // 3. 진료과 및 의사 정보 업데이트 (수정 가능 상태일 때만 반영)
+        if (canEditReception && request.getDeptId() != null && request.getDoctorId() != null) {
+            Department dept = departmentRepository.findById(request.getDeptId())
+                    .orElseThrow(() -> CustomException.notFound("진료과를 찾을 수 없습니다."));
+            Doctor doctor = doctorRepository.findById(request.getDoctorId())
+                    .orElseThrow(() -> CustomException.notFound("의사를 찾을 수 없습니다."));
+
+            reservation.updateReceptionInfo(dept, doctor);
+        }
     }
 
     /**
-     * 날짜별 예약 목록 조회
+     * 날짜별 예약 목록 조회 (다중 필터링 지원)
+     * 
+     * @param date      조회 날짜 (null이면 오늘 이후 전체)
+     * @param status    예약 상태 (문자열)
+     * @param query     검색어 (환자명, 전화번호 등)
+     * @param deptIds   다중 선택된 진료과 ID 리스트
+     * @param doctorIds 다중 선택된 의사 ID 리스트
+     * @param source    예약 경로 (ONLINE, PHONE, WALKIN)
+     * @return 필터링된 예약 DTO 리스트
      */
-    public List<StaffReservationDto> getReservations(LocalDate date, String status, String query, Long deptId, Long doctorId, String source) {
+    public List<StaffReservationDto> getReservations(LocalDate date, String status, String query, List<Long> deptIds,
+            List<Long> doctorIds, String source) {
         List<Reservation> reservations;
         if (date == null) {
             LocalDate today = LocalDate.now();
@@ -140,44 +188,56 @@ public class ReceptionService {
                 reservations = reservationRepository.findTodayByStatus(date, ReservationStatus.valueOf(status));
             }
         }
-        
+
         return reservations.stream()
                 .filter(r -> {
                     // 검색어 필터링 (환자명, 전화번호, 진료과, 전문의)
                     if (query != null && !query.isBlank()) {
                         String q = query.toLowerCase();
-                        boolean matches = r.getPatient().getName().toLowerCase().contains(q) || 
-                                          r.getPatient().getPhone().contains(q) ||
-                                          r.getDepartment().getName().toLowerCase().contains(q) ||
-                                          r.getDoctor().getStaff().getName().toLowerCase().contains(q);
-                        if (!matches) return false;
+                        boolean matches = r.getPatient().getName().toLowerCase().contains(q) ||
+                                r.getPatient().getPhone().contains(q) ||
+                                r.getDepartment().getName().toLowerCase().contains(q) ||
+                                r.getDoctor().getStaff().getName().toLowerCase().contains(q);
+                        if (!matches)
+                            return false;
                     }
-                    // 진료과 필터
-                    if (deptId != null && !r.getDepartment().getId().equals(deptId)) return false;
-                    // 전문의 필터
-                    if (doctorId != null && !r.getDoctor().getId().equals(doctorId)) return false;
+                    // 다중 진료과 필터 적용
+                    if (deptIds != null && !deptIds.isEmpty() && !deptIds.contains(r.getDepartment().getId()))
+                        return false;
+                    // 다중 전문의 필터 적용
+                    if (doctorIds != null && !doctorIds.isEmpty() && !doctorIds.contains(r.getDoctor().getId()))
+                        return false;
                     // 예약 구분 필터
-                    if (source != null && !source.isBlank() && !r.getSource().name().equals(source)) return false;
-                    
+                    if (source != null && !source.isBlank() && !r.getSource().name().equals(source))
+                        return false;
+
                     return true;
                 })
                 .map(r -> {
                     // 환자의 진료 완료 건수를 조회하여 초재진 여부를 판별합니다.
-                    long completedCount = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
+                    long completedCount = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(),
+                            ReservationStatus.COMPLETED);
                     return new StaffReservationDto(r, completedCount);
                 })
                 .collect(Collectors.toList());
     }
 
-    // 상태 필터 탭 목록
-    public List<StaffStatusFilter> getStatusFilters(String selected, String date, String query, Long deptId, Long doctorId, String source) {
+    /**
+     * 상태 필터 탭 목록 생성 (명칭 변경: 접수 대기 -> 예약)
+     */
+    public List<StaffStatusFilter> getStatusFilters(String selected, String date, String query, List<Long> deptIds,
+            List<Long> doctorIds, String source) {
         String s = (selected == null) ? "" : selected;
+        // 단일 ID만 받는 기존 DTO 구조상 첫 번째 값을 전달 (기존 호환성 유지)
+        Long dId = (deptIds != null && !deptIds.isEmpty()) ? deptIds.get(0) : null;
+        Long docId = (doctorIds != null && !doctorIds.isEmpty()) ? doctorIds.get(0) : null;
+
         return List.of(
-                new StaffStatusFilter("전체", "", s, date, query, deptId, doctorId, source),
-                new StaffStatusFilter("접수 대기", "RESERVED", s, date, query, deptId, doctorId, source),
-                new StaffStatusFilter("진료 대기", "RECEIVED", s, date, query, deptId, doctorId, source),
-                new StaffStatusFilter("진료 완료", "COMPLETED", s, date, query, deptId, doctorId, source),
-                new StaffStatusFilter("취소", "CANCELLED", s, date, query, deptId, doctorId, source));
+                new StaffStatusFilter("전체", "", s, date, query, dId, docId, source),
+                new StaffStatusFilter("예약", "RESERVED", s, date, query, dId, docId, source),
+                new StaffStatusFilter("진료 대기", "RECEIVED", s, date, query, dId, docId, source),
+                new StaffStatusFilter("진료 완료", "COMPLETED", s, date, query, dId, docId, source),
+                new StaffStatusFilter("취소", "CANCELLED", s, date, query, dId, docId, source));
     }
 
     /**
@@ -186,10 +246,11 @@ public class ReceptionService {
     public StaffReservationDto getDetail(Long id) {
         Reservation r = reservationRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
-        
+
         // 1. 초재진 판별을 위한 진료 완료 건수 조회
-        long completedCount = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
-        
+        long completedCount = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(),
+                ReservationStatus.COMPLETED);
+
         // 2. 환자의 전체 예약 히스토리 조회 (최신순, 모든 상태 포함)
         List<com.smartclinic.hms.domain.PatientHistoryDto> history = reservationRepository
                 .findByPatient_IdOrderByReservationDateDesc(r.getPatient().getId())
@@ -210,7 +271,8 @@ public class ReceptionService {
 
     /**
      * 예약 취소: {@code Reservation#cancel} — RECEIVED→RESERVED 롤백, RESERVED→CANCELLED.
-     * IN_TREATMENT 등 전이 불가 시 {@link com.smartclinic.hms.common.exception.CustomException#invalidStatusTransition(String)}.
+     * IN_TREATMENT 등 전이 불가 시
+     * {@link com.smartclinic.hms.common.exception.CustomException#invalidStatusTransition(String)}.
      */
     @Transactional
     public Reservation cancel(Long id, String reason) {
@@ -225,6 +287,16 @@ public class ReceptionService {
     }
 
     /**
+     * 수납 완료 처리
+     */
+    @Transactional
+    public void completePayment(Long id) {
+        Reservation r = reservationRepository.findById(id)
+                .orElseThrow(() -> CustomException.notFound("예약을 찾을 수 없습니다."));
+        r.pay();
+    }
+
+    /**
      * 대시보드 통계 및 최근 예약 목록
      */
     public StaffDashboardDto getDashboard() {
@@ -233,11 +305,14 @@ public class ReceptionService {
         int total = all.size();
         int waiting = (int) all.stream().filter(r -> r.getStatus() == ReservationStatus.RESERVED).count();
         int received = (int) all.stream().filter(r -> r.getStatus() == ReservationStatus.RECEIVED).count();
+        // [기능 구현] 오늘 수납이 완료된 건수 계산
+        int paid = (int) all.stream().filter(Reservation::isPaid).count();
         List<StaffReservationDto> recent = all.stream()
                 .limit(5)
                 .map(r -> {
                     // 환자의 초재진 판별을 위해 진료 완료 건수를 조회합니다.
-                    long completedCount = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(), ReservationStatus.COMPLETED);
+                    long completedCount = reservationRepository.countByPatient_IdAndStatus(r.getPatient().getId(),
+                            ReservationStatus.COMPLETED);
                     return new StaffReservationDto(r, completedCount);
                 })
                 .collect(Collectors.toList());
@@ -259,17 +334,11 @@ public class ReceptionService {
                     .count();
 
             int totalCount = (int) (resCount + recCount);
-            hourlyStats.add(new com.smartclinic.hms.staff.dto.StaffHourlyStatDto(label, (int) resCount, (int) recCount, totalCount));
+            hourlyStats.add(new com.smartclinic.hms.staff.dto.StaffHourlyStatDto(label, (int) resCount, (int) recCount,
+                    totalCount));
         }
 
-        // 테스트용 샘플 데이터 (데이터가 없을 때도 그래프 확인용)
-        if (all.isEmpty()) {
-            hourlyStats.set(0, new com.smartclinic.hms.staff.dto.StaffHourlyStatDto("09:00", 2, 1, 3));
-            hourlyStats.set(1, new com.smartclinic.hms.staff.dto.StaffHourlyStatDto("10:00", 5, 3, 8));
-            hourlyStats.set(2, new com.smartclinic.hms.staff.dto.StaffHourlyStatDto("11:00", 3, 4, 7));
-        }
-
-        return new StaffDashboardDto(total, waiting, received, recent, hourlyStats);
+        return new StaffDashboardDto(total, waiting, received, paid, recent, hourlyStats);
     }
 
     // 폼용 진료과 목록

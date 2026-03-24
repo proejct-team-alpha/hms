@@ -18,8 +18,8 @@
       <div class="space-y-6 max-w-5xl mx-auto">
         <h1 class="text-2xl font-bold text-slate-800">원무과 대시보드</h1>
 
-        <!-- Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- [기능 구현] 오늘 현황 요약 섹션 (수납 완료 추가) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <div class="flex items-center gap-4">
               <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
@@ -50,6 +50,18 @@
               <div>
                 <div class="text-sm font-medium text-slate-500">접수 완료</div>
                 <div class="text-2xl font-bold text-slate-800">{{dashboard.receivedCount}}명</div>
+              </div>
+            </div>
+          </div>
+          <!-- 수납 완료 박스 추가 -->
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                <i data-feather="credit-card" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <div class="text-sm font-medium text-slate-500">수납 완료</div>
+                <div class="text-2xl font-bold text-slate-800">{{dashboard.paidCount}}명</div>
               </div>
             </div>
           </div>

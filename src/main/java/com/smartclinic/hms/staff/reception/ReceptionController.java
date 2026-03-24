@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,182 +27,288 @@ import com.smartclinic.hms.staff.reception.dto.ReceptionUpdateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * 원무과 접수 관리 컨트롤러
+ */
 @Controller
 @RequestMapping("/staff/reception")
 @RequiredArgsConstructor
 public class ReceptionController {
 
     private final ReceptionService receptionService;
-
     private static final int PAGE_SIZE = 10;
 
-    // 접수 목록
     @GetMapping("/list")
     public String list(
-            @RequestParam(name = "status", defaultValue = "") String status,
-            @RequestParam(name = "date", required = false) String date,
+            @RequestParam(name = "tab", defaultValue = "all") String tabParam,
+            @RequestParam(name = "date", required = false) String dateStr,
             @RequestParam(name = "query", required = false) String query,
-            @RequestParam(name = "deptId", required = false) Long deptId,
-            @RequestParam(name = "doctorId", required = false) Long doctorId,
+            @RequestParam(name = "deptIds", required = false) List<Long> deptIds,
+            @RequestParam(name = "doctorIds", required = false) List<Long> doctorIds,
             @RequestParam(name = "source", required = false) String source,
             @ModelAttribute("date") String flashDate,
             @RequestParam(name = "page", defaultValue = "1") int page,
             Model model) {
 
-        if ((date == null || date.isBlank()) && flashDate != null && !flashDate.isBlank()) {
-            date = flashDate;
+        // 중복 파라미터 방어 및 변수명 명확화 (tabParam 사용)
+        String currentTab = tabParam;
+        if (currentTab != null && currentTab.contains(",")) {
+            currentTab = currentTab.split(",")[0];
         }
+
+        String searchDateStr = dateStr;
+        if (searchDateStr != null && searchDateStr.contains(",")) {
+            searchDateStr = searchDateStr.split(",")[0];
+        }
+
+        if ((searchDateStr == null || searchDateStr.isEmpty()) && flashDate != null && !flashDate.isEmpty()) {
+            searchDateStr = flashDate;
+        }
+
         model.addAttribute("isStaffReception", true);
-        // date 없으면 null → 오늘 이후 전체 조회
-        LocalDate selectedDate = (date == null || date.isBlank()) ? null : LocalDate.parse(date);
-        String dateStr = selectedDate != null ? selectedDate.toString() : "";
+        
+        LocalDate selectedDate = (searchDateStr == null || searchDateStr.isEmpty()) 
+            ? LocalDate.now() 
+            : LocalDate.parse(searchDateStr);
+        String finalDateStr = selectedDate.toString();
 
-        List<StaffReservationDto> all = receptionService.getReservations(selectedDate, status, query, deptId, doctorId, source);
+        String dayOfWeek = selectedDate.getDayOfWeek().getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.KOREAN);
+        model.addAttribute("formattedDate", finalDateStr + " (" + dayOfWeek + ")");
 
-        // 페이징
-        int total = all.size();
+        // 탭에 따른 DB 상태값 매핑 (호환성 높은 switch 문 사용)
+        String dbStatus = null;
+        if (currentTab != null) {
+            switch (currentTab) {
+                case "reserved": dbStatus = "RESERVED"; break;
+                case "received": dbStatus = "RECEIVED"; break;
+                case "cancelled": dbStatus = "CANCELLED"; break;
+                default: dbStatus = null; break;
+            }
+        }
+
+        List<StaffReservationDto> all = receptionService.getReservations(selectedDate, dbStatus, query, deptIds, doctorIds, source);
+
+        // 탭별 정밀 필터링 로직
+        final String activeTab = currentTab;
+        List<StaffReservationDto> filtered = all.stream()
+            .filter(r -> {
+                if ("treatment_status".equals(activeTab)) {
+                    // [기능 개선] 진료현황 탭: 진료중, 진료 완료, 처치 완료 환자 모두 노출
+                    return (r.getStatusText().equals("진료중") || r.getStatusText().equals("진료 완료") || r.getStatusText().equals("처치 완료")) 
+                           && !r.isPaid();
+                }
+                if ("paid".equals(activeTab)) {
+                    // [기능 개선] 수납 탭: 처치 완료(수납 대기) 환자 + 이미 수납 완료된 환자 통합 노출
+                    return r.isPaid() || r.getStatusText().equals("처치 완료");
+                }
+                return true;
+            })
+            .map(r -> {
+                // [명칭 변경] 수납 탭에서는 '처치 완료'를 '수납 대기'로 표시
+                if ("paid".equals(activeTab)) {
+                    if (r.isPaid()) {
+                        r.setStatusText("수납 완료");
+                        r.setStatusBadgeClass("bg-green-100 text-green-700");
+                    } else if ("처치 완료".equals(r.getStatusText())) {
+                        r.setStatusText("수납 대기");
+                        r.setStatusBadgeClass("bg-orange-100 text-orange-700");
+                    }
+                }
+                return r;
+            })
+            .collect(Collectors.toList());
+
+        int total = filtered.size();
         int totalPages = Math.max(1, (total + PAGE_SIZE - 1) / PAGE_SIZE);
-        page = Math.max(1, Math.min(page, totalPages));
-        int from = (page - 1) * PAGE_SIZE;
+        int finalPage = Math.max(1, Math.min(page, totalPages));
+        int from = (finalPage - 1) * PAGE_SIZE;
         int to = Math.min(from + PAGE_SIZE, total);
-        List<StaffReservationDto> paged = all.subList(from, to);
+        List<StaffReservationDto> paged = filtered.subList(from, to);
 
-        // 페이지 URL 기본 경로 (필터 포함)
-        String q = (query == null) ? "" : query;
-        StringBuilder baseUrlBuilder = new StringBuilder("/staff/reception/list?date=" + dateStr + "&status=" + status + "&query=" + q);
-        if (deptId != null) baseUrlBuilder.append("&deptId=").append(deptId);
-        if (doctorId != null) baseUrlBuilder.append("&doctorId=").append(doctorId);
-        if (source != null && !source.isBlank()) baseUrlBuilder.append("&source=").append(source);
-        String baseUrl = baseUrlBuilder.toString();
+        // [상태 유지] 모든 검색 파라미터를 유지하기 위한 빌더
+        StringBuilder keepParams = new StringBuilder();
+        if (query != null && !query.isEmpty()) keepParams.append("&query=").append(query);
+        if (deptIds != null && !deptIds.isEmpty()) {
+            for (Long id : deptIds) keepParams.append("&deptIds=").append(id);
+        }
+        if (doctorIds != null && !doctorIds.isEmpty()) {
+            for (Long id : doctorIds) keepParams.append("&doctorIds=").append(id);
+        }
+        if (source != null && !source.isEmpty()) keepParams.append("&source=").append(source);
+        String params = keepParams.toString();
 
         model.addAttribute("reservations", paged);
-        model.addAttribute("filters", receptionService.getStatusFilters(status, dateStr, query, deptId, doctorId, source));
-        
-        // 필터 데이터
-        model.addAttribute("departments", receptionService.getAllDepartments().stream()
-                .map(d -> Map.of("id", d.getId(), "name", d.getName(), "selected", d.getId().equals(deptId)))
-                .toList());
-        model.addAttribute("doctors", receptionService.getAllDoctors().stream()
-                .map(d -> Map.of("id", d.getId(), "name", d.getDisplayName(), "selected", d.getId().equals(doctorId)))
-                .toList());
-        model.addAttribute("sources", List.of(
-            Map.of("value", "ONLINE", "label", "온라인", "selected", "ONLINE".equals(source)),
-            Map.of("value", "PHONE", "label", "전화", "selected", "PHONE".equals(source)),
-            Map.of("value", "WALKIN", "label", "방문", "selected", "WALKIN".equals(source))
-        ));
+        model.addAttribute("searchDate", finalDateStr);
+        model.addAttribute("isToday", selectedDate.equals(LocalDate.now()));
+        model.addAttribute("currentTab", activeTab);
+        model.addAttribute("query", query != null ? query : "");
+        model.addAttribute("currentPage", finalPage); // 현재 페이지 추가
+        model.addAttribute("keepParams", params);
 
-        // 날짜 네비게이션
-        model.addAttribute("hasDate", selectedDate != null);
-        model.addAttribute("todayDate", LocalDate.now().toString());
-        model.addAttribute("selectedDate", selectedDate != null ? selectedDate.toString() : "오늘 이후 전체");
-        model.addAttribute("prevDate", selectedDate != null ? selectedDate.minusDays(1).toString() : "");
-        model.addAttribute("nextDate", selectedDate != null ? selectedDate.plusDays(1).toString() : "");
-        model.addAttribute("currentDate", dateStr);
-        model.addAttribute("currentStatus", status);
-        model.addAttribute("query", q);
-        model.addAttribute("deptId", deptId);
-        model.addAttribute("doctorId", doctorId);
-        model.addAttribute("source", source);
-        // 페이징
-        model.addAttribute("currentPage", page);
+        // 탭 활성화 상태 전달
+        model.addAttribute("isAllTab", "all".equals(activeTab));
+        model.addAttribute("isReservedTab", "reserved".equals(activeTab));
+        model.addAttribute("isReceivedTab", "received".equals(activeTab));
+        model.addAttribute("isTreatmentStatusTab", "treatment_status".equals(activeTab));
+        model.addAttribute("isPaidTab", "paid".equals(activeTab));
+        model.addAttribute("isCancelledTab", "cancelled".equals(activeTab));
+
+        model.addAttribute("departments", receptionService.getAllDepartments().stream()
+                .map(d -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", d.getId());
+                    map.put("name", d.getName());
+                    map.put("selected", deptIds != null && deptIds.contains(d.getId()));
+                    return map;
+                })
+                .collect(Collectors.toList()));
+
+        model.addAttribute("doctors", receptionService.getAllDoctors().stream()
+                .map(d -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", d.getId());
+                    map.put("name", d.getDisplayName());
+                    map.put("deptId", d.getDepartmentId());
+                    map.put("selected", doctorIds != null && doctorIds.contains(d.getId()));
+                    return map;
+                })
+                .collect(Collectors.toList()));
+
+        List<Map<String, Object>> sourceOptions = new ArrayList<>();
+        String[] sources = {"ONLINE", "PHONE", "WALKIN"};
+        String[] sourceLabels = {"온라인", "전화", "방문"};
+        for (int i = 0; i < sources.length; i++) {
+            Map<String, Object> opt = new HashMap<>();
+            opt.put("value", sources[i]);
+            opt.put("label", sourceLabels[i]);
+            opt.put("selected", sources[i].equals(source));
+            sourceOptions.add(opt);
+        }
+        model.addAttribute("sources", sourceOptions);
+
+        model.addAttribute("currentPage", finalPage);
         model.addAttribute("totalPages", totalPages);
         model.addAttribute("totalCount", total);
-        model.addAttribute("hasPrev", page > 1);
-        model.addAttribute("hasNext", page < totalPages);
-        model.addAttribute("prevPageUrl", baseUrl + "&page=" + (page - 1));
-        model.addAttribute("nextPageUrl", baseUrl + "&page=" + (page + 1));
-        model.addAttribute("pageInfo", page + " / " + totalPages);
+        model.addAttribute("hasPrev", finalPage > 1);
+        model.addAttribute("hasNext", finalPage < totalPages);
+        model.addAttribute("prevPageUrl", "/staff/reception/list?page=" + (finalPage - 1) + params);
+        model.addAttribute("nextPageUrl", "/staff/reception/list?page=" + (finalPage + 1) + params);
+        model.addAttribute("pageInfo", finalPage + " / " + totalPages);
+
         return "staff/reception-list";
     }
 
-    // 접수 상세
     @GetMapping("/detail")
     public String detail(@RequestParam("id") Long id, 
-                        @RequestParam(name = "status", defaultValue = "") String status,
+                        @RequestParam(name = "tab", defaultValue = "all") String tab,
                         @RequestParam(name = "date", required = false) String date,
                         @RequestParam(name = "page", defaultValue = "1") int page,
+                        @RequestParam(name = "query", required = false) String query,
+                        @RequestParam(name = "deptIds", required = false) List<Long> deptIds,
+                        @RequestParam(name = "doctorIds", required = false) List<Long> doctorIds,
+                        @RequestParam(name = "source", required = false) String source,
                         Model model) {
+        
+        String currentTab = tab;
+        if (currentTab != null && currentTab.contains(",")) currentTab = currentTab.split(",")[0];
+        String currentDate = date;
+        if (currentDate != null && currentDate.contains(",")) currentDate = currentDate.split(",")[0];
+
         model.addAttribute("isStaffReception", true);
-        model.addAttribute("detail", receptionService.getDetail(id));
-        model.addAttribute("currentStatus", status);
-        model.addAttribute("currentDate", date != null ? date : "");
+        StaffReservationDto dto = receptionService.getDetail(id);
+        model.addAttribute("detail", dto);
+        model.addAttribute("currentTab", currentTab);
+        model.addAttribute("currentDate", currentDate != null ? currentDate : "");
         model.addAttribute("currentPage", page);
+        model.addAttribute("query", query != null ? query : "");
+        model.addAttribute("deptIds", deptIds);
+        model.addAttribute("doctorIds", doctorIds);
+        model.addAttribute("source", source != null ? source : "");
+
+        model.addAttribute("departments", receptionService.getAllDepartments());
+        model.addAttribute("doctors", receptionService.getAllDoctors().stream()
+                .map(d -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", d.getId());
+                    map.put("name", d.getDisplayName());
+                    map.put("deptId", d.getDepartmentId());
+                    return map;
+                })
+                .collect(Collectors.toList()));
+
         return "staff/reception-detail";
     }
 
-    // 접수 처리
     @PostMapping("/receive")
     public String receive(@Valid @ModelAttribute ReceptionUpdateRequest request,
-            RedirectAttributes redirectAttributes) {
+                        @RequestParam(name = "tab", defaultValue = "all") String tab,
+                        RedirectAttributes redirectAttributes) {
         receptionService.receive(request);
         redirectAttributes.addFlashAttribute("message", "접수가 완료되었습니다.");
-
-        redirectAttributes.addAttribute("status", request.getStatus());
+        redirectAttributes.addAttribute("tab", tab);
         redirectAttributes.addAttribute("date", request.getDate());
         redirectAttributes.addAttribute("page", request.getPage());
-
         return "redirect:/staff/reception/list";
     }
 
     @PostMapping("/receive-ajax")
     @ResponseBody
     public Map<String, Object> receiveAjax(@RequestBody ReceptionUpdateRequest request) {
-
         receptionService.receive(request);
-
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
         result.put("statusText", "진료 대기");
-        result.put("statusClass", "bg-yellow-100 text-yellow-700");
-
+        result.put("statusClass", "bg-orange-100 text-orange-700");
         return result;
     }
 
-    // 예약 취소
     @PostMapping("/cancel")
     public String cancel(@RequestParam("id") Long id, 
                         @RequestParam(name = "reason", defaultValue = "") String reason,
                         @RequestParam(name = "date", required = false) String date,
-                        @RequestParam(name = "status", required = false) String status,
+                        @RequestParam(name = "tab", defaultValue = "all") String tab,
                         @RequestParam(name = "page", defaultValue = "1") int page,
                         RedirectAttributes redirectAttributes) {
         receptionService.cancel(id, reason);
         redirectAttributes.addFlashAttribute("message", "예약이 취소되었습니다.");
-        
-        // 보던 화면으로 돌아가기 위해 파라미터 전달
         redirectAttributes.addAttribute("date", date);
-        redirectAttributes.addAttribute("status", status);
+        redirectAttributes.addAttribute("tab", tab);
         redirectAttributes.addAttribute("page", page);
-        
         return "redirect:/staff/reception/list";
     }
 
     @PostMapping("/cancel-ajax")
     @ResponseBody
     public Map<String, Object> cancelAjax(@RequestBody Map<String, Object> request) {
-
         Long id = Long.valueOf(request.get("id").toString());
         String reason = (String) request.getOrDefault("reason", "");
-
         Reservation r = receptionService.cancel(id, reason);
-
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
         result.put("newStatus", r.getStatus().name());
         
-        // 프론트엔드 배지 업데이트를 위한 정보
         if (r.getStatus() == ReservationStatus.RESERVED) {
-            result.put("statusText", "접수 대기");
+            result.put("statusText", "예약");
             result.put("statusClass", "bg-blue-100 text-blue-700");
         } else if (r.getStatus() == ReservationStatus.CANCELLED) {
             result.put("statusText", "취소");
             result.put("statusClass", "bg-red-100 text-red-700");
         }
-
         return result;
     }
 
-    // 환자 정보 수정 (주소, 특이사항)
+    // [기능 추가] 수납 즉시 처리 AJAX
+    @PostMapping("/pay-ajax")
+    @ResponseBody
+    public Map<String, Object> payAjax(@RequestBody Map<String, Object> request) {
+        Long id = Long.valueOf(request.get("id").toString());
+        receptionService.completePayment(id); // 수납 완료 처리 서비스 호출
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("message", "수납이 완료되었습니다.");
+        return result;
+    }
+
     @PostMapping("/update-patient-info")
     @ResponseBody
     public Map<String, Object> updatePatientInfo(@RequestBody @Valid PatientInfoUpdateRequest request) {
@@ -210,5 +318,4 @@ public class ReceptionController {
         result.put("message", "환자 정보가 수정되었습니다.");
         return result;
     }
-
 }
