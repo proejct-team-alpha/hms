@@ -11,6 +11,7 @@ import lombok.Setter;
 public class StaffReservationDto {
 
     private final Long id;
+    private int rowNum; // 목록 표시용 순번
     private final Long patientId;
     private final String reservationNumber;
     private final String patientName;
