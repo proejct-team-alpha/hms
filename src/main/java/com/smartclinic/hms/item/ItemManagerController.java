@@ -100,8 +100,7 @@ public class ItemManagerController {
                                              @RequestParam("amount") String amountStr) {
         try {
             int amount = parseQuantity(amountStr, "입고 수량");
-            int newQuantity = itemService.restockItemAndGetQuantity(id, amount);
-            return ResponseEntity.ok(Map.of("quantity", newQuantity));
+            return ResponseEntity.ok(itemService.restockItemAndGetInfo(id, amount));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

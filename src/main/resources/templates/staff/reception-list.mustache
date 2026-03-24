@@ -298,6 +298,25 @@
                   {{/reservations}}
                 </tbody>
               </table>
+
+              <!-- 페이징 -->
+              <div class="flex items-center justify-between px-4 py-3 border-t border-slate-100">
+                <span class="text-xs text-slate-400">총 <span class="font-bold text-slate-600">{{totalCount}}</span>건</span>
+                <div class="flex items-center gap-1">
+                  {{#hasPrev}}
+                  <a href="/staff/reception/list?date={{searchDate}}&tab={{currentTab}}&page={{prevPage}}{{keepParams}}"
+                     class="px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">이전</a>
+                  {{/hasPrev}}
+                  {{#pageLinks}}
+                  <a href="/staff/reception/list?date={{searchDate}}&tab={{currentTab}}&page={{num}}{{keepParams}}"
+                     class="px-3 py-1.5 text-xs font-bold rounded-lg transition-colors {{#active}}bg-indigo-600 text-white border border-indigo-600{{/active}}{{^active}}text-slate-600 bg-white border border-slate-200 hover:bg-slate-50{{/active}}">{{label}}</a>
+                  {{/pageLinks}}
+                  {{#hasNext}}
+                  <a href="/staff/reception/list?date={{searchDate}}&tab={{currentTab}}&page={{nextPage}}{{keepParams}}"
+                     class="px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">다음</a>
+                  {{/hasNext}}
+                </div>
+              </div>
             </div>
           </div>
         </div>

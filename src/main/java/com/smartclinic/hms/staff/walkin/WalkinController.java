@@ -90,7 +90,18 @@ public class WalkinController {
 
         // 1. DTO 검증 실패 처리
         if (bindingResult.hasErrors()) {
-            model.addAttribute("form", request);
+            java.util.List<String> errors = new java.util.ArrayList<>();
+            bindingResult.getAllErrors().forEach(e -> errors.add(e.getDefaultMessage()));
+            model.addAttribute("message", String.join(", ", errors));
+            model.addAttribute("name", request.getName());
+            if (request.getPhone() != null && !request.getPhone().isBlank()) {
+                String[] parts = request.getPhone().split("-");
+                if (parts.length >= 1) model.addAttribute("p1", parts[0]);
+                if (parts.length >= 2) model.addAttribute("p2", parts[1]);
+                if (parts.length >= 3) model.addAttribute("p3", parts[2]);
+            }
+            model.addAttribute("selectedDeptId", request.getDepartmentId());
+            model.addAttribute("selectedDoctorId", request.getDoctorId());
             model.addAttribute("departments", receptionService.getAllDepartments());
             model.addAttribute("doctors", receptionService.getAllDoctors());
             model.addAttribute("today", LocalDate.now().toString());
@@ -113,14 +124,22 @@ public class WalkinController {
             if (request.getDeptIds() != null) redirectAttributes.addAttribute("deptIds", request.getDeptIds());
             if (request.getDoctorIds() != null) redirectAttributes.addAttribute("doctorIds", request.getDoctorIds());
             if (request.getSource() != null) redirectAttributes.addAttribute("source", request.getSource());
-            if (request.getTab() != null) redirectAttributes.addAttribute("tab", request.getTab());
-            if (request.getPage() != null) redirectAttributes.addAttribute("page", request.getPage());
+            // 방문 접수는 즉시 '진료대기' 상태이므로 received 탭으로 이동해야 목록에 표시됨
+            redirectAttributes.addAttribute("tab", "received");
 
             return "redirect:/staff/reception/list";
 
         } catch (CustomException e) {
             model.addAttribute("message", e.getMessage());
-            model.addAttribute("form", request);
+            model.addAttribute("name", request.getName());
+            if (request.getPhone() != null && !request.getPhone().isBlank()) {
+                String[] parts = request.getPhone().split("-");
+                if (parts.length >= 1) model.addAttribute("p1", parts[0]);
+                if (parts.length >= 2) model.addAttribute("p2", parts[1]);
+                if (parts.length >= 3) model.addAttribute("p3", parts[2]);
+            }
+            model.addAttribute("selectedDeptId", request.getDepartmentId());
+            model.addAttribute("selectedDoctorId", request.getDoctorId());
             model.addAttribute("departments", receptionService.getAllDepartments());
             model.addAttribute("doctors", receptionService.getAllDoctors());
             model.addAttribute("today", LocalDate.now().toString());

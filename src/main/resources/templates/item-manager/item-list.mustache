@@ -291,8 +291,22 @@
         .then(function(data) {
           if (data.quantity !== undefined) {
             const row = form.closest('tr');
-            const span = row.querySelector('td:nth-child(3) span');
-            span.textContent = data.quantity + '개';
+            const qtySpan = row.querySelector('td:nth-child(3) span');
+            const lowStock = data.quantity < data.minQuantity;
+
+            // 수량 텍스트 + 색상 갱신
+            qtySpan.textContent = data.quantity + '개';
+            qtySpan.className = 'font-bold ' + (lowStock ? 'text-red-600' : 'text-slate-800');
+
+            // 상태 배지 갱신
+            const statusCell = row.querySelector('td:nth-child(6)');
+            if (lowStock) {
+              statusCell.innerHTML = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800"><i data-feather="alert-triangle" class="w-3.5 h-3.5"></i>재고 부족</span>';
+            } else {
+              statusCell.innerHTML = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">정상</span>';
+            }
+            feather.replace();
+
             input.value = '';
           }
         })
