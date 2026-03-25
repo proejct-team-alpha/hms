@@ -1,34 +1,51 @@
-<aside class="w-64 bg-slate-900 text-slate-300 flex flex-col h-screen sticky top-0">
-    <div class="p-6 flex items-center gap-3 text-white">
-        <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
-            <i data-lucide="building-2" class="w-5 h-5"></i>
-        </div>
-        <span class="text-xl font-bold tracking-tight">원무과 시스템</span>
+{{! S1 — STAFF 사이드 메뉴. 화면 06~10, 33 }}
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col h-screen fixed left-0 top-0 z-10">
+  <div class="p-6 border-b border-slate-200">
+    <a href="/" class="text-xl font-bold text-slate-800 flex items-center gap-2 hover:text-indigo-600 transition-colors">
+      <i data-feather="activity" class="text-indigo-600"></i>
+      MediCare+
+    </a>
+  </div>
+  <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+    <div>
+      <div class="text-sm font-bold text-slate-800">원무과</div>
+      <div class="text-xs text-slate-500">접속 중</div>
     </div>
-
-    <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-        <a href="/staff/dashboard" target="contentFrame" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
-            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-            <span class="font-medium">대시보드</span>
-        </a>
-        <a href="/staff/reception-list" target="contentFrame" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
-            <i data-lucide="users" class="w-5 h-5"></i>
-            <span class="font-medium">예약 목록</span>
-        </a>
-    </nav>
-
-    <div class="p-4 border-t border-slate-800">
-        <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-800 text-white">
-            <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
-                <span class="text-sm font-bold">원무과</span>
-            </div>
-            <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium truncate">홍길동</p>
-                <p class="text-xs text-slate-400 truncate">staff@hospital.com</p>
-            </div>
-            <a href="/logout" class="text-slate-400 hover:text-white">
-                <i data-lucide="log-out" class="w-5 h-5"></i>
-            </a>
-        </div>
-    </div>
+    <form action="/logout" method="post" class="inline">
+      <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+      <button type="submit" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="로그아웃">
+        <i data-feather="log-out" class="w-5 h-5"></i>
+      </button>
+    </form>
+  </div>
+  <nav class="flex-1 overflow-y-auto p-4 space-y-1">
+    <a href="/staff/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isStaffDashboard}}bg-indigo-50 text-indigo-700{{/isStaffDashboard}}{{^isStaffDashboard}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isStaffDashboard}}">
+      <i data-feather="layout" class="w-5 h-5"></i>
+      대시보드
+    </a>
+    <a href="/staff/reception/list" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isStaffReception}}bg-indigo-50 text-indigo-700{{/isStaffReception}}{{^isStaffReception}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isStaffReception}}">
+      <i data-feather="clipboard" class="w-5 h-5"></i>
+      접수/수납
+    </a>
+    <a href="/staff/reservation/phone-reservation" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isStaffPhone}}bg-indigo-50 text-indigo-700{{/isStaffPhone}}{{^isStaffPhone}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isStaffPhone}}">
+      <i data-feather="phone-call" class="w-5 h-5"></i>
+      예약
+    </a>
+    <a href="/staff/walkin-reception" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isStaffWalkin}}bg-indigo-50 text-indigo-700{{/isStaffWalkin}}{{^isStaffWalkin}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isStaffWalkin}}">
+      <i data-feather="user-plus" class="w-5 h-5"></i>
+      접수
+    </a>
+    <a href="/staff/item/use" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isStaffItemUse}}bg-indigo-50 text-indigo-700{{/isStaffItemUse}}{{^isStaffItemUse}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isStaffItemUse}}">
+      <i data-feather="package" class="w-5 h-5"></i>
+      물품 출고
+    </a>
+    <a href="/staff/chatbot" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isStaffChatbot}}bg-indigo-50 text-indigo-700{{/isStaffChatbot}}{{^isStaffChatbot}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isStaffChatbot}}">
+      <i data-feather="message-circle" class="w-5 h-5"></i>
+      AI 챗봇
+    </a>
+    <a href="/staff/mypage" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isStaffMypage}}bg-indigo-50 text-indigo-700{{/isStaffMypage}}{{^isStaffMypage}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isStaffMypage}}">
+      <i data-feather="settings" class="w-5 h-5"></i>
+      내 정보 관리
+    </a>
+  </nav>
 </aside>

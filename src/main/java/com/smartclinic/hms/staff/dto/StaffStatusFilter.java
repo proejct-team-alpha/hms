@@ -1,0 +1,32 @@
+package com.smartclinic.hms.staff.dto;
+
+import lombok.Getter;
+
+@Getter
+public class StaffStatusFilter {
+
+    private final String label;
+    private final String value;
+    private final String href;
+    private final String cssClass;
+
+    public StaffStatusFilter(String label, String value, String selected, String date, String query, Long deptId, Long doctorId, String source) {
+        this.label = label;
+        this.value = value;
+        String q = (query == null) ? "" : query;
+        String dId = (deptId == null) ? "" : "&deptId=" + deptId;
+        String docId = (doctorId == null) ? "" : "&doctorId=" + doctorId;
+        String src = (source == null || source.isBlank()) ? "" : "&source=" + source;
+        
+        this.href = "/staff/reception/list?date=" + date + "&status=" + value + "&query=" + q + dId + docId + src;
+        boolean isSelected = value.equals(selected == null ? "" : selected);
+        this.cssClass = isSelected
+                ? switch (value) {
+                    case "RESERVED" -> "px-4 py-1.5 rounded-full text-sm font-medium bg-indigo-600 text-white";
+                    case "RECEIVED" -> "px-4 py-1.5 rounded-full text-sm font-medium bg-orange-600 text-white";
+                    case "COMPLETED" -> "px-4 py-1.5 rounded-full text-sm font-medium bg-green-600 text-white";
+                    default -> "px-4 py-1.5 rounded-full text-sm font-medium bg-slate-800 text-white";
+                }
+                : "px-4 py-1.5 rounded-full text-sm font-medium bg-white border border-slate-300 text-slate-600 hover:bg-slate-100";
+    }
+}

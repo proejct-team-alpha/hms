@@ -37,12 +37,28 @@ public class TreatmentRecord {
     @Column(columnDefinition = "TEXT")
     private String remark;
 
+    @Column(name = "nurse_note", columnDefinition = "TEXT")
+    private String nurseNote; // 간호사 처치 메모 추가
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    public void update(String diagnosis, String prescription, String remark) {
+        this.diagnosis = diagnosis;
+        this.prescription = prescription;
+        this.remark = remark != null ? remark : "";
+    }
+
+    /**
+     * 간호 메모 업데이트
+     */
+    public void updateNurseNote(String nurseNote) {
+        this.nurseNote = nurseNote != null ? nurseNote : "";
     }
 
     public static TreatmentRecord create(Reservation reservation, Doctor doctor,
@@ -52,7 +68,8 @@ public class TreatmentRecord {
         tr.doctor = doctor;
         tr.diagnosis = diagnosis;
         tr.prescription = prescription;
-        tr.remark = remark;
+        tr.remark = remark != null ? remark : "";
+        tr.nurseNote = ""; // 초기값 빈 문자열
         return tr;
     }
 }

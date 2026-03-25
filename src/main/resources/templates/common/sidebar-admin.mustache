@@ -1,46 +1,63 @@
-<aside class="w-64 bg-slate-900 text-slate-300 flex flex-col h-screen sticky top-0">
-    <div class="p-6 flex items-center gap-3 text-white">
-        <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
-            <i data-lucide="settings" class="w-5 h-5"></i>
-        </div>
-        <span class="text-xl font-bold tracking-tight">관리자 시스템</span>
+{{! S4 — ADMIN 사이드 메뉴. 화면 17~26, 30~32, 36, 40~42 }}
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col h-screen fixed left-0 top-0 z-10">
+  <div class="p-6 border-b border-slate-200">
+    <a href="/" class="text-xl font-bold text-slate-800 flex items-center gap-2 hover:text-indigo-600 transition-colors">
+      <i data-feather="activity" class="text-indigo-600"></i>
+      MediCare+
+    </a>
+  </div>
+  <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+    <div>
+      <div class="text-sm font-bold text-slate-800">관리자</div>
+      <div class="text-xs text-slate-500">접속 중</div>
     </div>
-
-    <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-        <a href="/admin/dashboard" target="contentFrame" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-colors bg-indigo-600 text-white">
-            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-            <span class="font-medium">대시보드</span>
-        </a>
-        <a href="/admin/department-list" target="contentFrame" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
-            <i data-lucide="building-2" class="w-5 h-5"></i>
-            <span class="font-medium">진료과</span>
-        </a>
-        <a href="/admin/staff-list" target="contentFrame" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
-            <i data-lucide="users" class="w-5 h-5"></i>
-            <span class="font-medium">직원</span>
-        </a>
-        <a href="/admin/rule-list" target="contentFrame" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
-            <i data-lucide="shield-check" class="w-5 h-5"></i>
-            <span class="font-medium">규칙</span>
-        </a>
-        <a href="/admin/reservation-list" target="contentFrame" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
-            <i data-lucide="calendar" class="w-5 h-5"></i>
-            <span class="font-medium">예약 목록</span>
-        </a>
-    </nav>
-
-    <div class="p-4 border-t border-slate-800">
-        <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-800 text-white">
-            <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
-                <span class="text-sm font-bold">관리자</span>
-            </div>
-            <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium truncate">홍길동</p>
-                <p class="text-xs text-slate-400 truncate">admin@hospital.com</p>
-            </div>
-            <a href="/logout" class="text-slate-400 hover:text-white">
-                <i data-lucide="log-out" class="w-5 h-5"></i>
-            </a>
-        </div>
-    </div>
+    <form action="/logout" method="post" class="inline">
+      <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+      <button type="submit" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="로그아웃">
+        <i data-feather="log-out" class="w-5 h-5"></i>
+      </button>
+    </form>
+  </div>
+  <nav class="flex-1 overflow-y-auto p-4 space-y-1">
+    <a href="/admin/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isAdminDashboard}}bg-indigo-50 text-indigo-700{{/isAdminDashboard}}{{^isAdminDashboard}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isAdminDashboard}}">
+      <i data-feather="layout" class="w-5 h-5"></i>
+      대시보드
+    </a>
+    <a href="/admin/department/list" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isAdminDepartment}}bg-indigo-50 text-indigo-700{{/isAdminDepartment}}{{^isAdminDepartment}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isAdminDepartment}}">
+      <i data-feather="grid" class="w-5 h-5"></i>
+      진료과 관리
+    </a>
+    <a href="/admin/reservation/list" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isAdminReservation}}bg-indigo-50 text-indigo-700{{/isAdminReservation}}{{^isAdminReservation}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isAdminReservation}}">
+      <i data-feather="calendar" class="w-5 h-5"></i>
+      전체 예약 목록
+    </a>
+    <a href="/admin/patient/list" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isAdminPatient}}bg-indigo-50 text-indigo-700{{/isAdminPatient}}{{^isAdminPatient}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isAdminPatient}}">
+      <i data-feather="user" class="w-5 h-5"></i>
+      환자 관리
+    </a>
+    <a href="/admin/rule/list" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isAdminRule}}bg-indigo-50 text-indigo-700{{/isAdminRule}}{{^isAdminRule}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isAdminRule}}">
+      <i data-feather="file-text" class="w-5 h-5"></i>
+      병원 규칙 관리
+    </a>
+    <a href="/admin/staff/list" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isAdminStaff}}bg-indigo-50 text-indigo-700{{/isAdminStaff}}{{^isAdminStaff}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isAdminStaff}}">
+      <i data-feather="users" class="w-5 h-5"></i>
+      직원 관리
+    </a>
+    <a href="/admin/item/list" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isAdminItemList}}bg-indigo-50 text-indigo-700{{/isAdminItemList}}{{^isAdminItemList}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isAdminItemList}}">
+      <i data-feather="package" class="w-5 h-5"></i>
+      물품 목록
+    </a>
+    <a href="/admin/item/history" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isAdminItemHistory}}bg-indigo-50 text-indigo-700{{/isAdminItemHistory}}{{^isAdminItemHistory}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isAdminItemHistory}}">
+      <i data-feather="list" class="w-5 h-5"></i>
+      입출고 내역
+    </a>
+    <a href="/admin/chatbot" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isAdminChatbot}}bg-indigo-50 text-indigo-700{{/isAdminChatbot}}{{^isAdminChatbot}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isAdminChatbot}}">
+      <i data-feather="message-circle" class="w-5 h-5"></i>
+      AI 챗봇
+    </a>
+    <a href="/admin/mypage" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{#isAdminMypage}}bg-indigo-50 text-indigo-700{{/isAdminMypage}}{{^isAdminMypage}}text-slate-600 hover:bg-slate-100 hover:text-slate-900{{/isAdminMypage}}">
+      <i data-feather="settings" class="w-5 h-5"></i>
+      내 정보 관리
+    </a>
+  </nav>
 </aside>

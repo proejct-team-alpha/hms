@@ -1,8 +1,8 @@
 package com.smartclinic.hms.admin.dashboard;
 
 import com.smartclinic.hms.admin.item.ItemRepository;
-import com.smartclinic.hms.admin.reservation.AdminReservationRepository;
 import com.smartclinic.hms.admin.staff.AdminStaffRepository;
+import com.smartclinic.hms.reservation.reservation.ReservationRepository;
 import com.smartclinic.hms.domain.Department;
 import com.smartclinic.hms.domain.Doctor;
 import com.smartclinic.hms.domain.Item;
@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AdminDashboardStatsRepositoryTest {
 
     @Autowired
-    private AdminReservationRepository adminReservationRepository;
+    private ReservationRepository adminReservationRepository;
 
     @Autowired
     private AdminStaffRepository adminStaffRepository;
@@ -92,10 +92,7 @@ class AdminDashboardStatsRepositoryTest {
         long todayReservations = adminReservationRepository.countByReservationDate(today);
         long totalReservations = adminReservationRepository.count();
         long totalActiveStaff = adminStaffRepository.countByActiveTrue();
-        long lowStockItems = itemRepository.findAllProjectedBy()
-                .stream()
-                .filter(item -> item.getQuantity() < item.getMinQuantity())
-                .count();
+        long lowStockItems = itemRepository.countLowStockItems();
 
         // then
         assertThat(todayReservations).isEqualTo(1L);

@@ -1,104 +1,386 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>환자 정보 관리 - 홍길동</title>
-    <link rel="stylesheet" href="/css/tailwind.min.css">
-    <script src="/js/lucide.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>환자 상세 정보 - MediCare+</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/feather.min.js"></script>
+  <style>
+    /* [기능: 의사 진료실 순정 CSS 이식] 물품 관리 섹션 스타일 */
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .item-card { transition: all 0.2s; }
+    .item-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+  </style>
 </head>
-<body class="bg-slate-50 p-6">
-    <div class="max-w-3xl mx-auto space-y-6">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
-                    <i data-lucide="users" class="w-5 h-5"></i>
-                </div>
-                <h1 class="text-2xl font-bold text-slate-800">환자 정보 관리</h1>
+<body class="min-h-screen flex bg-[#f8fafc] text-slate-900">
+  {{> common/sidebar-nurse}}
+
+  <div class="main-content flex-1 flex flex-col ml-64">
+    {{> common/header-staff}}
+
+    <main class="content-wrapper flex-1 p-6">
+      <div class="max-w-6xl mx-auto space-y-6">
+        <!-- 상단 내비게이션 바 -->
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 shadow-sm">
+              <i data-feather="user" class="w-5 h-5"></i>
             </div>
-            <button onclick="history.back()" class="text-sm font-medium text-slate-500 hover:text-slate-700">
-                목록으로 돌아가기
-            </button>
+            <h1 class="text-2xl font-bold text-slate-800">환자 상세 정보</h1>
+          </div>
+          <a href="/nurse/{{#currentMenu}}{{currentMenu}}{{/currentMenu}}{{^currentMenu}}treatment{{/currentMenu}}-list?date={{keepDate}}&tab={{keepTab}}&query={{keepQuery}}{{#keepDeptIds}}&deptIds={{.}}{{/keepDeptIds}}{{#keepDoctorIds}}&doctorIds={{.}}{{/keepDoctorIds}}" 
+             class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm">
+            <i data-feather="arrow-left" class="w-4 h-4"></i>
+            목록으로 돌아가기
+          </a>
         </div>
 
-        <form action="/nurse/patient/1/update" method="POST" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <input type="hidden" name="patientId" value="1">
+        <div class="flex flex-col gap-6">
+          <!-- 상단: 환자 정보 (슬림 레이아웃) -->
+          <div class="w-full">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 py-3 px-6">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 border border-slate-100">
+                    <i data-feather="user" class="w-6 h-6"></i>
+                  </div>
+                  <div class="flex flex-col gap-0.5">
+                    <div class="text-[9px] text-slate-400 font-black uppercase tracking-widest">환자등록번호: {{detail.patientId}}</div>
+                    <div class="flex items-center gap-2">
+                      <div class="flex items-center gap-1.5">
+                        {{#detail.isFirstVisit}}
+                        <span class="w-4 h-4 inline-flex items-center justify-center rounded-full bg-indigo-50 text-indigo-500 text-[10px] font-bold" style="transform: scale(0.85); flex-shrink: 0;">초</span>
+                        {{/detail.isFirstVisit}}
+                        {{^detail.isFirstVisit}}
+                        <span class="w-4 h-4 inline-flex items-center justify-center rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold" style="transform: scale(0.85); flex-shrink: 0;">재</span>
+                        {{/detail.isFirstVisit}}
+                        <h2 class="text-lg font-bold text-slate-800">{{detail.patientName}}</h2>
+                      </div>
+                      <div class="text-xs font-medium text-slate-400">({{detail.genderAge}})</div>
+                    </div>
+                    <div class="text-[11px] text-slate-400 font-medium">{{detail.patientPhone}}</div>
+                  </div>
+                </div>
+
+                <div class="flex-1 flex items-center justify-end border-l border-slate-100 ml-10 pr-2">
+                  <div class="px-5">
+                    <div class="flex items-center gap-1.5">
+                      <i data-feather="clock" class="w-3 h-3 text-slate-300"></i>
+                      <span class="text-slate-700 text-xs font-bold">{{#detail.receptionTime}}{{detail.receptionTime}}{{/detail.receptionTime}}{{^detail.receptionTime}}-{{/detail.receptionTime}}</span>
+                    </div>
+                  </div>
+                  <div class="px-5 border-l border-slate-50 max-w-xs">
+                    <span class="text-slate-600 text-xs font-medium truncate block" title="{{detail.visitReason}}">{{detail.visitReason}}</span>
+                  </div>
+                  <div class="pl-5 border-l border-slate-50">
+                    <span class="px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-600 text-[10px] font-bold border border-orange-100">
+                      {{detail.statusText}}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 중단: 정보 영역 (좌우 2:1 분할 상시 유지) -->
+          <div class="grid grid-cols-3 gap-6 items-stretch">
             
-            <div class="bg-indigo-50 border-b border-indigo-100 p-6 flex items-center gap-4">
-                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100">
-                    <i data-lucide="user" class="w-8 h-8"></i>
+            <!-- [왼쪽] 진료 기록 섹션 -->
+            <div class="col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col min-h-[600px]">
+              <div class="p-6 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i data-feather="file-text" class="w-5 h-5 text-indigo-600"></i>
+                  <h2 class="text-lg font-bold text-slate-800">진료 기록</h2>
                 </div>
-                <div>
-                    <h2 class="text-xl font-bold text-slate-800">홍길동</h2>
-                    <div class="flex items-center gap-2 text-sm text-slate-600 mt-1">
-                        <span class="font-medium">35세 / 남</span>
-                        <span class="text-slate-300">|</span>
-                        <span class="flex items-center gap-1"><i data-lucide="phone" class="w-3.5 h-3.5"></i> 010-1234-5678</span>
-                    </div>
+              </div>
+
+              <div class="p-8 flex-1 space-y-8">
+                <!-- 의사 진료 정보 -->
+                {{#detail.isConsultationCompleted}}
+                <div class="space-y-6">
+                  <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">진단명</h3>
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 text-sm font-semibold text-slate-700 leading-relaxed">{{#detail.diagnosis}}{{detail.diagnosis}}{{/detail.diagnosis}}{{^detail.diagnosis}}-{{/detail.diagnosis}}</div>
+                  </div>
+                  <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">진료 소견 (SOAP)</h3>
+                    <div class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap min-h-[100px]">{{#detail.remark}}{{detail.remark}}{{/detail.remark}}{{^detail.remark}}기록된 소견이 없습니다.{{/detail.remark}}</div>
+                  </div>
+                  <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">처방 내역</h3>
+                    <div class="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100 text-sm font-bold text-indigo-900 leading-relaxed whitespace-pre-wrap">{{#detail.prescription}}{{detail.prescription}}{{/detail.prescription}}{{^detail.prescription}}-{{/detail.prescription}}</div>
+                  </div>
                 </div>
-            </div>
+                {{/detail.isConsultationCompleted}}
 
-            <div class="p-8 space-y-8">
-                <div class="grid grid-cols-2 gap-8">
-                    <div class="space-y-6">
-                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">기본 정보</h3>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2">연락처</label>
-                            <div class="relative">
-                                <i data-lucide="phone" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                                <input
-                                    type="tel"
-                                    name="phone"
-                                    value="010-1234-5678"
-                                    class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                                    required
-                                />
-                            </div>
-                        </div>
+                {{^detail.isConsultationCompleted}}
+                <div class="py-24 flex flex-col items-center justify-center text-slate-400 gap-2">
+                  <i data-feather="inbox" class="w-12 h-12 opacity-20"></i>
+                  <p class="text-sm font-bold">기록된 진료 내용이 없습니다.</p>
+                </div>
+                {{/detail.isConsultationCompleted}}
 
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2">주소</label>
-                            <input
-                                type="text"
-                                name="address"
-                                value="서울시 강남구 테헤란로 123"
-                                class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                            />
-                        </div>
-                    </div>
-
-                    <div class="space-y-6">
-                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">의료 정보 (특이사항)</h3>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
-                                <i data-lucide="file-text" class="w-4 h-4 text-indigo-500"></i>
-                                알레르기 및 기저질환
-                            </label>
-                            <textarea
-                                name="medicalNotes"
-                                class="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none h-32 resize-none"
-                            >페니실린 알레르기</textarea>
-                        </div>
-                    </div>
+                <!-- 사용 물품 내역 (통합) -->
+                <div class="space-y-3 pt-4 border-t border-slate-100">
+                  <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">사용 물품 내역</h3>
+                  <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+                    <table class="w-full text-xs">
+                      <thead class="bg-slate-100 text-slate-500">
+                        <tr><th class="px-3 py-2 text-left font-medium">물품명</th><th class="px-3 py-2 text-left font-medium">사용자</th><th class="px-3 py-2 text-right font-medium">수량</th><th class="px-3 py-2 text-right font-medium">시간</th></tr>
+                      </thead>
+                      <tbody id="usage-log-tbody-consult" class="divide-y divide-slate-100 bg-white/50">
+                        {{#usageLogs}}
+                        <tr><td class="px-3 py-2 text-slate-700 font-medium">{{itemName}}</td><td class="px-3 py-2 text-slate-500">{{usedBy}}</td><td class="px-3 py-2 text-right text-slate-600">{{amount}}개</td><td class="px-3 py-2 text-right text-slate-400">{{usedAt}}</td></tr>
+                        {{/usageLogs}}
+                        {{^usageLogs}}<tr><td colspan="4" class="px-3 py-10 text-slate-400 text-center font-bold italic opacity-50">사용한 물품이 없습니다.</td></tr>{{/usageLogs}}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
 
-                <div class="pt-8 border-t border-slate-200 flex justify-end gap-3">
-                    <button 
-                        type="submit"
-                        class="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2"
-                    >
-                        <i data-lucide="save" class="w-5 h-5"></i>
-                        정보 저장 (UPDATE)
+                <!-- 간호 기록 -->
+                {{#detail.isConsultationCompleted}}
+                <div class="pt-6 border-t border-slate-100">
+                  <form id="nurse-note-form" action="/nurse/treatment/save-note" method="post" class="flex flex-col gap-3">
+                    <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                    <input type="hidden" name="id" value="{{detail.reservationId}}">
+                    <input type="hidden" name="menu" value="{{currentMenu}}">
+                    <input type="hidden" name="date" value="{{keepDate}}">
+                    <input type="hidden" name="tab" value="{{keepTab}}">
+                    <input type="hidden" name="query" value="{{keepQuery}}">
+                    {{#keepDeptIds}}<input type="hidden" name="deptIds" value="{{.}}">{{/keepDeptIds}}
+                    {{#keepDoctorIds}}<input type="hidden" name="doctorIds" value="{{.}}">{{/keepDoctorIds}}
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">간호 기록</label>
+                    {{^detail.isTreatmentCompleted}}
+                    <textarea name="nurseNote" 
+                              class="w-full p-5 bg-white border-2 border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-slate-700 text-sm leading-relaxed min-h-[180px] shadow-inner transition-all hover:border-slate-300"
+                              placeholder="여기에 환자 처치 내용 및 간호 기록을 입력하세요...">{{#detail.nurseNote}}{{detail.nurseNote}}{{/detail.nurseNote}}</textarea>
+                    {{/detail.isTreatmentCompleted}}
+                    {{#detail.isTreatmentCompleted}}
+                    <div class="w-full p-5 bg-slate-50/50 rounded-2xl border border-slate-100 text-slate-600 text-sm leading-relaxed min-h-[100px] whitespace-pre-wrap">{{#detail.nurseNote}}{{detail.nurseNote}}{{/detail.nurseNote}}{{^detail.nurseNote}}기록된 간호 메모가 없습니다.{{/detail.nurseNote}}</div>
+                    {{/detail.isTreatmentCompleted}}
+                  </form>
+                </div>
+                {{/detail.isConsultationCompleted}}
+              </div>
+
+              <!-- 푸터 -->
+              <div class="p-6 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl flex justify-end items-center gap-3">
+                {{#detail.isConsultationCompleted}}
+                  {{^detail.isTreatmentCompleted}}
+                  <button type="submit" form="nurse-note-form" class="px-4 py-2 bg-white text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 shadow-sm">
+                    <i data-feather="save" class="w-3.5 h-3.5"></i> 저장
+                  </button>
+                  <form action="/nurse/treatment/complete" method="post">
+                    <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                    <input type="hidden" name="id" value="{{detail.reservationId}}">
+                    <input type="hidden" name="menu" value="{{currentMenu}}">
+                    <input type="hidden" name="date" value="{{keepDate}}">
+                    <input type="hidden" name="tab" value="{{keepTab}}">
+                    <input type="hidden" name="query" value="{{keepQuery}}">
+                    {{#keepDeptIds}}<input type="hidden" name="deptIds" value="{{.}}">{{/keepDeptIds}}
+                    {{#keepDoctorIds}}<input type="hidden" name="doctorIds" value="{{.}}">{{/keepDoctorIds}}
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 shadow-sm flex items-center gap-1.5">
+                      <i data-feather="check-circle" class="w-3.5 h-3.5"></i> 처치 완료
                     </button>
-                </div>
+                  </form>
+                  {{/detail.isTreatmentCompleted}}
+                  {{#detail.isTreatmentCompleted}}
+                  <span class="text-sm font-bold text-green-600 flex items-center gap-1.5 bg-green-50 px-4 py-2 rounded-xl border border-green-100"><i data-feather="check-circle" class="w-4 h-4"></i> 처치 완료됨</span>
+                  {{/detail.isTreatmentCompleted}}
+                {{/detail.isConsultationCompleted}}
+              </div>
             </div>
-        </form>
-    </div>
 
-    <script>
-        lucide.createIcons();
-    </script>
+            <!-- [오른쪽] 과거 진료 이력 (페이징 복구) -->
+            <div class="col-span-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col min-h-[600px]">
+              <div class="p-6 border-b border-slate-200 bg-slate-50/50 flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2"><i data-feather="clock" class="w-5 h-5 text-indigo-600"></i><h2 class="text-lg font-bold text-slate-800">과거 진료 이력</h2></div>
+                  <div id="history-pagination" class="flex items-center gap-2" style="display: none;">
+                    <button type="button" id="history-prev" class="p-1 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-indigo-600 disabled:opacity-30 transition-all"><i data-feather="chevron-left" class="w-4 h-4"></i></button>
+                    <span class="text-[10px] font-bold text-slate-500"><span id="history-current-page" class="text-indigo-600">1</span> / <span id="history-total-pages">1</span></span>
+                    <button type="button" id="history-next" class="p-1 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-indigo-600 disabled:opacity-30 transition-all"><i data-feather="chevron-right" class="w-4 h-4"></i></button>
+                  </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <select id="filter-dept" class="text-[11px] border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-sm"><option value="">전체 진료과</option>{{#filterDepartments}}<option value="{{id}}">{{name}}</option>{{/filterDepartments}}</select>
+                  <select id="filter-doctor" class="text-[11px] border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-sm"><option value="">전체 의사</option>{{#filterDoctors}}<option value="{{id}}" data-dept-id="{{departmentId}}">{{displayName}}</option>{{/filterDoctors}}</select>
+                </div>
+              </div>
+              <div class="p-4 flex-1 overflow-y-auto custom-scrollbar bg-white">
+                {{#detail.history.size}}
+                  <div id="history-list-container" class="space-y-4 relative before:absolute before:inset-0 before:left-3 before:w-0.5 before:bg-slate-50 before:content-['']">
+                    {{#detail.history}}<div class="history-item relative pl-8 transition-all duration-300" data-dept-id="{{deptId}}" data-doctor-id="{{doctorId}}"><div class="absolute left-2 top-1.5 w-2 h-2 rounded-full bg-white border-2 border-indigo-500 shadow-sm"></div><div class="bg-slate-50/50 rounded-xl p-4 border border-slate-100 space-y-3 transition-all hover:border-indigo-200 hover:bg-white"><div class="flex justify-between items-start"><div class="text-[11px] font-bold text-slate-800">{{date}}</div><div class="text-[9px] text-slate-400 font-medium">{{deptName}}·{{doctorName}}</div></div><div class="text-xs font-bold text-slate-700 leading-tight">{{diagnosis}}</div><div class="text-[10px] text-slate-500 bg-white/80 p-2 rounded-lg border border-slate-50 line-clamp-2 overflow-hidden">{{prescription}}</div></div></div>{{/detail.history}}
+                  </div>
+                {{/detail.history.size}}
+                {{^detail.history.size}}
+                  <div class="py-12 flex flex-col items-center justify-center text-slate-400 gap-2"><i data-feather="folder" class="w-8 h-8 opacity-20"></i><p class="text-[11px] font-medium">과거 진료 기록이 없습니다.</p></div>
+                {{/detail.history.size}}
+              </div>
+            </div>
+          </div>
+
+          <!-- 하단: 물품 사용 섹션 -->
+          {{#detail.isConsultationCompleted}}
+          {{^detail.isTreatmentCompleted}}
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-bold text-slate-800 flex items-center gap-2"><i data-feather="package" class="w-5 h-5 text-indigo-600"></i>물품 사용</h3>
+              <div class="flex gap-1.5" id="item-category-btns">
+                <button type="button" data-cat="" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors">전체</button>
+                <button type="button" data-cat="MEDICAL_SUPPLIES" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">의료소모품</button>
+                <button type="button" data-cat="MEDICAL_EQUIPMENT" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">의료기기</button>
+                <button type="button" data-cat="GENERAL_SUPPLIES" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">사무/비품</button>
+              </div>
+            </div>
+            <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+              <table class="w-full text-xs">
+                <thead class="bg-slate-100 text-slate-500"><tr><th class="px-3 py-2 text-left font-medium">물품명</th><th class="px-3 py-2 text-left font-medium">사용자</th><th class="px-3 py-2 text-right font-medium">수량</th><th class="px-3 py-2 text-right font-medium">시간</th><th class="px-3 py-2 text-center font-medium">관리</th></tr></thead>
+                <tbody id="usage-log-tbody" class="divide-y divide-slate-100">
+                  {{#usageLogs}}<tr><td class="px-3 py-2 text-slate-700 font-medium">{{itemName}}</td><td class="px-3 py-2 text-slate-500">{{usedBy}}</td><td class="px-3 py-2 text-right text-slate-600 font-medium">{{amount}}개</td><td class="px-3 py-2 text-right text-slate-400">{{usedAt}}</td><td class="px-3 py-2 text-center"><button type="button" onclick="cancelUsage({{id}})" class="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"><i data-feather="x-circle" class="w-4 h-4"></i></button></td></tr>{{/usageLogs}}
+                  <tr id="usage-log-empty" style="{{#usageLogs.size}}display:none{{/usageLogs.size}}"><td colspan="5" class="px-3 py-2 text-xs text-slate-400 text-center font-bold italic opacity-50">사용된 물품이 없습니다.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="relative"><i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" id="item-search" placeholder="물품명 검색..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300"></div>
+            <div class="grid grid-cols-4 gap-3" id="item-use-grid">
+              {{#items}}<div class="item-card border border-slate-200 rounded-xl p-3 space-y-2" data-category="{{category}}" data-id="{{id}}"><div class="item-name text-sm font-bold text-slate-800 truncate">{{name}}</div><div class="text-xs text-slate-500">{{categoryText}}</div><div class="text-xs font-bold {{#lowStock}}text-red-600{{/lowStock}}{{^lowStock}}text-slate-600{{/lowStock}}">재고: <span class="quantity-span">{{quantity}}</span>개</div><form action="/nurse/item/use" method="post" class="flex items-center gap-1 item-use-form"><input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}"><input type="hidden" name="id" value="{{id}}"><input type="hidden" name="reservationId" value="{{detail.reservationId}}"><input type="number" name="amount" min="1" placeholder="수량" class="flex-1 w-0 px-2 py-1 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-1 focus:ring-indigo-400"><button type="submit" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap">사용</button></form></div>{{/items}}
+            </div>
+          </div>
+          {{/detail.isTreatmentCompleted}}
+          {{/detail.isConsultationCompleted}}
+        </div>
+      </div>
+    </main>
+
+    {{> common/footer-staff}}
+  </div>
+
+  <script>
+    feather.replace();
+    (function() {
+      // 1. 물품 로직
+      const itemSearchInput = document.getElementById('item-search');
+      const itemCards = document.querySelectorAll('.item-card');
+      const categoryBtns = document.querySelectorAll('.item-cat-btn');
+      let currentCategory = "";
+      function filterItems() {
+        if (!itemSearchInput) return;
+        const query = itemSearchInput.value.toLowerCase();
+        itemCards.forEach(card => {
+          const nEl = card.querySelector('.item-name');
+          const name = nEl ? nEl.textContent.toLowerCase() : "";
+          const cat = card.getAttribute('data-category');
+          card.style.display = ((!currentCategory || cat === currentCategory) && (!query || itemMatches(name, query))) ? 'block' : 'none';
+        });
+      }
+      if (categoryBtns) categoryBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          categoryBtns.forEach(b => { b.classList.remove('bg-indigo-600', 'text-white'); b.classList.add('bg-slate-100', 'text-slate-600'); });
+          btn.classList.remove('bg-slate-100', 'text-slate-600'); btn.classList.add('bg-indigo-600', 'text-white');
+          currentCategory = btn.getAttribute('data-cat'); filterItems();
+        });
+      });
+      if (itemSearchInput) itemSearchInput.addEventListener('input', filterItems);
+
+      var CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+      function getChosung(str) { return str.split('').map(ch => { var code = ch.charCodeAt(0); return (code >= 0xAC00 && code <= 0xD7A3) ? CHOSUNG[Math.floor((code - 0xAC00) / 588)] : ch; }).join(''); }
+      function itemMatches(name, query) { var q = query.toLowerCase(); return /^[ㄱ-ㅎ]+$/.test(q) ? getChosung(name).includes(q) : name.includes(q); }
+
+      document.querySelectorAll('.item-use-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const amount = form.querySelector('input[name="amount"]').value || 1;
+          const id = form.querySelector('input[name="id"]').value;
+          const reservationId = form.querySelector('input[name="reservationId"]').value;
+          const csrf = document.querySelector('input[name="_csrf"]').value;
+          const params = new URLSearchParams({ id, amount, reservationId, _csrf: csrf });
+          fetch('/nurse/item/use', { method: 'POST', body: params }).then(res => res.json()).then(data => {
+            if (data.quantity !== undefined) {
+              const card = form.closest('.item-card');
+              if (card) card.querySelector('.quantity-span').textContent = data.quantity;
+              form.querySelector('input[name="amount"]').value = ''; refreshUsageLogs(data.logs || []);
+            } else if (data.error) alert(data.error);
+          });
+        });
+      });
+
+      window.cancelUsage = function(logId) {
+        if(!confirm('정말 취소하시겠습니까?')) return;
+        const csrf = document.querySelector('input[name="_csrf"]').value;
+        const params = new URLSearchParams({ logId, reservationId: "{{detail.reservationId}}", _csrf: csrf });
+        fetch('/nurse/item/cancel', { method: 'POST', body: params }).then(res => res.json()).then(data => {
+          if (data.logs) {
+            refreshUsageLogs(data.logs);
+            if (data.itemId) {
+              const card = document.querySelector(`.item-card[data-id="${data.itemId}"]`);
+              if (card) card.querySelector('.quantity-span').textContent = data.quantity;
+            } else { location.reload(); }
+          } else if (data.error) alert(data.error);
+        });
+      };
+
+      window.refreshUsageLogs = function(logs) {
+        const tbody = document.getElementById('usage-log-tbody');
+        if (!tbody) return;
+        const empty = document.getElementById('usage-log-empty');
+        Array.from(tbody.querySelectorAll('tr:not(#usage-log-empty)')).forEach(r => r.remove());
+        if (logs && logs.length > 0) {
+          if (empty) empty.style.display = 'none';
+          logs.forEach(log => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td class="px-3 py-2 text-slate-700 font-medium">${log.itemName}</td><td class="px-3 py-2 text-slate-500">${log.usedBy}</td><td class="px-3 py-2 text-right text-slate-600 font-medium">${log.amount}개</td><td class="px-3 py-2 text-right text-slate-400">${log.usedAt}</td><td class="px-3 py-2 text-center"><button type="button" onclick="cancelUsage(${log.id})" class="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"><i data-feather="x-circle" class="w-4 h-4"></i></button></td>`;
+            tbody.appendChild(tr);
+          });
+          feather.replace();
+        } else { if (empty) empty.style.display = ''; }
+      };
+
+      // 2. 히스토리 로직 (페이징 및 필터링)
+      (function() {
+        var PAGE_SIZE = 3; var curPage = 1;
+        const fDept = document.getElementById('filter-dept'); const fDoc = document.getElementById('filter-doctor');
+        if (!fDept || !fDoc) return;
+        const docOpts = Array.from(fDoc.querySelectorAll('option')).filter(opt => opt.value !== "");
+        function clean(v) { return String(v || "").replace(/[^0-9]/g, '').trim(); }
+        function update() {
+          const all = Array.from(document.querySelectorAll('.history-item'));
+          const sd = clean(fDept.value); const sdr = clean(fDoc.value);
+          const filtered = all.filter(i => {
+            const d = clean(i.getAttribute('data-dept-id')); const dr = clean(i.getAttribute('data-doctor-id'));
+            return (!sd || d === sd) && (!sdr || dr === sdr);
+          });
+          all.forEach(i => i.style.display = 'none');
+          const totalP = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+          if (curPage > totalP) curPage = totalP;
+          filtered.slice((curPage - 1) * PAGE_SIZE, curPage * PAGE_SIZE).forEach(i => i.style.display = 'block');
+          const pBar = document.getElementById('history-pagination');
+          if (pBar) pBar.style.display = filtered.length > 0 ? 'flex' : 'none';
+          document.getElementById('history-current-page').textContent = curPage;
+          document.getElementById('history-total-pages').textContent = totalP;
+          document.getElementById('history-prev').disabled = (curPage <= 1);
+          document.getElementById('history-next').disabled = (curPage >= totalP);
+        }
+        fDept.addEventListener('change', function() {
+          const sid = clean(this.value); fDoc.innerHTML = '<option value="">전체 의사</option>';
+          docOpts.forEach(o => { if(!sid || clean(o.getAttribute('data-dept-id')) === sid) fDoc.appendChild(o); });
+          curPage = 1; update();
+        });
+        fDoc.addEventListener('change', () => { curPage = 1; update(); });
+        document.getElementById('history-prev').onclick = () => { if(curPage > 1) { curPage--; update(); } };
+        document.getElementById('history-next').onclick = () => {
+          const all = Array.from(document.querySelectorAll('.history-item'));
+          const sd = clean(fDept.value); const sdr = clean(fDoc.value);
+          const cnt = all.filter(i => (!sd || clean(i.getAttribute('data-dept-id')) === sd) && (!sdr || clean(i.getAttribute('data-doctor-id')) === sdr)).length;
+          if (curPage < Math.ceil(cnt / PAGE_SIZE)) { curPage++; update(); }
+        };
+        update();
+      })();
+    })();
+  </script>
 </body>
 </html>

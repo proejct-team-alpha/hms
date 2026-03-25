@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>내 정보 관리 - MediCare+</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/feather.min.js"></script>
+</head>
+<body class="min-h-screen flex">
+  {{> common/sidebar-staff}}
+
+  <div class="main-content flex-1 flex flex-col ml-64">
+    {{> common/header-staff}}
+
+    <main class="content-wrapper flex-1 p-6">
+      <div class="max-w-2xl mx-auto space-y-6">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+            <i data-feather="settings" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-slate-800">내 정보 관리</h1>
+            <p class="text-slate-500 mt-1">개인 정보 및 비밀번호를 변경할 수 있습니다.</p>
+          </div>
+        </div>
+
+        {{#success}}
+        <div class="bg-green-50 border border-green-200 text-green-700 rounded-xl p-4 flex items-center gap-2">
+          <i data-feather="check-circle" class="w-4 h-4 flex-shrink-0"></i>
+          <span class="text-sm font-medium">{{success}}</span>
+        </div>
+        {{/success}}
+        {{#error}}
+        <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 flex items-center gap-2">
+          <i data-feather="alert-circle" class="w-4 h-4 flex-shrink-0"></i>
+          <span class="text-sm font-medium">{{error}}</span>
+        </div>
+        {{/error}}
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+          <form method="post" action="/staff/mypage" class="space-y-5">
+            <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">이름</label>
+                <div class="relative">
+                  <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <i data-feather="user" class="w-4 h-4"></i>
+                  </div>
+                  <input type="text" name="name" value="{{info.name}}" required
+                    class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400">
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">사원번호</label>
+                <div class="relative">
+                  <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <i data-feather="hash" class="w-4 h-4"></i>
+                  </div>
+                  <input type="text" value="{{info.employeeNumber}}" disabled
+                    class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 text-slate-400 cursor-not-allowed">
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">담당업무</label>
+                <div class="relative">
+                  <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <i data-feather="briefcase" class="w-4 h-4"></i>
+                  </div>
+                  <input type="text" value="{{info.role}}" disabled
+                    class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 text-slate-400 cursor-not-allowed">
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">이메일</label>
+                <div class="relative">
+                  <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <i data-feather="mail" class="w-4 h-4"></i>
+                  </div>
+                  <input type="email" name="email" value="{{info.email}}" placeholder="이메일 주소"
+                    class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400">
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">연락처</label>
+                <div class="relative">
+                  <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <i data-feather="phone" class="w-4 h-4"></i>
+                  </div>
+                  <input type="text" name="phone" value="{{info.phone}}" placeholder="010-0000-0000"
+                    class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400">
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100">
+              <div class="flex items-center gap-2 mb-4">
+                <i data-feather="lock" class="w-4 h-4 text-indigo-500"></i>
+                <h3 class="text-sm font-bold text-indigo-600">비밀번호 변경</h3>
+              </div>
+              <div class="grid grid-cols-3 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">현재 비밀번호</label>
+                  <input type="password" name="currentPassword" placeholder="변경할 경우 입력"
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">새 비밀번호</label>
+                  <input type="password" name="newPassword" placeholder="새 비밀번호"
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">비밀번호 확인</label>
+                  <input type="password" name="confirmPassword" placeholder="새 비밀번호 재입력"
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400">
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end pt-2">
+              <button type="submit"
+                class="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors">
+                <i data-feather="save" class="w-4 h-4"></i>
+                정보 수정하기
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    {{> common/footer-staff}}
+  </div>
+
+  <script>feather.replace();</script>
+</body>
+</html>

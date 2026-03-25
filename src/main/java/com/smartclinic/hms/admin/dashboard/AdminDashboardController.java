@@ -21,6 +21,8 @@ public class AdminDashboardController {
         AdminDashboardStatsResponse stats = adminDashboardStatsService.getDashboardStats();
 
         req.setAttribute("model", stats);
+        // 페이지 타이틀 설정
+        req.setAttribute("pageTitle", "관리자 대시보드");
         return "admin/dashboard";
     }
 

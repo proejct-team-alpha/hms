@@ -18,6 +18,10 @@ repositories {
 	mavenCentral()
 }
 
+configurations {
+	mockitoAgent
+}
+
 dependencies {
 	// Spring Boot Starters (alphabetical)
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -25,15 +29,15 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-
-	// Third-party
-	implementation 'com.auth0:java-jwt:4.3.0'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
 	// Compile-only (빌드 시에만 필요)
 	compileOnly 'org.projectlombok:lombok'
 
 	// Runtime-only (실행 시에만 필요)
 	runtimeOnly 'com.h2database:h2'
+	runtimeOnly 'com.mysql:mysql-connector-j'
 	// H2 콘솔 (Spring Boot 4 — 별도 모듈로 분리됨, 개발 전용)
 	developmentOnly 'org.springframework.boot:spring-boot-h2console'
 
@@ -47,6 +51,7 @@ dependencies {
 	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	mockitoAgent('org.mockito:mockito-core:5.20.0') { transitive = false }
 }
 
 // JAR 설정
@@ -57,10 +62,16 @@ bootJar {
 // 테스트 설정
 test {
 	useJUnitPlatform()
+	jvmArgs "-javaagent:${configurations.mockitoAgent.asPath}"
 }
 
-// 컴파일 옵션 (UTF-8 인코딩)
+// 컴파일 옵션 (UTF-8 인코딩, Spring 6+ 파라미터명 reflection 지원)
 tasks.withType(JavaCompile).configureEach {
 	options.encoding = 'UTF-8'
+	options.compilerArgs << '-parameters'
+}
+
+bootRun {
+    systemProperties = System.properties
 }
 

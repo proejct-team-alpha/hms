@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -33,6 +34,15 @@ public class HospitalRule {
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 
+    @Column(length = 100)
+    private String target;
+
+    @Column(name = "start_date")
+    private LocalDate startDate;
+
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -50,11 +60,12 @@ public class HospitalRule {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public static HospitalRule create(String title, String content, HospitalRuleCategory category) {
+    public static HospitalRule create(String title, String content, HospitalRuleCategory category, boolean active) {
         HospitalRule r = new HospitalRule();
         r.title = title;
         r.content = content;
         r.category = category;
+        r.active = active;
         return r;
     }
 
@@ -65,7 +76,11 @@ public class HospitalRule {
         this.active = active;
     }
 
-    public void toggleActive() {
-        this.active = !this.active;
+    public void activate() {
+        this.active = true;
+    }
+
+    public void deactivate() {
+        this.active = false;
     }
 }

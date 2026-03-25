@@ -1,0 +1,112 @@
+# W4-8 리포트 - 통합 테스트 및 최종 검증
+
+## 작업 개요
+- **작업명**: LLM 병합(Task 2~7) 결과물에 대한 JUnit 슬라이스 테스트 작성, 전체 테스트 통과 확인,
+  LLM_SERVICE_URL 환경변수 설정, 수동 시나리오 체크리스트 정의
+- **신규 테스트 파일**:
+  - `test/.../llm/LlmPageControllerTest.java`
+  - `test/.../llm/ChatControllerTest.java`
+  - `test/.../llm/MedicalControllerTest.java`
+  - `test/.../llm/LlmReservationControllerTest.java`
+- **수정 파일**:
+  - `.env.example` — `LLM_SERVICE_URL` 항목 추가
+
+## 작업 내용
+
+### 1. LLM 슬라이스 테스트 (4종)
+
+공통 패턴: `@WebMvcTest` + inner `@TestConfiguration TestSecurityConfig` + `@MockitoBean`
+
+#### LlmPageControllerTest (3개)
+
+| 테스트 | 결과 |
+|---|---|
+| GET /llm/medical — 비인증 200 (permitAll) | PASS |
+| GET /llm/chatbot — 비인증 /login 리다이렉트 | PASS |
+| GET /llm/chatbot — DOCTOR 인증 200 | PASS |
+
+#### ChatControllerTest (4개)
+
+| 테스트 | 결과 |
+|---|---|
+| POST /llm/chatbot/query — 비인증 리다이렉트 | PASS |
+| POST /llm/chatbot/query — DOCTOR 인증 200 | PASS |
+| POST /llm/chatbot/query/stream — DOCTOR 인증 SSE 200 | PASS |
+| GET /llm/chatbot/history/{staffId} — DOCTOR 인증 Page 200 | PASS |
+
+#### MedicalControllerTest (4개)
+
+| 테스트 | 결과 |
+|---|---|
+| POST /llm/medical/query — 비인증 200 (permitAll) | PASS |
+| POST /llm/medical/query/consult — 비인증 200, `recommendedDepartment` 검증 | PASS |
+| POST /llm/medical/query/stream — 비인증 SSE 200 | PASS |
+| GET /llm/medical/history/{staffId} — 인증 Page 200 | PASS |
+
+#### LlmReservationControllerTest (2개)
+
+| 테스트 | 결과 |
+|---|---|
+| GET /llm/reservation/slots/{doctorId} — 비인증 200 (permitAll) | PASS |
+| 응답 구조 확인 — doctorId, doctorName, slots 필드 | PASS |
+
+### 2. 전체 테스트 결과
+
+```
+150 tests — BUILD SUCCESSFUL
+```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: 프로젝트의 모든 JUnit 테스트(기존 137개 + 신규 13개)가 전부 통과했음을 나타냅니다.
+> - **왜 이렇게 썼는지**: 새 기능을 추가하면 기존 기능이 깨지지 않았는지(회귀 테스트) 확인하는 것이 중요합니다. 150개 전체 통과는 LLM 이식 작업이 기존 HMS 기능에 영향을 주지 않았음을 의미합니다.
+> - **쉽게 말하면**: 신규 직원 13명이 입사한 후, 기존 직원 137명 포함 전원이 정상 출근하고 업무에 문제가 없다는 확인입니다.
+
+기존 테스트(137개) 회귀 없음. LLM 신규 테스트(13개) 전원 통과.
+
+### 3. LLM_SERVICE_URL 환경변수
+
+`.env.example`에 항목 추가:
+```
+LLM_SERVICE_URL=http://192.168.0.73:8000
+```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: `.env.example` 파일에 `LLM_SERVICE_URL` 환경변수 예시를 추가합니다. 이 파일은 실제로 앱이 읽는 파일이 아니라, 개발자들에게 어떤 환경변수가 필요한지 알려주는 템플릿입니다.
+> - **왜 이렇게 썼는지**: `.env` 파일은 실제 IP나 비밀번호가 들어가므로 Git에 커밋하지 않습니다. `.env.example`은 민감 정보 없이 구조만 보여주는 샘플 파일로 Git에 포함시켜, 새 팀원이 참고해서 자신의 `.env` 파일을 만들 수 있게 합니다.
+> - **쉽게 말하면**: 집 열쇠(실제 .env)는 공개하지 않지만, "열쇠 모양은 이렇습니다"라는 안내(.env.example)는 공유하는 것입니다.
+
+`application-dev.properties` 기본값: `http://localhost:8000`
+`.env` 파일에 실제 IP 설정 후 `.\run-dev.ps1` 실행.
+
+### 4. 수동 시나리오 체크리스트
+
+서버 기동: `.env` 설정 → `.\run-dev.ps1`
+
+| 시나리오 | 방법 | 기대 결과 |
+|---|---|---|
+| AI 증상 상담 페이지 | 브라우저 GET /llm/medical (비인증) | 채팅 UI 렌더링 |
+| 병원규칙 Q&A 미인증 | 브라우저 GET /llm/chatbot (비인증) | /login 리다이렉트 |
+| 병원규칙 Q&A 인증 | DOCTOR 로그인 후 GET /llm/chatbot | 채팅 UI 렌더링 |
+| 의료 상담 LLM 호출 | POST /llm/medical/query `{"query":"두통"}` | python-llm 응답 텍스트 |
+| 의사 추천 API | POST /llm/medical/query/consult `{"query":"두통"}` | recommendedDepartment, doctors 포함 JSON |
+| 슬롯 조회 | GET /llm/reservation/slots/1 | doctorId, doctorName, slots 포함 JSON |
+| 챗봇 쿼리 | DOCTOR 세션 POST /llm/chatbot/query `{"query":"당직"}` | 응답 텍스트 반환 |
+
+## 빌드 결과
+```
+BUILD SUCCESSFUL — 150 tests
+```
+
+> **💡 입문자 설명**
+> - **이 코드가 하는 일**: `./gradlew test` 명령으로 전체 테스트를 실행한 최종 결과입니다. 150개 테스트 모두 통과하고 빌드가 성공했습니다.
+> - **왜 이렇게 썼는지**: 4주차 전체 작업(Task 2~8)의 최종 품질 확인 지표입니다. 테스트가 모두 통과해야 다음 단계(PR 생성, 배포)로 진행할 수 있습니다.
+> - **쉽게 말하면**: 최종 검수를 통과해 출하 준비가 완료된 상태입니다.
+
+## 특이사항
+- `LlmPageControllerTest.chatbotPage_비인증_리다이렉트`: 최초 작성 시 `redirectedUrlPattern("**/login")`이
+  `/login`과 불일치 → `redirectedUrl("/login")`으로 수정. Spring Security는 절대 경로로 리다이렉트.
+- `MedicalControllerTest.consultQuery_비인증_200`: `Mono<MedicalLlmResponse>` 반환 컨트롤러는
+  MockMvc에서 비동기 디스패치 처리 필요 → `request().asyncStarted()` + `asyncDispatch(mvcResult)` 패턴으로 수정.
+- `ChatController.resolveStaffId()` mock 처리: `staffRepository.findByUsernameAndActiveTrue(any())`를
+  `Optional.empty()` 반환으로 mock → staffId null 처리 경로 정상 동작 확인.
+- LLM 슬라이스 테스트는 python-llm 서버 없이 mock으로 동작 — CI 환경에서도 통과 가능.

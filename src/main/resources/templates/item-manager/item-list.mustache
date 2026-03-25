@@ -1,127 +1,319 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>물품 관리</title>
-    <link rel="stylesheet" href="/css/tailwind.min.css">
-    <script src="/js/lucide.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>물품 목록 - MediCare+</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/feather.min.js"></script>
 </head>
-<body class="bg-slate-50 min-h-screen p-6">
-    <div class="max-w-7xl mx-auto space-y-6">
+<body class="min-h-screen flex">
+  {{> common/sidebar-item-manager}}
+
+  <div class="main-content flex-1 flex flex-col ml-64">
+    {{> common/header-staff}}
+
+    <main class="content-wrapper flex-1 p-6">
+      <div class="space-y-6 max-w-6xl mx-auto">
         <div class="flex justify-between items-center mb-8">
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
-                    <i data-lucide="package" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-800">물품 관리</h1>
-                    <p class="text-slate-500 mt-1">병원 내 의료소모품 및 비품 재고를 관리합니다.</p>
-                </div>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+              <i data-feather="package" class="w-6 h-6"></i>
             </div>
-            <a href="/item-manager/item/form" class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
-                <i data-lucide="plus" class="w-5 h-5"></i>
-                물품 등록
-            </a>
+            <div>
+              <h1 class="text-2xl font-bold text-slate-800">물품 관리</h1>
+              <p class="text-slate-500 mt-1">병원 내 의료소모품 및 비품 재고를 관리합니다.</p>
+            </div>
+          </div>
+          <a href="/item-manager/item-form" class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
+            <i data-feather="plus" class="w-5 h-5"></i>
+            물품 등록
+          </a>
         </div>
 
-        <form action="/item-manager/items" method="GET" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div class="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto">
-                <button type="submit" name="category" value="ALL" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap bg-indigo-600 text-white">전체</button>
-                <button type="submit" name="category" value="MEDICAL" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200">의료소모품</button>
-                <button type="submit" name="category" value="DRUG" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200">의약품</button>
-                <button type="submit" name="category" value="OFFICE" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200">사무용품</button>
-            </div>
-            <div class="relative w-full md:w-64">
-                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                <input type="text" name="keyword" value="" placeholder="물품명 검색..." class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"/>
-            </div>
-        </form>
+        <!-- Flash messages -->
+        {{#message}}
+        <div class="p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700">{{message}}</div>
+        {{/message}}
+        {{#errorMessage}}
+        <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{{errorMessage}}</div>
+        {{/errorMessage}}
 
+        <!-- Category Filters -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-2 flex-wrap">
+          {{#categoryFilters}}
+          <a href="{{url}}" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{#selected}}bg-indigo-600 text-white{{/selected}}{{^selected}}bg-slate-100 text-slate-600 hover:bg-slate-200{{/selected}}">
+            {{label}}
+          </a>
+          {{/categoryFilters}}
+        </div>
+
+        <!-- 검색창 -->
+        <div class="relative">
+          <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="item-list-search" placeholder="물품명 검색 (초성·영문 가능)"
+                 class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300">
+        </div>
+
+        <!-- Item Table -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
-                        <th class="p-4 font-medium">물품명</th>
-                        <th class="p-4 font-medium">카테고리</th>
-                        <th class="p-4 font-medium text-right">현재 재고</th>
-                        <th class="p-4 font-medium text-right">최소 수량</th>
-                        <th class="p-4 font-medium text-center">상태</th>
-                        <th class="p-4 font-medium text-right">관리</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200">
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="p-4 text-sm font-bold text-slate-800">알코올 솜</td>
-                        <td class="p-4 text-sm text-slate-600">
-                            <span class="px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-medium">의료소모품</span>
-                        </td>
-                        <td class="p-4 text-sm font-bold text-right text-red-600">
-                            5 개
-                        </td>
-                        <td class="p-4 text-sm text-slate-500 text-right">
-                            20 개
-                        </td>
-                        <td class="p-4 text-center">
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">
-                                <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> 재고 부족
-                            </span>
-                        </td>
-                        <td class="p-4 text-right">
-                            <div class="flex items-center justify-end gap-2">
-                                <a href="/item-manager/item/1/edit" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors inline-block">
-                                    <i data-lucide="edit-2" class="w-4 h-4"></i>
-                                </a>
-                                <form action="/item-manager/item/1/delete" method="POST" class="inline" onsubmit="return confirm('정말 삭제하시겠습니까?');">
-                                    <input type="hidden" name="itemId" value="1">
-                                    <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
-                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="p-4 text-sm font-bold text-slate-800">타이레놀</td>
-                        <td class="p-4 text-sm text-slate-600">
-                            <span class="px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-medium">의약품</span>
-                        </td>
-                        <td class="p-4 text-sm font-bold text-right text-slate-800">
-                            120 정
-                        </td>
-                        <td class="p-4 text-sm text-slate-500 text-right">
-                            50 정
-                        </td>
-                        <td class="p-4 text-center">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
-                                정상
-                            </span>
-                        </td>
-                        <td class="p-4 text-right">
-                            <div class="flex items-center justify-end gap-2">
-                                <a href="/item-manager/item/2/edit" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors inline-block">
-                                    <i data-lucide="edit-2" class="w-4 h-4"></i>
-                                </a>
-                                <form action="/item-manager/item/2/delete" method="POST" class="inline" onsubmit="return confirm('정말 삭제하시겠습니까?');">
-                                    <input type="hidden" name="itemId" value="2">
-                                    <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
-                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
+                <th class="p-4 font-medium">물품명</th>
+                <th class="p-4 font-medium">카테고리</th>
+                <th class="p-4 font-medium text-right">현재 재고</th>
+                <th class="p-4 font-medium text-center">입고</th>
+                <th class="p-4 font-medium text-right">최소 수량</th>
+                <th class="p-4 font-medium text-center">상태</th>
+                <th class="p-4 font-medium text-right">관리</th>
+              </tr>
+            </thead>
+            <tbody id="item-list-tbody" class="divide-y divide-slate-200">
+              {{#items}}
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="p-4 text-sm font-bold text-slate-800">{{name}}</td>
+                <td class="p-4 text-sm text-slate-600">
+                  <span class="px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-medium">{{categoryText}}</span>
+                </td>
+                <td class="p-4 text-sm text-right">
+                  <span class="font-bold {{#lowStock}}text-red-600{{/lowStock}}{{^lowStock}}text-slate-800{{/lowStock}}">{{quantity}}개</span>
+                </td>
+                <td class="p-4 text-sm text-center">
+                  <form method="post" action="/item-manager/item/restock" class="flex items-center justify-center gap-1">
+                    <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                    <input type="hidden" name="id" value="{{id}}">
+                    <input type="hidden" name="redirectTo" value="/item-manager/item-list">
+                    <input type="number" name="amount" min="1" placeholder="수량"
+                           class="w-16 px-2 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-400 text-center">
+                    <button type="submit"
+                            class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-md transition-colors whitespace-nowrap">
+                      입고
+                    </button>
+                  </form>
+                </td>
+                <td class="p-4 text-sm text-slate-500 text-right">{{minQuantity}}개</td>
+                <td class="p-4 text-center">
+                  {{#lowStock}}
+                  <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">
+                    <i data-feather="alert-triangle" class="w-3.5 h-3.5"></i>
+                    재고 부족
+                  </span>
+                  {{/lowStock}}
+                  {{^lowStock}}
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
+                    정상
+                  </span>
+                  {{/lowStock}}
+                </td>
+                <td class="p-4 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    <a href="/item-manager/item-form?id={{id}}" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors inline-block">
+                      <i data-feather="edit-2" class="w-4 h-4"></i>
+                    </a>
+                    <form method="post" action="/item-manager/item/delete" style="display:inline;">
+                      <input type="hidden" name="{{_csrf.parameterName}}" value="{{_csrf.token}}">
+                      <input type="hidden" name="id" value="{{id}}">
+                      <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
+                        <i data-feather="trash-2" class="w-4 h-4"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {{/items}}
+              <tr id="js-empty-row" style="display:none">
+                <td colspan="7" class="p-8 text-center text-slate-500 text-sm">검색 결과가 없습니다.</td>
+              </tr>
+              {{^items}}
+              <tr id="empty-row">
+                <td colspan="7" class="p-8 text-center text-slate-500 text-sm">등록된 물품이 없습니다.</td>
+              </tr>
+              {{/items}}
+            </tbody>
+          </table>
         </div>
 
-        <div class="flex justify-center mt-6">
-            <nav class="flex gap-2"><span class="px-3 py-1 bg-indigo-600 text-white rounded">1</span><a href="?page=2" class="px-3 py-1 text-slate-600 hover:bg-slate-100 rounded">2</a></nav>
+        <!-- 페이징 바 -->
+        <div id="item-list-pagination" class="flex items-center justify-between" style="display:none!important">
+          <span id="item-list-page-info" class="text-xs text-slate-500"></span>
+          <div class="flex items-center gap-2">
+            <button id="item-list-prev" type="button"
+                    class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              이전
+            </button>
+            <div id="item-list-page-numbers" class="flex items-center gap-1"></div>
+            <button id="item-list-next" type="button"
+                    class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              다음
+            </button>
+          </div>
         </div>
-    </div>
+      </div>
+    </main>
 
-    <script>
-        lucide.createIcons();
-    </script>
+    {{> common/footer-staff}}
+  </div>
+
+  <script>
+    // ===== 물품 목록 검색 + 페이징 =====
+    const ITEM_LIST_PAGE_SIZE = 10;
+    let itemListPage = 1;
+    let itemListQuery = '';
+
+    const CHOSUNG_LIST = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+    function getChosung(str) {
+      return str.split('').map(function(ch) {
+        const code = ch.charCodeAt(0);
+        if (code >= 0xAC00 && code <= 0xD7A3) return CHOSUNG_LIST[Math.floor((code - 0xAC00) / 588)];
+        return ch;
+      }).join('');
+    }
+    function isChosungOnly(str) { return /^[ㄱ-ㅎ]+$/.test(str); }
+    function itemListMatches(name, query) {
+      if (!query) return true;
+      const q = query.toLowerCase();
+      if (isChosungOnly(q)) return getChosung(name).includes(q);
+      return name.toLowerCase().includes(q);
+    }
+
+    function getItemListRows() {
+      return Array.from(document.querySelectorAll('#item-list-tbody tr:not(#empty-row):not(#js-empty-row)')).filter(function(row) {
+        const name = row.querySelector('td:first-child') ? row.querySelector('td:first-child').textContent.trim() : '';
+        return itemListMatches(name, itemListQuery);
+      });
+    }
+
+    function buildItemListPageNumbers(totalPages) {
+      const half = 2;
+      let start = Math.max(1, itemListPage - half);
+      const end = Math.min(totalPages, start + 4);
+      start = Math.max(1, end - 4);
+      let html = '';
+      if (start > 1) {
+        html += '<button type="button" data-page="1" class="il-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors">1</button>';
+        if (start > 2) html += '<span class="px-1 text-xs text-slate-400">...</span>';
+      }
+      for (let p = start; p <= end; p++) {
+        const active = p === itemListPage ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100';
+        html += '<button type="button" data-page="' + p + '" class="il-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 ' + active + ' transition-colors">' + p + '</button>';
+      }
+      if (end < totalPages) {
+        if (end < totalPages - 1) html += '<span class="px-1 text-xs text-slate-400">...</span>';
+        html += '<button type="button" data-page="' + totalPages + '" class="il-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors">' + totalPages + '</button>';
+      }
+      return html;
+    }
+
+    function renderItemList() {
+      const rows = getItemListRows();
+      const total = rows.length;
+      const totalPages = Math.max(1, Math.ceil(total / ITEM_LIST_PAGE_SIZE));
+      if (itemListPage > totalPages) itemListPage = totalPages;
+
+      const start = (itemListPage - 1) * ITEM_LIST_PAGE_SIZE;
+      const end = start + ITEM_LIST_PAGE_SIZE;
+
+      document.querySelectorAll('#item-list-tbody tr:not(#empty-row):not(#js-empty-row)').forEach(function(r) { r.style.display = 'none'; });
+      rows.forEach(function(r, i) { r.style.display = (i >= start && i < end) ? '' : 'none'; });
+      const jsEmptyRow = document.getElementById('js-empty-row');
+      if (jsEmptyRow) jsEmptyRow.style.display = (total === 0) ? '' : 'none';
+
+      const bar = document.getElementById('item-list-pagination');
+      if (!bar) return;
+      if (totalPages <= 1) { bar.style.removeProperty('display'); bar.style.display = 'none'; return; }
+      bar.style.removeProperty('display');
+
+      const numbersEl = document.getElementById('item-list-page-numbers');
+      if (numbersEl) {
+        numbersEl.innerHTML = buildItemListPageNumbers(totalPages);
+        numbersEl.querySelectorAll('.il-page-btn').forEach(function(btn) {
+          btn.addEventListener('click', function() { itemListPage = parseInt(this.dataset.page); renderItemList(); });
+        });
+      }
+
+      const info = document.getElementById('item-list-page-info');
+      if (info) info.textContent = total + '건 / ' + totalPages + '페이지';
+
+      const prev = document.getElementById('item-list-prev');
+      const next = document.getElementById('item-list-next');
+      if (prev) prev.disabled = itemListPage <= 1;
+      if (next) next.disabled = itemListPage >= totalPages;
+    }
+
+    const ilSearch = document.getElementById('item-list-search');
+    if (ilSearch) {
+      ilSearch.addEventListener('input', function() {
+        itemListQuery = this.value.trim();
+        itemListPage = 1;
+        renderItemList();
+      });
+    }
+
+    const ilPrev = document.getElementById('item-list-prev');
+    const ilNext = document.getElementById('item-list-next');
+    if (ilPrev) ilPrev.addEventListener('click', function() { itemListPage--; renderItemList(); });
+    if (ilNext) ilNext.addEventListener('click', function() { itemListPage++; renderItemList(); });
+
+    renderItemList();
+    // ===== END 물품 목록 검색 + 페이징 =====
+
+    document.querySelectorAll('form[action$="/item/restock"]').forEach(function(form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const input = form.querySelector('input[name="amount"]');
+        const value = input.value.trim();
+        const amount = Number(value);
+
+        if (value === '' || isNaN(amount) || !Number.isInteger(amount) || amount < 0) {
+          alert('올바른 수량을 입력해주세요. (0 이상의 정수)');
+          return;
+        }
+
+        const id = form.querySelector('input[name="id"]').value;
+        const csrfInput = form.querySelector('input[type="hidden"]:not([name="id"]):not([name="redirectTo"])');
+
+        const params = new URLSearchParams();
+        params.append('id', id);
+        params.append('amount', value);
+        params.append(csrfInput.name, csrfInput.value);
+
+        fetch('/item-manager/item/restock/ajax', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString()
+        })
+        .then(function(res) {
+          if (!res.ok) { return res.json().then(function(d) { alert(d.error || '서버 오류가 발생했습니다.'); throw new Error('server error'); }); }
+          return res.json();
+        })
+        .then(function(data) {
+          if (data.quantity !== undefined) {
+            const row = form.closest('tr');
+            const qtySpan = row.querySelector('td:nth-child(3) span');
+            const lowStock = data.quantity < data.minQuantity;
+
+            // 수량 텍스트 + 색상 갱신
+            qtySpan.textContent = data.quantity + '개';
+            qtySpan.className = 'font-bold ' + (lowStock ? 'text-red-600' : 'text-slate-800');
+
+            // 상태 배지 갱신
+            const statusCell = row.querySelector('td:nth-child(6)');
+            if (lowStock) {
+              statusCell.innerHTML = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800"><i data-feather="alert-triangle" class="w-3.5 h-3.5"></i>재고 부족</span>';
+            } else {
+              statusCell.innerHTML = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">정상</span>';
+            }
+            feather.replace();
+
+            input.value = '';
+          }
+        })
+        .catch(function(err) { if (err.message !== 'server error') alert('오류가 발생했습니다. 다시 시도해주세요.'); });
+      });
+    });
+  </script>
+  <script>feather.replace();</script>
 </body>
 </html>

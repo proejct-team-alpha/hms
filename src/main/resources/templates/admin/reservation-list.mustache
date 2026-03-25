@@ -1,79 +1,148 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>예약 취소 관리</title>
-    <link rel="stylesheet" href="/css/tailwind.min.css">
-    <script src="/js/lucide.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{pageTitle}} - MediCare+</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/feather.min.js"></script>
 </head>
-<body class="bg-slate-50 min-h-screen p-6">
-    <div class="max-w-7xl mx-auto space-y-6">
-        <div class="flex items-center gap-3 mb-8">
+<body class="min-h-screen flex">
+  {{> common/sidebar-admin}}
+
+  <div class="main-content flex-1 flex flex-col ml-64">
+    {{> common/header-staff}}
+
+    <main class="content-wrapper flex-1 p-6">
+      <div class="space-y-6 max-w-6xl mx-auto">
+      
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
             <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
-                <i data-lucide="calendar" class="w-6 h-6"></i>
+              <i data-feather="calendar" class="w-6 h-6"></i>
             </div>
             <div>
-                <h1 class="text-2xl font-bold text-slate-800">예약 취소 관리</h1>
-                <p class="text-slate-500 mt-1">모든 예약을 조회하고 취소할 수 있습니다.</p>
+              <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
+              <p class="text-slate-500 mt-1">환자명 또는 연락처로 예약과 접수 현황을 빠르게 조회합니다.</p>
             </div>
+          </div>
+          <div class="text-sm text-slate-500 text-right">
+            <div>총 <span class="font-semibold text-slate-700">{{model.totalCount}}</span>건</div>
+          </div>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <form action="/admin/reservation-list" method="GET" class="p-4 border-b border-slate-200 flex flex-col md:flex-row justify-between items-center bg-slate-50 gap-4">
-                <div class="flex flex-wrap gap-2">
-                    <button type="submit" name="status" value="ALL" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-slate-800 text-white">전체</button>
-                    <button type="submit" name="status" value="RESERVED" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600">예약</button>
-                    <button type="submit" name="status" value="RECEIVED" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-white border border-slate-300 text-slate-600">접수</button>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="relative">
-                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                        <input type="text" name="keyword" value="" placeholder="환자명 검색..." class="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-64"/>
-                    </div>
-                </div>
-            </form>
+          <form method="get" action="/admin/reservation/list" class="p-4 border-b border-slate-200 bg-slate-50">
+            <input type="hidden" name="page" value="1">
+            <input type="hidden" name="size" value="{{model.size}}">
 
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
-                        <th class="p-4 font-medium">시간</th>
-                        <th class="p-4 font-medium">환자명</th>
-                        <th class="p-4 font-medium">연락처</th>
-                        <th class="p-4 font-medium">진료과 / 전문의</th>
-                        <th class="p-4 font-medium">상태</th>
-                        <th class="p-4 font-medium text-right">액션</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200">
-                    <tr class="hover:bg-slate-50 transition-colors cursor-pointer">
-                        <td class="p-4 text-sm font-medium text-slate-900">10:00</td>
-                        <td class="p-4 text-sm font-semibold text-slate-800">김환자</td>
-                        <td class="p-4 text-sm text-slate-600">010-1234-5678</td>
-                        <td class="p-4 text-sm text-slate-600">내과 / 김의사</td>
-                        <td class="p-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">예약</span>
-                        </td>
-                        <td class="p-4 text-right">
-                            <div class="flex items-center justify-end gap-2">
-                                <form action="/admin/reservation-list" method="POST" class="inline" onsubmit="return confirm('예약을 취소하시겠습니까?');">
-                                    <input type="hidden" name="id" value="1">
-                                    <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 text-sm font-medium rounded-lg transition-colors">
-                                        <i data-lucide="x-circle" class="w-4 h-4"></i> 취소
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="flex flex-wrap items-end gap-3">
+              <div class="min-w-[280px] flex-1">
+                <label for="reservation-keyword" class="block text-sm font-medium text-slate-700 mb-1.5">검색</label>
+                <div class="relative">
+                  <i data-feather="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                  <input
+                    type="text"
+                    id="reservation-keyword"
+                    name="keyword"
+                    value="{{model.keyword}}"
+                    placeholder="환자명 또는 연락처 검색"
+                    class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  >
+                </div>
+              </div>
 
-            <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-center">
-                <nav class="flex gap-2"><span class="px-3 py-1 bg-indigo-600 text-white rounded">1</span><a href="?page=2" class="px-3 py-1 text-slate-600 hover:bg-slate-100 rounded">2</a></nav>
+              <div class="min-w-[180px]">
+                <label for="reservation-status" class="block text-sm font-medium text-slate-700 mb-1.5">상태</label>
+                <select
+                  id="reservation-status"
+                  name="status"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                >
+                  {{#model.statusOptions}}
+                    <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                  {{/model.statusOptions}}
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                조회
+              </button>
+              <a
+                href="/admin/reservation/list"
+                class="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
+              >
+                초기화
+              </a>
             </div>
-        </div>
-    </div>
+          </form>
 
-    <script>lucide.createIcons();</script>
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
+                <th class="p-4 font-medium">예약번호</th>
+                <th class="p-4 font-medium">예약일</th>
+                <th class="p-4 font-medium">시간</th>
+                <th class="p-4 font-medium">환자명</th>
+                <th class="p-4 font-medium">연락처</th>
+                <th class="p-4 font-medium">진료과 / 의사</th>
+                <th class="p-4 font-medium">상태</th>
+                <th class="p-4 font-medium text-right">관리</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">
+              {{#model.reservations}}
+                <tr class="hover:bg-slate-50 transition-colors">
+                  <td class="p-4 text-sm text-slate-700">{{reservationNumber}}</td>
+                  <td class="p-4 text-sm text-slate-700">{{reservationDate}}</td>
+                  <td class="p-4 text-sm text-slate-700">{{timeSlot}}</td>
+                  <td class="p-4 text-sm font-semibold text-slate-800">{{patientName}}</td>
+                  <td class="p-4 text-sm text-slate-700">{{patientPhone}}</td>
+                  <td class="p-4 text-sm text-slate-700">{{departmentName}} / {{doctorName}}</td>
+                  <td class="p-4">
+                    {{#reserved}}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800">예약</span>{{/reserved}}
+                    {{#received}}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800">접수</span>{{/received}}
+                    {{#completed}}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">완료</span>{{/completed}}
+                    {{#cancelled}}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800">취소</span>{{/cancelled}}
+                  </td>
+                  <td class="p-4 text-right">
+                    <a href="{{patientDetailUrl}}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors">환자 상세</a>
+                  </td>
+                </tr>
+              {{/model.reservations}}
+              {{^model.reservations}}
+                <tr>
+                  <td colspan="8" class="p-8 text-center text-slate-500">조회된 내역이 없습니다.</td>
+                </tr>
+              {{/model.reservations}}
+            </tbody>
+          </table>
+
+          <div class="p-4 border-t border-slate-200 flex items-center justify-center gap-2 bg-slate-50">
+            {{#model.hasPrevious}}
+              <a href="{{model.previousUrl}}" class="px-3 py-1.5 text-sm rounded-md border border-slate-300 text-slate-600 hover:bg-white">이전</a>
+            {{/model.hasPrevious}}
+
+            {{#model.pageLinks}}
+              <a href="{{url}}" class="px-3 py-1.5 text-sm rounded-md border transition-colors {{#active}}bg-slate-800 border-slate-800 text-white{{/active}}{{^active}}border-slate-300 text-slate-600 hover:bg-white{{/active}}">{{page}}</a>
+            {{/model.pageLinks}}
+
+            {{#model.hasNext}}
+              <a href="{{model.nextUrl}}" class="px-3 py-1.5 text-sm rounded-md border border-slate-300 text-slate-600 hover:bg-white">다음</a>
+            {{/model.hasNext}}
+          </div>
+        </div>
+      </div>
+    </main>
+
+    {{> common/footer-staff}}
+  </div>
+
+  <script>
+    feather.replace();
+  </script>
 </body>
 </html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>물품 출고 - MediCare+</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/feather.min.js"></script>
+</head>
+<body class="min-h-screen flex">
+  {{> common/sidebar-staff}}
+
+  <div class="main-content flex-1 flex flex-col ml-64">
+    {{> common/header-staff}}
+
+    <main class="content-wrapper flex-1 p-6">
+      <div class="max-w-5xl mx-auto space-y-6">
+
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+            <i data-feather="package" class="w-5 h-5"></i>
+          </div>
+          <h1 class="text-2xl font-bold text-slate-800">물품 출고</h1>
+        </div>
+
+        <!-- [의사 페이지 이식] 사용(출고) 내역 섹션 -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                <i data-feather="package" class="w-5 h-5 text-indigo-600"></i>
+                물품 사용
+              </h3>
+            </div>
+            <div class="flex gap-1.5" id="item-category-btns">
+              <button type="button" data-cat="" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white transition-colors">전체</button>
+              <button type="button" data-cat="MEDICAL_SUPPLIES" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">의료소모품</button>
+              <button type="button" data-cat="MEDICAL_EQUIPMENT" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">의료기기</button>
+              <button type="button" data-cat="GENERAL_SUPPLIES" class="item-cat-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">사무/비품</button>
+            </div>
+          </div>
+
+          <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+            <table class="w-full text-xs">
+              <thead class="bg-slate-100 text-slate-500">
+                <tr>
+                  <th class="px-3 py-2 text-left font-medium">물품명</th>
+                  <th class="px-3 py-2 text-left font-medium">사용자</th>
+                  <th class="px-3 py-2 text-right font-medium">수량</th>
+                  <th class="px-3 py-2 text-right font-medium">시간</th>
+                  <th class="px-3 py-2 text-center font-medium">관리</th>
+                </tr>
+              </thead>
+              <tbody id="usage-log-tbody" class="divide-y divide-slate-100">
+                {{#todayLogs}}
+                <tr>
+                  <td class="px-3 py-2 text-slate-700 font-medium">{{itemName}}</td>
+                  <td class="px-3 py-2 text-slate-500">{{usedBy}}</td>
+                  <td class="px-3 py-2 text-right text-slate-600">{{amount}}개</td>
+                  <td class="px-3 py-2 text-right text-slate-400">{{usedAt}}</td>
+                  <td class="px-3 py-2 text-center">
+                    <button type="button" onclick="cancelUsage({{id}})"
+                            class="p-1 text-red-500 hover:bg-red-50 rounded transition-colors" title="사용 취소">
+                      <i data-feather="x-circle" class="w-4 h-4"></i>
+                    </button>
+                  </td>
+                </tr>
+                {{/todayLogs}}
+                <tr id="usage-log-empty" style="{{#todayLogs.size}}display:none{{/todayLogs.size}}">
+                  <td colspan="5" class="px-3 py-2 text-xs text-slate-400 text-center">사용된 물품이 없습니다.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="usage-log-pagination" class="flex items-center justify-center pt-1" style="display:none">
+            <div class="flex items-center gap-2">
+              <button id="usage-log-prev" type="button" class="px-2 py-1 text-[10px] border border-slate-200 rounded">이전</button>
+              <div id="usage-log-page-numbers" class="flex items-center gap-1"></div>
+              <button id="usage-log-next" type="button" class="px-2 py-1 text-[10px] border border-slate-200 rounded">다음</button>
+            </div>
+          </div>
+
+          <div class="relative">
+            <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="item-search" placeholder="물품명 검색 (초성·영문 가능)"
+                   class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300">
+          </div>
+          <div class="grid grid-cols-4 gap-3" id="item-use-grid">
+            {{#items}}
+            <div class="item-card border border-slate-200 rounded-xl p-3 space-y-2" data-category="{{category}}" data-id="{{id}}">
+              <div class="item-name text-sm font-bold text-slate-800 truncate">{{name}}</div>
+              <div class="text-xs text-slate-500">{{categoryText}}</div>
+              <div class="text-xs font-bold {{#lowStock}}text-red-600{{/lowStock}}{{^lowStock}}text-slate-600{{/lowStock}}">
+                재고: <span class="quantity-span">{{quantity}}</span>개
+              </div>
+              <form action="/staff/item/use" method="post" class="flex items-center gap-1">
+                <input type="hidden" name="id" value="{{id}}">
+                <input type="number" name="amount" min="1" placeholder="수량"
+                       class="flex-1 w-0 px-2 py-1 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                <button type="submit" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap">
+                  사용
+                </button>
+              </form>
+            </div>
+            {{/items}}
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    {{> common/footer-staff}}
+  </div>
+
+  <script>
+    (function() {
+      // 1. 카테고리 필터링 및 검색 로직 (의사 페이지 로직)
+      const itemSearchInput = document.getElementById('item-search');
+      const itemCards = document.querySelectorAll('.item-card');
+      const categoryBtns = document.querySelectorAll('.item-cat-btn');
+      let currentCategory = "";
+
+      function filterItems() {
+        if (!itemSearchInput) return;
+        const query = itemSearchInput.value.toLowerCase();
+        itemCards.forEach(card => {
+          const nameEl = card.querySelector('.item-name');
+          const name = nameEl ? nameEl.textContent.toLowerCase() : "";
+          const category = card.getAttribute('data-category');
+          const matchesCategory = !currentCategory || category === currentCategory;
+          const matchesSearch = !query || itemMatches(name, query);
+          card.style.display = (matchesCategory && matchesSearch) ? 'block' : 'none';
+        });
+      }
+
+      if (categoryBtns && categoryBtns.length > 0) {
+        categoryBtns.forEach(btn => {
+          btn.addEventListener('click', () => {
+            categoryBtns.forEach(b => {
+              b.classList.replace('bg-indigo-600', 'bg-slate-100');
+              b.classList.replace('text-white', 'text-slate-600');
+            });
+            btn.classList.replace('bg-slate-100', 'bg-indigo-600');
+            btn.classList.replace('text-slate-600', 'text-white');
+            currentCategory = btn.getAttribute('data-cat');
+            filterItems();
+          });
+        });
+      }
+
+      if (itemSearchInput) {
+        itemSearchInput.addEventListener('input', filterItems);
+      }
+
+      // 2. 개별 물품 사용 (AJAX) - 의사 페이지 로직 그대로 이식
+      const useForms = document.querySelectorAll('form[action$="/staff/item/use"]');
+      if (useForms.length > 0) {
+        useForms.forEach(function(form) {
+          form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const input = form.querySelector('input[name="amount"]');
+            const amount = input ? input.value.trim() : "";
+            if (!amount || amount <= 0) return alert('수량을 입력해주세요.');
+
+            const idInput = form.querySelector('input[name="id"]');
+            const csrfToken = '{{_csrf.token}}';
+            const csrfParam = '{{_csrf.parameterName}}';
+            
+            if (!idInput) return;
+
+            const params = new URLSearchParams();
+            params.append('id', idInput.value);
+            params.append('amount', amount);
+            params.append(csrfParam, csrfToken);
+
+            fetch('/staff/item/use', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: params.toString()
+            }).then(res => res.json()).then(data => {
+              // [기능 구현] 서버로부터 받은 최신 전체 재고 정보(items)와 내역(logs)을 사용하여 UI 일괄 갱신
+              if (data.items) {
+                refreshAllUI(data);
+                input.value = '';
+              } else if (data.error) alert(data.error);
+            });
+          });
+        });
+      }
+
+      // ── 초성 검색 지원 로직 ──
+      var CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+      function getChosung(str) {
+        return str.split('').map(function(ch) {
+          var code = ch.charCodeAt(0);
+          if (code >= 0xAC00 && code <= 0xD7A3) return CHOSUNG[Math.floor((code - 0xAC00) / 588)];
+          return ch;
+        }).join('');
+      }
+      function isChosungOnly(str) { return /^[ㄱ-ㅎ]+$/.test(str); }
+      function itemMatches(name, query) {
+        if (!query) return true;
+        var q = query.toLowerCase();
+        if (isChosungOnly(q)) return getChosung(name).includes(q);
+        return name.toLowerCase().includes(q);
+      }
+
+      // ── 사용 내역 취소 (의사 페이지 로직) ──
+      window.cancelUsage = function(logId) {
+        if(!confirm('정말 취소하시겠습니까?')) return;
+        const csrfToken = '{{_csrf.token}}';
+        const csrfParam = '{{_csrf.parameterName}}';
+        const params = new URLSearchParams();
+        params.append('logId', logId);
+        params.append(csrfParam, csrfToken);
+
+        fetch('/staff/item/cancel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString()
+        }).then(res => res.json()).then(data => {
+          if (data.logs) {
+            refreshAllUI(data);
+          } else if (data.error) alert(data.error);
+        });
+      };
+
+      // ── 사용 내역 페이징 (의사 페이지 로직) ──
+      var USAGE_LOG_PAGE_SIZE = 10;
+      var usageLogPage = 1;
+
+      function renderUsageLog() {
+        var tbody = document.getElementById('usage-log-tbody');
+        if (!tbody) return;
+        var rows = Array.from(tbody.querySelectorAll('tr:not(#usage-log-empty)'));
+        var total = rows.length;
+        var totalPages = Math.max(1, Math.ceil(total / USAGE_LOG_PAGE_SIZE));
+        if (usageLogPage > totalPages) usageLogPage = totalPages;
+        var start = (usageLogPage - 1) * USAGE_LOG_PAGE_SIZE;
+        rows.forEach(function(r, i) { r.style.display = (i >= start && i < start + USAGE_LOG_PAGE_SIZE) ? '' : 'none'; });
+        var bar = document.getElementById('usage-log-pagination');
+        if (bar) bar.style.display = (total === 0 || totalPages <= 1) ? 'none' : 'flex';
+        buildUsageLogPageNumbers(usageLogPage, totalPages);
+      }
+
+      function buildUsageLogPageNumbers(current, total) {
+        var container = document.getElementById('usage-log-page-numbers');
+        if(!container) return;
+        container.innerHTML = '';
+        if (total <= 1) return;
+        for (var i = 1; i <= total; i++) {
+          (function(n) {
+            var b = document.createElement('button');
+            b.type = 'button'; b.textContent = n;
+            b.className = 'px-2 py-1 text-xs rounded-lg border transition-colors ' +
+              (n === current ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 text-slate-600 hover:bg-slate-100');
+            b.addEventListener('click', function() { usageLogPage = n; renderUsageLog(); });
+            container.appendChild(b);
+          })(i);
+        }
+      }
+
+      window.refreshUsageLogs = function(logs) {
+        var tbody = document.getElementById('usage-log-tbody');
+        if (!tbody) return;
+        Array.from(tbody.querySelectorAll('tr:not(#usage-log-empty)')).forEach(r => r.remove());
+        var emptyRow = document.getElementById('usage-log-empty');
+        if (logs && logs.length > 0) {
+          if (emptyRow) emptyRow.style.display = 'none';
+          logs.forEach(log => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td class="px-3 py-2 text-slate-700 font-medium">${log.itemName}</td>
+                            <td class="px-3 py-2 text-slate-500">${log.usedBy}</td>
+                            <td class="px-3 py-2 text-right text-slate-600">${log.amount}개</td>
+                            <td class="px-3 py-2 text-right text-slate-400">${log.usedAt}</td>
+                            <td class="px-3 py-2 text-center">
+                              <button type="button" onclick="cancelUsage(${log.id})" class="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"><i data-feather="x-circle" class="w-4 h-4"></i></button>
+                            </td>`;
+            tbody.appendChild(tr);
+          });
+          if (window.feather) feather.replace();
+        } else {
+          if (emptyRow) emptyRow.style.display = 'table-row';
+        }
+        renderUsageLog();
+      }
+
+      function refreshAllUI(data) {
+        if (data.items) {
+          data.items.forEach(item => {
+            const card = document.querySelector(`.item-card[data-id="${item.id}"]`);
+            if (card) {
+              const span = card.querySelector('.quantity-span');
+              if (span) span.textContent = item.quantity;
+              if (item.lowStock) span.closest('div').className = 'text-xs font-bold text-red-600';
+              else span.closest('div').className = 'text-xs font-bold text-slate-600';
+            }
+          });
+        }
+        refreshUsageLogs(data.logs);
+      }
+
+      renderUsageLog();
+      filterItems();
+    })();
+  </script>
+  <script>feather.replace();</script>
+</body>
+</html>

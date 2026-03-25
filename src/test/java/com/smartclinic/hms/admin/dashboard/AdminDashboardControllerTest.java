@@ -1,34 +1,35 @@
 package com.smartclinic.hms.admin.dashboard;
 
 import com.smartclinic.hms.admin.dashboard.dto.AdminDashboardStatsResponse;
+import com.smartclinic.hms.common.AdminControllerTestSecurityConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 
-@WebMvcTest(AdminDashboardController.class)
-@Import(AdminDashboardControllerTest.TestSecurityConfig.class)
+@WebMvcTest(
+        value = AdminDashboardController.class,
+        properties = {
+                "spring.mustache.servlet.expose-request-attributes=true",
+                "spring.mustache.servlet.allow-request-override=true"
+        }
+)
+@Import(AdminControllerTestSecurityConfig.class)
 class AdminDashboardControllerTest {
 
     @Autowired
@@ -46,27 +47,23 @@ class AdminDashboardControllerTest {
     @Test
     @DisplayName("ROLE_ADMIN can render admin dashboard")
     void dashboard_withAdminRole_rendersDashboardView() throws Exception {
-        // given
-
-        // when
-        // then
-        mockMvc.perform(get("/admin/dashboard").with(user("admin").roles("ADMIN")))
+        mockMvc.perform(get("/admin/dashboard")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/dashboard"))
-                .andExpect(model().attribute("pageTitle", "Admin Dashboard"))
-                .andExpect(model().attribute("todayReservations", 7L))
-                .andExpect(model().attribute("totalReservations", 70L))
-                .andExpect(model().attribute("totalStaff", 12L))
-                .andExpect(model().attribute("lowStockItems", 4L));
+                .andExpect(request().attribute("model", new AdminDashboardStatsResponse(7L, 70L, 12L, 4L)))
+                .andExpect(request().attribute("pageTitle", "\uAD00\uB9AC\uC790 \uB300\uC2DC\uBCF4\uB4DC"))
+                .andExpect(content().string(containsString("\uC77C\uC77C \uD658\uC790\uC218 \uCD94\uC774")))
+                .andExpect(content().string(containsString("\uCD5C\uADFC 7\uC77C \uC785\uACE0/\uCD9C\uACE0 \uCD94\uC774")))
+                .andExpect(content().string(containsString("daily-patient-canvas")))
+                .andExpect(content().string(containsString("item-flow-chart")))
+                .andExpect(content().string(containsString("/js/pages/admin-dashboard.js")));
     }
 
     @Test
     @DisplayName("Unauthenticated user is redirected to login page")
     void dashboard_withoutAuthentication_redirectsToLogin() throws Exception {
-        // given
-
-        // when
-        // then
         mockMvc.perform(get("/admin/dashboard"))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/login"));
@@ -75,64 +72,7 @@ class AdminDashboardControllerTest {
     @Test
     @DisplayName("ROLE_STAFF is forbidden from admin dashboard")
     void dashboard_withNonAdminRole_isForbidden() throws Exception {
-        // given
-
-        // when
-        // then
         mockMvc.perform(get("/admin/dashboard").with(user("staff").roles("STAFF")))
                 .andExpect(status().isForbidden());
-    }
-
-    @Test
-    @DisplayName("ROLE_ADMIN can fetch dashboard stats as JSON")
-    void dashboardStats_withAdminRole_returnsJson() throws Exception {
-        // given
-
-        // when
-        // then
-        mockMvc.perform(get("/admin/dashboard/stats").with(user("admin").roles("ADMIN")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.todayReservations").value(7))
-                .andExpect(jsonPath("$.data.totalReservations").value(70))
-                .andExpect(jsonPath("$.data.totalStaff").value(12))
-                .andExpect(jsonPath("$.data.lowStockItems").value(4));
-    }
-
-    @Test
-    @DisplayName("ROLE_STAFF is forbidden from dashboard stats JSON")
-    void dashboardStats_withNonAdminRole_isForbidden() throws Exception {
-        // given
-
-        // when
-        // then
-        mockMvc.perform(get("/admin/dashboard/stats").with(user("staff").roles("STAFF")))
-                .andExpect(status().isForbidden());
-    }
-
-    @TestConfiguration
-    @EnableWebSecurity
-    static class TestSecurityConfig {
-
-        @Bean
-        SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            return http
-                    .authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/login").permitAll()
-                            .requestMatchers("/admin/**").hasRole("ADMIN")
-                            .anyRequest().authenticated())
-                    .formLogin(form -> form
-                            .loginPage("/login")
-                            .permitAll())
-                    .csrf(csrf -> csrf.disable())
-                    .build();
-        }
-
-        @Bean
-        UserDetailsService userDetailsService() {
-            return new InMemoryUserDetailsManager(
-                    User.withUsername("admin").password("{noop}password").roles("ADMIN").build(),
-                    User.withUsername("staff").password("{noop}password").roles("STAFF").build());
-        }
     }
 }

@@ -1,10 +1,8 @@
 package com.smartclinic.hms.common.exception;
 
-import java.time.Instant;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -14,6 +12,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import com.smartclinic.hms.common.util.Resp;
+
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * ════════════════════════════════════════════════════════════════════════════
- * 전역 예외 핸들러 — 모든 예외를 공통 ErrorResponse 포맷으로 반환
+ * REST API(@RestController) 전역 예외 핸들러 — 응답 본문은 {@link com.smartclinic.hms.common.util.Resp} 로 통일
  * ════════════════════════════════════════════════════════════════════════════
  *
  * ■ 처리 대상 (rule_spring.md §2)
@@ -32,91 +32,37 @@ import lombok.extern.slf4j.Slf4j;
  *   5. NoResourceFoundException       — 정적 리소스/라우트 없음
  *   6. Exception                       — 예측 불가 예외 (폴백)
  *
- * ■ 응답 포맷
- *   { "success": false, "errorCode": "...", "message": "...",
- *     "timestamp": "...", "path": "...", "traceId": "...", "details": {} }
+ * ■ 응답 JSON 스키마 (실제 필드명)
+ *   - 성공(컨트롤러에서 Resp.ok 사용 시): { "status": 200, "msg": "성공", "body": &lt;T&gt; }
+ *   - 실패(본 핸들러): { "status": &lt;httpCode&gt;, "msg": "[ERROR_CODE] 사용자 메시지", "body": null }
  *
- * ■ SSR + AJAX 공용
- *   POST 성공 시 → Controller에서 302 리다이렉트
- *   POST/GET 실패 시 → 이 핸들러가 JSON 반환 (클라이언트 JS에서 처리)
+ * ■ SSR(@Controller) 예외
+ *   - {@link SsrExceptionHandler} 가 담당한다. Mustache 에러 뷰(403/404/500) + HTTP 상태 반영.
+ *   - 본 클래스는 {@code @RestControllerAdvice(annotations = RestController.class)} 로
+ *     REST 레이어만 포괄한다.
+ *
+ * ■ AJAX 실패
+ *   - REST 컨트롤러에서 발생한 예외는 본 핸들러가 JSON(Resp)으로 반환한다.
  * ════════════════════════════════════════════════════════════════════════════
  */
 @Slf4j
-@RestControllerAdvice
+@RestControllerAdvice(annotations = org.springframework.web.bind.annotation.RestController.class)
 public class GlobalExceptionHandler {
-
-    // ════════════════════════════════════════════════════════════════════════
-    // ErrorResponse — 공통 에러 응답 포맷
-    // ════════════════════════════════════════════════════════════════════════
-
-    /**
-     * 공통 에러 응답.
-     *
-     * <ul>
-     *   <li>{@code success}   — 항상 {@code false}</li>
-     *   <li>{@code errorCode} — API 명세서 §15 에러 코드</li>
-     *   <li>{@code message}   — 사람이 읽을 수 있는 메시지</li>
-     *   <li>{@code timestamp} — 오류 발생 시각 (ISO-8601)</li>
-     *   <li>{@code path}      — 요청 URI</li>
-     *   <li>{@code traceId}   — Micrometer Tracing 연동 시 자동 채워짐</li>
-     *   <li>{@code details}   — Validation 오류 필드 목록 등 부가 정보</li>
-     * </ul>
-     */
-    public record ErrorResponse(
-            boolean success,
-            String errorCode,
-            String message,
-            Instant timestamp,
-            String path,
-            String traceId,
-            Map<String, Object> details
-    ) {
-        /** 단순 오류 (details 없음) */
-        public static ErrorResponse of(String errorCode, String message, HttpServletRequest req) {
-            return new ErrorResponse(
-                    false, errorCode, message,
-                    Instant.now(),
-                    req.getRequestURI(),
-                    MDC.get("traceId"),
-                    Map.of()
-            );
-        }
-
-        /** Validation 오류 (fields 포함) */
-        public static ErrorResponse ofValidation(
-                String message, Map<String, Object> details, HttpServletRequest req) {
-            return new ErrorResponse(
-                    false, "VALIDATION_ERROR", message,
-                    Instant.now(),
-                    req.getRequestURI(),
-                    MDC.get("traceId"),
-                    details
-            );
-        }
-    }
 
     // ════════════════════════════════════════════════════════════════════════
     // 1. Bean Validation — @Valid (@RequestBody)
     // ════════════════════════════════════════════════════════════════════════
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(
+    public ResponseEntity<Resp<?>> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex, HttpServletRequest req) {
 
-        Map<String, Object> details = ex.getBindingResult()
+        String message = ex.getBindingResult()
                 .getFieldErrors().stream()
-                .collect(Collectors.toMap(
-                        FieldError::getField,
-                        e -> e.getDefaultMessage() != null ? e.getDefaultMessage() : "invalid",
-                        (a, b) -> a   // 동일 필드 중복 시 첫 번째 메시지 유지
-                ));
-
-        String message = details.entrySet().stream()
-                .map(e -> e.getKey() + ": " + e.getValue())
+                .map(e -> e.getField() + ": " + (e.getDefaultMessage() != null ? e.getDefaultMessage() : "invalid"))
                 .collect(Collectors.joining(", "));
 
-        return ResponseEntity.badRequest()
-                .body(ErrorResponse.ofValidation(message, details, req));
+        return Resp.fail(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", message);
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -124,18 +70,14 @@ public class GlobalExceptionHandler {
     // ════════════════════════════════════════════════════════════════════════
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ErrorResponse> handleConstraintViolation(
+    public ResponseEntity<Resp<?>> handleConstraintViolation(
             ConstraintViolationException ex, HttpServletRequest req) {
 
-        Map<String, Object> details = ex.getConstraintViolations().stream()
-                .collect(Collectors.toMap(
-                        v -> v.getPropertyPath().toString(),
-                        v -> v.getMessage(),
-                        (a, b) -> a
-                ));
+        String message = ex.getConstraintViolations().stream()
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .collect(Collectors.joining(", "));
 
-        return ResponseEntity.badRequest()
-                .body(ErrorResponse.ofValidation(ex.getMessage(), details, req));
+        return Resp.fail(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", message);
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -143,12 +85,10 @@ public class GlobalExceptionHandler {
     // ════════════════════════════════════════════════════════════════════════
 
     @ExceptionHandler(CustomException.class)
-    public ResponseEntity<ErrorResponse> handleBusiness(
+    public ResponseEntity<Resp<?>> handleBusiness(
             CustomException ex, HttpServletRequest req) {
 
-        return ResponseEntity
-                .status(ex.getHttpStatus())
-                .body(ErrorResponse.of(ex.getErrorCode(), ex.getMessage(), req));
+        return Resp.fail(ex.getHttpStatus(), ex.getErrorCode(), ex.getMessage());
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -156,11 +96,10 @@ public class GlobalExceptionHandler {
     // ════════════════════════════════════════════════════════════════════════
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFound(
+    public ResponseEntity<Resp<?>> handleNotFound(
             EntityNotFoundException ex, HttpServletRequest req) {
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ErrorResponse.of("RESOURCE_NOT_FOUND", ex.getMessage(), req));
+        return Resp.fail(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", ex.getMessage());
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -168,13 +107,12 @@ public class GlobalExceptionHandler {
     // ════════════════════════════════════════════════════════════════════════
 
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNoResourceFound(
+    public ResponseEntity<Resp<?>> handleNoResourceFound(
             NoResourceFoundException ex, HttpServletRequest req) {
 
         log.debug("[GlobalExceptionHandler] 리소스 없음: path={}", req.getRequestURI());
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ErrorResponse.of("ROUTE_NOT_FOUND", ex.getMessage(), req));
+        return Resp.fail(HttpStatus.NOT_FOUND, "ROUTE_NOT_FOUND", ex.getMessage());
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -182,12 +120,11 @@ public class GlobalExceptionHandler {
     // ════════════════════════════════════════════════════════════════════════
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleUnexpected(
+    public ResponseEntity<Resp<?>> handleUnexpected(
             Exception ex, HttpServletRequest req) {
 
         log.error("[GlobalExceptionHandler] 예측 불가 예외: path={}", req.getRequestURI(), ex);
 
-        return ResponseEntity.internalServerError()
-                .body(ErrorResponse.of("INTERNAL_ERROR", "서버 오류가 발생했습니다.", req));
+        return Resp.fail(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "서버 오류가 발생했습니다.");
     }
 }

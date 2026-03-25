@@ -1,92 +1,364 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>물품 입출고 내역</title>
-    <link rel="stylesheet" href="/css/tailwind.min.css">
-    <script src="/js/lucide.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{pageTitle}} - MediCare+</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/feather.min.js"></script>
 </head>
-<body class="bg-slate-50 min-h-screen p-6">
-    <div class="max-w-7xl mx-auto space-y-6">
-        <div class="flex items-center gap-3 mb-8">
+<body class="min-h-screen flex">
+  {{> common/sidebar-item-manager}}
+
+  <div class="main-content flex-1 flex flex-col ml-64">
+    {{> common/header-staff}}
+
+    <main class="content-wrapper flex-1 p-6">
+      <div class="space-y-6 max-w-6xl mx-auto">
+
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div class="flex items-center gap-3">
             <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
-                <i data-lucide="package" class="w-6 h-6"></i>
+              <i data-feather="list" class="w-6 h-6"></i>
             </div>
             <div>
-                <h1 class="text-2xl font-bold text-slate-800">물품 입출고 내역</h1>
-                <p class="text-slate-500 mt-1">모든 물품의 입고 및 출고 기록을 확인합니다.</p>
+              <h1 class="text-2xl font-bold text-slate-800">{{pageTitle}}</h1>
+              <p class="text-slate-500 mt-1">날짜 범위를 기준으로 물품 입출고 이력을 조회합니다.</p>
             </div>
+          </div>
+          <div class="w-full sm:w-auto">
+            <div class="flex flex-col gap-3 text-sm text-slate-500 sm:items-end">
+              <div class="text-right">
+                총 <span class="font-semibold text-slate-700">{{totalCount}}</span>건
+              </div>
+              <div class="flex flex-wrap items-end gap-2 sm:justify-end">
+                <div class="min-w-[150px]">
+                  <label for="history-from-date" class="mb-1 block text-xs font-medium text-slate-500">시작일</label>
+                  <input
+                    type="date"
+                    id="history-from-date"
+                    name="fromDate"
+                    value="{{fromDate}}"
+                    form="history-filter-form"
+                    class="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm text-slate-700 outline-none transition focus:ring-2 focus:ring-indigo-500"
+                  >
+                </div>
+                <div class="min-w-[150px]">
+                  <label for="history-to-date" class="mb-1 block text-xs font-medium text-slate-500">종료일</label>
+                  <input
+                    type="date"
+                    id="history-to-date"
+                    name="toDate"
+                    value="{{toDate}}"
+                    form="history-filter-form"
+                    class="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm text-slate-700 outline-none transition focus:ring-2 focus:ring-indigo-500"
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {{#dateError}}
+        <div class="px-4 py-3 rounded-lg border border-red-200 bg-red-50 text-sm text-red-700">
+          {{dateError}}
+        </div>
+        {{/dateError}}
+
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div class="rounded-xl border border-blue-200 bg-blue-50 p-4">
+            <div class="text-xs font-medium text-blue-700">총 입고 수량</div>
+            <div class="mt-1 text-xl font-bold text-blue-800">{{totalIn}}<span class="ml-1 text-sm font-normal text-blue-600">개</span></div>
+          </div>
+          <div class="rounded-xl border border-orange-200 bg-orange-50 p-4">
+            <div class="text-xs font-medium text-orange-700">총 출고 수량</div>
+            <div class="mt-1 text-xl font-bold text-orange-800">{{totalOut}}<span class="ml-1 text-sm font-normal text-orange-600">개</span></div>
+          </div>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <form action="/item-manager/history" method="GET" class="p-4 border-b border-slate-200 flex flex-col md:flex-row justify-between items-center bg-slate-50 gap-4">
-                <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-                    <button type="submit" name="type" value="ALL" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap bg-slate-800 text-white">전체</button>
-                    <button type="submit" name="type" value="INBOUND" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap bg-white border border-slate-300 text-slate-600 hover:bg-slate-100">입고</button>
-                    <button type="submit" name="type" value="OUTBOUND" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap bg-white border border-slate-300 text-slate-600 hover:bg-slate-100">출고</button>
+          <form method="get" action="/item-manager/item-history" class="p-4 border-b border-slate-200 bg-slate-50" id="history-filter-form">
+            <div class="flex flex-wrap items-end gap-3">
+              <div class="min-w-[260px] flex-1">
+                <label for="history-search" class="block text-sm font-medium text-slate-700 mb-1.5">물품명 검색</label>
+                <div class="relative">
+                  <i data-feather="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                  <input
+                    type="text"
+                    id="history-search"
+                    name="keyword"
+                    placeholder="물품명 검색"
+                    class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  >
                 </div>
-                <div class="flex items-center gap-2 w-full md:w-auto">
-                    <div class="relative w-full md:w-64">
-                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                        <input type="text" name="keyword" value="" placeholder="물품명 검색..." class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-                    </div>
-                </div>
-            </form>
+              </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse min-w-[800px]">
-                    <thead>
-                        <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
-                            <th class="p-4 font-medium">일시</th>
-                            <th class="p-4 font-medium">구분</th>
-                            <th class="p-4 font-medium">물품명</th>
-                            <th class="p-4 font-medium">수량</th>
-                            <th class="p-4 font-medium">담당자</th>
-                            <th class="p-4 font-medium">비고</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-200">
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="p-4 text-sm text-slate-600">2025-03-05 09:30</td>
-                            <td class="p-4">
-                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800">
-                                    <i data-lucide="arrow-down-right" class="w-3 h-3"></i> 입고
-                                </span>
-                            </td>
-                            <td class="p-4 text-sm font-semibold text-slate-800">알코올 솜</td>
-                            <td class="p-4 text-sm font-medium text-slate-900">
-                                <span class="text-green-600">+50</span>
-                            </td>
-                            <td class="p-4 text-sm text-slate-600">김담당</td>
-                            <td class="p-4 text-sm text-slate-500">정기 입고</td>
-                        </tr>
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="p-4 text-sm text-slate-600">2025-03-05 08:15</td>
-                            <td class="p-4">
-                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800">
-                                    <i data-lucide="arrow-up-right" class="w-3 h-3"></i> 출고
-                                </span>
-                            </td>
-                            <td class="p-4 text-sm font-semibold text-slate-800">밴드</td>
-                            <td class="p-4 text-sm font-medium text-slate-900">
-                                <span class="text-red-600">-10</span>
-                            </td>
-                            <td class="p-4 text-sm text-slate-600">이담당</td>
-                            <td class="p-4 text-sm text-slate-500">진료실 사용</td>
-                        </tr>
-                    </tbody>
-                </table>
+              <div class="min-w-[180px]">
+                <label for="history-type" class="block text-sm font-medium text-slate-700 mb-1.5">구분</label>
+                <select
+                  id="history-type"
+                  name="type"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                >
+                  <option value="">전체</option>
+                  <option value="입고">입고</option>
+                  <option value="출고">출고</option>
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                조회
+              </button>
+              <a
+                href="/item-manager/item-history"
+                class="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
+              >
+                초기화
+              </a>
             </div>
-            
-            <div class="p-4 border-t border-slate-200 flex justify-center">
-                <nav class="flex gap-2"><span class="px-3 py-1 bg-indigo-600 text-white rounded">1</span><a href="?page=2" class="px-3 py-1 text-slate-600 hover:bg-slate-100 rounded">2</a></nav>
+          </form>
+
+          {{#hasHistories}}
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">구분</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">물품명</th>
+                <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">수량</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">담당자</th>
+                <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">일시</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody" class="divide-y divide-slate-100">
+              {{#histories}}
+              <tr class="history-row hover:bg-slate-50 transition-colors" data-name="{{itemName}}" data-type="{{typeText}}">
+                <td class="px-5 py-3">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{#isIn}}bg-blue-100 text-blue-700{{/isIn}}{{^isIn}}bg-orange-100 text-orange-700{{/isIn}}">
+                    {{typeText}}
+                  </span>
+                </td>
+                <td class="px-5 py-3 font-medium text-slate-800">{{itemName}}</td>
+                <td class="px-5 py-3 text-right text-slate-600">{{amount}}개</td>
+                <td class="px-5 py-3 text-slate-600">{{performedBy}}</td>
+                <td class="px-5 py-3 text-right text-slate-400">{{createdAt}}</td>
+              </tr>
+              {{/histories}}
+            </tbody>
+          </table>
+          {{/hasHistories}}
+          {{^hasHistories}}
+          <div class="p-8 text-center">
+            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <i data-feather="clock" class="w-8 h-8 text-slate-400"></i>
             </div>
+            <p class="text-sm text-slate-500">조회된 입출고 내역이 없습니다.</p>
+          </div>
+          {{/hasHistories}}
+
+          {{#hasHistories}}
+          <div class="p-4 border-t border-slate-200 flex items-center justify-between bg-slate-50" id="pagination-bar">
+            <span class="text-xs text-slate-500" id="page-info"></span>
+            <div class="flex items-center gap-2">
+              <button id="btn-prev" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">이전</button>
+              <div id="page-numbers" class="flex items-center gap-1"></div>
+              <button id="btn-next" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">다음</button>
+            </div>
+          </div>
+          {{/hasHistories}}
         </div>
-    </div>
 
-    <script>
-        lucide.createIcons();
-    </script>
+      </div>
+    </main>
+
+    {{> common/footer-staff}}
+  </div>
+
+  <script>
+    const PAGE_SIZE = 10;
+    let currentPage = 1;
+    let totalPages = 1;
+    let currentType = '';
+    let currentQuery = '';
+
+    function getStateParams() {
+      return new URLSearchParams(window.location.search);
+    }
+
+    function syncStateToUrl() {
+      const params = getStateParams();
+      if (currentQuery) {
+        params.set('keyword', currentQuery);
+      } else {
+        params.delete('keyword');
+      }
+
+      if (currentType) {
+        params.set('type', currentType);
+      } else {
+        params.delete('type');
+      }
+
+      const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+      window.history.replaceState({}, '', nextUrl);
+    }
+
+    function applyInitialState() {
+      const params = getStateParams();
+      currentQuery = params.get('keyword') || '';
+      currentType = params.get('type') || '';
+
+      const searchInput = document.getElementById('history-search');
+      const typeSelect = document.getElementById('history-type');
+      if (searchInput) {
+        searchInput.value = currentQuery;
+      }
+      if (typeSelect) {
+        typeSelect.value = currentType;
+      }
+
+      syncStateToUrl();
+    }
+
+    function getFilteredRows() {
+      const rows = Array.from(document.querySelectorAll('#history-tbody .history-row'));
+      return rows.filter((row) => {
+        const rowName = row.dataset.name || '';
+        const rowType = row.dataset.type || '';
+        const nameOk = !currentQuery || rowName.includes(currentQuery);
+        const typeOk = !currentType || rowType === currentType;
+        return nameOk && typeOk;
+      });
+    }
+
+    function buildPageNumbers(totalPgs) {
+      const startBase = Math.max(1, currentPage - 2);
+      const end = Math.min(totalPgs, startBase + 4);
+      const start = Math.max(1, end - 4);
+      let html = '';
+
+      if (start > 1) {
+        html += '<button type="button" data-page="1" class="hist-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors">1</button>';
+        if (start > 2) {
+          html += '<span class="px-1 text-xs text-slate-400">...</span>';
+        }
+      }
+
+      for (let page = start; page <= end; page += 1) {
+        const active = page === currentPage
+          ? 'bg-indigo-600 text-white border-indigo-600'
+          : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200';
+        html += `<button type="button" data-page="${page}" class="hist-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border ${active} transition-colors">${page}</button>`;
+      }
+
+      if (end < totalPgs) {
+        if (end < totalPgs - 1) {
+          html += '<span class="px-1 text-xs text-slate-400">...</span>';
+        }
+        html += `<button type="button" data-page="${totalPgs}" class="hist-page-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition-colors">${totalPgs}</button>`;
+      }
+
+      return html;
+    }
+
+    function render() {
+      const body = document.getElementById('history-tbody');
+      if (!body) {
+        return;
+      }
+
+      const rows = getFilteredRows();
+      const total = rows.length;
+      totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      currentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const end = start + PAGE_SIZE;
+
+      Array.from(document.querySelectorAll('#history-tbody .history-row')).forEach((row) => {
+        row.style.display = 'none';
+      });
+      rows.forEach((row, index) => {
+        row.style.display = index >= start && index < end ? '' : 'none';
+      });
+
+      const bar = document.getElementById('pagination-bar');
+      const info = document.getElementById('page-info');
+      const numbersEl = document.getElementById('page-numbers');
+      const prevButton = document.getElementById('btn-prev');
+      const nextButton = document.getElementById('btn-next');
+
+      if (totalPages <= 1) {
+        if (bar) {
+          bar.style.display = 'none';
+        }
+        syncStateToUrl();
+        return;
+      }
+      if (bar) {
+        bar.style.display = '';
+      }
+
+      if (info) {
+        info.textContent = `${total}건 / ${totalPages}페이지`;
+      }
+
+      if (numbersEl) {
+        numbersEl.innerHTML = buildPageNumbers(totalPages);
+        numbersEl.querySelectorAll('.hist-page-btn').forEach((button) => {
+          button.addEventListener('click', () => {
+            currentPage = Number(button.dataset.page);
+            render();
+          });
+        });
+      }
+
+      if (prevButton) {
+        prevButton.disabled = currentPage <= 1;
+      }
+      if (nextButton) {
+        nextButton.disabled = currentPage >= totalPages;
+      }
+
+      syncStateToUrl();
+    }
+
+    const searchInput = document.getElementById('history-search');
+    const typeSelect = document.getElementById('history-type');
+    const historyFilterForm = document.getElementById('history-filter-form');
+    if (historyFilterForm) {
+      historyFilterForm.addEventListener('submit', () => {
+        currentQuery = searchInput ? searchInput.value.trim() : '';
+        currentType = typeSelect ? typeSelect.value : '';
+        currentPage = 1;
+      });
+    }
+
+    const prevButton = document.getElementById('btn-prev');
+    if (prevButton) {
+      prevButton.addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage -= 1;
+          render();
+        }
+      });
+    }
+
+    const nextButton = document.getElementById('btn-next');
+    if (nextButton) {
+      nextButton.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+          currentPage += 1;
+          render();
+        }
+      });
+    }
+
+    feather.replace();
+    applyInitialState();
+    render();
+  </script>
 </body>
 </html>

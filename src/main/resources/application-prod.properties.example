@@ -14,20 +14,22 @@
 #   implementation 'org.springframework.session:spring-session-data-redis'
 # ==============================================================================
 
+
 # ------------------------------------------------------------------------------
 # 서버 설정
 # ------------------------------------------------------------------------------
 server.port=${SERVER_PORT:8080}
 server.servlet.session.timeout=30m
+server.servlet.session.cookie.secure=false
 server.shutdown=graceful
 spring.lifecycle.timeout-per-shutdown-phase=30s
 
 # ------------------------------------------------------------------------------
-# MySQL (운영 — 환경 변수 필수)
+# MySQL (환경 변수 필수)
 # ------------------------------------------------------------------------------
-spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/hms_db?useSSL=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
-spring.datasource.username=${SPRING_DATASOURCE_USERNAME}
-spring.datasource.password=${SPRING_DATASOURCE_PASSWORD}
+spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:mysql://192.168.0.22:3306/hms_db?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME:hms_admin}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:hms_password}
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
 
@@ -36,45 +38,57 @@ spring.datasource.hikari.minimum-idle=5
 spring.datasource.hikari.connection-timeout=3000
 
 # ------------------------------------------------------------------------------
-# JPA (운영)
+# JPA / Hibernate (운영)
 # ------------------------------------------------------------------------------
-spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=false
 spring.jpa.properties.hibernate.format_sql=false
+spring.jpa.defer-datasource-initialization=false
 
 # ------------------------------------------------------------------------------
-# Redis 세션 (의존성 추가 후 활성화)
+# 테스트 데이터 비활성화
 # ------------------------------------------------------------------------------
-# spring.session.store-type=redis
-# spring.data.redis.host=${SPRING_DATA_REDIS_HOST}
-# spring.data.redis.port=${SPRING_DATA_REDIS_PORT:6379}
-# spring.data.redis.password=${SPRING_DATA_REDIS_PASSWORD}
-# spring.session.redis.namespace=hms:session:prod
-# spring.session.timeout=1800
+hms.init.use-sql=false
+spring.sql.init.mode=never
 
 # ------------------------------------------------------------------------------
 # Claude API (환경 변수 필수)
 # ------------------------------------------------------------------------------
-claude.api.key=${CLAUDE_API_KEY}
+claude.api.key=${CLAUDE_API_KEY:}
 claude.api.model=claude-sonnet-4-6
 claude.api.timeout-seconds=5
+
+# ------------------------------------------------------------------------------
+# LLM 서비스 (Python FastAPI)
+# ------------------------------------------------------------------------------
+llm.service.url=${LLM_SERVICE_URL:http://python-llm:8000}
+llm.service.timeout.connect=5000
+llm.service.timeout.read=120000
 
 # ------------------------------------------------------------------------------
 # 로깅 (운영: 최소)
 # ------------------------------------------------------------------------------
 logging.level.root=WARN
-logging.level.com.smartclinic.hms=INFO
+logging.level.com.smartclinic.hms=DEBUG
 logging.file.name=/opt/hms/logs/hms-app.log
 logging.file.max-size=50MB
 logging.file.max-history=90
-
-# ------------------------------------------------------------------------------
-# 세션 쿠키 보안 (운영: HTTPS 필수)
-# ------------------------------------------------------------------------------
-server.servlet.session.cookie.secure=true
+logging.pattern.console=%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
 
 # ------------------------------------------------------------------------------
 # 에러 페이지 (운영: 스택트레이스 비노출)
 # ------------------------------------------------------------------------------
 server.error.include-message=never
 server.error.include-stacktrace=never
+
+# ------------------------------------------------------------------------------
+# Redis 캐시 (운영)
+# ------------------------------------------------------------------------------
+spring.data.redis.host=${SPRING_DATA_REDIS_HOST:192.168.0.22}
+spring.data.redis.port=${SPRING_DATA_REDIS_PORT:6379}
+spring.cache.type=redis
+
+# ------------------------------------------------------------------------------
+# CORS 허용 Origin (운영: LAN IP + localhost)
+# ------------------------------------------------------------------------------
+hms.cors.allowed-origins=http://192.168.0.22:8080,http://localhost:8080

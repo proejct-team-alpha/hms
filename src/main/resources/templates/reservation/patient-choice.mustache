@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>진료 예약 선택 - MediCare+</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/feather.min.js"></script>
+</head>
+<body class="min-h-screen flex flex-col">
+  {{> common/header-public}}
+  
+  <main class="flex-1 overflow-y-auto p-8">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex flex-col items-center justify-center py-12 relative">
+        <button onclick="location.href='/'" class="absolute top-0 left-0 flex items-center gap-2 text-slate-500 hover:text-slate-800 font-medium">
+          <i data-feather="arrow-left" class="w-5 h-5"></i>
+          처음으로
+        </button>
+
+        <div class="text-center mb-12 mt-8">
+          <h1 class="text-3xl font-bold text-slate-800 mb-4">진료 예약</h1>
+          <p class="text-slate-500">원하시는 예약 방식을 선택해주세요.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
+          <button onclick="location.href='/reservation/symptom-reservation'" class="bg-white p-10 rounded-3xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-300 transition-all group flex flex-col items-center text-center">
+            <div class="w-20 h-20 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-6 group-hover:scale-110 transition-transform">
+              <i data-feather="activity" class="w-10 h-10"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-4">AI 증상 추천 예약</h2>
+            <p class="text-slate-500 leading-relaxed">
+              어디가 아픈지 증상을 입력하시면<br/>
+              AI가 적합한 진료과와 전문의를 추천해 드립니다.
+            </p>
+          </button>
+
+          <button onclick="location.href='/reservation/direct-reservation'" class="bg-white p-10 rounded-3xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-300 transition-all group flex flex-col items-center text-center">
+            <div class="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-600 mb-6 group-hover:scale-110 transition-transform">
+              <i data-feather="calendar" class="w-10 h-10"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-4">직접 선택 예약</h2>
+            <p class="text-slate-500 leading-relaxed">
+              원하시는 진료과와 전문의,<br/>
+              예약 시간을 직접 선택하여 예약합니다.
+            </p>
+          </button>
+
+          <button onclick="location.href='/reservation/lookup'" class="bg-white p-10 rounded-3xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-300 transition-all group flex flex-col items-center text-center">
+            <div class="w-20 h-20 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 mb-6 group-hover:scale-110 transition-transform">
+              <i data-feather="search" class="w-10 h-10"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-4">예약 조회</h2>
+            <p class="text-slate-500 leading-relaxed">
+              예약번호 또는 이름과 전화번호로<br/>
+              기존 예약을 조회하고 변경·취소합니다.
+            </p>
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  {{> common/footer-public}}
+  <script>
+    feather.replace();
+  </script>
+</body>
+</html>
