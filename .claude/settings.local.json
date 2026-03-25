@@ -99,7 +99,15 @@
       "Bash(openssl req:*)",
       "Bash(MSYS_NO_PATHCONV=1 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /c/workspace/team_project/hospital-reservation-system/nginx/ssl/server.key -out /c/workspace/team_project/hospital-reservation-system/nginx/ssl/server.crt -subj \"/CN=192.168.0.22\" 2>&1)",
       "Bash(MSYS_NO_PATHCONV=1 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout \"C:\\\\workspace\\\\team_project\\\\hospital-reservation-system\\\\nginx\\\\ssl\\\\server.key\" -out \"C:\\\\workspace\\\\team_project\\\\hospital-reservation-system\\\\nginx\\\\ssl\\\\server.crt\" -subj \"/CN=192.168.0.22\" 2>&1)",
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "Bash(./gradlew compileJava compileTestJava --no-daemon)",
+      "Bash(LLM_FALLBACK_MOCK=1 python -m pytest tests/ -x -q)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\(''app.py''\\).read\\(\\)\\); print\\(''Syntax OK''\\)\")",
+      "Bash(python:*)",
+      "Bash(./gradlew compileJava --no-daemon)",
+      "Bash(./gradlew compileTestJava)",
+      "Bash(done)",
+      "Bash(powershell -Command \"Get-ChildItem doc -Filter ''*보고서*'' | Select-Object -ExpandProperty Name\")"
     ],
     "deny": [],
     "ask": []
