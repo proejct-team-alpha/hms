@@ -1,7 +1,9 @@
 package com.smartclinic.hms.reservation.reservation;
 
-// 예약 완료 화면에 필요한 정보만 담는 DTO (flash attribute → Mustache {{#info}} 바인딩)
-// 트랜잭션 종료 후 LazyInitializationException 방지용
+import java.io.Serial;
+import java.io.Serializable;
+
+// DTO for reservation completion page flash attributes.
 public record ReservationCompleteInfo(
         String reservationNumber,
         String patientName,
@@ -9,5 +11,7 @@ public record ReservationCompleteInfo(
         String doctorName,
         String reservationDate,
         String timeSlot
-) {
+) implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
 }

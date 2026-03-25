@@ -82,11 +82,14 @@ server.error.include-message=never
 server.error.include-stacktrace=never
 
 # ------------------------------------------------------------------------------
-# Redis 캐시 (운영)
+# Redis 캐시 / 세션 (운영)
 # ------------------------------------------------------------------------------
 spring.data.redis.host=${SPRING_DATA_REDIS_HOST:192.168.0.22}
 spring.data.redis.port=${SPRING_DATA_REDIS_PORT:6379}
+spring.data.redis.repositories.enabled=false
 spring.cache.type=redis
+spring.session.store-type=redis
+spring.session.redis.namespace=hms:session
 
 # ------------------------------------------------------------------------------
 # CORS 허용 Origin (운영: LAN IP + localhost)
