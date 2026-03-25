@@ -160,11 +160,9 @@
 
           <div class="flex-1 min-w-0 space-y-4">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex">
-              <a href="/nurse/reception-list?date={{searchDate}}&tab=all" 
+              <a href="/nurse/reception-list?date={{searchDate}}&tab=all"
                  class="tab-btn flex-1 {{#isAllTab}}active{{/isAllTab}}">전체</a>
-              <a href="/nurse/reception-list?date={{searchDate}}&tab=reserved" 
-                 class="tab-btn flex-1 {{#isReservedTab}}active{{/isReservedTab}}">예약</a>
-              <a href="/nurse/reception-list?date={{searchDate}}&tab=received" 
+              <a href="/nurse/reception-list?date={{searchDate}}&tab=received"
                  class="tab-btn flex-1 {{#isReceivedTab}}active{{/isReceivedTab}}">진료대기</a>
               <a href="/nurse/reception-list?date={{searchDate}}&tab=in_treatment" 
                  class="tab-btn flex-1 {{#isInTreatmentTab}}active{{/isInTreatmentTab}}">진료 중</a>
@@ -177,7 +175,8 @@
             </div>
 
             <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-              <table class="w-full text-left">
+              <div class="overflow-x-auto">
+              <table class="w-full text-left min-w-[700px]">
                 <thead>
                   <tr class="reception-header-row bg-slate-50 border-b border-slate-100 text-[11px] font-black uppercase tracking-widest text-slate-400">
                     <th class="px-6 py-2.5">상태</th>
@@ -237,6 +236,7 @@
                   {{/reservations}}
                 </tbody>
               </table>
+              </div>
 
               {{#pageLinks.0}}
               <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-center gap-2">

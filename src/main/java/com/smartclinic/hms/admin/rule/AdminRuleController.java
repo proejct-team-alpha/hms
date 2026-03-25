@@ -71,6 +71,20 @@ public class AdminRuleController {
         }
     }
 
+    @GetMapping("/edit")
+    public String edit(
+            @RequestParam("ruleId") Long ruleId,
+            HttpServletRequest req,
+            HttpServletResponse response,
+            Model model) {
+        try {
+            AdminRuleDetailResponse detail = adminRuleService.getRuleDetail(ruleId);
+            return renderEdit(req, model, detail, UpdateAdminRuleRequest.from(detail));
+        } catch (CustomException ex) {
+            return renderNotFound(req, response, ex);
+        }
+    }
+
     @GetMapping("/form")
     public RedirectView legacyForm() {
         return redirectTo("/admin/rule/new");
@@ -188,6 +202,33 @@ public class AdminRuleController {
         return "admin/rule-detail";
     }
 
+    private String renderEdit(
+            HttpServletRequest req,
+            Model model,
+            AdminRuleDetailResponse detail,
+            UpdateAdminRuleRequest request) {
+        req.setAttribute("model", request);
+        req.setAttribute("pageTitle", "규칙 수정");
+        req.setAttribute("activeChecked", request.isActiveChecked());
+        model.addAttribute("pageTitle", "규칙 수정");
+        model.addAttribute("model", request);
+        populateFormAttributes(
+                model,
+                request.ruleId(),
+                request.title(),
+                request.content(),
+                request.category(),
+                request.isActiveChecked(),
+                "/admin/rule/update",
+                "저장",
+                "/admin/rule/detail?ruleId=" + request.ruleId(),
+                true,
+                "규칙 수정",
+                "규칙 내용을 수정합니다."
+        );
+        return "admin/rule-edit";
+    }
+
     private Object renderUpdateValidationFailure(
             HttpServletRequest req,
             Model model,
@@ -202,7 +243,7 @@ public class AdminRuleController {
         try {
             AdminRuleDetailResponse detail = adminRuleService.getRuleDetail(request.ruleId());
             applyFormErrors(req, bindingResult);
-            return renderDetail(req, model, detail, request);
+            return renderEdit(req, model, detail, request);
         } catch (CustomException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
             return redirectTo("/admin/rule/list");

@@ -158,7 +158,8 @@
             </div>
 
             <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-              <table class="w-full text-left">
+              <div class="overflow-x-auto">
+              <table class="w-full text-left min-w-[700px]">
                 <thead>
                   <tr class="reception-header-row bg-slate-50 border-b border-slate-100 text-[11px] font-black uppercase tracking-widest text-slate-400">
                     <th class="px-4 py-2.5 text-center">번호</th>
@@ -298,6 +299,7 @@
                   {{/reservations}}
                 </tbody>
               </table>
+              </div>
 
               <!-- 페이징 -->
               <div class="flex items-center justify-between px-4 py-3 border-t border-slate-100">
