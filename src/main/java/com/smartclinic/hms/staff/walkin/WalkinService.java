@@ -1,7 +1,8 @@
 package com.smartclinic.hms.staff.walkin;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,7 +15,6 @@ import com.smartclinic.hms.domain.Doctor;
 import com.smartclinic.hms.domain.Patient;
 import com.smartclinic.hms.domain.Reservation;
 import com.smartclinic.hms.domain.ReservationSource;
-import com.smartclinic.hms.domain.ReservationStatus;
 import com.smartclinic.hms.reservation.reservation.DepartmentRepository;
 import com.smartclinic.hms.reservation.reservation.PatientRepository;
 import com.smartclinic.hms.reservation.reservation.ReservationRepository;
@@ -88,19 +88,9 @@ public class WalkinService {
                         reservation.receive();
                         
                 } else {
-                        // [주석] 새로운 방문 접수인 경우 (일반 현장 접수)
-                        
-                        // 중복 접수 검증
+                        // [주석] 새로운 방문 접수인 경우 (일반 현장 접수) — 접수 시각을 현재 시간으로 자동 설정
                         LocalDate reservationDate = request.getDate();
-                        List<Reservation> existingReservations = reservationRepository.findTodayExcludingStatus(reservationDate,
-                                        ReservationStatus.CANCELLED);
-                        boolean isDuplicate = existingReservations.stream()
-                                        .anyMatch(r -> r.getDoctor().getId().equals(doctor.getId())
-                                                        && r.getTimeSlot().equals(request.getTime()));
-                        if (isDuplicate) {
-                                throw CustomException.conflict("DUPLICATE_RESERVATION",
-                                                "해당 의사 선생님의 선택하신 시간대에는 이미 접수된 정보가 있습니다.");
-                        }
+                        String nowTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
 
                         String reservationNumber = reservationNumberGenerator.generate(
                                         reservationDate,
@@ -112,7 +102,7 @@ public class WalkinService {
                                         doctor,
                                         department,
                                         reservationDate,
-                                        request.getTime(),
+                                        nowTime,
                                         ReservationSource.WALKIN);
 
                         // 방문 접수는 생성 즉시 '진료 대기'(RECEIVED) 상태로 변경
