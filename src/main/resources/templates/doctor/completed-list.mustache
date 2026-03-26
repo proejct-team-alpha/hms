@@ -118,7 +118,8 @@
           </div>
 
           <!-- 오른쪽: EMR 리스트 메인 -->
-          <div class="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden overflow-x-auto">
+            <div class="min-w-[600px]">
             <!-- 리스트 헤더 (호버 효과 및 클릭 기능 없음) -->
             <div class="emr-row bg-slate-50 border-b border-slate-200 text-[11px] font-black text-slate-400 uppercase tracking-wider">
               <div>진료 시간</div>
@@ -177,6 +178,7 @@
                   </p>
                 </div>
               {{/reservations}}
+            </div>
             </div>
 
             <!-- 페이징 -->

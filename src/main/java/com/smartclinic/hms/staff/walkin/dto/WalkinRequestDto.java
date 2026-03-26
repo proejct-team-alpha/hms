@@ -6,6 +6,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+
 import lombok.Data;
 
 @Data
@@ -56,9 +57,6 @@ public class WalkinRequestDto {
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate date;
-
-    @NotBlank(message = "접수 시간은 필수입니다.")
-    private String time;
 
     private String notes;
 
