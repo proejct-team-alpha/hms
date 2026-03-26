@@ -60,14 +60,6 @@
             <!-- (2) 데이터 섹션 -->
             <div class="flex-1 flex">
               <div class="flex-1 flex items-center justify-center gap-3 border-r border-slate-100 px-4">
-                <i data-feather="users" class="w-5 h-5 text-slate-400"></i>
-                <div class="text-center">
-                  <div class="text-[10px] font-bold text-slate-400 uppercase">전체</div>
-                  <div class="text-xl font-bold text-slate-700">{{totalToday}}</div>
-                </div>
-              </div>
-
-              <div class="flex-1 flex items-center justify-center gap-3 border-r border-slate-100 px-4">
                 <i data-feather="clock" class="w-5 h-5 text-yellow-500"></i>
                 <div class="text-center">
                   <div class="text-[10px] font-bold text-yellow-500 uppercase">진료 대기</div>
@@ -83,19 +75,11 @@
                 </div>
               </div>
 
-              <div class="flex-1 flex items-center justify-center gap-3 border-r border-slate-100 px-4 bg-blue-50/20">
+              <div class="flex-1 flex items-center justify-center gap-3 px-4 bg-blue-50/20">
                 <i data-feather="activity" class="w-5 h-5 text-blue-600"></i>
                 <div class="text-center">
                   <div class="text-[10px] font-bold text-blue-500 uppercase">처치 대기</div>
                   <div class="text-2xl font-black {{#pendingTreatmentCount}}text-blue-600 underline{{/pendingTreatmentCount}}{{^pendingTreatmentCount}}text-slate-200{{/pendingTreatmentCount}}">{{pendingTreatmentCount}}</div>
-                </div>
-              </div>
-
-              <div class="flex-1 flex items-center justify-center gap-3 bg-purple-50/20 px-4">
-                <i data-feather="check-circle" class="w-5 h-5 text-purple-600"></i>
-                <div class="text-center">
-                  <div class="text-[10px] font-bold text-purple-500 uppercase">수납 완료</div>
-                  <div class="text-xl font-bold {{#paidCount}}text-purple-600{{/paidCount}}{{^paidCount}}text-slate-200{{/paidCount}}">{{paidCount}}</div>
                 </div>
               </div>
             </div>

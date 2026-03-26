@@ -155,7 +155,8 @@
             </div>
             {{/isPastDate}}
 
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden overflow-x-auto">
+              <div class="min-w-[750px]">
               <div class="emr-row bg-slate-50 border-b border-slate-200 text-[11px] font-black text-slate-400 uppercase tracking-wider">
                 <div>순번</div>
                 <div>상태</div>
@@ -213,6 +214,7 @@
                 {{/hasNext}}
               </div>
               {{/isWaitingTab}}
+              </div>
             </div>
           </div>
         </div>

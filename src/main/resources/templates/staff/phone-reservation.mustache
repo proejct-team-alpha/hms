@@ -62,7 +62,7 @@
                 <div>
                   <label class="block text-sm font-medium text-slate-700 mb-2 ml-1">연락처</label>
                   <div class="flex items-center gap-1.5">
-                    <input type="text" id="phone1" maxlength="3" class="split-input w-16 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 text-sm" placeholder="010" required />
+                    <input type="text" id="phone1" value="010" readonly class="split-input w-16 border border-slate-200 rounded-xl outline-none bg-slate-50 text-slate-500 text-sm" />
                     <span class="text-slate-400 font-bold">-</span>
                     <input type="text" id="phone2" maxlength="4" class="split-input w-20 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 text-sm" placeholder="1234" required />
                     <span class="text-slate-400 font-bold">-</span>
@@ -373,19 +373,17 @@
       const p1 = document.getElementById('phone1'), p2 = document.getElementById('phone2'), p3 = document.getElementById('phone3'), final = document.getElementById('finalPhone');
       const bDate = document.getElementById('birthDate'), gDigit = document.getElementById('genderDigit'), finalBirth = document.getElementById('finalBirthInfo');
       
-      // 기존 값이 있으면 필드 분할하여 채우기
+      // 기존 값이 있으면 필드 분할하여 채우기 (010 제외 나머지 복원)
       const initVal = final.value.replace(/-/g, '');
-      if (initVal.length >= 3) p1.value = initVal.slice(0, 3);
       if (initVal.length >= 7) p2.value = initVal.slice(3, 7);
       if (initVal.length >= 11) p3.value = initVal.slice(7, 11);
 
       function update() {
-        final.value = (p1.value && p2.value && p3.value) ? `${p1.value}-${p2.value}-${p3.value}` : '';
+        final.value = (p2.value && p3.value) ? `010-${p2.value}-${p3.value}` : '';
         finalBirth.value = (bDate.value && gDigit.value) ? `${bDate.value}-${gDigit.value}` : '';
       }
 
-      [p1, p2, p3, bDate, gDigit].forEach(el => el.addEventListener('input', update));
-      p1.addEventListener('input', () => { if (p1.value.length >= 3) p2.focus(); });
+      [p2, p3, bDate, gDigit].forEach(el => el.addEventListener('input', update));
       p2.addEventListener('input', () => { if (p2.value.length >= 4) p3.focus(); });
       bDate.addEventListener('input', () => { if (bDate.value.length >= 6) gDigit.focus(); });
     })();
