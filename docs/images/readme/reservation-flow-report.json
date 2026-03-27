@@ -1,0 +1,67 @@
+{
+  "finalUrl": "http://localhost:9090/reservation/modify?reservationNumber=RES-20260330-001",
+  "finalScreenshot": null,
+  "clickCount": 10,
+  "markers": [
+    {
+      "clickNumber": 1,
+      "selector": "button[onclick=\"location.href='/reservation/direct-reservation'\"]",
+      "status": "skipped",
+      "reason": "selector not available on final page after navigation"
+    },
+    {
+      "clickNumber": 2,
+      "selector": "#department",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 3,
+      "selector": "#doctor",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 4,
+      "selector": "#date",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 5,
+      "selector": ".flatpickr-day:not(.flatpickr-disabled):not(.today):not(.prevMonthDay):not(.nextMonthDay)",
+      "status": "skipped",
+      "reason": "selector not available on final page after navigation"
+    },
+    {
+      "clickNumber": 6,
+      "selector": "#time",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 7,
+      "selector": "button[type=\"submit\"]",
+      "status": "skipped",
+      "reason": "selector not available on final page after navigation"
+    },
+    {
+      "clickNumber": 8,
+      "selector": "a[href^=\"/reservation/lookup?reservationNumber=\"]",
+      "status": "skipped",
+      "reason": "selector not available on final page after navigation"
+    },
+    {
+      "clickNumber": 9,
+      "selector": "button[data-href^=\"/reservation/modify?\"]",
+      "status": "skipped",
+      "reason": "selector not available on final page after navigation"
+    },
+    {
+      "clickNumber": 10,
+      "selector": "#date",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "url": "http://localhost:9090/login",
+  "outputPath": false,
+  "reportPath": "./images/nurse/nurse-capture-report.json",
+  "headless": true,
+  "captureEachClick": true,
+  "captureTiming": "after",
+  "stepOutputDir": "./images/nurse",
+  "viewport": {
+    "width": 1600,
+    "height": 1200
+  },
+  "capture": {
+    "fullPage": true
+  },
+  "annotate": {
+    "color": "#ef4444",
+    "textColor": "#ffffff",
+    "showLabel": true
+  },
+  "steps": [
+    {
+      "action": "fill",
+      "selector": "input[name=\"username\"]",
+      "value": "nurse01"
+    },
+    {
+      "action": "fill",
+      "selector": "input[name=\"password\"]",
+      "value": "password123"
+    },
+    {
+      "action": "click",
+      "name": "nurse-login",
+      "selector": "button[type=\"submit\"]",
+      "label": "간호사 로그인",
+      "waitForSelector": "body",
+      "waitMs": 700
+    },
+    {
+      "action": "click",
+      "name": "nurse-reception-list",
+      "selector": "a[href=\"/nurse/reception-list\"]",
+      "label": "환자 현황",
+      "waitForSelector": "body",
+      "waitMs": 500
+    },
+    {
+      "action": "click",
+      "name": "nurse-treatment-list",
+      "selector": "a[href=\"/nurse/treatment-list\"]",
+      "label": "처치 관리",
+      "waitForSelector": "body",
+      "waitMs": 500
+    },
+    {
+      "action": "click",
+      "name": "nurse-chatbot",
+      "selector": "a[href=\"/nurse/chatbot\"]",
+      "label": "AI 챗봇",
+      "waitForSelector": "h1:has-text(\"AI 챗봇\")",
+      "waitMs": 500
+    },
+    {
+      "action": "click",
+      "name": "nurse-mypage",
+      "selector": "a[href=\"/nurse/mypage\"]",
+      "label": "내 정보 관리",
+      "waitForSelector": "h1:has-text(\"내 정보 관리\")",
+      "waitMs": 500
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "finalUrl": "http://localhost:9090/nurse/mypage",
+  "finalScreenshot": null,
+  "clickCount": 5,
+  "markers": [
+    {
+      "clickNumber": 1,
+      "selector": "button[type=\"submit\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 2,
+      "selector": "a[href=\"/nurse/reception-list\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 3,
+      "selector": "a[href=\"/nurse/treatment-list\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 4,
+      "selector": "a[href=\"/nurse/chatbot\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 5,
+      "selector": "a[href=\"/nurse/mypage\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    }
+  ]
+}

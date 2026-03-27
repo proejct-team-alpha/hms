@@ -1,0 +1,31 @@
+{
+  "finalUrl": "http://localhost:9090/doctor/mypage",
+  "finalScreenshot": null,
+  "clickCount": 4,
+  "markers": [
+    {
+      "clickNumber": 1,
+      "selector": "button[type=\"submit\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 2,
+      "selector": "a[href=\"/doctor/treatment-list\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 3,
+      "selector": "a[href=\"/doctor/chatbot\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 4,
+      "selector": "a[href=\"/doctor/mypage\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    }
+  ]
+}

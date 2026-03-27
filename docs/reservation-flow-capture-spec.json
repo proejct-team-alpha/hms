@@ -1,0 +1,144 @@
+{
+  "url": "http://localhost:9090/reservation",
+  "outputPath": false,
+  "reportPath": "./images/readme/reservation-flow-report.json",
+  "headless": true,
+  "captureEachClick": true,
+  "captureTiming": "after",
+  "stepOutputDir": "./images/readme",
+  "viewport": {
+    "width": 1600,
+    "height": 1200
+  },
+  "capture": {
+    "fullPage": true
+  },
+  "annotate": {
+    "color": "#ef4444",
+    "textColor": "#ffffff",
+    "showLabel": true
+  },
+  "steps": [
+    {
+      "action": "click",
+      "name": "reservation-flow-01-choice",
+      "selector": "button[onclick=\"location.href='/reservation/direct-reservation'\"]",
+      "label": "직접 선택 예약",
+      "waitForSelector": "#reservation-form",
+      "waitMs": 500
+    },
+    {
+      "action": "fill",
+      "selector": "#name",
+      "value": "자동 캡처"
+    },
+    {
+      "action": "fill",
+      "selector": "#phone",
+      "value": "010-5555-1234"
+    },
+    {
+      "action": "click",
+      "selector": "#department",
+      "label": "진료과 선택"
+    },
+    {
+      "action": "press",
+      "selector": "#department",
+      "key": "ArrowDown"
+    },
+    {
+      "action": "press",
+      "selector": "#department",
+      "key": "Enter"
+    },
+    {
+      "action": "wait",
+      "ms": 800
+    },
+    {
+      "action": "click",
+      "selector": "#doctor",
+      "label": "전문의 선택"
+    },
+    {
+      "action": "press",
+      "selector": "#doctor",
+      "key": "ArrowDown"
+    },
+    {
+      "action": "press",
+      "selector": "#doctor",
+      "key": "Enter"
+    },
+    {
+      "action": "wait",
+      "ms": 1000
+    },
+    {
+      "action": "click",
+      "selector": "#date",
+      "label": "예약 날짜 선택"
+    },
+    {
+      "action": "wait",
+      "ms": 300
+    },
+    {
+      "action": "click",
+      "selector": ".flatpickr-day:not(.flatpickr-disabled):not(.today):not(.prevMonthDay):not(.nextMonthDay)",
+      "label": "예약 날짜",
+      "waitMs": 300
+    },
+    {
+      "action": "click",
+      "selector": "#time",
+      "label": "예약 시간 선택"
+    },
+    {
+      "action": "press",
+      "selector": "#time",
+      "key": "ArrowDown"
+    },
+    {
+      "action": "press",
+      "selector": "#time",
+      "key": "Enter"
+    },
+    {
+      "action": "wait",
+      "ms": 300
+    },
+    {
+      "action": "click",
+      "name": "reservation-flow-02-form",
+      "selector": "button[type=\"submit\"]",
+      "label": "예약 완료하기",
+      "waitForSelector": "h1:has-text(\"예약이 완료되었습니다!\")",
+      "waitMs": 700
+    },
+    {
+      "action": "click",
+      "name": "reservation-flow-03-complete",
+      "selector": "a[href^=\"/reservation/lookup?reservationNumber=\"]",
+      "label": "예약 조회",
+      "waitForSelector": ".res-btn",
+      "waitMs": 700
+    },
+    {
+      "action": "click",
+      "name": "reservation-flow-04-lookup",
+      "selector": "button[data-href^=\"/reservation/modify?\"]",
+      "label": "예약 변경",
+      "waitForSelector": "#reservation-form",
+      "waitMs": 700
+    },
+    {
+      "action": "click",
+      "name": "reservation-flow-05-modify",
+      "selector": "#date",
+      "label": "변경 날짜 선택",
+      "waitMs": 300
+    }
+  ]
+}
