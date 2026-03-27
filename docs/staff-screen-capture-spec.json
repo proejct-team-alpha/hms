@@ -1,0 +1,88 @@
+{
+  "url": "http://localhost:9090/login",
+  "outputPath": false,
+  "reportPath": "./images/staff/staff-capture-report.json",
+  "headless": true,
+  "captureEachClick": true,
+  "stepOutputDir": "./images/staff",
+  "viewport": {
+    "width": 1600,
+    "height": 1200
+  },
+  "capture": {
+    "fullPage": true
+  },
+  "annotate": {
+    "color": "#ef4444",
+    "textColor": "#ffffff",
+    "showLabel": true
+  },
+  "steps": [
+    {
+      "action": "fill",
+      "selector": "input[name=\"username\"]",
+      "value": "staff01"
+    },
+    {
+      "action": "fill",
+      "selector": "input[name=\"password\"]",
+      "value": "password123"
+    },
+    {
+      "action": "click",
+      "name": "staff-login",
+      "selector": "button[type=\"submit\"]",
+      "label": "직원 로그인",
+      "waitForSelector": "h1:has-text(\"원무과 대시보드\")",
+      "waitMs": 500
+    },
+    {
+      "action": "click",
+      "name": "staff-reception-list",
+      "selector": "a[href=\"/staff/reception/list\"]",
+      "label": "접수/수납 목록",
+      "waitForSelector": "h1:has-text(\"접수/수납 목록\")",
+      "waitMs": 500
+    },
+    {
+      "action": "click",
+      "name": "staff-phone-reservation",
+      "selector": "a[href=\"/staff/reservation/phone-reservation\"]",
+      "label": "전화 예약 등록",
+      "waitForSelector": "h1:has-text(\"예약\")",
+      "waitMs": 500
+    },
+    {
+      "action": "click",
+      "name": "staff-walkin-reception",
+      "selector": "a[href=\"/staff/walkin-reception\"]",
+      "label": "방문 접수 등록",
+      "waitForSelector": "h1:has-text(\"접수\")",
+      "waitMs": 500
+    },
+    {
+      "action": "click",
+      "name": "staff-item-use",
+      "selector": "a[href=\"/staff/item/use\"]",
+      "label": "물품 출고",
+      "waitForSelector": "h1:has-text(\"물품 출고\")",
+      "waitMs": 500
+    },
+    {
+      "action": "click",
+      "name": "staff-chatbot",
+      "selector": "a[href=\"/staff/chatbot\"]",
+      "label": "AI 챗봇",
+      "waitForSelector": "h1:has-text(\"AI 챗봇\")",
+      "waitMs": 500
+    },
+    {
+      "action": "click",
+      "name": "staff-mypage",
+      "selector": "a[href=\"/staff/mypage\"]",
+      "label": "내 정보 관리",
+      "waitForSelector": "h1:has-text(\"내 정보 관리\")",
+      "waitMs": 500
+    }
+  ]
+}

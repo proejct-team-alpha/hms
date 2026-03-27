@@ -1,0 +1,96 @@
+{
+  "url": "http://localhost:9090/login",
+  "outputPath": false,
+  "reportPath": "./images/admin/admin-capture-report.json",
+  "headless": true,
+  "captureEachClick": true,
+  "stepOutputDir": "./images/admin",
+  "viewport": {
+    "width": 1600,
+    "height": 1200
+  },
+  "capture": {
+    "fullPage": true
+  },
+  "annotate": {
+    "color": "#ef4444",
+    "textColor": "#ffffff",
+    "showLabel": true
+  },
+  "steps": [
+    {
+      "action": "fill",
+      "selector": "input[name=\"username\"]",
+      "value": "admin01"
+    },
+    {
+      "action": "fill",
+      "selector": "input[name=\"password\"]",
+      "value": "password123"
+    },
+    {
+      "action": "click",
+      "name": "admin-login",
+      "selector": "button[type=\"submit\"]",
+      "label": "관리자 로그인",
+      "waitForSelector": "body",
+      "waitMs": 700
+    },
+    {
+      "action": "click",
+      "name": "admin-reservation-list",
+      "selector": "a[href=\"/admin/reservation/list\"]",
+      "label": "전체 예약 목록",
+      "waitForSelector": "body",
+      "waitMs": 500
+    },
+    {
+      "action": "click",
+      "name": "admin-patient-list",
+      "selector": "a[href=\"/admin/patient/list\"]",
+      "label": "환자 관리",
+      "waitForSelector": "body",
+      "waitMs": 500
+    },
+    {
+      "action": "click",
+      "name": "admin-staff-list",
+      "selector": "a[href=\"/admin/staff/list\"]",
+      "label": "직원 관리",
+      "waitForSelector": "body",
+      "waitMs": 500
+    },
+    {
+      "action": "click",
+      "name": "admin-item-list",
+      "selector": "a[href=\"/admin/item/list\"]",
+      "label": "물품 목록",
+      "waitForSelector": "body",
+      "waitMs": 500
+    },
+    {
+      "action": "click",
+      "name": "admin-rule-list",
+      "selector": "a[href=\"/admin/rule/list\"]",
+      "label": "병원 규칙 관리",
+      "waitForSelector": "body",
+      "waitMs": 500
+    },
+    {
+      "action": "click",
+      "name": "admin-chatbot",
+      "selector": "a[href=\"/admin/chatbot\"]",
+      "label": "AI 챗봇",
+      "waitForSelector": "h1:has-text(\"AI 챗봇\")",
+      "waitMs": 500
+    },
+    {
+      "action": "click",
+      "name": "admin-mypage",
+      "selector": "a[href=\"/admin/mypage\"]",
+      "label": "내 정보 관리",
+      "waitForSelector": "h1:has-text(\"내 정보 관리\")",
+      "waitMs": 500
+    }
+  ]
+}

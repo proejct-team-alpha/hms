@@ -1,0 +1,55 @@
+{
+  "finalUrl": "http://localhost:9090/admin/mypage",
+  "finalScreenshot": null,
+  "clickCount": 8,
+  "markers": [
+    {
+      "clickNumber": 1,
+      "selector": "button[type=\"submit\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 2,
+      "selector": "a[href=\"/admin/reservation/list\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 3,
+      "selector": "a[href=\"/admin/patient/list\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 4,
+      "selector": "a[href=\"/admin/staff/list\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 5,
+      "selector": "a[href=\"/admin/item/list\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 6,
+      "selector": "a[href=\"/admin/rule/list\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 7,
+      "selector": "a[href=\"/admin/chatbot\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 8,
+      "selector": "a[href=\"/admin/mypage\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    }
+  ]
+}

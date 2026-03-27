@@ -1,0 +1,64 @@
+{
+  "url": "http://localhost:9090/login",
+  "outputPath": false,
+  "reportPath": "./images/doctor/doctor-capture-report.json",
+  "headless": true,
+  "captureEachClick": true,
+  "stepOutputDir": "./images/doctor",
+  "viewport": {
+    "width": 1600,
+    "height": 1200
+  },
+  "capture": {
+    "fullPage": true
+  },
+  "annotate": {
+    "color": "#ef4444",
+    "textColor": "#ffffff",
+    "showLabel": true
+  },
+  "steps": [
+    {
+      "action": "fill",
+      "selector": "input[name=\"username\"]",
+      "value": "doctor01"
+    },
+    {
+      "action": "fill",
+      "selector": "input[name=\"password\"]",
+      "value": "password123"
+    },
+    {
+      "action": "click",
+      "name": "doctor-login",
+      "selector": "button[type=\"submit\"]",
+      "label": "의사 로그인",
+      "waitForSelector": "h1:has-text(\"의사 대시보드\")",
+      "waitMs": 500
+    },
+    {
+      "action": "click",
+      "name": "doctor-treatment-list",
+      "selector": "a[href=\"/doctor/treatment-list\"]",
+      "label": "진료 현황",
+      "waitForSelector": "body",
+      "waitMs": 500
+    },
+    {
+      "action": "click",
+      "name": "doctor-chatbot",
+      "selector": "a[href=\"/doctor/chatbot\"]",
+      "label": "AI 챗봇",
+      "waitForSelector": "h1:has-text(\"AI 챗봇\")",
+      "waitMs": 500
+    },
+    {
+      "action": "click",
+      "name": "doctor-mypage",
+      "selector": "a[href=\"/doctor/mypage\"]",
+      "label": "내 정보 관리",
+      "waitForSelector": "h1:has-text(\"내 정보 관리\")",
+      "waitMs": 500
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "finalUrl": "http://localhost:9090/staff/mypage",
+  "finalScreenshot": null,
+  "clickCount": 7,
+  "markers": [
+    {
+      "clickNumber": 1,
+      "selector": "button[type=\"submit\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 2,
+      "selector": "a[href=\"/staff/reception/list\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 3,
+      "selector": "a[href=\"/staff/reservation/phone-reservation\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 4,
+      "selector": "a[href=\"/staff/walkin-reception\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 5,
+      "selector": "a[href=\"/staff/item/use\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 6,
+      "selector": "a[href=\"/staff/chatbot\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    },
+    {
+      "clickNumber": 7,
+      "selector": "a[href=\"/staff/mypage\"]",
+      "status": "rendered",
+      "reason": "selector found on final page"
+    }
+  ]
+}
