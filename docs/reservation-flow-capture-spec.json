@@ -4,6 +4,7 @@
   "reportPath": "./images/readme/reservation-flow-report.json",
   "headless": true,
   "captureEachClick": true,
+  "captureTiming": "after",
   "stepOutputDir": "./images/readme",
   "viewport": {
     "width": 1600,

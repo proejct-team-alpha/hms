@@ -4,6 +4,7 @@
   "reportPath": "./images/doctor/doctor-capture-report.json",
   "headless": true,
   "captureEachClick": true,
+  "captureTiming": "after",
   "stepOutputDir": "./images/doctor",
   "viewport": {
     "width": 1600,

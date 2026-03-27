@@ -4,6 +4,7 @@
   "reportPath": "./images/staff/staff-capture-report.json",
   "headless": true,
   "captureEachClick": true,
+  "captureTiming": "after",
   "stepOutputDir": "./images/staff",
   "viewport": {
     "width": 1600,

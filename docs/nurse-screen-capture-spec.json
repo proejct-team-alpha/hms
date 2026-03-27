@@ -4,6 +4,7 @@
   "reportPath": "./images/nurse/nurse-capture-report.json",
   "headless": true,
   "captureEachClick": true,
+  "captureTiming": "after",
   "stepOutputDir": "./images/nurse",
   "viewport": {
     "width": 1600,

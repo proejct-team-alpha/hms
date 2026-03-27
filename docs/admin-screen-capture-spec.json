@@ -4,6 +4,7 @@
   "reportPath": "./images/admin/admin-capture-report.json",
   "headless": true,
   "captureEachClick": true,
+  "captureTiming": "after",
   "stepOutputDir": "./images/admin",
   "viewport": {
     "width": 1600,

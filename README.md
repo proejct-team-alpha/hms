@@ -46,25 +46,25 @@
 
 ### 예약 흐름
 
-1. 예약 방식 선택 화면에서 `직접 선택 예약` 흐름으로 진입합니다.
+1. `직접 선택 예약`을 선택하면 예약 입력 화면으로 이동합니다.
 
 ![예약 흐름 1 - 예약 방식 선택](docs/images/readme/01-reservation-flow-01-choice.png)
 
-2. 환자 정보, 진료과, 전문의, 날짜와 시간을 입력해 예약을 진행합니다.
+2. 환자 정보, 진료과, 전문의, 날짜와 시간을 입력해 예약을 완료합니다.
 
-![예약 흐름 2 - 예약 입력](docs/images/readme/07-reservation-flow-02-form.png)
+![예약 흐름 2 - 예약 완료](docs/images/readme/07-reservation-flow-02-form.png)
 
-3. 예약 완료 화면에서 예약번호와 예약 상세 정보를 확인합니다.
+3. 예약 완료 후 예약 조회 화면으로 이동해 생성된 예약 정보를 확인합니다.
 
-![예약 흐름 3 - 예약 완료](docs/images/readme/08-reservation-flow-03-complete.png)
+![예약 흐름 3 - 예약 조회](docs/images/readme/08-reservation-flow-03-complete.png)
 
 ### 조회 흐름
 
-1. 예약 완료 후 `예약 조회`로 이동해 생성된 예약 정보를 바로 확인할 수 있습니다.
+1. 예약 조회 결과에서 예약 상세 정보와 변경/취소 액션을 확인할 수 있습니다.
 
-![조회 흐름 1 - 예약 조회 결과](docs/images/readme/09-reservation-flow-04-lookup.png)
+![조회 흐름 1 - 조회 결과](docs/images/readme/09-reservation-flow-04-lookup.png)
 
-2. 조회 결과에서 `예약 변경`으로 이동해 수정 가능한 예약을 관리합니다.
+2. `예약 변경`을 선택하면 수정 화면으로 이동해 예약 정보를 다시 입력할 수 있습니다.
 
 ![조회 흐름 2 - 예약 변경 화면](docs/images/readme/10-reservation-flow-05-modify.png)
 
